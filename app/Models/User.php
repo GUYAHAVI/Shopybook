@@ -45,4 +45,17 @@ class User extends Authenticatable
             'password' => 'hashed',
         ];
     }
+// In your controller
+public function create()
+{
+    if (auth()->user()->business) {
+        return redirect()->route('business.edit');
+    }
+    return view('business.create');
+}
+// app/Models/User.php
+public function business()
+{
+    return $this->hasOne(\App\Models\Business::class);
+}
 }
