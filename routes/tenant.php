@@ -27,12 +27,10 @@ Route::get('/dashboard', function () {
 })->middleware('auth');
 
 
-Route::middleware([
-    'web',
-    InitializeTenancyByDomain::class,
-    PreventAccessFromCentralDomains::class,
-])->group(function () {
+Route::middleware(['web', 'auth'])->group(function () {
     Route::get('/', function () {
-        return 'This is your multi-tenant application. The id of the current tenant is ' . tenant('id');
-    });
+        return view('tenant.dashboard');
+    })->name('tenant.dashboard');
+
+    // Tenant-specific routes will go here
 });
