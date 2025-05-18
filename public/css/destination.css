@@ -1,0 +1,333 @@
+:root {
+    --primary: #00008B;
+    --secondary: #0000FF;
+    --light: #ece5d8;
+    --dark: #14141f;
+    --playfair: "Playfair Display", serif;
+    --source-sans: "Source Sans 3", sans-serif;
+}
+#peopleDropdown {
+    width: 200px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+#peopleDropdown span {
+    font-weight: bold;
+}
+
+.dropdown-menu .btn {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.dropdown-menu span {
+    font-size: 18px;
+    font-weight: bold;
+}
+
+.apply-button {
+    display: block;
+    width: 100%;
+    text-align: center;
+    padding: 8px 0;
+    margin-top: 10px;
+}
+
+/* Destination*/
+.destination .col-md-3 {
+    margin-top: 2rem;
+
+    border-radius: 1rem;
+    
+
+    text-align: justify;
+    background-color: #fff;
+    border-radius: 10px;
+    padding: 20px;
+    transition: 0.5s;
+    left: calc(50% - 110px);
+    top: 0;
+}
+
+.destination-item:hover img {
+    transform: scale(1.1);
+    transition: 0.5s;
+    filter: brightness(50%);
+}
+.destination-item:hover .btn-more{
+    background: var(--secondary) !important;
+    color: var(--light) !important;
+}
+
+.destinationimg img {
+    width: 100%;
+    height: 45vh;
+    object-fit: cover;
+    border-radius: 1rem;
+}
+
+.destination-text {
+    padding: 1rem;
+    background-color: var(--light, #ece5d8);
+    opacity: 1;
+    box-shadow: 10px 10px 10px 0 rgba(0, 0, 0, 0.2);
+
+    color: var(--dark);
+    border-bottom-right-radius: 0.25rem;
+    border-bottom-left-radius: 0.25rem;
+    width: 80%;
+    border-top-right-radius: 1rem;
+    margin-top: -7rem;
+
+    rotate: 0deg;
+}
+.destination-item:hover .destination-text {
+    background: var(--primary);
+    color: var(--light);
+    transition: 0.5s;
+    border-radius: 1rem;
+    margin-left: 4rem;
+}
+.destination-item:hover h3 {
+    color: var(--secondary);
+    transition: 0.5s;
+}
+.destination-item:hover p {
+    color: var(--light);
+    transition: 0.5s;
+}
+
+.destination-carousel {
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    scroll-behavior: smooth;
+}
+
+
+.destination-text h3 {
+    font-family: var(--playfair);
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: var(--primary);
+    margin-bottom: 0.5rem;
+}
+.destination-text p {
+    font-family: var(--source-sans);
+    font-size: 1rem;
+    color: var(--dark);
+    margin-bottom: 0.5rem;
+}
+
+/* Basic styling for carousel layout */
+.destination-carousel {
+    display: flex;
+
+    scroll-snap-type: x mandatory;
+    scroll-behavior: smooth;
+    padding: 1rem 0;
+}
+.destination-item {
+    flex: 0 0 calc(25% - 1rem); /* Four items visible */
+    margin: 0 0.5rem;
+    scroll-snap-align: center;
+    background-color: #fff;
+    border-radius: 10px;
+    padding: 20px;
+    transition: 0.5s;
+}
+.destinationimg img {
+    width: 100%;
+    height: 45vh;
+    object-fit: cover;
+    border-radius: 1rem;
+}
+.destination-text h3,
+.destination-text p {
+    text-align: justify;
+}
+
+/* Adjust the width of .destination-item for small screens */
+@media (max-width: 768px) {
+    .destination-carousel {
+        display: flex;
+        overflow-x: scroll;
+        scroll-snap-type: x mandatory;
+        gap: 1rem; /* Add spacing between items */
+    }
+
+    .destination-item {
+        min-width: 85%; /* Adjust item width for small screens */
+        scroll-snap-align: center;
+        transition: transform 0.5s;
+    }
+
+    /* Adjust other styles if needed */
+    .destination-text {
+        width: 100%;
+        margin-top: -1rem;
+    }
+    .destination-item:hover .destination-text {
+        background: var(--primary);
+        color: var(--light);
+        transition: 0.5s;
+        border-radius: 1rem;
+        margin-left: 0;
+    }
+}
+
+/* Carousel Container */
+.container-fluid {
+    max-width: 100%;
+    position: relative;
+    margin-right: 2rem;
+}
+
+/* Destination Carousel Row */
+.destination-carousel {
+    display: flex;
+    transition: transform 1s ease;
+}
+
+.destination-item {
+    flex: 0 0 33.333%;
+    box-sizing: border-box;
+}
+
+.destinationimg img {
+    width: 100%;
+    height: auto;
+}
+@media (max-width: 768px) {
+    .destination-item {
+        flex: 0 0 100%;
+    }
+}
+
+/* Carousel Controls Container */
+.carousel-controls {
+    position: absolute;
+    top: 50%;
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    transform: translateY(-50%);
+    opacity: 0; /* Initially hidden */
+    transition: opacity 0.3s ease;
+    z-index: 1000; /* Ensures it appears above other elements */
+}
+
+/* Show buttons on hover */
+.row.destination:hover .carousel-controls {
+    opacity: 1; /* Show controls when hovering over the row */
+}
+
+.carousel-button {
+    background-color: var(--secondary);
+    color: white;
+    font-weight: bold;
+    border: none;
+    padding: 10px 20px;
+    font-size: 1.5rem;
+    cursor: pointer;
+    z-index: 1001; /* Higher z-index to ensure it's above other elements */
+    position: relative;
+    rotate: 0deg;
+}
+/* Packaages */
+.package-card {
+    background-color: #fff;
+    padding: 20px;
+    box-shadow: 2px 2px 10px 0 rgba(0, 0, 0, 0.2);
+}
+.package-card:hover img {
+    transform: scale(1.1);
+    transition: 0.5s;
+    filter: brightness(50%);
+}
+.package-img {
+    height: 45vh;
+    overflow: hidden;
+}
+.package-img img {
+    width: 100%;
+    height: 45vh;
+    object-fit: cover;
+}
+.package-card-body h3 {
+    border-bottom: var(--primary) dotted 2px;
+    padding-bottom: 2rem;
+}
+
+.carousel-item {
+    height: 60vh;
+    width: 70vw;
+    overflow: hidden;
+    box-shadow: 2px 2px 10px 0 rgba(0, 0, 0, 0.2);
+}
+.carousel-item img {
+    object-fit: cover;
+}
+
+.package-dest {
+    background-color: var(--primary);
+    color: var(--light);
+    padding: 10px;
+
+    box-shadow: 2px 2px 10px 0 rgba(0, 0, 0, 0.2);
+    margin: 1rem;
+}
+
+/* Set the dimensions of the map */
+#map, #map2 , #map3, #map4 , #map5 , #map6 , #map7 , #map8 , #map9 , #map10, #map11, #map12, #map13, #map14, #map15 {
+    width: 100%;
+    height: 500px;
+    margin: 0 auto;
+    z-index: 0;
+    padding: 1rem;
+    border: 1px dotted var(--primary);
+}
+
+/* Styling for Font Awesome icons inside the map markers */
+.leaflet-marker-icon .fa-location-dot {
+    font-size: 2em;
+    /* line-height: 2em; */
+    color: var(--secondary);
+    font-weight: 900;
+}
+.map-text{
+    box-shadow: 2px 2px 10px 0 rgba(0, 0, 0, 0.2);
+    
+}
+.others ul {
+    list-style-type: none;
+    padding: 0;
+}
+.others ul li {
+    padding: 0.5rem;
+    border-bottom: 1px dotted var(--primary);
+}
+.others i{
+    color: var(--secondary);
+}
+
+.destimg{
+    /* width: auto; */
+    padding: 1rem;
+    border: 1px dotted var(--primary);
+    /* height: 45vh; */
+    overflow: hidden;
+    object-fit: cover;
+    margin: 1rem;
+    margin-top: 2rem;
+}
+.destimg img {
+    width: 100%;   
+    object-fit: cover;
+    height: 100%;
+   
+}
