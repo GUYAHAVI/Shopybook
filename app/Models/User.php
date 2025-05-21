@@ -46,13 +46,7 @@ class User extends Authenticatable
         ];
     }
 // In your controller
-public function create()
-{
-    if (auth()->user()->business) {
-        return redirect()->route('business.edit');
-    }
-    return view('business.create');
-}
+
 // app/Models/User.php
 public function business()
 {

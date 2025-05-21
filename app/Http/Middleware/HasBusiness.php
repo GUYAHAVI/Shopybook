@@ -8,14 +8,7 @@ use Symfony\Component\HttpFoundation\Response;
 
 class HasBusiness
 {
-    /**
-     * Handle an incoming request.
-     *
-     * @param  \Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response)  $next
-     */
-
-    // app/Http/Middleware/HasBusiness.php
-    public function handle($request, Closure $next)
+    public function handle(Request $request, Closure $next): Response
     {
         if (!auth()->user()->business) {
             return redirect()->route('business.create')

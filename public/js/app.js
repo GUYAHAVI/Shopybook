@@ -273,27 +273,3 @@ document.addEventListener('DOMContentLoaded', function() {
         // You would then update all charts with new data
     });
 });
-// Dropdown functionality
-document.querySelectorAll('.dropdown-toggle').forEach(toggle => {
-    toggle.addEventListener('click', function(e) {
-        e.preventDefault();
-        const dropdown = this.parentElement;
-        dropdown.classList.toggle('active');
-        
-        // Close other open dropdowns
-        document.querySelectorAll('.dropdown').forEach(item => {
-            if (item !== dropdown) {
-                item.classList.remove('active');
-            }
-        });
-    });
-});
-
-// Close dropdowns when clicking outside
-document.addEventListener('click', function(e) {
-    if (!e.target.closest('.dropdown')) {
-        document.querySelectorAll('.dropdown').forEach(item => {
-            item.classList.remove('active');
-        });
-    }
-});

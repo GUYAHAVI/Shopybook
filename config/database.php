@@ -96,7 +96,24 @@ return [
             'search_path' => 'public',
             'sslmode' => 'prefer',
         ],
-
+        'tenant' => [
+            'driver' => 'mysql',
+            'url' => env('TENANT_DATABASE_URL'),
+            'host' => env('TENANT_DB_HOST', '127.0.0.1'),
+            'port' => env('TENANT_DB_PORT', '3306'),
+            'database' => null, // Will be set dynamically
+            'username' => env('TENANT_DB_USERNAME', 'forge'),
+            'password' => env('TENANT_DB_PASSWORD', ''),
+            'charset' => 'utf8mb4',
+            'collation' => 'utf8mb4_unicode_ci',
+            'prefix' => '',
+            'prefix_indexes' => true,
+            'strict' => true,
+            'engine' => null,
+            'options' => extension_loaded('pdo_mysql') ? array_filter([
+                PDO::MYSQL_ATTR_SSL_CA => env('MYSQL_ATTR_SSL_CA'),
+            ]) : [],
+        ],
         'sqlsrv' => [
             'driver' => 'sqlsrv',
             'url' => env('DB_URL'),
@@ -147,7 +164,7 @@ return [
 
         'options' => [
             'cluster' => env('REDIS_CLUSTER', 'redis'),
-            'prefix' => env('REDIS_PREFIX', Str::slug(env('APP_NAME', 'laravel'), '_').'_database_'),
+            'prefix' => env('REDIS_PREFIX', Str::slug(env('APP_NAME', 'laravel'), '_') . '_database_'),
             'persistent' => env('REDIS_PERSISTENT', false),
         ],
 
