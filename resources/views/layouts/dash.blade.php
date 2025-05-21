@@ -9,107 +9,118 @@
     <!-- My CSS -->
     <link rel="stylesheet" href="{{ asset('css/app.css') }}">
     <title>Shopybook Dashboard</title>
+    
+
+
+
 </head>
 <body>
-<!-- Updated SIDEBAR with dropdown functionality -->
+<!-- Sidebar with dropdown functionality -->
 <section id="sidebar">
+    <!-- Brand Section -->
     <a href="#" class="brand">
         <i class='bx bxs-store-alt bx-lg'></i>
         <span class="text">Shopybook</span>
     </a>
-    <ul class="side-menu top">
-        <li class="active">
-            <a href="#">
-                <i class='bx bxs-dashboard bx-sm'></i>
-                <span class="text">Dashboard</span>
-            </a>
-        </li>
-        
-        <!-- My Business Dropdown -->
-        <li class="dropdown">
-            <a href="#" class="dropdown-toggle">
-                <i class='bx bxs-business bx-sm'></i>
-                <span class="text">My Business</span>
-                <i class='bx bx-chevron-down dropdown-icon'></i>
-            </a>
-            <ul class="dropdown-menu">
-                @if(auth()->user()->business)
-                    <li>
-                        <a href="{{ route('business.edit') }}">
-                            <i class='bx bxs-edit-alt'></i>
-                            <span>Edit Business Profile</span>
-                        </a>
-                    </li>
-                    <li>
-                        <a href="#" onclick="event.preventDefault(); document.getElementById('delete-business-form').submit();">
-                            <i class='bx bxs-trash'></i>
-                            <span>Delete Business</span>
-                        </a>
-                        <form id="delete-business-form" action="{{ route('business.destroy') }}" method="POST" class="d-none">
-                            @csrf
-                            @method('DELETE')
-                        </form>
-                    </li>
-                @else
-                    <li>
-                        <a href="{{ route('business.create') }}">
-                            <i class='bx bxs-plus-circle'></i>
-                            <span>Create Business Profile</span>
-                        </a>
-                    </li>
-                @endif
-            </ul>
-        </li>
-        
-        <!-- Products Dropdown -->
-        <li class="dropdown">
-            <a href="#" class="dropdown-toggle">
-                <i class='bx bxs-package bx-sm'></i>
-                <span class="text">Products</span>
-                <i class='bx bx-chevron-down dropdown-icon'></i>
-            </a>
-            <ul class="dropdown-menu">
-                <li>
-                    <a href="{{ route('products.index') }}">
-                        <i class='bx bxs-grid'></i>
-                        <span>All Products</span>
-                    </a>
-                </li>
-                <li>
-                    <a href="{{ route('products.create') }}">
-                        <i class='bx bxs-plus-circle'></i>
-                        <span>Add New Product</span>
-                    </a>
-                </li>
-                <li>
-                    <a href="{{ route('products.import') }}">
-                        <i class='bx bxs-cloud-upload'></i>
-                        <span>Bulk Import</span>
-                    </a>
-                </li>
-            </ul>
-        </li>
-        
-        <!-- Other menu items remain the same -->
-        <li>
-            <a href="#">
-                <i class='bx bxs-receipt bx-sm'></i>
-                <span class="text">Invoices</span>
-            </a>
-        </li>
-        <!-- ... rest of your menu items ... -->
-    </ul>
+
+   <!-- Main Menu -->
+<ul class="side-menu top">
+    <!-- Dashboard -->
+    <li class="active">
+        <a href="{{ route('dashboard') }}">
+            <i class='bx bxs-dashboard bx-sm'></i>
+            <span class="text">Dashboard</span>
+        </a>
+    </li>
     
-    <!-- Bottom menu remains unchanged -->
+    <!-- My Business Dropdown -->
+    <li class="dropdown">
+        <a href="#" class="dropdown-toggle">
+            <i class='bx bxs-business bx-sm'></i>
+            <span class="text">My Business</span>
+            <i class='bx bx-chevron-down dropdown-icon'></i>
+        </a>
+        <ul class="dropdown-menu">
+            @if(auth()->user()->business)
+                <li>
+                    <a href="{{ route('business.edit') }}">
+                        <i class='bx bxs-edit-alt'></i>
+                        <span>Edit Business Profile</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#" onclick="event.preventDefault(); document.getElementById('delete-business-form').submit();">
+                        <i class='bx bxs-trash'></i>
+                        <span>Delete Business</span>
+                    </a>
+                    <form id="delete-business-form" action="{{ route('business.destroy') }}" method="POST" class="d-none">
+                        @csrf
+                        @method('DELETE')
+                    </form>
+                </li>
+            @else
+                <li>
+                    <a href="{{ route('business.create') }}">
+                        <i class='bx bxs-plus-circle'></i>
+                        <span>Create Business Profile</span>
+                    </a>
+                </li>
+            @endif
+        </ul>
+    </li>
+    
+    <!-- Products Dropdown -->
+    <li class="dropdown">
+        <a href="#" class="dropdown-toggle">
+            <i class='bx bxs-package bx-sm'></i>
+            <span class="text">Products</span>
+            <i class='bx bx-chevron-down dropdown-icon'></i>
+        </a>
+        <ul class="dropdown-menu">
+            <li>
+                <a href="#">
+                    <i class='bx bxs-grid'></i>
+                    <span>All Products</span>
+                </a>
+            </li>
+            <li>
+                <a href="#">
+                    <i class='bx bxs-plus-circle'></i>
+                    <span>Add New Product</span>
+                </a>
+            </li>
+            <li>
+                <a href="#">
+                    <i class='bx bxs-cloud-upload'></i>
+                    <span>Bulk Import</span>
+                </a>
+            </li>
+        </ul>
+    </li>
+    
+    <!-- Invoices -->
+    <li>
+        <a href="#">
+            <i class='bx bxs-receipt bx-sm'></i>
+            <span class="text">Invoices</span>
+        </a>
+    </li>
+</ul>
+
+
+    <!-- Bottom Menu -->
     <ul class="side-menu bottom">
+        <!-- Settings -->
         <li>
             <a href="#">
                 <i class='bx bxs-cog bx-sm bx-spin-hover'></i>
                 <span class="text">Settings</span>
             </a>
         </li>
+        
+        <!-- Logout -->
         <li>
-            <a href="#" class="logout">
+            <a href="{{ route('logout') }}" class="logout">
                 <i class='bx bx-power-off bx-sm bx-burst-hover'></i>
                 <span class="text">Logout</span>
             </a>
@@ -157,7 +168,7 @@
                 <ul>
                     <li><a href="#">Business Profile</a></li>
                     <li><a href="#">Account Settings</a></li>
-                    <li><a href="#">Log Out</a></li>
+                    <li><a href="{{ route('logout') }}">Log Out</a></li>
                 </ul>
             </div>
         </nav>
@@ -171,3 +182,25 @@
     <script src="{{ asset('js/app.js') }}"></script>
 </body>
 </html>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const dropdownToggles = document.querySelectorAll('.dropdown-toggle');
+
+        dropdownToggles.forEach(toggle => {
+            toggle.addEventListener('click', function (e) {
+                e.preventDefault();
+
+                const parent = this.closest('.dropdown');
+                parent.classList.toggle('open');
+
+                // Optional: Close other dropdowns when one opens
+                document.querySelectorAll('.dropdown').forEach(drop => {
+                    if (drop !== parent) {
+                        drop.classList.remove('open');
+                    }
+                });
+            });
+        });
+    });
+</script>

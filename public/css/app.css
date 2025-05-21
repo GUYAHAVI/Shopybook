@@ -103,7 +103,7 @@ body {
 }
 #sidebar .side-menu li.active::before {
     content: '';
-    position: absolute;
+    position: relative;
     width: 40px;
     height: 40px;
     border-radius: 50%;
@@ -816,58 +816,4 @@ body {
     .recommendation-cards {
         grid-template-columns: 1fr;
     }
-}
-/* Dropdown Menu Styles */
-.side-menu .dropdown {
-    position: relative;
-}
-
-.side-menu .dropdown-toggle {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-}
-
-.side-menu .dropdown-icon {
-    transition: transform 0.3s ease;
-    font-size: 1.1rem;
-}
-
-.side-menu .dropdown.active .dropdown-icon {
-    transform: rotate(180deg);
-}
-
-.side-menu .dropdown-menu {
-    display: none;
-    padding-left: 2rem;
-    background: rgba(0, 0, 0, 0.03);
-    border-left: 3px solid var(--blue);
-}
-
-.side-menu .dropdown.active .dropdown-menu {
-    display: block;
-}
-
-.side-menu .dropdown-menu li {
-    height: 40px;
-    margin-left: 0;
-}
-
-.side-menu .dropdown-menu li a {
-    padding-left: 0;
-    font-size: 14px;
-    color: var(--dark);
-}
-
-.side-menu .dropdown-menu li a i {
-    font-size: 12px;
-    min-width: 20px;
-}
-
-.side-menu .dropdown-menu li:hover {
-    background: transparent;
-}
-
-.side-menu .dropdown-menu li a:hover {
-    color: var(--blue);
 }
