@@ -1,194 +1,7 @@
 @extends('layouts.master')
 @section('content')
 
-    <style>
-        /* Brand Images Animation */
-        .brandimgs-container {
-            position: relative;
-            height: 500px;
-            /* Increased height */
-            overflow: visible;
-            z-index: 10;
-            margin-top: 50px;
-        }
-
-        /* Feature Bubbles Animation */
-        .feature-bubbles-container {
-            position: relative;
-            height: 500px;
-            /* Increased height */
-            z-index: 10;
-            margin-top: 50px;
-        }
-
-        /* Image Wrapper Base Styles */
-        .image-bubble {
-            position: absolute;
-            overflow: hidden;
-            border-radius: 50%;
-            opacity: 0;
-            transform: scale(0.5);
-            transition: all 1.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-            z-index: 10;
-        }
-
-        .image-bubble img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-
-        /* Brand Images (first two) - Doubled in size */
-        .brand-bubble-1 {
-            width: 300px;
-            /* Increased from 150px */
-            height: 300px;
-            /* Increased from 150px */
-            bottom: 60px;
-            /* Adjusted position */
-            left: 100px;
-            /* Adjusted position */
-            transition-delay: 2s;
-        }
-
-        .brand-bubble-2 {
-            width: 260px;
-            /* Increased from 130px */
-            height: 260px;
-            /* Increased from 130px */
-            bottom: 120px;
-            /* Adjusted position */
-            left: 300px;
-            /* Adjusted position */
-            transition-delay: 3s;
-        }
-
-        /* Feature Bubbles (last two) - Doubled in size */
-        .feature-bubble-1 {
-            width: 280px;
-            /* Increased from 140px */
-            height: 280px;
-            /* Increased from 140px */
-            top: 100px;
-            /* Adjusted position */
-            right: 200px;
-            /* Adjusted position */
-            transition-delay: 2s;
-        }
-
-        .feature-bubble-2 {
-            width: 240px;
-            /* Increased from 120px */
-            height: 240px;
-            /* Increased from 120px */
-            top: 240px;
-            /* Adjusted position */
-            right: 100px;
-            /* Adjusted position */
-            transition-delay: 4s;
-        }
-
-        .connector-svg {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: 5;
-            pointer-events: none;
-            overflow: visible;
-        }
-
-        .connector-line {
-            stroke: rgba(255, 255, 255, 0.7);
-            stroke-width: 2;
-            stroke-dasharray: 5, 5;
-            fill: none;
-            opacity: 0;
-            transition: all 5s ease;
-        }
-
-        /* Animation when loaded - Adjusted final sizes */
-        .loaded .image-bubble {
-            opacity: 1;
-            transform: scale(1);
-            border-radius: 10px;
-            height: 400px;
-            /* Increased from 200px */
-        }
-
-        .loaded .brand-bubble-1 {
-            height: 360px;
-            /* Increased from 220px */
-            width: 280px;
-            /* Increased from 160px */
-        }
-
-        .loaded .brand-bubble-2 {
-            height: 320px;
-            /* Increased from 200px */
-            width: 240px;
-            /* Increased from 140px */
-            bottom: 160px;
-            /* Adjusted position */
-            left: 255px;
-            right: ;
-            /* Adjusted position */
-        }
-
-        .loaded .feature-bubble-1 {
-            height: 360px;
-            /* Increased from 180px */
-            width: 280px;
-            /* Increased from 140px */
-        }
-
-        .loaded .feature-bubble-2 {
-            height: 320px;
-            /* Increased from 160px */
-            width: 240px;
-            /* Increased from 120px */
-        }
-
-        .loaded .connector-line {
-            opacity: 1;
-            transform: scaleX(1);
-        }
-
-        /* Make sure morphing bubbles don't interfere */
-        .morphing-bubbles {
-            z-index: 1;
-        }
-
-        /* Responsive - hide on small screens */
-        @media (max-width: 767.98px) {
-
-            .brandimgs-container,
-            .feature-bubbles-container {
-                display: none;
-            }
-            .brandtext {
-                margin-top: 0 !important;
-                padding-top: 0 !important;
-                text-align: center;
-            }
-        }
-
-        .col-md-5 {
-            position: relative;
-            overflow: visible;
-        }
-        .brandtext {
-            position: relative;
-            margin-top: 20rem;
-            
-            color: white;
-        }
-        .brandtext .col-md-7 {
-            padding-top: 10rem;
-        }
-    </style>
+    
 
     <div id="home" class="container-fluid px-0">
         <div>
@@ -357,6 +170,28 @@
             </div>
         </div>
     </section>
+
+    <!-- Registered business -->
+    <section class="py-5 text-light">
+        <div class="container px-5">
+            <div class="text-center mb-5">
+                <h2 class="display-4">
+                    Trusted by <span class="text-primary">Businesses</span>
+                </h2>
+                <p class="lead">Join the growing community of Shopybook Pro users</p>
+            </div>
+
+            <div class="row justify-content-center px-5">
+               
+                 @include('partials.businesses', ['groupedBusinesses' => $groupedBusinesses])
+                </div>
+               
+
+               
+            </div>
+        
+    </section>
+
 
     <!-- Testimonials Section -->
     <section class="py-5 bg-dark text-light">

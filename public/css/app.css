@@ -103,7 +103,7 @@ body {
 }
 #sidebar .side-menu li.active::before {
     content: '';
-    position: relative;
+    position: absolute;
     width: 40px;
     height: 40px;
     border-radius: 50%;

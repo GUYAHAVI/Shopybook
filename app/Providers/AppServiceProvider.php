@@ -4,6 +4,9 @@ namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
 
+use App\Models\Business;
+use Illuminate\Support\Facades\Route;
+
 class AppServiceProvider extends ServiceProvider
 {
     /**
@@ -14,11 +17,15 @@ class AppServiceProvider extends ServiceProvider
         //
     }
 
-    /**
-     * Bootstrap any application services.
-     */
-    public function boot(): void
+    // Bootstrap any application services.
+
+
+    public function boot()
     {
-        //
+        view()->composer('*', function ($view) {
+            if (auth()->check()) {
+                $view->with('business', auth()->user()->business);
+            }
+        });
     }
 }

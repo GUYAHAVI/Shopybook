@@ -7,15 +7,41 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Storage;
+// Log class for logging
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Hash;
 
 class BusinessController extends Controller
 {
+
+
+    public function index(Request $request)
+    {
+        $sort = $request->get('sort', 'name');
+        $order = $request->get('order', 'asc');
+
+        $businessTypes = Business::select('business_type')
+            ->distinct()
+            ->orderBy('business_type')
+            ->pluck('business_type');
+
+        $groupedBusinesses = [];
+
+        foreach ($businessTypes as $type) {
+            $groupedBusinesses[$type] = Business::where('business_type', $type)
+                ->where('active', true)
+                ->orderBy($sort, $order)
+                ->get();
+        }
+
+        return view('businesses', compact('groupedBusinesses', 'sort', 'order'));
+    }
     public function create()
     {
         if (auth()->user()->business) {
             return redirect()->route('dashboard');
         }
-        
+
         return view('business.create', [
             'businessTypes' => [
                 'retail' => 'Retail Shop',
@@ -30,45 +56,45 @@ class BusinessController extends Controller
         ]);
     }
 
-   public function store(Request $request)
-{
-    $validated = $request->validate([
-        'name' => 'required|string|max:255|unique:businesses',
-        'business_type' => 'required|string',
-        'description' => 'nullable|string',
-        'email' => 'nullable|email|unique:businesses',
-        'phone' => 'required|string|max:20',
-        'address' => 'nullable|string',
-        'city' => 'required|string',
-        'terms' => 'required|accepted',
-        'logo' => 'nullable|image|max:2048',
-    ]);
+    public function store(Request $request)
+    {
+        $validated = $request->validate([
+            'name' => 'required|string|max:255|unique:businesses',
+            'business_type' => 'required|string',
+            'description' => 'nullable|string',
+            'email' => 'nullable|email|unique:businesses',
+            'phone' => 'required|string|max:20',
+            'address' => 'nullable|string',
+            'city' => 'required|string',
+            'terms' => 'required|accepted',
+            'logo' => 'nullable|image|max:2048',
+        ]);
 
-    // Create the tenant (business)
-    $business = Business::create([
-        'user_id' => auth()->id(),
-        'name' => $validated['name'],
-        'slug' => Str::slug($validated['name']),
-        'email' => $validated['email'] ?? null,
-        'phone' => $validated['phone'],
-        'business_type' => $validated['business_type'],
-        'description' => $validated['description'] ?? null,
-        'address' => $validated['address'] ?? null,
-        'city' => $validated['city'],
-        'country' => 'Kenya', // or get from request if you have that field
-    ]);
+        // Create the tenant (business)
+        $business = Business::create([
+            'user_id' => auth()->id(),
+            'name' => $validated['name'],
+            'slug' => Str::slug($validated['name']),
+            'email' => $validated['email'] ?? null,
+            'phone' => $validated['phone'],
+            'business_type' => $validated['business_type'],
+            'description' => $validated['description'] ?? null,
+            'address' => $validated['address'] ?? null,
+            'city' => $validated['city'],
+            'country' => 'Kenya', // or get from request if you have that field
+        ]);
 
-    // Handle logo upload
-    if ($request->hasFile('logo')) {
-        $path = $request->file('logo')->store('business/logos', 'public');
-        $business->update(['logo_path' => $path]);
+        // Handle logo upload
+        if ($request->hasFile('logo')) {
+            $path = $request->file('logo')->store('business/logos', 'public');
+            $business->update(['logo_path' => $path]);
+        }
+
+        // Initialize the tenant (creates database, runs migrations, etc.)
+        tenancy()->initialize($business);
+
+        return redirect()->route('dashboard')->with('success', 'Business created successfully!');
     }
-
-    // Initialize the tenant (creates database, runs migrations, etc.)
-    tenancy()->initialize($business);
-
-    return redirect()->route('dashboard')->with('success', 'Business created successfully!');
-}
 
     public function edit(Business $business)
     {
@@ -90,8 +116,8 @@ class BusinessController extends Controller
     public function update(Request $request, Business $business)
     {
         $validated = $request->validate([
-            'name' => ['required','string','max:255', Rule::unique('businesses')->ignore($business->id)],
-            'email' => ['nullable','email', Rule::unique('businesses')->ignore($business->id)],
+            'name' => ['required', 'string', 'max:255', Rule::unique('businesses')->ignore($business->id)],
+            'email' => ['nullable', 'email', Rule::unique('businesses')->ignore($business->id)],
             'phone' => 'required|string|max:20',
             'business_type' => 'required|string',
             'description' => 'nullable|string|max:500',
@@ -116,7 +142,7 @@ class BusinessController extends Controller
             if ($business->logo_path) {
                 Storage::disk('public')->delete($business->logo_path);
             }
-            
+
             $updateData['logo_path'] = $request->file('logo')->store('business/logos', 'public');
         }
 
@@ -125,17 +151,40 @@ class BusinessController extends Controller
         return back()->with('success', 'Business profile updated successfully!');
     }
 
-    public function destroy(Business $business)
+    public function destroy(Business $business, Request $request)
     {
-        // Delete logo if exists
-        if ($business->logo_path) {
-            Storage::disk('public')->delete($business->logo_path);
+
+        if (!Hash::check($request->password, auth()->user()->password)) {
+            return back()->with('error', 'Invalid password. Deletion canceled.');
         }
+        try {
+            // Delete logo if exists
+            if ($business->logo_path) {
+                Storage::disk('public')->delete($business->logo_path);
+            }
 
-        // Delete the tenant and all associated resources
-        tenancy()->delete($business);
+            // Delete cover if exists
+            if ($business->cover_path) {
+                Storage::disk('public')->delete($business->cover_path);
+            }
 
-        return redirect()->route('home')
-            ->with('success', 'Business deleted successfully. All associated data has been removed.');
+            // Proper way to delete a tenant
+            $business->delete(); // This will trigger all tenant cleanup
+
+            // OR if you need more control:
+            // tenancy()->end();
+            // $business->purge();
+
+            return redirect()->route('dashboard')
+                ->with('success', 'Business and all its data deleted successfully');
+
+        } catch (\Exception $e) {
+            \Log::error('Business deletion failed', [
+                'error' => $e->getMessage(),
+                'business_id' => $business->id
+            ]);
+
+            return back()->with('error', 'Failed to delete business: ' . $e->getMessage());
+        }
     }
 }
