@@ -7,9 +7,8 @@ use Illuminate\Http\Request;
 class DashboardController extends Controller
 {
     public function dashboard()
-    {
-        // This is the main dashboard for the tenant
-        // You can fetch tenant-specific data here
-        return view('dashboard');
-    }
+{
+    $business = auth()->user()->business; // or however you get the business
+    return view('dashboard', compact('business'));
+}
 }
