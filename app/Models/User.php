@@ -45,11 +45,12 @@ class User extends Authenticatable
             'password' => 'hashed',
         ];
     }
-// In your controller
 
-// app/Models/User.php
+    /**
+     * Get the user's business.
+     */
 public function business()
 {
-    return $this->hasOne(\App\Models\Business::class);
+        return $this->hasOne(Business::class);
 }
 }

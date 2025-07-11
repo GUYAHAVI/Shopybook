@@ -6,6 +6,7 @@ use Illuminate\Support\ServiceProvider;
 
 use App\Models\Business;
 use Illuminate\Support\Facades\Route;
+use App\Services\LocalizationService;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -27,5 +28,12 @@ class AppServiceProvider extends ServiceProvider
                 $view->with('business', auth()->user()->business);
             }
         });
+
+        if (!function_exists('t')) {
+            function t($key, $context = 'ui', $parameters = []) {
+                $service = app(LocalizationService::class);
+                return $service->translate($key, $context, $parameters);
+            }
+        }
     }
 }

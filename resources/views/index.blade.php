@@ -1,16 +1,99 @@
 @extends('layouts.master')
+@section('title', 'Shopybook Pro')
 @section('content')
 
-    
+<style>
+body, html {
+    background: #020258 !important;
+    color: #fff !important;
+}
+.hero-section,
+.hero-section *,
+.hero-section .container-fluid,
+.hero-section .brandtext,
+.hero-section .morphing-bubbles-hero,
+.hero-section .morphing-bubble,
+.hero-section .main-bubble,
+.hero-section .secondary-bubble,
+.hero-section .accent-bubble {
+    background: #020258 !important;
+    background-color: #020258 !important;
+    color: #fff !important;
+}
 
-    <div id="home" class="container-fluid px-0">
+h1, h2, h3, h4, h5, h6, .display-4, .text-primary {
+    color: #13e8e9 !important;
+}
+
+.lead, p, .card-text, .card-title, .list-unstyled, .contact-info, .social-bubbles, .uscontent, .uscard {
+    color: #fff !important;
+}
+
+.btn-primary, .btn-primary:active, .btn-primary:focus {
+    background: #13e8e9 !important;
+    color: #020258 !important;
+    border: 2px solid #13e8e9 !important;
+}
+.btn-primary:hover {
+    background: #020258 !important;
+    color: #13e8e9 !important;
+    border: 2px solid #13e8e9 !important;
+}
+
+.btn-outline-light, .btn-outline-light:active, .btn-outline-light:focus {
+    background: transparent !important;
+    color: #13e8e9 !important;
+    border: 2px solid #13e8e9 !important;
+}
+.btn-outline-light:hover {
+    background: #13e8e9 !important;
+    color: #020258 !important;
+}
+
+input.form-control, textarea.form-control, select.form-select {
+    background: #fff !important;
+    color: #020258 !important;
+    border: 2px solid #13e8e9 !important;
+}
+input.form-control:focus, textarea.form-control:focus, select.form-select:focus {
+    border-color: #13e8e9 !important;
+    box-shadow: 0 0 0 2px #13e8e9 !important;
+    color: #020258 !important;
+}
+input.form-control::placeholder, textarea.form-control::placeholder {
+    color: #888 !important;
+    opacity: 1;
+}
+
+.card, .pricing-card, .glass-card, .uscard {
+    background: #03104e !important;
+    color: #fff !important;
+    border: 2px solid #13e8e9 !important;
+}
+.card-title, .pricing-card .card-title, .glass-card .card-title, .uscard .card-title {
+    color: #13e8e9 !important;
+}
+
+.popular-badge {
+    background: #13e8e9 !important;
+    color: #020258 !important;
+    border-radius: 8px;
+    padding: 2px 10px;
+    font-weight: bold;
+    font-size: 0.9rem;
+    margin-bottom: 10px;
+    display: inline-block;
+}
+</style>
+
+    <div id="home" class="container-fluid px-0 hero-section">
         <div>
             <div class="morphing-bubbles-hero">
                 <div class="morphing-bubble main-bubble"></div>
                 <div class="morphing-bubble secondary-bubble"></div>
                 <div class="morphing-bubble accent-bubble"></div>
             </div>
-            <div class="brandtext">
+            <div class="brandtext ">
                 <div class="row">
                     <div class="col-md-7">
                         <h1>Shopybook Pro</h1>
@@ -38,7 +121,7 @@
             </div>
         </div>
     </div>
-
+    
     <!-- Features Section -->
     <section id="features" class="py-5 text-light position-relative">
         <div class="container">
@@ -72,9 +155,6 @@
             </div>
         </div>
     </section>
-
-
-
 
     <!-- Key Features Section -->
     <section id="services" class="py-5 bg-dark text-light">
@@ -180,11 +260,12 @@
                 </h2>
                 <p class="lead">Join the growing community of Shopybook Pro users</p>
             </div>
+            </div>
 
-            <div class="row justify-content-center px-5">
+            <div class="container-fluid">
                
                  @include('partials.businesses', ['groupedBusinesses' => $groupedBusinesses])
-                </div>
+                
                
 
                

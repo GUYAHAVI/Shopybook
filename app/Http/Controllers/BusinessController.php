@@ -153,8 +153,10 @@ class BusinessController extends Controller
 
     public function destroy(Business $business, Request $request)
     {
+        // Check if user can delete this business
+        $this->authorize('delete', $business);
 
-        if (!Hash::check($request->password, auth()->user()->password)) {
+        if (!Hash::check($request->input('password'), auth()->user()->getAuthPassword())) {
             return back()->with('error', 'Invalid password. Deletion canceled.');
         }
         try {
@@ -187,4 +189,14 @@ class BusinessController extends Controller
             return back()->with('error', 'Failed to delete business: ' . $e->getMessage());
         }
     }
+    public function show(Business $business)
+    {
+        // Ensure the business is active
+        if (!$business->active) {
+            return redirect()->route('business.index')->with('error', 'This business is not active.');
+        }
+
+        return view('business.show', compact('business'));
+    }
+
 }

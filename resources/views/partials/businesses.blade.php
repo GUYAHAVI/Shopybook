@@ -1,7 +1,38 @@
 <style>
+body, .container-fluid, .card, .main-content, .content {
+    background: #fff !important;
+    color: #020258 !important;
+}
+.container-fluid{
+  background: #020258 !important;
+}
+.btn-primary {
+    background: #020258 !important;
+    color: #fff !important;
+    border: 2px solid #13e8e9 !important;
+}
+.btn-primary:hover {
+    background: #13e8e9 !important;
+    color: #020258 !important;
+    border: 2px solid #020258 !important;
+}
+.form-control {
+    background: #f8f9fa !important;
+    color: #020258 !important;
+    border: 2px solid #13e8e9 !important;
+}
+.form-control:focus {
+    border-color: #020258 !important;
+    box-shadow: 0 0 0 3px rgba(19, 232, 233, 0.1) !important;
+}
+.card-header {
+    background: #f8f9fa !important;
+    color: #020258 !important;
+    border-bottom: 1px solid #13e8e9 !important;
+}
 .cardx {
-  width: 100%;
-  height: 100%;
+  /* width: 100%; */
+  /* height: 100%; */
   border-radius: 10px;
   overflow: hidden;
   z-index: 10;
@@ -17,6 +48,26 @@
   border-bottom: 2px solid #13e8e9;
   color: #2c3e50;
   font-weight: 600;
+}
+.card-img {
+  position: relative;
+  overflow: hidden;
+  width: 100%;
+  aspect-ratio: 16/9; /* Adjust this for your preferred ratio */
+  border-radius: 4px; /* Optional: adds rounded corners */
+}
+
+.card-img img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  transition: transform 0.3s ease; /* Optional: for hover effects */
+}
+
+/* Optional hover effect */
+.card-img:hover img {
+  transform: scale(1.05);
 }
 .empty-message {
   padding: 2rem;
