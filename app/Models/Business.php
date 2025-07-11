@@ -12,7 +12,6 @@ use Stancl\Tenancy\DatabaseConfig;
 class Business extends BaseTenant implements TenantWithDatabase
 {
     use GeneratesIds, CentralConnection;
-      use GeneratesIds; // This will handle UUID generation
     
     public function getIncrementing()
     {
@@ -71,6 +70,61 @@ class Business extends BaseTenant implements TenantWithDatabase
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function products()
+    {
+        return $this->hasMany(Product::class);
+    }
+
+    public function orders()
+    {
+        return $this->hasMany(Order::class);
+    }
+
+    public function customers()
+    {
+        return $this->hasMany(Customer::class);
+    }
+
+    public function suppliers()
+    {
+        return $this->hasMany(Supplier::class);
+    }
+
+    public function employees()
+    {
+        return $this->hasMany(Employee::class);
+    }
+
+    public function categories()
+    {
+        return $this->hasMany(Category::class);
+    }
+
+    public function brands()
+    {
+        return $this->hasMany(Brand::class);
+    }
+
+    public function invoices()
+    {
+        return $this->hasMany(Invoice::class);
+    }
+
+    public function promotions()
+    {
+        return $this->hasMany(Promotion::class);
+    }
+
+    public function advertisingCampaigns()
+    {
+        return $this->hasMany(AdvertisingCampaign::class);
+    }
+
+    public function payments()
+    {
+        return $this->hasManyThrough(Payment::class, Order::class);
     }
 
     /**

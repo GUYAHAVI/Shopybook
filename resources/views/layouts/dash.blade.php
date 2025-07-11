@@ -4,532 +4,962 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <!-- Boxicons -->
-    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
-
-    <!-- My CSS -->
-    <link rel="stylesheet" href="{{ asset('css/app.css') }}">
-    <title>Shopybook Dashboard</title>
-
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <title>Shopybook</title>
+    <link rel="icon" href="{{ asset('img/logo.png') }}" type="image/x-icon">
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <link href="https://fonts.googleapis.com/css2?family=Boldonse&family=Cinzel+Decorative:wght@400;700;900&family=Montserrat:ital,wght@0,100..900;1,100..900&family=Roboto+Mono:ital,wght@0,100..700;1,100..700&display=swap" rel="stylesheet">
+    
     <style>
-        /* Sidebar base styling */
-
-
-
-
-
-        /* Dropdown toggle style */
-        .dropdown-toggle {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            cursor: pointer;
+        :root {
+            --primary-color: #13e8e9;
+            --secondary-color: #020258;
+            --danger-color: #e74a3b;
+            --warning-color: #f6c23e;
+            --info-color: #36b9cc;
+            --dark-color: #5a5c69;
+            --light-color: #f8f9fc;
         }
-
-        /* Dropdown menu */
-        .dropdown-menu {
-            max-height: 0;
-            overflow: hidden;
-            transition: max-height 0.3s ease, padding 0.3s ease;
-            padding-left: 1.5rem;
-            z-index: 3000;
-            width: 100%;
+        
+        body, .container-fluid, .card, .dashboard-content, .main-content, .content, .sidebar, .navbar, .form-control {
+            background: #fff !important;
+            color: #020258 !important;
         }
-
-        .dropdown-menu li {
-            padding: 0.5rem 0;
+        
+        body {
+            font-family: 'Montserrat', sans-serif;
+            overflow-x: hidden;
         }
-
-        /* Active/open dropdown */
-        .dropdown.open .dropdown-menu {
-            max-height: 500px;
-            /* Large enough to accommodate all items */
-            padding-top: 0.5rem;
-            padding-bottom: 0.5rem;
-        }
-
-        /* Icon rotation when open */
-        .dropdown.open .dropdown-icon {
-            transform: rotate(180deg);
-            transition: transform 0.3s ease;
-        }
-
-        /* Modal Overlay */
-        .modal-overlay {
+        
+        /* Sidebar styling */
+        #sidebar {
+            width: 250px;
+            min-height: 100vh;
+            background: #020258;
+            color: #13e8e9;
             position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background-color: rgba(0, 0, 0, 0.6);
+            transition: all 0.3s;
+            z-index: 1000;
+            box-shadow: 4px 0 10px rgba(19, 232, 233, 0.2);
+            border-right: 2px solid #13e8e9;
+        }
+        
+        #sidebar .brand {
+            padding: 1.5rem 1rem;
             display: flex;
             align-items: center;
             justify-content: center;
-            z-index: 1000;
-            opacity: 0;
-            visibility: hidden;
-            transition: all 0.3s ease;
+            font-size: 1.2rem;
+            font-weight: 800;
+            color: #13e8e9;
+            text-decoration: none;
+            border-bottom: 1px solid rgba(19, 232, 233, 0.3);
+            font-family: "Cinzel Decorative", serif;
         }
-
-        .modal-overlay.active {
-            opacity: 1;
-            visibility: visible;
+        
+        #sidebar .nav-link {
+            color: rgba(19, 232, 233, 0.8);
+            padding: 0.75rem 1rem;
+            font-weight: 600;
+            border-left: 3px solid transparent;
+            transition: all 0.3s;
         }
-
-        /* Modal Content */
-        .modal-content {
-            background-color: white;
-            width: 90%;
-            max-width: 500px;
-            border-radius: 8px;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
-            transform: translateY(-50px);
-            transition: transform 0.3s ease;
+        
+        #sidebar .nav-link:hover, 
+        #sidebar .nav-link.active {
+            color: #13e8e9;
+            background: rgba(19, 232, 233, 0.1);
+            border-left: 3px solid #13e8e9;
         }
-
-        .modal-overlay.active .modal-content {
-            transform: translateY(0);
+        
+        #sidebar .dropdown-menu {
+            background: rgba(2, 2, 88, 0.9);
+            border: 1px solid #13e8e9;
+            padding: 0;
         }
-
-        /* Modal Header */
-        .modal-header {
-            padding: 20px;
-            border-bottom: 1px solid #eee;
+        
+        #sidebar .dropdown-item {
+            color: rgba(19, 232, 233, 0.8);
+            padding: 0.5rem 1.5rem;
+            font-size: 0.85rem;
+        }
+        
+        #sidebar .dropdown-item:hover {
+            color: #13e8e9;
+            background: rgba(19, 232, 233, 0.1);
+        }
+        
+        /* Main content area */
+        #content {
+            margin-left: 250px;
+            min-height: 100vh;
+            transition: all 0.3s;
+            background-color: #020258;
+        }
+        
+        /* Top navbar */
+        .top-navbar {
+            height: 70px;
+            box-shadow: 0 0.15rem 1.75rem 0 rgba(19, 232, 233, 0.15);
+            background-color: rgba(2, 2, 88, 0.95);
+            border-bottom: 2px solid #13e8e9;
+        }
+        
+        .notification-badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            font-size: 0.7rem;
+        }
+        
+        /* AI Assistant Chat */
+        .ai-assistant {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 1050;
+        }
+        
+        .ai-assistant-btn {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: #fff;
+            color: #020258;
+            font-size: 28px;
+            border: 2px solid #13e8e9;
+            box-shadow: 0 4px 20px rgba(19, 232, 233, 0.15);
+            cursor: pointer;
+            transition: all 0.3s;
             display: flex;
-            justify-content: space-between;
             align-items: center;
-            background-color: #f44336;
-            color: white;
-            border-radius: 8px 8px 0 0;
+            justify-content: center;
         }
-
-        .modal-header h3 {
-            margin: 0;
-            font-size: 1.25rem;
+        
+        .ai-assistant-btn:hover {
+            background: #13e8e9;
+            color: #020258;
+            border-color: #020258;
         }
-
-        .modal-close {
-            background: none;
-            border: none;
-            font-size: 1.5rem;
-            color: white;
-            cursor: pointer;
-            padding: 0 5px;
+        
+        .ai-chat-container {
+            position: absolute;
+            bottom: 70px;
+            right: 0;
+            width: 350px;
+            height: 500px;
+            background: #fff;
+            border: 2px solid #020258;
+            border-radius: 10px;
+            box-shadow: 0 5px 25px rgba(2,2,88,0.10);
+            display: none;
+            flex-direction: column;
         }
-
-        /* Modal Body */
-        .modal-body {
-            padding: 20px;
-        }
-
-        .warning-text {
-            color: #f44336;
-            font-weight: bold;
-            margin: 10px 0;
-        }
-
-        .form-group {
-            margin-top: 20px;
-        }
-
-        .form-group label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: 500;
-        }
-
-        .form-group input {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            font-size: 1rem;
-        }
-
-        .error-message {
-            color: #f44336;
-            font-size: 0.875rem;
-            margin-top: 5px;
-            min-height: 20px;
-        }
-
-        /* Modal Footer */
-        .modal-footer {
-            padding: 15px 20px;
-            border-top: 1px solid #eee;
+        
+        .ai-chat-container.active {
             display: flex;
-            justify-content: flex-end;
-            gap: 10px;
         }
-
-        .cancel-btn,
-        .delete-btn {
-            padding: 8px 16px;
-            border-radius: 4px;
-            cursor: pointer;
+        
+        .ai-chat-header {
+            padding: 15px;
+            background: #020258;
+            color: #fff;
+            border-radius: 10px 10px 0 0;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .ai-chat-body {
+            flex-grow: 1;
+            padding: 15px;
+            overflow-y: auto;
+            background: #fff;
+        }
+        
+        .ai-chat-body .fa-robot {
+            color: #13e8e9;
+            background: #020258;
+            border-radius: 50%;
+            padding: 6px;
+            font-size: 22px;
+        }
+        
+        .ai-chat-body .fa-user {
+            color: #fff;
+            background: #020258;
+            border-radius: 50%;
+            padding: 6px;
+            font-size: 22px;
+        }
+        
+        .ai-chat-body .card.bg-light {
+            background: #f8f9fa !important;
+            color: #020258;
+        }
+        
+        .ai-chat-body .card.bg-primary {
+            background: #020258 !important;
+            color: #fff;
+        }
+        
+        .ai-chat-footer {
+            padding: 15px;
+            border-top: 1px solid #13e8e9;
+            background: #f8f9fa;
+            border-radius: 0 0 10px 10px;
+        }
+        
+        /* Delete Business Modal Styling */
+        .modal-danger .modal-content {
+            background: #fff;
+            border: 2px solid #dc3545;
+            border-radius: 10px;
+        }
+        
+        .modal-danger .modal-header {
+            background: #020258;
+            color: #fff;
+            border-bottom: 1px solid #dc3545;
+            border-radius: 10px 10px 0 0;
+            align-items: center;
+        }
+        
+        .modal-danger .modal-title {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .modal-danger .modal-title .fa-exclamation-triangle {
+            color: #dc3545;
+            font-size: 1.5rem;
+        }
+        
+        .modal-danger .modal-body {
+            background: #fff;
+            color: #020258;
+            font-size: 1.1rem;
+        }
+        
+        .modal-danger .modal-body .text-danger {
+            color: #dc3545 !important;
+        }
+        
+        .modal-danger .form-label {
+            color: #020258;
             font-weight: 500;
         }
-
-        .cancel-btn {
-            background-color: #f0f0f0;
-            border: 1px solid #ddd;
+        
+        .modal-danger .form-control {
+            border: 2px solid #dc3545;
+            background: #f8f9fa;
+            color: #020258;
         }
-
-        .delete-btn {
-            background-color: #f44336;
-            color: white;
-            border: none;
+        
+        .modal-danger .form-control:focus {
+            border-color: #020258;
+            box-shadow: 0 0 0 2px #dc3545;
         }
-
-        .delete-btn:hover {
-            background-color: #d32f2f;
+        
+        .modal-danger .invalid-feedback {
+            color: #dc3545;
+            font-size: 0.95rem;
         }
-
-        /* Responsive */
-        @media (max-width: 480px) {
-            .modal-content {
-                width: 95%;
+        
+        .modal-danger .btn-danger {
+            background: #dc3545;
+            color: #fff;
+            border: 2px solid #dc3545;
+            font-weight: 600;
+            padding: 0.5rem 1.5rem;
+            border-radius: 6px;
+            transition: background 0.2s;
+        }
+        
+        .modal-danger .btn-danger:hover {
+            background: #b71c1c;
+            border-color: #b71c1c;
+        }
+        
+        /* Form controls */
+        .form-control {
+            background: #f8f9fa !important;
+            color: #020258 !important;
+            border: 2px solid #13e8e9 !important;
+        }
+        
+        .form-control:focus {
+            border-color: #020258 !important;
+            box-shadow: 0 0 0 3px rgba(19, 232, 233, 0.1) !important;
+        }
+        
+        .form-control::placeholder {
+            color: rgba(19, 232, 233, 0.6);
+        }
+        
+        /* Buttons */
+        .btn-primary {
+            background: #020258 !important;
+            color: #fff !important;
+            border: 2px solid #13e8e9 !important;
+        }
+        
+        .btn-primary:hover {
+            background: #13e8e9 !important;
+            color: #020258 !important;
+            border: 2px solid #020258 !important;
+        }
+        
+        .btn-outline-primary {
+            border: 2px solid #13e8e9;
+            color: #13e8e9;
+        }
+        
+        .btn-outline-primary:hover {
+            background: #13e8e9;
+            color: #020258;
+        }
+        
+        /* Cards */
+        .card {
+            background: rgba(2, 2, 88, 0.8);
+            border: 2px solid rgba(19, 232, 233, 0.3);
+            color: #13e8e9;
+        }
+        
+        .card-header {
+            background: #f8f9fa !important;
+            color: #020258 !important;
+            border-bottom: 1px solid #13e8e9 !important;
+        }
+        
+        /* Alerts */
+        .alert-success {
+            background: rgba(19, 232, 233, 0.1);
+            border: 2px solid #13e8e9;
+            color: #13e8e9;
+        }
+        
+        .alert-danger {
+            background: rgba(220, 53, 69, 0.1);
+            border: 2px solid #dc3545;
+            color: #dc3545;
+        }
+        
+        @media (max-width: 768px) {
+            #sidebar {
+                margin-left: -250px;
             }
-
-            .modal-footer {
-                flex-direction: column;
+            
+            #sidebar.active {
+                margin-left: 0;
             }
-
-            .cancel-btn,
-            .delete-btn {
-                width: 100%;
+            
+            #content {
+                margin-left: 0;
+            }
+            
+            #content.active {
+                margin-left: 250px;
             }
         }
     </style>
-
-
 </head>
 
 <body>
-    <!-- Sidebar with dropdown functionality -->
-    <section id="sidebar">
-        <!-- Brand Section -->
-        <a href="{{ route('index') }}" class="brand">
-            <i class='bx bxs-store-alt bx-lg'></i>
+    <!-- Sidebar Navigation -->
+    <nav id="sidebar" class="d-flex flex-column">
+        <!-- Brand -->
+        <a href="{{ route('index') }}" class="brand text-decoration-none mb-4">
+            <i class="fas fa-store me-2"></i>
             <span class="text">Shopybook</span>
         </a>
-
+        
         <!-- Main Menu -->
-        <ul class="side-menu top">
-            <!-- Dashboard -->
-            <li class="active">
-                <a href="{{ route('dashboard') }}">
-                    <i class='bx bxs-dashboard bx-sm'></i>
-                    <span class="text">Dashboard</span>
-                </a>
-            </li>
+        <div class="flex-grow-1">
+            <ul class="nav flex-column">
+                <!-- Dashboard -->
+                <li class="nav-item">
+                    <a href="{{ route('dashboard') }}" class="nav-link active">
+                        <i class="fas fa-tachometer-alt me-2"></i>
+                        {{ t('dashboard') }}
+                    </a>
+                </li>
+                
+                <!-- My Business -->
+                <li class="nav-item">
+                    <a class="nav-link dropdown-toggle" data-bs-toggle="collapse" href="#businessCollapse" role="button">
+                        <i class="fas fa-briefcase me-2"></i>
+                        {{ t('my_business') }}
+                    </a>
+                    <div class="collapse" id="businessCollapse">
+                        <ul class="nav flex-column ps-3">
+                            <li class="nav-item">
+                                <a href="{{ route('business.edit') }}" class="nav-link">
+                                    <i class="fas fa-edit me-2"></i>
+                                    {{ t('edit_business_profile') }}
+                                </a>
+                            </li>
+                            @if(auth()->user()->business)
+                            <li class="nav-item">
+                                <a href="#" class="nav-link" data-bs-toggle="modal" data-bs-target="#deleteBusinessModal">
+                                    <i class="fas fa-trash me-2"></i>
+                                    {{ t('delete_business') }}
+                                </a>
+                            </li>
+                            @endif
+                            <li class="nav-item">
+                                <a href="{{ route('business.analysis.index') }}" class="nav-link">
+                                    <i class="fas fa-chart-line me-2"></i>
+                                    {{ t('business_analytics') }}
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                </li>
+                
+                <!-- Products -->
+                <li class="nav-item">
+                    <a class="nav-link dropdown-toggle" data-bs-toggle="collapse" href="#productsCollapse" role="button">
+                        <i class="fas fa-boxes me-2"></i>
+                        {{ t('products') }}
+                    </a>
+                    <div class="collapse" id="productsCollapse">
+                        <ul class="nav flex-column ps-3">
+                            <li class="nav-item">
+                                <a href="{{ route('products.index') }}" class="nav-link">
+                                    <i class="fas fa-list me-2"></i>
+                                    {{ t('all_products') }}
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="{{ route('products.create') }}" class="nav-link">
+                                    <i class="fas fa-plus-circle me-2"></i>
+                                    {{ t('add_new_product') }}
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="{{ route('products.bulk-import') }}" class="nav-link">
+                                    <i class="fas fa-file-import me-2"></i>
+                                    {{ t('bulk_import') }}
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="{{ route('products.inventory') }}" class="nav-link">
+                                    <i class="fas fa-warehouse me-2"></i>
+                                    {{ t('inventory_management') }}
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                </li>
+                
+                <!-- Sales -->
+                <li class="nav-item">
+                    <a class="nav-link dropdown-toggle" data-bs-toggle="collapse" href="#salesCollapse" role="button">
+                        <i class="fas fa-cash-register me-2"></i>
+                        {{ t('sales') }}
+                    </a>
+                    <div class="collapse" id="salesCollapse">
+                        <ul class="nav flex-column ps-3">
+                            <li class="nav-item">
+                                <a href="{{ route('sales.pos') }}" class="nav-link">
+                                    <i class="fas fa-shopping-cart me-2"></i>
+                                    {{ t('pos_system') }}
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="{{ route('sales.orders') }}" class="nav-link">
+                                    <i class="fas fa-clipboard-list me-2"></i>
+                                    {{ t('orders') }}
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="{{ route('sales.invoices') }}" class="nav-link">
+                                    <i class="fas fa-file-invoice-dollar me-2"></i>
+                                    {{ t('invoices') }}
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="{{ route('sales.customers') }}" class="nav-link">
+                                    <i class="fas fa-users me-2"></i>
+                                    {{ t('customers') }}
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="{{ route('sales.report') }}" class="nav-link">
+                                    <i class="fas fa-chart-line me-2"></i>
+                                    {{ t('sales_report') }}
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                </li>
+                
+                <!-- Marketing -->
+                <li class="nav-item">
+                    <a class="nav-link dropdown-toggle" data-bs-toggle="collapse" href="#marketingCollapse" role="button">
+                        <i class="fas fa-bullhorn me-2"></i>
+                        {{ t('marketing') }}
+                    </a>
+                    <div class="collapse" id="marketingCollapse">
+                        <ul class="nav flex-column ps-3">
+                            <li class="nav-item">
+                                <a href="{{ route('marketing.promotions') }}" class="nav-link">
+                                    <i class="fas fa-percentage me-2"></i>
+                                    {{ t('promotions') }}
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="{{ route('marketing.sms') }}" class="nav-link">
+                                    <i class="fas fa-sms me-2"></i>
+                                    {{ t('bulk_sms') }}
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="{{ route('marketing.email') }}" class="nav-link">
+                                    <i class="fas fa-envelope me-2"></i>
+                                    {{ t('email_marketing') }}
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="{{ route('marketing.advertising') }}" class="nav-link">
+                                    <i class="fas fa-ad me-2"></i>
+                                    {{ t('advertising') }}
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="{{ route('marketing.report') }}" class="nav-link">
+                                    <i class="fas fa-chart-line me-2"></i>
+                                    {{ t('marketing_report') }}
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                </li>
+                
+                <!-- Suppliers -->
+                <li class="nav-item">
+                    <a href="#" class="nav-link">
+                        <i class="fas fa-truck me-2"></i>
+                        {{ t('suppliers') }}
+                    </a>
+                </li>
+                
+                <!-- Employees -->
+                <li class="nav-item">
+                    <a class="nav-link dropdown-toggle" data-bs-toggle="collapse" href="#employeesCollapse" role="button">
+                        <i class="fas fa-user-tie me-2"></i>
+                        {{ t('employees') }}
+                    </a>
+                    <div class="collapse" id="employeesCollapse">
+                        <ul class="nav flex-column ps-3">
+                            <li class="nav-item">
+                                <a href="#" class="nav-link">
+                                    <i class="fas fa-users-cog me-2"></i>
+                                    {{ t('manage_team') }}
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="#" class="nav-link">
+                                    <i class="fas fa-money-check-alt me-2"></i>
+                                    {{ t('payroll') }}
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="#" class="nav-link">
+                                    <i class="fas fa-calendar-check me-2"></i>
+                                    {{ t('attendance') }}
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                </li>
+                
+                <!-- Reports -->
+                <li class="nav-item">
+                    <a href="#" class="nav-link">
+                        <i class="fas fa-chart-pie me-2"></i>
+                        {{ t('reports') }}
+                    </a>
+                </li>
+                
+                <!-- AI Assistant -->
+                <li class="nav-item">
+                    <a href="#" class="nav-link" id="openAiChat">
+                        <i class="fas fa-robot me-2"></i>
+                        {{ t('ai_assistant') }}
+                    </a>
+                </li>
 
-            <!-- My Business Dropdown -->
-            <li class="dropdown">
-                <a href="#" class="dropdown-toggle">
-                    <i class='bx bxs-business bx-sm'></i>
-                    <span class="text">My Business</span>
-                    <i class='bx bx-chevron-down dropdown-icon'></i>
-                </a>
-                <ul class="dropdown-menu">
-                    @if(auth()->user()->business)
-                        <li>
-                            <a href="{{ route('business.edit') }}">
-                                <i class='bx bxs-edit-alt'></i>
-                                <span>Edit Business Profile</span>
-                            </a>
-                        </li>
-                        <li>
-                            <a href="#" data-delete-business>
-                                <i class='bx bxs-trash'></i>
-                                <span>Delete Business</span>
-                            </a>
-                            <form id="delete-business-form" action="{{ route('business.destroy', $business->id) }}"
-                                method="POST" class="d-none">
-                                @csrf
-                                @method('DELETE')
-                                <input type="hidden" name="password" id="formPassword">
-                            </form>
-                        </li>
-                    @else
-                        <li>
-                            <a href="{{ route('business.create') }}">
-                                <i class='bx bxs-plus-circle'></i>
-                                <span>Create Business Profile</span>
-                            </a>
-                        </li>
-                    @endif
-                </ul>
-            </li>
-
-            <!-- Products Dropdown -->
-            <li class="dropdown">
-                <a href="#" class="dropdown-toggle">
-                    <i class='bx bxs-package bx-sm'></i>
-                    <span class="text">Products</span>
-                    <i class='bx bx-chevron-down dropdown-icon'></i>
-                </a>
-                <ul class="dropdown-menu">
-                    <li>
-                        <a href="#">
-                            <i class='bx bxs-grid'></i>
-                            <span>All Products</span>
-                        </a>
-                    </li>
-                    <li>
-                        <a href="#">
-                            <i class='bx bxs-plus-circle'></i>
-                            <span>Add New Product</span>
-                        </a>
-                    </li>
-                    <li>
-                        <a href="#">
-                            <i class='bx bxs-cloud-upload'></i>
-                            <span>Bulk Import</span>
-                        </a>
-                    </li>
-                </ul>
-            </li>
-
-            <!-- Invoices -->
-            <li>
-                <a href="#">
-                    <i class='bx bxs-receipt bx-sm'></i>
-                    <span class="text">Invoices</span>
-                </a>
-            </li>
-        </ul>
-
-
+                @if(auth()->user()->business && in_array(auth()->user()->business->business_type, ['service', 'hybrid']))
+                <li class="nav-item">
+                    <a class="nav-link dropdown-toggle" data-bs-toggle="collapse" href="#servicesCollapse" role="button">
+                        <i class="fas fa-cut me-2"></i>
+                        {{ t('services') }}
+                    </a>
+                    <div class="collapse" id="servicesCollapse">
+                        <ul class="nav flex-column ps-3">
+                            <li class="nav-item">
+                                <a href="{{ route('services.index') }}" class="nav-link">
+                                    <i class="fas fa-list me-2"></i> {{ t('manage_services') }}
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="{{ route('staff.index') }}" class="nav-link">
+                                    <i class="fas fa-users me-2"></i> {{ t('staff') }}
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="{{ route('service-records.index') }}" class="nav-link">
+                                    <i class="fas fa-clipboard-list me-2"></i> {{ t('service_records') }}
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="{{ route('costs.index') }}" class="nav-link">
+                                    <i class="fas fa-money-bill-wave me-2"></i> {{ t('costs') }}
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="{{ route('commissions.index') }}" class="nav-link">
+                                    <i class="fas fa-hand-holding-usd me-2"></i> {{ t('commissions') }}
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                </li>
+                @endif
+            </ul>
+        </div>
+        
         <!-- Bottom Menu -->
-        <ul class="side-menu bottom">
-            <!-- Settings -->
-            <li>
-                <a href="#">
-                    <i class='bx bxs-cog bx-sm bx-spin-hover'></i>
-                    <span class="text">Settings</span>
-                </a>
-            </li>
+        <div class="mt-auto pb-3">
+            <ul class="nav flex-column">
+                <li class="nav-item">
+                    <a href="#" class="nav-link">
+                        <i class="fas fa-cog fa-spin me-2"></i>
+                        {{ t('settings') }}
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{{ route('logout') }}" class="nav-link" onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
+                        <i class="fas fa-power-off me-2"></i>
+                        {{ t('logout') }}
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </nav>
 
-            <!-- Logout -->
-            <li>
-                <a href="{{ route('logout') }}" class="logout">
-                    <i class='bx bx-power-off bx-sm bx-burst-hover'></i>
-                    <span class="text">Logout</span>
-                </a>
-            </li>
-        </ul>
-    </section>
-
-    <!-- CONTENT -->
-    <section id="content">
-        <!-- Modal Overlay -->
-        <div id="deleteBusinessModal" class="modal-overlay">
-            <!-- Modal Content -->
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h3>Confirm Deletion</h3>
-                    <button class="modal-close">&times;</button>
-                </div>
-                <div class="modal-body">
-                    <p>Are you sure you want to permanently delete this business and all its data?</p>
-                    <p class="warning-text">This action cannot be undone!</p>
-
-                    <div class="form-group">
-                        <label for="passwordConfirmation">Enter your password to confirm:</label>
-                        <input type="password" id="passwordConfirmation" placeholder="Your account password" required>
-                        <div id="passwordError" class="error-message"></div>
+    <!-- Main Content -->
+    <div id="content">
+        <!-- Top Navbar -->
+        <nav class="navbar top-navbar navbar-expand-lg navbar-light bg-white shadow-sm">
+            <div class="container-fluid">
+                <!-- Sidebar Toggle -->
+                <button class="btn btn-link d-md-none" id="sidebarToggle">
+                    <i class="fas fa-bars"></i>
+                </button>
+                
+                <!-- Search Form -->
+                <form class="d-flex ms-md-auto">
+                    <input class="form-control me-2" type="search" placeholder="{{ t('search_products_orders') }}" aria-label="Search">
+                    <button class="btn btn-outline-primary" type="submit">
+                        <i class="fas fa-search"></i>
+                    </button>
+                </form>
+                
+                <!-- Right Side Nav Items -->
+                <div class="d-flex align-items-center ms-3">
+                    <!-- Language Switcher -->
+                    @include('components.language-switcher')
+                    
+                    <!-- Notifications -->
+                    <div class="dropdown me-3">
+                        <a class="position-relative" href="#" role="button" id="notificationDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fas fa-bell fa-lg"></i>
+                            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger notification-badge">3</span>
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="notificationDropdown">
+                            <li><h6 class="dropdown-header">{{ t('notifications') }}</h6></li>
+                            <li><a class="dropdown-item" href="#">{{ t('new_order') }} #SHB-1024</a></li>
+                            <li><a class="dropdown-item" href="#">{{ t('inventory_low') }} {{ t('on') }} T-Shirts</a></li>
+                            <li><a class="dropdown-item" href="#">{{ t('ai_business_tip') }}</a></li>
+                        </ul>
+                    </div>
+                    
+                    <!-- User Profile -->
+                    <div class="dropdown">
+                        <a class="d-flex align-items-center text-decoration-none" href="#" role="button" id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                            <img src="https://placehold.co/600x400/png" alt="Profile" class="rounded-circle me-2" width="40" height="40">
+                            <span class="d-none d-md-inline">{{ t('user_name') }}</span>
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+                            <li><a class="dropdown-item" href="#">{{ t('profile') }}</a></li>
+                            <li><a class="dropdown-item" href="#">{{ t('settings') }}</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="{{ route('logout') }}" onclick="event.preventDefault(); document.getElementById('logout-form').submit();">{{ t('logout') }}</a></li>
+                        </ul>
                     </div>
                 </div>
-                <div class="modal-footer">
-                    <button class="cancel-btn">Cancel</button>
-                    <button id="confirmDeleteBtn" class="delete-btn">Delete Business</button>
+            </div>
+        </nav>
+
+        <!-- Page content will be inserted here -->
+        @if(session('success'))
+            <div class="alert alert-success alert-dismissible fade show m-3" role="alert">
+                <i class="fas fa-check-circle me-2"></i>
+                {{ session('success') }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        @endif
+
+        @if(session('error'))
+            <div class="alert alert-danger alert-dismissible fade show m-3" role="alert">
+                <i class="fas fa-exclamation-circle me-2"></i>
+                {{ session('error') }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        @endif
+
+        @yield('content')
+    </div>
+    
+    <!-- AI Assistant Floating Button -->
+    <div class="ai-assistant">
+        <button class="ai-assistant-btn" id="aiAssistantBtn" title="{{ t('chat_with_shopybook_ai') }}">
+            <i class="fas fa-robot"></i>
+        </button>
+        <div class="ai-chat-container" id="aiChatContainer">
+            <div class="ai-chat-header">
+                <span><i class="fas fa-robot me-2" style="color:#13e8e9;"></i>{{ t('shopybook_ai_assistant') }}</span>
+                <button class="btn-close btn-close-white float-end" id="closeAiChat" style="filter:invert(0);"></button>
+            </div>
+            <div class="ai-chat-body" id="aiChatBody">
+                <div class="d-flex mb-3">
+                    <div class="flex-shrink-0 me-2">
+                        <i class="fas fa-robot"></i>
+                    </div>
+                    <div class="flex-grow-1">
+                        <div class="card bg-light">
+                            <div class="card-body p-2">
+                                <p class="mb-0">{{ t('ai_assistant_greeting') }}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="ai-chat-footer">
+                <div class="input-group">
+                    <input type="text" class="form-control" id="aiChatInput" placeholder="{{ t('ask_me_anything') }}">
+                    <button class="btn btn-primary" id="sendAiMessage">
+                        <i class="fas fa-paper-plane"></i>
+                    </button>
                 </div>
             </div>
         </div>
-        <!-- NAVBAR -->
-        <nav>
-            <i class='bx bx-menu bx-sm'></i>
-            <a href="#" class="nav-link">Quick Actions</a>
-            <form action="#">
-                <div class="form-input">
-                    <input type="search" placeholder="Search products, orders...">
-                    <button type="submit" class="search-btn"><i class='bx bx-search'></i></button>
+    </div>
+<div class="modal fade" id="deleteBusinessModal" tabindex="-1" aria-labelledby="deleteBusinessModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content modal-danger">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="deleteBusinessModalLabel">
+                        <i class="fas fa-exclamation-triangle"></i> {{ t('confirm_deletion') }}
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-            </form>
-            <input type="checkbox" class="checkbox" id="switch-mode" hidden />
-            <label class="swith-lm" for="switch-mode">
-                <i class="bx bxs-sun"></i>
-                <i class="bx bx-moon"></i>
-                <div class="ball"></div>
-            </label>
-
-            <!-- Notification Bell -->
-            <a href="#" class="notification" id="notificationIcon">
-                <i class='bx bxs-bell bx-tada-hover'></i>
-                <span class="num">3</span>
-            </a>
-            <div class="notification-menu" id="notificationMenu">
-                <ul>
-                    <li>New order #SHB-1024</li>
-                    <li>Inventory low on T-Shirts</li>
-                    <li>AI Business Tip: Run a weekend promo</li>
-                </ul>
+                <div class="modal-body">
+                    <p>{{ t('delete_business_confirmation') }}</p>
+                    <p class="text-danger fw-bold">{{ t('action_cannot_be_undone') }}</p>
+                    
+                    <form id="deleteBusinessForm" method="POST">
+                        @csrf
+                        @method('DELETE')
+                        <input type="hidden" name="password" id="formPassword">
+                        <div class="mb-3">
+                            <label for="passwordConfirmation" class="form-label">{{ t('enter_password_to_confirm') }}:</label>
+                            <input type="password" class="form-control" id="passwordConfirmation" required>
+                            <div id="passwordError" class="invalid-feedback"></div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ t('cancel') }}</button>
+                    <button type="button" id="confirmDeleteBtn" class="btn btn-danger">{{ t('delete_business') }}</button>
+                </div>
             </div>
+        </div>
+    </div>
 
-            <!-- Profile Menu -->
-            <a href="#" class="profile" id="profileIcon">
-                <img src="https://placehold.co/600x400/png" alt="Profile">
-            </a>
-            <div class="profile-menu" id="profileMenu">
-                <ul>
-                    <li><a href="#">Business Profile</a></li>
-                    <li><a href="#">Account Settings</a></li>
-                    <li><a href="{{ route('logout') }}">Log Out</a></li>
-                </ul>
-            </div>
-        </nav>
-        <!-- NAVBAR -->
-
-        @yield('content')
-    </section>
-    <!-- CONTENT -->
-
-    <!-- Load jQuery first -->
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <!-- Then load Bootstrap JS -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
-    <!-- Load Chart.js first -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="{{ asset('js/app.js') }}"></script>
-</body>
-
-</html>
-<script>
-    document.addEventListener('DOMContentLoaded', function () {
-        // Elements
-        const modal = document.getElementById('deleteBusinessModal');
-        const modalContent = modal.querySelector('.modal-content');
-        const closeBtn = modal.querySelector('.modal-close');
-        const cancelBtn = modal.querySelector('.cancel-btn');
-        const confirmBtn = document.getElementById('confirmDeleteBtn');
-        const passwordInput = document.getElementById('passwordConfirmation');
-        const passwordError = document.getElementById('passwordError');
-        const deleteLinks = document.querySelectorAll('[data-delete-business]');
-
-        // Show modal function
-        function showModal() {
-            modal.classList.add('active');
-            document.body.style.overflow = 'hidden'; // Prevent scrolling
-        }
-
-        // Hide modal function
-        function hideModal() {
-            modal.classList.remove('active');
-            document.body.style.overflow = ''; // Restore scrolling
-            passwordInput.value = '';
-            passwordInput.classList.remove('error');
-            passwordError.textContent = '';
-        }
-
-        // Show modal when delete is clicked
-        deleteLinks.forEach(link => {
-            link.addEventListener('click', function (e) {
-                e.preventDefault();
-                showModal();
+    <!-- Bootstrap Bundle with Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Sidebar Toggle
+            const sidebar = document.getElementById('sidebar');
+            const content = document.getElementById('content');
+            const sidebarToggle = document.getElementById('sidebarToggle');
+            
+            sidebarToggle.addEventListener('click', function() {
+                sidebar.classList.toggle('active');
+                content.classList.toggle('active');
             });
-        });
-
-        // Close modal when X, cancel, or overlay is clicked
-        closeBtn.addEventListener('click', hideModal);
-        cancelBtn.addEventListener('click', hideModal);
-        modal.addEventListener('click', function (e) {
-            if (e.target === modal) {
-                hideModal();
-            }
-        });
-
-        // Prevent modal content from closing modal when clicked
-        modalContent.addEventListener('click', function (e) {
-            e.stopPropagation();
-        });
-
-        async function verifyPassword(password) {
-            try {
-                const response = await fetch('{{ route("password.verify") }}', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Accept': 'application/json',
-                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                        'X-Requested-With': 'XMLHttpRequest'
-                    },
-                    body: JSON.stringify({ password })
-                });
-
-                if (!response.ok) {
-                    const errorData = await response.json().catch(() => ({}));
-                    throw new Error(errorData.message || 'Verification failed');
-                }
-
-                return await response.json();
-            } catch (error) {
-                console.error('Verification error:', error);
-                throw error;
-            }
-        }
-
-        confirmBtn.addEventListener('click', async function () {
-            // Reset UI state
-            passwordInput.classList.remove('error');
-            passwordError.textContent = '';
-            confirmBtn.disabled = true;
-            confirmBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Verifying...';
-
-            try {
-                const data = await verifyPassword(passwordInput.value);
-
-                if (data.valid) {
-                    document.getElementById('formPassword').value = passwordInput.value;
-                    document.getElementById('delete-business-form').submit();
+            
+            // AI Assistant Chat
+            const aiAssistantBtn = document.getElementById('aiAssistantBtn');
+            const aiChatContainer = document.getElementById('aiChatContainer');
+            const closeAiChat = document.getElementById('closeAiChat');
+            const sendAiMessage = document.getElementById('sendAiMessage');
+            const aiChatInput = document.getElementById('aiChatInput');
+            const aiChatBody = document.getElementById('aiChatBody');
+            const openAiChatLink = document.getElementById('openAiChat');
+            
+            // Delete Business Modal
+            const deleteBusinessModal = document.getElementById('deleteBusinessModal');
+            const deleteBusinessForm = document.getElementById('deleteBusinessForm');
+            const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
+            const passwordConfirmation = document.getElementById('passwordConfirmation');
+            const passwordError = document.getElementById('passwordError');
+            
+            // Set the delete form action when modal opens
+            deleteBusinessModal.addEventListener('show.bs.modal', function() {
+                // Get the current user's business
+                const business = @json(auth()->user()->business ?? null);
+                if (business && business.id) {
+                    deleteBusinessForm.action = `/business/${business.id}`;
                 } else {
-                    passwordInput.classList.add('error');
-                    passwordError.textContent = data.message || 'Incorrect password';
-                }
-            } catch (error) {
-                passwordInput.classList.add('error');
-                passwordError.textContent = error.message || 'Failed to verify password';
-            } finally {
-                confirmBtn.disabled = false;
-                confirmBtn.textContent = 'Delete Business';
-            }
-        });
-        // Close modal with Escape key
-        document.addEventListener('keydown', function (e) {
-            if (e.key === 'Escape' && modal.classList.contains('active')) {
-                hideModal();
-            }
-        });
-    });
-</script>
-<script>
-    document.addEventListener('DOMContentLoaded', function () {
-        const dropdownToggles = document.querySelectorAll('.dropdown-toggle');
-
-        dropdownToggles.forEach(toggle => {
-            toggle.addEventListener('click', function (e) {
-                e.preventDefault();
-
-                const parent = this.closest('.dropdown');
-                parent.classList.toggle('open');
-
-                // Optional: Close other dropdowns when one opens
-                document.querySelectorAll('.dropdown').forEach(drop => {
-                    if (drop !== parent) {
-                        drop.classList.remove('open');
+                    // Handle case where user doesn't have a business
+                    alert('No business found to delete.');
+                    const modal = bootstrap.Modal.getInstance(deleteBusinessModal);
+                    if (modal) {
+                        modal.hide();
                     }
-                });
+                }
+            });
+            
+            // Handle delete confirmation
+            confirmDeleteBtn.addEventListener('click', function() {
+                const password = passwordConfirmation.value;
+                if (!password) {
+                    passwordError.textContent = 'Password is required';
+                    passwordError.style.display = 'block';
+                    return;
+                }
+                
+                // Set the password in the hidden field
+                document.getElementById('formPassword').value = password;
+                
+                // Submit the form
+                deleteBusinessForm.submit();
+            });
+            
+            // Clear password error when user types
+            passwordConfirmation.addEventListener('input', function() {
+                passwordError.style.display = 'none';
+            });
+            
+            aiAssistantBtn.addEventListener('click', function() {
+                aiChatContainer.classList.toggle('active');
+            });
+            
+            openAiChatLink.addEventListener('click', function(e) {
+                e.preventDefault();
+                aiChatContainer.classList.add('active');
+            });
+            
+            closeAiChat.addEventListener('click', function() {
+                aiChatContainer.classList.remove('active');
+            });
+            
+            function addAiMessage(message, isUser = false) {
+                const messageDiv = document.createElement('div');
+                messageDiv.className = `d-flex mb-3`;
+                
+                messageDiv.innerHTML = `
+                    <div class="flex-shrink-0 me-2">
+                        <i class="fas ${isUser ? 'fa-user' : 'fa-robot text-info'}"></i>
+                    </div>
+                    <div class="flex-grow-1">
+                        <div class="card ${isUser ? 'bg-primary text-white' : 'bg-light'}">
+                            <div class="card-body p-2">
+                                <p class="mb-0">${message}</p>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                aiChatBody.appendChild(messageDiv);
+                aiChatBody.scrollTop = aiChatBody.scrollHeight;
+            }
+            
+            function sendMessage() {
+                const message = aiChatInput.value.trim();
+                if (message) {
+                    addAiMessage(message, true);
+                    aiChatInput.value = '';
+                    
+                    // Simulate AI response
+                    setTimeout(() => {
+                        const responses = [
+                            "I can help you analyze your sales data. What would you like to know?",
+                            "Based on your inventory levels, you might want to reorder T-shirts soon.",
+                            "Your weekend sales are consistently higher than weekdays. Consider running promotions on Fridays.",
+                            "I notice customers often buy jeans with shirts. You might create a bundle offer."
+                        ];
+                        
+                        const randomResponse = responses[Math.floor(Math.random() * responses.length)];
+                        addAiMessage(randomResponse);
+                    }, 1000);
+                }
+            }
+            
+            sendAiMessage.addEventListener('click', sendMessage);
+            
+            aiChatInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    sendMessage();
+                }
+            });
+
+            // Expose a function to open the delete modal and set a callback for password confirmation
+            window.openDeleteBusinessModal = function(onConfirm) {
+                const modal = new bootstrap.Modal(document.getElementById('deleteBusinessModal'));
+                modal.show();
+                // Optionally, you can set a callback for after confirmation
+                window._deleteBusinessCallback = onConfirm;
+            }
+
+            // In the confirmDeleteBtn click handler, after successful password check:
+            confirmDeleteBtn.addEventListener('click', function() {
+                const password = passwordConfirmation.value;
+                if (!password) {
+                    passwordError.textContent = 'Password is required';
+                    passwordError.style.display = 'block';
+                    return;
+                }
+                document.getElementById('formPassword').value = password;
+                if (window._deleteBusinessCallback) {
+                    window._deleteBusinessCallback(password);
+                    window._deleteBusinessCallback = null;
+                } else {
+                    deleteBusinessForm.submit();
+                }
             });
         });
-    });
-</script>
+    </script>
+
+    <!-- Logout Form -->
+    <form id="logout-form" action="{{ route('logout') }}" method="POST" class="d-none">
+        @csrf
+    </form>
+</body>
+</html>
