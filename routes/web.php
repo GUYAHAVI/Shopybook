@@ -17,6 +17,8 @@ use App\Http\Controllers\StaffController;
 use App\Http\Controllers\ServiceRecordsController;
 use App\Http\Controllers\CostController;
 use App\Http\Controllers\CommissionPayoutController;
+use App\Http\Controllers\SupplierController;
+use App\Http\Controllers\EmployeeController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Route;
@@ -215,6 +217,28 @@ Route::middleware(['auth', 'verified'])->group(function () {
         // Commission calculation and payout routes
         Route::post('/calculate', [CommissionPayoutController::class, 'calculateCommissions'])->name('commissions.calculate');
         Route::post('/{commission}/payout', [CommissionPayoutController::class, 'payout'])->name('commissions.payout');
+    });
+
+    // Suppliers Routes
+    Route::prefix('suppliers')->middleware('has.business')->group(function () {
+        Route::get('/', [SupplierController::class, 'index'])->name('suppliers.index');
+        Route::get('/create', [SupplierController::class, 'create'])->name('suppliers.create');
+        Route::post('/', [SupplierController::class, 'store'])->name('suppliers.store');
+        Route::get('/{supplier}', [SupplierController::class, 'show'])->name('suppliers.show');
+        Route::get('/{supplier}/edit', [SupplierController::class, 'edit'])->name('suppliers.edit');
+        Route::put('/{supplier}', [SupplierController::class, 'update'])->name('suppliers.update');
+        Route::delete('/{supplier}', [SupplierController::class, 'destroy'])->name('suppliers.destroy');
+    });
+
+    // Employees Routes
+    Route::prefix('employees')->middleware('has.business')->group(function () {
+        Route::get('/', [EmployeeController::class, 'index'])->name('employees.index');
+        Route::get('/create', [EmployeeController::class, 'create'])->name('employees.create');
+        Route::post('/', [EmployeeController::class, 'store'])->name('employees.store');
+        Route::get('/{employee}', [EmployeeController::class, 'show'])->name('employees.show');
+        Route::get('/{employee}/edit', [EmployeeController::class, 'edit'])->name('employees.edit');
+        Route::put('/{employee}', [EmployeeController::class, 'update'])->name('employees.update');
+        Route::delete('/{employee}', [EmployeeController::class, 'destroy'])->name('employees.destroy');
     });
 
     // Payment Routes
