@@ -950,7 +950,7 @@
                 <!-- Suppliers - Show for product and hybrid businesses -->
                 @if(auth()->user()->business && in_array(auth()->user()->business->business_type, ['product', 'hybrid']))
                 <li class="nav-item">
-                    <a href="#" class="nav-link">
+                    <a href="{{ route('suppliers.index') }}" class="nav-link">
                         <i class="fas fa-truck me-2"></i>
                         {{ t('suppliers') }}
                     </a>
