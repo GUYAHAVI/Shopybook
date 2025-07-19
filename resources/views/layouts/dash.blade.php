@@ -18,36 +18,68 @@
     
     <style>
         :root {
-            --primary-color: #13e8e9;
-            --secondary-color: #020258;
-            --danger-color: #e74a3b;
-            --warning-color: #f6c23e;
-            --info-color: #36b9cc;
-            --dark-color: #5a5c69;
-            --light-color: #f8f9fc;
+            --primary-color: #020258;
+            --primary-dark: #020258;
+            --secondary-color: #6c757d;
+            --accent-color: #007bff;
+            --success-color: #28a745;
+            --danger-color: #dc3545;
+            --warning-color: #ffc107;
+            --info-color: #007bff;
+            --dark-color: #343a40;
+            --light-color: #f8f9fa;
+            --white: #ffffff;
+            --gray-100: #f8f9fa;
+            --gray-200: #e9ecef;
+            --gray-300: #dee2e6;
+            --gray-600: #6c757d;
+            --gray-700: #495057;
+            --gray-800: #343a40;
         }
         
-        body, .container-fluid, .card, .dashboard-content, .main-content, .content, .sidebar, .navbar, .form-control {
-            background: #fff !important;
-            color: #020258 !important;
+        /* Dark mode variables */
+        [data-theme="dark"] {
+            --primary-color: #4a5cff;
+            --primary-dark: #3a4bef;
+            --secondary-color: #6c757d;
+            --accent-color: #5a6fff;
+            --success-color: #28a745;
+            --danger-color: #dc3545;
+            --warning-color: #ffc107;
+            --info-color: #5a6fff;
+            --dark-color: #1a1a1a;
+            --light-color: #2d2d2d;
+            --white: #1e1e1e;
+            --gray-100: #2d2d2d;
+            --gray-200: #3a3a3a;
+            --gray-300: #4a4a4a;
+            --gray-600: #9ca3af;
+            --gray-700: #d1d5db;
+            --gray-800: #f3f4f6;
         }
         
         body {
             font-family: 'Montserrat', sans-serif;
             overflow-x: hidden;
+            background-color: var(--gray-100);
+            color: var(--gray-800);
+        }
+        
+        .container-fluid, .dashboard-content, .main-content, .content {
+            background: transparent;
+            color: var(--gray-800);
         }
         
         /* Sidebar styling */
         #sidebar {
             width: 250px;
             min-height: 100vh;
-            background: #020258;
-            color: #13e8e9;
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
+            color: var(--white);
             position: fixed;
             transition: all 0.3s;
             z-index: 1000;
-            box-shadow: 4px 0 10px rgba(19, 232, 233, 0.2);
-            border-right: 2px solid #13e8e9;
+            box-shadow: 2px 0 15px rgba(0, 0, 0, 0.1);
         }
         
         #sidebar .brand {
@@ -55,44 +87,55 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 1.2rem;
-            font-weight: 800;
-            color: #13e8e9;
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: var(--white);
             text-decoration: none;
-            border-bottom: 1px solid rgba(19, 232, 233, 0.3);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
             font-family: "Cinzel Decorative", serif;
+            background: rgba(255, 255, 255, 0.1);
         }
         
         #sidebar .nav-link {
-            color: rgba(19, 232, 233, 0.8);
+            color: rgba(255, 255, 255, 0.9);
             padding: 0.75rem 1rem;
-            font-weight: 600;
+            font-weight: 500;
             border-left: 3px solid transparent;
             transition: all 0.3s;
+            font-size: 0.9rem;
         }
         
-        #sidebar .nav-link:hover, 
+        #sidebar .nav-link:hover {
+            color: var(--white);
+            background: rgba(255, 255, 255, 0.1);
+            border-left: 3px solid var(--white);
+            transform: translateX(2px);
+        }
+        
         #sidebar .nav-link.active {
-            color: #13e8e9;
-            background: rgba(19, 232, 233, 0.1);
-            border-left: 3px solid #13e8e9;
+            color: var(--white);
+            background: rgba(255, 255, 255, 0.15);
+            border-left: 3px solid var(--white);
+            font-weight: 600;
         }
         
         #sidebar .dropdown-menu {
-            background: rgba(2, 2, 88, 0.9);
-            border: 1px solid #13e8e9;
+            background: rgba(0, 0, 0, 0.2);
+            border: none;
             padding: 0;
+            margin-left: 1rem;
         }
         
         #sidebar .dropdown-item {
-            color: rgba(19, 232, 233, 0.8);
-            padding: 0.5rem 1.5rem;
+            color: rgba(255, 255, 255, 0.8);
+            padding: 0.5rem 1rem;
             font-size: 0.85rem;
+            border-radius: 0;
         }
         
         #sidebar .dropdown-item:hover {
-            color: #13e8e9;
-            background: rgba(19, 232, 233, 0.1);
+            color: var(--white);
+            background: rgba(255, 255, 255, 0.1);
         }
         
         /* Main content area */
@@ -100,15 +143,24 @@
             margin-left: 250px;
             min-height: 100vh;
             transition: all 0.3s;
-            background-color: #020258;
+            background-color: var(--gray-100);
         }
         
         /* Top navbar */
         .top-navbar {
             height: 70px;
-            box-shadow: 0 0.15rem 1.75rem 0 rgba(19, 232, 233, 0.15);
-            background-color: rgba(2, 2, 88, 0.95);
-            border-bottom: 2px solid #13e8e9;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            background-color: var(--white);
+            border-bottom: 1px solid var(--gray-200);
+        }
+        
+        .top-navbar .navbar-brand,
+        .top-navbar .nav-link {
+            color: var(--gray-700);
+        }
+        
+        .top-navbar .nav-link:hover {
+            color: var(--primary-color);
         }
         
         .notification-badge {
@@ -116,6 +168,8 @@
             top: -5px;
             right: -5px;
             font-size: 0.7rem;
+            background: var(--danger-color);
+            color: var(--white);
         }
         
         /* AI Assistant Chat */
@@ -130,11 +184,11 @@
             width: 60px;
             height: 60px;
             border-radius: 50%;
-            background: #fff;
-            color: #020258;
+            background: var(--primary-color);
+            color: var(--white);
             font-size: 28px;
-            border: 2px solid #13e8e9;
-            box-shadow: 0 4px 20px rgba(19, 232, 233, 0.15);
+            border: none;
+            box-shadow: 0 4px 20px rgba(0, 123, 255, 0.3);
             cursor: pointer;
             transition: all 0.3s;
             display: flex;
@@ -143,9 +197,9 @@
         }
         
         .ai-assistant-btn:hover {
-            background: #13e8e9;
-            color: #020258;
-            border-color: #020258;
+            background: var(--primary-dark);
+            transform: scale(1.05);
+            box-shadow: 0 6px 25px rgba(0, 123, 255, 0.4);
         }
         
         .ai-chat-container {
@@ -154,10 +208,10 @@
             right: 0;
             width: 350px;
             height: 500px;
-            background: #fff;
-            border: 2px solid #020258;
-            border-radius: 10px;
-            box-shadow: 0 5px 25px rgba(2,2,88,0.10);
+            background: var(--white);
+            border: 1px solid var(--gray-200);
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
             display: none;
             flex-direction: column;
         }
@@ -168,10 +222,10 @@
         
         .ai-chat-header {
             padding: 15px;
-            background: #020258;
-            color: #fff;
-            border-radius: 10px 10px 0 0;
-            font-weight: bold;
+            background: var(--primary-color);
+            color: var(--white);
+            border-radius: 15px 15px 0 0;
+            font-weight: 600;
             display: flex;
             align-items: center;
             justify-content: space-between;
@@ -181,179 +235,358 @@
             flex-grow: 1;
             padding: 15px;
             overflow-y: auto;
-            background: #fff;
+            background: var(--white);
+            color: var(--gray-800);
         }
         
         .ai-chat-body .fa-robot {
-            color: #13e8e9;
-            background: #020258;
+            color: var(--white);
+            background: var(--primary-color);
             border-radius: 50%;
-            padding: 6px;
-            font-size: 22px;
+            padding: 8px;
+            font-size: 18px;
+            width: 35px;
+            height: 35px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
         
         .ai-chat-body .fa-user {
-            color: #fff;
-            background: #020258;
+            color: var(--white);
+            background: var(--gray-600);
             border-radius: 50%;
-            padding: 6px;
-            font-size: 22px;
+            padding: 8px;
+            font-size: 18px;
+            width: 35px;
+            height: 35px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
         
         .ai-chat-body .card.bg-light {
-            background: #f8f9fa !important;
-            color: #020258;
+            background: var(--gray-100) !important;
+            color: var(--gray-800);
+            border: 1px solid var(--gray-200);
         }
         
         .ai-chat-body .card.bg-primary {
-            background: #020258 !important;
-            color: #fff;
+            background: var(--primary-color) !important;
+            color: var(--white);
+            border: 1px solid var(--primary-color);
         }
         
         .ai-chat-footer {
             padding: 15px;
-            border-top: 1px solid #13e8e9;
-            background: #f8f9fa;
-            border-radius: 0 0 10px 10px;
+            border-top: 1px solid var(--gray-200);
+            background: var(--gray-50);
+            border-radius: 0 0 15px 15px;
         }
         
         /* Delete Business Modal Styling */
         .modal-danger .modal-content {
-            background: #fff;
-            border: 2px solid #dc3545;
+            background: var(--white);
+            border: 1px solid var(--danger-color);
             border-radius: 10px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
         }
         
         .modal-danger .modal-header {
-            background: #020258;
-            color: #fff;
-            border-bottom: 1px solid #dc3545;
+            background: var(--danger-color);
+            color: var(--white);
+            border-bottom: none;
             border-radius: 10px 10px 0 0;
-            align-items: center;
         }
         
         .modal-danger .modal-title {
             display: flex;
             align-items: center;
             gap: 0.5rem;
+            font-weight: 600;
         }
         
         .modal-danger .modal-title .fa-exclamation-triangle {
-            color: #dc3545;
-            font-size: 1.5rem;
+            color: var(--white);
+            font-size: 1.2rem;
         }
         
         .modal-danger .modal-body {
-            background: #fff;
-            color: #020258;
-            font-size: 1.1rem;
+            background: var(--white);
+            color: var(--gray-800);
+            padding: 2rem;
         }
         
         .modal-danger .modal-body .text-danger {
-            color: #dc3545 !important;
+            color: var(--danger-color) !important;
         }
         
         .modal-danger .form-label {
-            color: #020258;
+            color: var(--gray-700);
             font-weight: 500;
         }
         
         .modal-danger .form-control {
-            border: 2px solid #dc3545;
-            background: #f8f9fa;
-            color: #020258;
+            border: 1px solid var(--gray-300);
+            background: var(--white);
+            color: var(--gray-800);
         }
         
         .modal-danger .form-control:focus {
-            border-color: #020258;
-            box-shadow: 0 0 0 2px #dc3545;
-        }
-        
-        .modal-danger .invalid-feedback {
-            color: #dc3545;
-            font-size: 0.95rem;
+            border-color: var(--danger-color);
+            box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25);
         }
         
         .modal-danger .btn-danger {
-            background: #dc3545;
-            color: #fff;
-            border: 2px solid #dc3545;
+            background: var(--danger-color);
+            border: 1px solid var(--danger-color);
+            color: var(--white);
             font-weight: 600;
             padding: 0.5rem 1.5rem;
-            border-radius: 6px;
-            transition: background 0.2s;
         }
         
         .modal-danger .btn-danger:hover {
-            background: #b71c1c;
-            border-color: #b71c1c;
+            background: #c82333;
+            border-color: #c82333;
         }
         
         /* Form controls */
         .form-control {
-            background: #f8f9fa !important;
-            color: #020258 !important;
-            border: 2px solid #13e8e9 !important;
+            background: var(--white);
+            color: var(--gray-800);
+            border: 1px solid var(--gray-300);
+            border-radius: 6px;
+            padding: 0.5rem 0.75rem;
+            transition: all 0.15s ease-in-out;
         }
         
         .form-control:focus {
-            border-color: #020258 !important;
-            box-shadow: 0 0 0 3px rgba(19, 232, 233, 0.1) !important;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+            background: var(--white);
+            color: var(--gray-800);
         }
         
         .form-control::placeholder {
-            color: rgba(19, 232, 233, 0.6);
+            color: var(--gray-600);
+        }
+        
+        .form-label {
+            color: var(--gray-700);
+            font-weight: 500;
+            margin-bottom: 0.5rem;
         }
         
         /* Buttons */
         .btn-primary {
-            background: #020258 !important;
-            color: #fff !important;
-            border: 2px solid #13e8e9 !important;
+            background: var(--primary-color);
+            border: 1px solid var(--primary-color);
+            color: var(--white);
+            font-weight: 500;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            transition: all 0.15s ease-in-out;
         }
         
         .btn-primary:hover {
-            background: #13e8e9 !important;
-            color: #020258 !important;
-            border: 2px solid #020258 !important;
+            background: var(--primary-dark);
+            border-color: var(--primary-dark);
+            color: var(--white);
+            transform: translateY(-1px);
         }
         
         .btn-outline-primary {
-            border: 2px solid #13e8e9;
-            color: #13e8e9;
+            border: 1px solid var(--primary-color);
+            color: var(--primary-color);
+            background: transparent;
+            font-weight: 500;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            transition: all 0.15s ease-in-out;
         }
         
         .btn-outline-primary:hover {
-            background: #13e8e9;
-            color: #020258;
+            background: var(--primary-color);
+            color: var(--white);
+            transform: translateY(-1px);
+        }
+        
+        .btn-success {
+            background: var(--success-color);
+            border: 1px solid var(--success-color);
+            color: var(--white);
+        }
+        
+        .btn-success:hover {
+            background: #218838;
+            border-color: #218838;
+        }
+        
+        .btn-danger {
+            background: var(--danger-color);
+            border: 1px solid var(--danger-color);
+            color: var(--white);
+        }
+        
+        .btn-danger:hover {
+            background: #c82333;
+            border-color: #c82333;
+        }
+        
+        .btn-info {
+            background: var(--info-color);
+            border: 1px solid var(--info-color);
+            color: var(--white);
+        }
+        
+        .btn-outline-info {
+            border: 1px solid var(--info-color);
+            color: var(--info-color);
+            background: transparent;
+        }
+        
+        .btn-outline-info:hover {
+            background: var(--info-color);
+            color: var(--white);
         }
         
         /* Cards */
         .card {
-            background: rgba(2, 2, 88, 0.8);
-            border: 2px solid rgba(19, 232, 233, 0.3);
-            color: #13e8e9;
+            background: var(--white);
+            border: 1px solid var(--gray-200);
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+            color: var(--gray-800);
+        }
+        
+        .card:hover {
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+            transform: translateY(-2px);
         }
         
         .card-header {
-            background: #f8f9fa !important;
-            color: #020258 !important;
-            border-bottom: 1px solid #13e8e9 !important;
+            background: var(--white);
+            border-bottom: 1px solid var(--gray-200);
+            border-radius: 10px 10px 0 0;
+            padding: 1.25rem;
+            color: var(--gray-800);
+        }
+        
+        .card-header h6 {
+            color: var(--primary-color);
+            font-weight: 600;
+            margin: 0;
+        }
+        
+        .card-body {
+            padding: 1.25rem;
+            color: var(--gray-800);
+        }
+        
+        /* Tables */
+        .table {
+            color: var(--gray-800);
+        }
+        
+        .table th {
+            background: var(--gray-50);
+            color: var(--gray-700);
+            font-weight: 600;
+            border-bottom: 2px solid var(--gray-200);
+            padding: 1rem;
+        }
+        
+        .table td {
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid var(--gray-200);
+        }
+        
+        .table-hover tbody tr:hover {
+            background: var(--gray-50);
         }
         
         /* Alerts */
+        .alert {
+            border: none;
+            border-radius: 8px;
+            padding: 1rem 1.25rem;
+            margin-bottom: 1rem;
+            border-left: 4px solid;
+        }
+        
         .alert-success {
-            background: rgba(19, 232, 233, 0.1);
-            border: 2px solid #13e8e9;
-            color: #13e8e9;
+            background: rgba(40, 167, 69, 0.1);
+            color: var(--success-color);
+            border-left-color: var(--success-color);
         }
         
         .alert-danger {
             background: rgba(220, 53, 69, 0.1);
-            border: 2px solid #dc3545;
-            color: #dc3545;
+            color: var(--danger-color);
+            border-left-color: var(--danger-color);
         }
         
+        .alert-info {
+            background: rgba(0, 123, 255, 0.1);
+            color: var(--info-color);
+            border-left-color: var(--info-color);
+        }
+        
+        .alert-warning {
+            background: rgba(255, 193, 7, 0.1);
+            color: #856404;
+            border-left-color: var(--warning-color);
+        }
+        
+        /* Modals */
+        .modal-content {
+            border: none;
+            border-radius: 10px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+        }
+        
+        .modal-header {
+            background: var(--primary-color);
+            color: var(--white);
+            border-bottom: none;
+            border-radius: 10px 10px 0 0;
+            padding: 1.25rem;
+        }
+        
+        .modal-header.bg-success {
+            background: var(--success-color) !important;
+        }
+        
+        .modal-body {
+            padding: 2rem;
+            color: var(--gray-800);
+        }
+        
+        .modal-footer {
+            border-top: 1px solid var(--gray-200);
+            padding: 1.25rem;
+        }
+        
+        /* Text colors */
+        .text-primary { color: var(--primary-color) !important; }
+        .text-success { color: var(--success-color) !important; }
+        .text-danger { color: var(--danger-color) !important; }
+        .text-info { color: var(--info-color) !important; }
+        .text-warning { color: #856404 !important; }
+        .text-gray-800 { color: var(--gray-800) !important; }
+        .text-muted { color: var(--gray-600) !important; }
+        
+        /* Utility classes */
+        .shadow {
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1) !important;
+        }
+        
+        .shadow-sm {
+            box-shadow: 0 1px 5px rgba(0, 0, 0, 0.1) !important;
+        }
+        
+        /* Responsive Design */
         @media (max-width: 768px) {
             #sidebar {
                 margin-left: -250px;
@@ -370,6 +603,131 @@
             #content.active {
                 margin-left: 250px;
             }
+            
+            .ai-chat-container {
+                width: 300px;
+                height: 400px;
+            }
+            
+            .card {
+                margin-bottom: 1rem;
+            }
+            
+            .table-responsive {
+                font-size: 0.875rem;
+            }
+            
+            .btn {
+                padding: 0.375rem 0.75rem;
+                font-size: 0.875rem;
+            }
+        }
+        
+        @media (max-width: 576px) {
+            .ai-chat-container {
+                width: 280px;
+                height: 350px;
+                right: -10px;
+            }
+            
+            .container-fluid {
+                padding: 0.5rem;
+            }
+            
+            .card-header {
+                padding: 1rem;
+            }
+            
+            .card-body {
+                padding: 1rem;
+            }
+            
+            .table th,
+            .table td {
+                padding: 0.5rem;
+                font-size: 0.875rem;
+            }
+        }
+        
+        /* Smooth animations */
+        * {
+            transition: color 0.15s ease-in-out, background-color 0.15s ease-in-out, border-color 0.15s ease-in-out;
+        }
+        
+        /* Dark mode toggle button */
+        #darkModeToggle {
+            color: var(--gray-700);
+            transition: all 0.3s ease;
+            padding: 0.5rem;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        #darkModeToggle:hover {
+            color: var(--primary-color);
+            background-color: var(--gray-100);
+            transform: scale(1.1);
+        }
+        
+        #darkModeToggle:focus {
+            outline: 2px solid var(--primary-color);
+            outline-offset: 2px;
+        }
+        
+        /* Dark mode specific styles */
+        [data-theme="dark"] body {
+            background-color: var(--dark-color);
+            color: var(--gray-800);
+        }
+        
+        [data-theme="dark"] .top-navbar {
+            background-color: var(--white) !important;
+            border-bottom: 1px solid var(--gray-200);
+        }
+        
+        [data-theme="dark"] #darkModeToggle {
+            color: var(--gray-700);
+        }
+        
+        [data-theme="dark"] #darkModeToggle:hover {
+            color: var(--primary-color);
+            background-color: var(--gray-100);
+        }
+        
+        /* Focus states for accessibility */
+        .btn:focus,
+        .form-control:focus,
+        .nav-link:focus {
+            outline: 2px solid var(--primary-color);
+            outline-offset: 2px;
+        }
+        
+        /* Loading states */
+        .spinner-border-sm {
+            width: 1rem;
+            height: 1rem;
+        }
+        
+        /* Custom scrollbar */
+        .ai-chat-body::-webkit-scrollbar {
+            width: 4px;
+        }
+        
+        .ai-chat-body::-webkit-scrollbar-track {
+            background: var(--gray-100);
+        }
+        
+        .ai-chat-body::-webkit-scrollbar-thumb {
+            background: var(--gray-400);
+            border-radius: 2px;
+        }
+        
+        .ai-chat-body::-webkit-scrollbar-thumb:hover {
+            background: var(--gray-500);
         }
     </style>
 </head>
@@ -426,7 +784,8 @@
                     </div>
                 </li>
                 
-                <!-- Products -->
+                <!-- Products - Show for product and hybrid businesses -->
+                @if(auth()->user()->business && in_array(auth()->user()->business->business_type, ['product', 'hybrid']))
                 <li class="nav-item">
                     <a class="nav-link dropdown-toggle" data-bs-toggle="collapse" href="#productsCollapse" role="button">
                         <i class="fas fa-boxes me-2"></i>
@@ -461,6 +820,46 @@
                         </ul>
                     </div>
                 </li>
+                @endif
+                
+                <!-- Services - Show for service and hybrid businesses -->
+                @if(auth()->user()->business && in_array(auth()->user()->business->business_type, ['service', 'hybrid']))
+                <li class="nav-item">
+                    <a class="nav-link dropdown-toggle" data-bs-toggle="collapse" href="#servicesCollapse" role="button">
+                        <i class="fas fa-cut me-2"></i>
+                        {{ t('services') }}
+                    </a>
+                    <div class="collapse" id="servicesCollapse">
+                        <ul class="nav flex-column ps-3">
+                            <li class="nav-item">
+                                <a href="{{ route('services.index') }}" class="nav-link">
+                                    <i class="fas fa-list me-2"></i> {{ t('manage_services') }}
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="{{ route('staff.index') }}" class="nav-link">
+                                    <i class="fas fa-users me-2"></i> {{ t('staff') }}
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="{{ route('service-records.index') }}" class="nav-link">
+                                    <i class="fas fa-clipboard-list me-2"></i> {{ t('service_records') }}
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="{{ route('costs.index') }}" class="nav-link">
+                                    <i class="fas fa-money-bill-wave me-2"></i> {{ t('costs') }}
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="{{ route('commissions.index') }}" class="nav-link">
+                                    <i class="fas fa-hand-holding-usd me-2"></i> {{ t('commissions') }}
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                </li>
+                @endif
                 
                 <!-- Sales -->
                 <li class="nav-item">
@@ -470,12 +869,14 @@
                     </a>
                     <div class="collapse" id="salesCollapse">
                         <ul class="nav flex-column ps-3">
+                            @if(auth()->user()->business && in_array(auth()->user()->business->business_type, ['product', 'hybrid']))
                             <li class="nav-item">
                                 <a href="{{ route('sales.pos') }}" class="nav-link">
                                     <i class="fas fa-shopping-cart me-2"></i>
                                     {{ t('pos_system') }}
                                 </a>
                             </li>
+                            @endif
                             <li class="nav-item">
                                 <a href="{{ route('sales.orders') }}" class="nav-link">
                                     <i class="fas fa-clipboard-list me-2"></i>
@@ -490,8 +891,8 @@
                             </li>
                             <li class="nav-item">
                                 <a href="{{ route('sales.customers') }}" class="nav-link">
-                                    <i class="fas fa-users me-2"></i>
-                                    {{ t('customers') }}
+                                    <i class="fas fa-users"></i>
+                                    <span>Customers</span>
                                 </a>
                             </li>
                             <li class="nav-item">
@@ -546,11 +947,20 @@
                     </div>
                 </li>
                 
-                <!-- Suppliers -->
+                <!-- Suppliers - Show for product and hybrid businesses -->
+                @if(auth()->user()->business && in_array(auth()->user()->business->business_type, ['product', 'hybrid']))
                 <li class="nav-item">
                     <a href="#" class="nav-link">
                         <i class="fas fa-truck me-2"></i>
                         {{ t('suppliers') }}
+                    </a>
+                </li>
+                @endif
+                <!-- Customers -->
+                <li class="nav-item">
+                    <a href="{{ route('sales.customers') }}" class="nav-link">
+                        <i class="fas fa-users me-2"></i>
+                        Customers
                     </a>
                 </li>
                 
@@ -599,44 +1009,6 @@
                         {{ t('ai_assistant') }}
                     </a>
                 </li>
-
-                @if(auth()->user()->business && in_array(auth()->user()->business->business_type, ['service', 'hybrid']))
-                <li class="nav-item">
-                    <a class="nav-link dropdown-toggle" data-bs-toggle="collapse" href="#servicesCollapse" role="button">
-                        <i class="fas fa-cut me-2"></i>
-                        {{ t('services') }}
-                    </a>
-                    <div class="collapse" id="servicesCollapse">
-                        <ul class="nav flex-column ps-3">
-                            <li class="nav-item">
-                                <a href="{{ route('services.index') }}" class="nav-link">
-                                    <i class="fas fa-list me-2"></i> {{ t('manage_services') }}
-                                </a>
-                            </li>
-                            <li class="nav-item">
-                                <a href="{{ route('staff.index') }}" class="nav-link">
-                                    <i class="fas fa-users me-2"></i> {{ t('staff') }}
-                                </a>
-                            </li>
-                            <li class="nav-item">
-                                <a href="{{ route('service-records.index') }}" class="nav-link">
-                                    <i class="fas fa-clipboard-list me-2"></i> {{ t('service_records') }}
-                                </a>
-                            </li>
-                            <li class="nav-item">
-                                <a href="{{ route('costs.index') }}" class="nav-link">
-                                    <i class="fas fa-money-bill-wave me-2"></i> {{ t('costs') }}
-                                </a>
-                            </li>
-                            <li class="nav-item">
-                                <a href="{{ route('commissions.index') }}" class="nav-link">
-                                    <i class="fas fa-hand-holding-usd me-2"></i> {{ t('commissions') }}
-                                </a>
-                            </li>
-                        </ul>
-                    </div>
-                </li>
-                @endif
             </ul>
         </div>
         
@@ -696,11 +1068,18 @@
                         </ul>
                     </div>
                     
+                    <!-- Dark Mode Toggle -->
+                    <div class="me-3">
+                        <button class="btn btn-link p-0 border-0 bg-transparent" id="darkModeToggle" title="Toggle Dark Mode">
+                            <i class="fas fa-moon fa-lg" id="darkModeIcon"></i>
+                        </button>
+                    </div>
+                    
                     <!-- User Profile -->
                     <div class="dropdown">
                         <a class="d-flex align-items-center text-decoration-none" href="#" role="button" id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">
                             <img src="https://placehold.co/600x400/png" alt="Profile" class="rounded-circle me-2" width="40" height="40">
-                            <span class="d-none d-md-inline">{{ t('user_name') }}</span>
+                            <span class="d-none d-md-inline">{{ Auth::user()->name }}</span>
                         </a>
                         <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
                             <li><a class="dropdown-item" href="#">{{ t('profile') }}</a></li>
@@ -804,6 +1183,37 @@
     
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+            // Dark Mode Toggle
+            const darkModeToggle = document.getElementById('darkModeToggle');
+            const darkModeIcon = document.getElementById('darkModeIcon');
+            const body = document.body;
+            
+            // Check for saved theme preference or default to light mode
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            body.setAttribute('data-theme', savedTheme);
+            updateDarkModeIcon(savedTheme);
+            
+            darkModeToggle.addEventListener('click', function() {
+                const currentTheme = body.getAttribute('data-theme');
+                const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+                
+                body.setAttribute('data-theme', newTheme);
+                localStorage.setItem('theme', newTheme);
+                updateDarkModeIcon(newTheme);
+            });
+            
+            function updateDarkModeIcon(theme) {
+                if (theme === 'dark') {
+                    darkModeIcon.classList.remove('fa-moon');
+                    darkModeIcon.classList.add('fa-sun');
+                    darkModeToggle.title = 'Switch to Light Mode';
+                } else {
+                    darkModeIcon.classList.remove('fa-sun');
+                    darkModeIcon.classList.add('fa-moon');
+                    darkModeToggle.title = 'Switch to Dark Mode';
+                }
+            }
+            
             // Sidebar Toggle
             const sidebar = document.getElementById('sidebar');
             const content = document.getElementById('content');

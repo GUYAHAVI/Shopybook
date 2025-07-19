@@ -198,6 +198,37 @@
     margin-bottom: 25px;
 }
 
+/* Selected Type Indicator */
+.selected-type-indicator {
+    background: #f0f9ff;
+    border: 1px solid #bfdbfe;
+    border-radius: 8px;
+    padding: 12px 16px;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.selected-type-indicator span {
+    display: flex;
+    align-items: center;
+}
+
+.selected-type-indicator a {
+    text-decoration: none;
+    font-size: 12px;
+    color: #6b7280;
+    padding: 4px 8px;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+}
+
+.selected-type-indicator a:hover {
+    background: #e5e7eb;
+    color: #374151;
+}
+
 .file-upload label {
     display: block;
     margin-bottom: 8px;
@@ -305,8 +336,27 @@ body, .container-fluid, .card, .main-content, .content {
         
         <!-- Fieldset 1: Business Information -->
         <fieldset>
-            <h2 class="fs-title">Business Information</h2>
-            <h3 class="fs-subtitle">Tell us about your business</h3>
+            <h2 class="fs-title">{{ $typeTitle ?? 'Business Information' }}</h2>
+            <h3 class="fs-subtitle">Tell us about your {{ strtolower($typeTitle ?? 'business') }}</h3>
+            
+            @if(isset($selectedType))
+            <div class="form-group">
+                <div class="selected-type-indicator">
+                    <i class="fas fa-check-circle" style="color: #10b981; margin-right: 8px;"></i>
+                    <span style="color: #374151; font-weight: 500;">
+                        Business Type: 
+                        @if($selectedType == 'product')
+                            <strong>Product-Based Business</strong>
+                        @elseif($selectedType == 'service')
+                            <strong>Service-Based Business</strong>
+                        @else
+                            <strong>Hybrid Business (Products & Services)</strong>
+                        @endif
+                    </span>
+                    <a href="{{ route('business.choose-type') }}" style="margin-left: 10px; color: #6b7280; font-size: 12px;">Change</a>
+                </div>
+            </div>
+            @endif
             
             <div class="form-group">
                 <input type="text" name="name" placeholder="Business Name*" value="{{ old('name') }}" required />

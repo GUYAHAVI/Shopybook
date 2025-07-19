@@ -36,23 +36,61 @@ class BusinessController extends Controller
 
         return view('businesses', compact('groupedBusinesses', 'sort', 'order'));
     }
-    public function create()
+    public function chooseType()
     {
+        // If user already has a business, redirect to dashboard
         if (auth()->user()->business) {
             return redirect()->route('dashboard');
         }
 
-        return view('business.create', [
-            'businessTypes' => [
+        return view('business.choose-type');
+    }
+
+    public function create(Request $request)
+    {
+        // Check if user already has a business
+        if (auth()->user()->business) {
+            return redirect()->route('dashboard');
+        }
+
+        $type = $request->get('type', 'product');
+        
+        // Map business types to appropriate categories
+        $businessTypeOptions = [
+            'product' => [
                 'retail' => 'Retail Shop',
-                'restaurant' => 'Restaurant',
-                'service' => 'Service Provider',
                 'online' => 'Online Store',
                 'fashion' => 'Fashion & Clothing',
                 'electronics' => 'Electronics',
                 'grocery' => 'Grocery Store',
                 'beauty' => 'Beauty & Cosmetics',
+                'wholesale' => 'Wholesale Business',
+                'other_product' => 'Other Product Business',
+            ],
+            'service' => [
+                'consulting' => 'Consulting Services',
+                'beauty_service' => 'Beauty & Wellness Services',
+                'repair' => 'Repair Services',
+                'cleaning' => 'Cleaning Services',
+                'education' => 'Education & Training',
+                'healthcare' => 'Healthcare Services',
+                'professional' => 'Professional Services',
+                'other_service' => 'Other Service Business',
+            ],
+            'hybrid' => [
+                'restaurant' => 'Restaurant',
+                'salon' => 'Salon & Spa',
+                'auto_service' => 'Auto Service Center',
+                'retail_service' => 'Retail with Services',
+                'tech_service' => 'Technology Sales & Support',
+                'other_hybrid' => 'Other Hybrid Business',
             ]
+        ];
+
+        return view('business.create', [
+            'businessTypes' => $businessTypeOptions[$type] ?? $businessTypeOptions['product'],
+            'selectedType' => $type,
+            'typeTitle' => ucfirst($type) . ' Business'
         ]);
     }
 

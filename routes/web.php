@@ -12,6 +12,11 @@ use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\BusinessAnalysisController;
 use App\Http\Controllers\LanguageController;
 use App\Http\Controllers\Auth\PasswordVerificationController;
+use App\Http\Controllers\ServicesController;
+use App\Http\Controllers\StaffController;
+use App\Http\Controllers\ServiceRecordsController;
+use App\Http\Controllers\CostController;
+use App\Http\Controllers\CommissionPayoutController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Route;
@@ -35,6 +40,7 @@ Route::get('/dashboard', [DashboardController::class, 'dashboard'])->name('dashb
 Route::middleware(['auth', 'verified'])->group(function () {
     // Business Profile Routes
     Route::prefix('business')->group(function () {
+        Route::get('/choose-type', [BusinessController::class, 'chooseType'])->name('business.choose-type');
         Route::get('/create', [BusinessController::class, 'create'])->name('business.create');
         Route::post('/store', [BusinessController::class, 'store'])->name('business.store');
         Route::get('/edit', [BusinessController::class, 'edit'])->name('business.edit')
@@ -102,10 +108,15 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('/orders/{order}/invoice', [SalesController::class, 'generateInvoice'])->name('sales.generate-invoice')->middleware('has.business');
         
         Route::get('/customers', [SalesController::class, 'customers'])->name('sales.customers')->middleware('has.business');
-        Route::get('/customers/{customer}', [SalesController::class, 'customerDetails'])->name('sales.customer-details')->middleware('has.business');
+        Route::get('/customers/{type}/{id}', [SalesController::class, 'showCustomer'])->name('sales.customers.show')->middleware('has.business');
         Route::post('/customers', [SalesController::class, 'storeCustomer'])->name('sales.store-customer')->middleware('has.business');
+        Route::get('/customers/create', [SalesController::class, 'createCustomer'])->name('sales.customers.create')->middleware('has.business');
         
         Route::get('/report', [SalesController::class, 'salesReport'])->name('sales.report')->middleware('has.business');
+        Route::get('/organization-customers', [SalesController::class, 'organizationCustomers'])->name('sales.organization-customers')->middleware('has.business');
+        Route::get('/organization-customers/create', [SalesController::class, 'createOrganizationCustomer'])->name('sales.organization-customers.create')->middleware('has.business');
+        Route::post('/organization-customers', [SalesController::class, 'storeOrganizationCustomer'])->name('sales.organization-customers.store')->middleware('has.business');
+        Route::get('/organization-customers/{organizationCustomer}', [SalesController::class, 'showOrganizationCustomer'])->name('sales.organization-customers.show')->middleware('has.business');
     });
 
     // Marketing Routes
@@ -140,6 +151,70 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/', [BusinessAnalysisController::class, 'index'])->name('business.analysis.index')->middleware('has.business');
         Route::post('/generate', [BusinessAnalysisController::class, 'generateAnalysis'])->name('business.analysis.generate')->middleware('has.business');
         Route::get('/financial', [BusinessAnalysisController::class, 'financialReport'])->name('business.analysis.financial')->middleware('has.business');
+    });
+
+    // Services Management Routes
+    Route::prefix('services')->middleware('has.business')->group(function () {
+        Route::get('/', [ServicesController::class, 'index'])->name('services.index');
+        Route::get('/create', [ServicesController::class, 'create'])->name('services.create');
+        Route::post('/', [ServicesController::class, 'store'])->name('services.store');
+        Route::get('/{service}', [ServicesController::class, 'show'])->name('services.show');
+        Route::get('/{service}/edit', [ServicesController::class, 'edit'])->name('services.edit');
+        Route::put('/{service}', [ServicesController::class, 'update'])->name('services.update');
+        Route::delete('/{service}', [ServicesController::class, 'destroy'])->name('services.destroy');
+    });
+
+    // Staff Management Routes
+    Route::prefix('staff')->middleware('has.business')->group(function () {
+        Route::get('/', [StaffController::class, 'index'])->name('staff.index');
+        Route::get('/create', [StaffController::class, 'create'])->name('staff.create');
+        Route::post('/', [StaffController::class, 'store'])->name('staff.store');
+        Route::get('/{staff}', [StaffController::class, 'show'])->name('staff.show');
+        Route::get('/{staff}/edit', [StaffController::class, 'edit'])->name('staff.edit');
+        Route::put('/{staff}', [StaffController::class, 'update'])->name('staff.update');
+        Route::delete('/{staff}', [StaffController::class, 'destroy'])->name('staff.destroy');
+    });
+
+    // Service Records Routes
+    Route::prefix('service-records')->middleware('has.business')->group(function () {
+        Route::get('/', [ServiceRecordsController::class, 'index'])->name('service-records.index');
+        Route::get('/create', [ServiceRecordsController::class, 'create'])->name('service-records.create');
+        Route::post('/', [ServiceRecordsController::class, 'store'])->name('service-records.store');
+        Route::get('/{serviceRecord}', [ServiceRecordsController::class, 'show'])->name('service-records.show');
+        Route::get('/{serviceRecord}/edit', [ServiceRecordsController::class, 'edit'])->name('service-records.edit');
+        Route::put('/{serviceRecord}', [ServiceRecordsController::class, 'update'])->name('service-records.update');
+        Route::delete('/{serviceRecord}', [ServiceRecordsController::class, 'destroy'])->name('service-records.destroy');
+        
+        // Additional service record routes
+        Route::post('/{serviceRecord}/add-service', [ServiceRecordsController::class, 'addService'])->name('service-records.add-service');
+        Route::delete('/service-item/{serviceItem}', [ServiceRecordsController::class, 'removeService'])->name('service-records.remove-service');
+        Route::put('/{serviceRecord}/complete', [ServiceRecordsController::class, 'complete'])->name('service-records.complete');
+    });
+
+    // Costs Routes
+    Route::prefix('costs')->middleware('has.business')->group(function () {
+        Route::get('/', [CostController::class, 'index'])->name('costs.index');
+        Route::get('/create', [CostController::class, 'create'])->name('costs.create');
+        Route::post('/', [CostController::class, 'store'])->name('costs.store');
+        Route::get('/{cost}', [CostController::class, 'show'])->name('costs.show');
+        Route::get('/{cost}/edit', [CostController::class, 'edit'])->name('costs.edit');
+        Route::put('/{cost}', [CostController::class, 'update'])->name('costs.update');
+        Route::delete('/{cost}', [CostController::class, 'destroy'])->name('costs.destroy');
+    });
+
+    // Commissions Routes
+    Route::prefix('commissions')->middleware('has.business')->group(function () {
+        Route::get('/', [CommissionPayoutController::class, 'index'])->name('commissions.index');
+        Route::get('/create', [CommissionPayoutController::class, 'create'])->name('commissions.create');
+        Route::post('/', [CommissionPayoutController::class, 'store'])->name('commissions.store');
+        Route::get('/{commission}', [CommissionPayoutController::class, 'show'])->name('commissions.show');
+        Route::get('/{commission}/edit', [CommissionPayoutController::class, 'edit'])->name('commissions.edit');
+        Route::put('/{commission}', [CommissionPayoutController::class, 'update'])->name('commissions.update');
+        Route::delete('/{commission}', [CommissionPayoutController::class, 'destroy'])->name('commissions.destroy');
+        
+        // Commission calculation and payout routes
+        Route::post('/calculate', [CommissionPayoutController::class, 'calculateCommissions'])->name('commissions.calculate');
+        Route::post('/{commission}/payout', [CommissionPayoutController::class, 'payout'])->name('commissions.payout');
     });
 
     // Payment Routes

@@ -16,13 +16,14 @@
 
         body {
             font-family: 'Montserrat', sans-serif;
-            background: #fff !important;
+            background: #020258 !important;
             min-height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
             padding: 20px;
-            color: #020258 !important;
+
+            color: #fff !important;
         }
 
         .login-container {
@@ -39,7 +40,7 @@
         }
 
         .login-image {
-            background: linear-gradient(135deg, #020258 0%, #13e8e9 100%);
+            background: #020258 !important;
             flex: 1;
             display: flex;
             align-items: center;

@@ -42,7 +42,7 @@ class LoginController extends Controller
     protected function authenticated(Request $request, $user)
     {
         if (!$user->business) {
-            return redirect()->route('business.create');
+            return redirect()->route('business.choose-type');
         }
         return redirect()->intended($this->redirectPath());
     }

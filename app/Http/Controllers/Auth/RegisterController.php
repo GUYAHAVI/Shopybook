@@ -29,7 +29,7 @@ class RegisterController extends Controller
      *
      * @var string
      */
-    protected $redirectTo = '/dashboard';
+    protected $redirectTo = '/business/choose-type';
 
     /**
      * Create a new controller instance.
@@ -73,6 +73,6 @@ class RegisterController extends Controller
 
     protected function registered(Request $request, $user)
     {
-        return redirect()->route('business.create');
+        return redirect()->route('business.choose-type');
     }
 }

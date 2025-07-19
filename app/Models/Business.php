@@ -127,6 +127,39 @@ class Business extends BaseTenant implements TenantWithDatabase
         return $this->hasManyThrough(Payment::class, Order::class);
     }
 
+    public function organizationCustomers()
+    {
+        return $this->hasMany(OrganizationCustomer::class);
+    }
+
+    /**
+     * Services-related relationships
+     */
+    public function services()
+    {
+        return $this->hasMany(Service::class);
+    }
+
+    public function staff()
+    {
+        return $this->hasMany(Staff::class);
+    }
+
+    public function serviceRecords()
+    {
+        return $this->hasMany(ServiceRecord::class);
+    }
+
+    public function costs()
+    {
+        return $this->hasMany(Cost::class);
+    }
+
+    public function commissionPayouts()
+    {
+        return $this->hasMany(CommissionPayout::class);
+    }
+
     /**
      * Get the database configuration for the tenant.
      */
