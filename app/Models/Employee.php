@@ -108,4 +108,20 @@ class Employee extends Model
     {
         return $this->hire_date && Carbon::parse($this->hire_date)->diffInMonths(now()) < 6;
     }
+
+    /**
+     * Get the is_active attribute based on status.
+     */
+    public function getIsActiveAttribute()
+    {
+        return $this->status === 'active';
+    }
+
+    /**
+     * Check if employee is currently active.
+     */
+    public function isActive()
+    {
+        return $this->status === 'active';
+    }
 }

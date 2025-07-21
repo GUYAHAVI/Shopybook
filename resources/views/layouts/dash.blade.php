@@ -5,6 +5,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
     <title>Shopybook</title>
     <link rel="icon" href="{{ asset('img/logo.png') }}" type="image/x-icon">
     
@@ -144,6 +147,7 @@
             min-height: 100vh;
             transition: all 0.3s;
             background-color: var(--gray-100);
+            padding-top: 70px; /* Account for fixed navbar */
         }
         
         /* Top navbar */
@@ -152,6 +156,54 @@
             box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
             background-color: var(--white);
             border-bottom: 1px solid var(--gray-200);
+            position: fixed;
+            top: 0;
+            left: 250px;
+            right: 0;
+            z-index: 1020;
+            transition: all 0.3s;
+        }
+
+        /* Responsive adjustments for topbar */
+        @media (max-width: 768px) {
+            .top-navbar {
+                left: 0;
+                right: 0;
+            }
+            
+            #content {
+                margin-left: 0 !important;
+                padding-top: 70px;
+            }
+            
+            #sidebar {
+                transform: translateX(-100%);
+                position: fixed;
+                top: 0;
+                left: 0;
+                height: 100vh;
+                z-index: 1030;
+            }
+            
+            #sidebar.show {
+                transform: translateX(0);
+            }
+
+            /* Mobile overlay */
+            .mobile-overlay {
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0, 0, 0, 0.5);
+                z-index: 1025;
+                display: none;
+            }
+
+            .mobile-overlay.show {
+                display: block;
+            }
         }
         
         .top-navbar .navbar-brand,
@@ -539,6 +591,52 @@
             border-left-color: var(--warning-color);
         }
         
+        /* Enhanced Flash Messages */
+        .flash-messages-container {
+            position: sticky;
+            top: 0;
+            z-index: 1050;
+        }
+        
+        .flash-messages-container .alert {
+            margin-bottom: 0;
+            border-radius: 0;
+            animation: slideDown 0.3s ease-out;
+            border-left-width: 5px;
+            font-weight: 500;
+        }
+        
+        @keyframes slideDown {
+            from {
+                transform: translateY(-100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+        
+        .alert-success {
+            background: linear-gradient(90deg, rgba(40, 167, 69, 0.15), rgba(40, 167, 69, 0.05));
+            border: 1px solid rgba(40, 167, 69, 0.3);
+        }
+        
+        .alert-danger {
+            background: linear-gradient(90deg, rgba(220, 53, 69, 0.15), rgba(220, 53, 69, 0.05));
+            border: 1px solid rgba(220, 53, 69, 0.3);
+        }
+        
+        .alert-warning {
+            background: linear-gradient(90deg, rgba(255, 193, 7, 0.15), rgba(255, 193, 7, 0.05));
+            border: 1px solid rgba(255, 193, 7, 0.3);
+        }
+        
+        .alert-info {
+            background: linear-gradient(90deg, rgba(0, 123, 255, 0.15), rgba(0, 123, 255, 0.05));
+            border: 1px solid rgba(0, 123, 255, 0.3);
+        }
+        
         /* Modals */
         .modal-content {
             border: none;
@@ -733,6 +831,9 @@
 </head>
 
 <body>
+    <!-- Mobile Overlay -->
+    <div class="mobile-overlay" id="mobileOverlay"></div>
+    
     <!-- Sidebar Navigation -->
     <nav id="sidebar" class="d-flex flex-column">
         <!-- Brand -->
@@ -817,49 +918,69 @@
                                     {{ t('inventory_management') }}
                                 </a>
                             </li>
+                            <li class="nav-item">
+                                <a href="{{ route('categories.index', ['business_id' => auth()->user()->business->id]) }}" class="nav-link">
+                                    <i class="fas fa-tags me-2"></i>
+                                    {{ t('categories') }}
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="{{ route('brands.index', ['business_id' => auth()->user()->business->id]) }}" class="nav-link">
+                                    <i class="fas fa-award me-2"></i>
+                                    {{ t('brands') }}
+                                </a>
+                            </li>
                         </ul>
                     </div>
                 </li>
                 @endif
                 
+                <!-- DEBUG: Business Type Check -->
+                @if(auth()->user()->business)
+                    <!-- Debug: Business Type = {{ auth()->user()->business->business_type }} -->
+                    <!-- Debug: Is Service/Hybrid = {{ in_array(auth()->user()->business->business_type, ['service', 'hybrid']) ? 'YES' : 'NO' }} -->
+                @else
+                    <!-- Debug: No business found for user -->
+                @endif
+                
                 <!-- Services - Show for service and hybrid businesses -->
-                @if(auth()->user()->business && in_array(auth()->user()->business->business_type, ['service', 'hybrid']))
+                <!-- @if(auth()->user()->business && in_array(auth()->user()->business->business_type, ['service', 'hybrid'])) -->
                 <li class="nav-item">
                     <a class="nav-link dropdown-toggle" data-bs-toggle="collapse" href="#servicesCollapse" role="button">
                         <i class="fas fa-cut me-2"></i>
-                        {{ t('services') }}
+                        Services
                     </a>
                     <div class="collapse" id="servicesCollapse">
                         <ul class="nav flex-column ps-3">
                             <li class="nav-item">
                                 <a href="{{ route('services.index') }}" class="nav-link">
-                                    <i class="fas fa-list me-2"></i> {{ t('manage_services') }}
+                                    <i class="fas fa-list me-2"></i> Manage Services
                                 </a>
                             </li>
                             <li class="nav-item">
                                 <a href="{{ route('staff.index') }}" class="nav-link">
-                                    <i class="fas fa-users me-2"></i> {{ t('staff') }}
+                                    <i class="fas fa-users me-2"></i> Staff
                                 </a>
                             </li>
                             <li class="nav-item">
-                                <a href="{{ route('service-records.index') }}" class="nav-link">
-                                    <i class="fas fa-clipboard-list me-2"></i> {{ t('service_records') }}
+                                <a href="{{ route('service-bookings.index') }}" class="nav-link">
+                                    <i class="fas fa-clipboard-list me-2"></i> Service Bookings
                                 </a>
                             </li>
                             <li class="nav-item">
                                 <a href="{{ route('costs.index') }}" class="nav-link">
-                                    <i class="fas fa-money-bill-wave me-2"></i> {{ t('costs') }}
+                                    <i class="fas fa-money-bill-wave me-2"></i> Costs
                                 </a>
                             </li>
                             <li class="nav-item">
-                                <a href="{{ route('commissions.index') }}" class="nav-link">
-                                    <i class="fas fa-hand-holding-usd me-2"></i> {{ t('commissions') }}
+                                <a href="{{ route('commission-reports') }}" class="nav-link">
+                                    <i class="fas fa-hand-holding-usd me-2"></i> Commission Reports
                                 </a>
                             </li>
                         </ul>
                     </div>
                 </li>
-                @endif
+                <!-- @endif -->
                 
                 <!-- Sales -->
                 <li class="nav-item">
@@ -973,7 +1094,7 @@
                     <div class="collapse" id="employeesCollapse">
                         <ul class="nav flex-column ps-3">
                             <li class="nav-item">
-                                <a href="#" class="nav-link">
+                                <a href="{{ route('employees.index') }}" class="nav-link">
                                     <i class="fas fa-users-cog me-2"></i>
                                     {{ t('manage_team') }}
                                 </a>
@@ -1093,21 +1214,41 @@
         </nav>
 
         <!-- Page content will be inserted here -->
-        @if(session('success'))
-            <div class="alert alert-success alert-dismissible fade show m-3" role="alert">
-                <i class="fas fa-check-circle me-2"></i>
-                {{ session('success') }}
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-            </div>
-        @endif
+        
+        <!-- Flash Messages - Positioned at top for immediate visibility -->
+        <div class="flash-messages-container">
+            @if(session('success'))
+                <div class="alert alert-success alert-dismissible fade show m-3 position-relative" role="alert" style="z-index: 1050;">
+                    <i class="fas fa-check-circle me-2"></i>
+                    {{ session('success') }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            @endif
 
-        @if(session('error'))
-            <div class="alert alert-danger alert-dismissible fade show m-3" role="alert">
-                <i class="fas fa-exclamation-circle me-2"></i>
-                {{ session('error') }}
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-            </div>
-        @endif
+            @if(session('error'))
+                <div class="alert alert-danger alert-dismissible fade show m-3 position-relative" role="alert" style="z-index: 1050;">
+                    <i class="fas fa-exclamation-circle me-2"></i>
+                    {{ session('error') }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            @endif
+
+            @if(session('warning'))
+                <div class="alert alert-warning alert-dismissible fade show m-3 position-relative" role="alert" style="z-index: 1050;">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    {{ session('warning') }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            @endif
+
+            @if(session('info'))
+                <div class="alert alert-info alert-dismissible fade show m-3 position-relative" role="alert" style="z-index: 1050;">
+                    <i class="fas fa-info-circle me-2"></i>
+                    {{ session('info') }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            @endif
+        </div>
 
         @yield('content')
     </div>
@@ -1218,10 +1359,17 @@
             const sidebar = document.getElementById('sidebar');
             const content = document.getElementById('content');
             const sidebarToggle = document.getElementById('sidebarToggle');
+            const mobileOverlay = document.getElementById('mobileOverlay');
             
             sidebarToggle.addEventListener('click', function() {
-                sidebar.classList.toggle('active');
-                content.classList.toggle('active');
+                sidebar.classList.toggle('show');
+                mobileOverlay.classList.toggle('show');
+            });
+
+            // Close sidebar when clicking overlay
+            mobileOverlay.addEventListener('click', function() {
+                sidebar.classList.remove('show');
+                mobileOverlay.classList.remove('show');
             });
             
             // AI Assistant Chat
@@ -1363,6 +1511,39 @@
                 } else {
                     deleteBusinessForm.submit();
                 }
+            });
+        });
+        
+        // Flash Message Auto-scroll and Enhancement
+        document.addEventListener('DOMContentLoaded', function() {
+            const flashContainer = document.querySelector('.flash-messages-container');
+            if (flashContainer && flashContainer.children.length > 0) {
+                // Scroll to flash message immediately
+                flashContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                
+                // Auto-dismiss after 5 seconds unless user interacts
+                setTimeout(function() {
+                    const alerts = flashContainer.querySelectorAll('.alert');
+                    alerts.forEach(function(alert) {
+                        if (alert && !alert.matches(':hover')) {
+                            const bsAlert = new bootstrap.Alert(alert);
+                            if (bsAlert) {
+                                bsAlert.close();
+                            }
+                        }
+                    });
+                }, 5000);
+            }
+            
+            // Prevent auto-dismiss on hover
+            const alerts = document.querySelectorAll('.flash-messages-container .alert');
+            alerts.forEach(function(alert) {
+                alert.addEventListener('mouseenter', function() {
+                    alert.classList.add('stay-open');
+                });
+                alert.addEventListener('mouseleave', function() {
+                    alert.classList.remove('stay-open');
+                });
             });
         });
     </script>

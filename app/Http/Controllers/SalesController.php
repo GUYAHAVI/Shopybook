@@ -66,7 +66,7 @@ class SalesController extends Controller
                 // Assign to Walk-in Customer if not provided
                 $walkin = Customer::where('business_id', auth()->user()->business->id)
                     ->where('name', 'Walk-in Customer')->first();
-                $order->customer_id = $walkin ? $walkin->id : null;
+                $order->customer_id = ($walkin && isset($walkin->id)) ? $walkin->id : null;
             } else {
                 $order->customer_id = $validated['customer_id'];
             }

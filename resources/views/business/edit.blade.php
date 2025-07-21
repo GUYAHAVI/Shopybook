@@ -15,19 +15,38 @@
                             <i class="fas fa-store"></i>
                         </div>
                     @endif
-                    <label for="logo" class="block mt-2 text-sm text-gray-500">Update Logo</label>
-                    <input id="logo" class="block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 focus:outline-none mt-1" type="file" name="logo" accept="image/*">
-                    <p class="mt-1 text-xs text-gray-400">Leave blank to keep current logo</p>
-                    <x-input-error :messages="$errors->get('logo')" class="mt-2" />
+                    <p class="mt-1 text-xs text-gray-400">Logo will be updated with the form</p>
                 </div>
             </div>
             <!-- Form Card -->
             <div class="col-span-2">
                 <div class="bg-white shadow-lg rounded-lg p-8 border border-cyan-200">
                     <h2 class="text-2xl font-bold mb-6" style="color:#020258;">Edit Business Profile</h2>
+                    
+                    <!-- Display validation errors -->
+                    @if ($errors->any())
+                        <div class="alert alert-danger mb-4">
+                            <h6><i class="fas fa-exclamation-triangle me-2"></i>Please fix the following errors:</h6>
+                            <ul class="mb-0 mt-2">
+                                @foreach ($errors->all() as $error)
+                                    <li>{{ $error }}</li>
+                                @endforeach
+                            </ul>
+                        </div>
+                    @endif
+                    
                     <form method="POST" action="{{ route('business.update') }}" enctype="multipart/form-data" class="space-y-6">
                         @csrf
                         @method('PUT')
+                        
+                        <!-- Logo Upload Field -->
+                        <div class="mb-6">
+                            <label for="logo" class="block text-sm font-medium text-cyan-700 mb-1"><i class="fas fa-image mr-1"></i> Update Business Logo</label>
+                            <input id="logo" class="form-control block w-full" type="file" name="logo" accept="image/*">
+                            <p class="mt-1 text-xs text-gray-400">Leave blank to keep current logo</p>
+                            <x-input-error :messages="$errors->get('logo')" class="mt-2" />
+                        </div>
+                        
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <!-- Business Name -->
                             <div>
@@ -81,9 +100,9 @@
                             <button type="button" onclick="window.openDeleteBusinessModal(function(password) { document.getElementById('delete-form').submit(); });" class="btn btn-outline-danger ms-auto" style="border:2px solid #dc3545; color:#dc3545;">
                                 <i class="fas fa-trash-alt me-1"></i> Delete Business
                             </button>
-                            <x-primary-button>
-                                <i class="fas fa-save me-1"></i> {{ __('Update Business Profile') }}
-                            </x-primary-button>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-1"></i> Update Business Profile
+                            </button>
                         </div>
                     </form>
                 </div>

@@ -125,7 +125,7 @@ class BusinessController extends Controller
         // Handle logo upload
         if ($request->hasFile('logo')) {
             $path = $request->file('logo')->store('business/logos', 'public');
-            $business->update(['logo_path' => $path]);
+            $business->update(['logo' => $path]);
         }
 
         // Initialize the tenant (creates database, runs migrations, etc.)
@@ -134,25 +134,32 @@ class BusinessController extends Controller
         return redirect()->route('dashboard')->with('success', 'Business created successfully!');
     }
 
-    public function edit(Business $business)
+    public function edit()
     {
+        $business = auth()->user()->business;
+        
+        if (!$business) {
+            return redirect()->route('business.create')->with('error', 'You need to create a business first.');
+        }
+
         return view('business.edit', [
             'business' => $business,
             'businessTypes' => [
-                'retail' => 'Retail Shop',
-                'restaurant' => 'Restaurant',
-                'service' => 'Service Provider',
-                'online' => 'Online Store',
-                'fashion' => 'Fashion & Clothing',
-                'electronics' => 'Electronics',
-                'grocery' => 'Grocery Store',
-                'beauty' => 'Beauty & Cosmetics',
+                'product' => 'Product Business',
+                'service' => 'Service Business', 
+                'hybrid' => 'Hybrid Business (Products & Services)',
             ]
         ]);
     }
 
-    public function update(Request $request, Business $business)
+    public function update(Request $request)
     {
+        $business = auth()->user()->business;
+        
+        if (!$business) {
+            return redirect()->route('business.create')->with('error', 'You need to create a business first.');
+        }
+
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255', Rule::unique('businesses')->ignore($business->id)],
             'email' => ['nullable', 'email', Rule::unique('businesses')->ignore($business->id)],
@@ -177,16 +184,16 @@ class BusinessController extends Controller
         // Handle logo update
         if ($request->hasFile('logo')) {
             // Delete old logo if exists
-            if ($business->logo_path) {
-                Storage::disk('public')->delete($business->logo_path);
+            if ($business->getAttribute('logo') && Storage::disk('public')->exists($business->getAttribute('logo'))) {
+                Storage::disk('public')->delete($business->getAttribute('logo'));
             }
 
-            $updateData['logo_path'] = $request->file('logo')->store('business/logos', 'public');
+            $updateData['logo'] = $request->file('logo')->store('business/logos', 'public');
         }
 
         $business->update($updateData);
 
-        return back()->with('success', 'Business profile updated successfully!');
+        return redirect()->route('business.edit')->with('success', 'Business profile updated successfully!');
     }
 
     public function destroy(Business $business, Request $request)
@@ -199,13 +206,13 @@ class BusinessController extends Controller
         }
         try {
             // Delete logo if exists
-            if ($business->logo_path) {
-                Storage::disk('public')->delete($business->logo_path);
+            if ($business->getAttribute('logo') && Storage::disk('public')->exists($business->getAttribute('logo'))) {
+                Storage::disk('public')->delete($business->getAttribute('logo'));
             }
 
             // Delete cover if exists
-            if ($business->cover_path) {
-                Storage::disk('public')->delete($business->cover_path);
+            if ($business->getAttribute('cover') && Storage::disk('public')->exists($business->getAttribute('cover'))) {
+                Storage::disk('public')->delete($business->getAttribute('cover'));
             }
 
             // Proper way to delete a tenant
@@ -230,7 +237,7 @@ class BusinessController extends Controller
     public function show(Business $business)
     {
         // Ensure the business is active
-        if (!$business->active) {
+        if (!$business->getAttribute('active')) {
             return redirect()->route('business.index')->with('error', 'This business is not active.');
         }
 

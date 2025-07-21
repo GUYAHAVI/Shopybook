@@ -30,7 +30,10 @@ class ServicesController extends Controller
             return redirect()->route('business.choose-type');
         }
 
-        return view('services.create');
+        // Get existing services for bundling options
+        $services = Service::where('business_id', $business->id)->get();
+
+        return view('services.create', compact('services'));
     }
 
     public function store(Request $request)
@@ -46,6 +49,11 @@ class ServicesController extends Controller
             'duration' => 'nullable|integer|min:1',
             'commission_rate' => 'nullable|numeric|min:0|max:100',
             'description' => 'nullable|string|max:1000',
+            'is_bundle_trigger' => 'boolean',
+            'bundled_services' => 'nullable|array',
+            'bundled_services.*' => 'exists:services,id',
+            'is_complimentary' => 'boolean',
+            'parent_service_id' => 'nullable|exists:services,id',
         ]);
 
         Service::create([
@@ -55,6 +63,10 @@ class ServicesController extends Controller
             'duration' => $validated['duration'],
             'commission_rate' => $validated['commission_rate'],
             'description' => $validated['description'],
+            'is_bundle_trigger' => $request->has('is_bundle_trigger'),
+            'bundled_services' => $validated['bundled_services'] ?? null,
+            'is_complimentary' => $request->has('is_complimentary'),
+            'parent_service_id' => $validated['parent_service_id'] ?? null,
         ]);
 
         return redirect()->route('services.index')

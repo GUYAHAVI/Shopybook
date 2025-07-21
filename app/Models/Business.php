@@ -165,15 +165,7 @@ class Business extends BaseTenant implements TenantWithDatabase
      */
     public function database(): DatabaseConfig
     {
-        return DatabaseConfig::fromArray([
-            'driver' => 'mysql',
-            'host' => env('TENANT_DB_HOST', '127.0.0.1'),
-            'port' => env('TENANT_DB_PORT', '3306'),
-            'database' => $this->databaseName(),
-            'username' => env('TENANT_DB_USERNAME', 'root'),
-            'password' => env('TENANT_DB_PASSWORD', ''),
-            'prefix' => '',
-        ]);
+        return tenancy()->database();
     }
 
     /**

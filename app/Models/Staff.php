@@ -23,8 +23,47 @@ class Staff extends Model
         return $this->hasMany(ServiceRecord::class);
     }
 
+    public function serviceItems()
+    {
+        return $this->hasMany(ServiceItem::class);
+    }
+
     public function commissionPayouts()
     {
         return $this->hasMany(CommissionPayout::class);
+    }
+
+    // Calculate total commission earned from service items
+    public function getTotalCommissionAttribute()
+    {
+        return $this->serviceItems()->sum('commission_amount') ?? 0;
+    }
+
+    // Calculate commission for a specific date range
+    public function getCommissionForPeriod($startDate, $endDate)
+    {
+        return $this->serviceItems()
+            ->whereHas('serviceBooking', function ($query) use ($startDate, $endDate) {
+                $query->whereBetween('created_at', [$startDate, $endDate]);
+            })
+            ->sum('commission_amount') ?? 0;
+    }
+
+    // Get commission earned today
+    public function getTodayCommissionAttribute()
+    {
+        return $this->getCommissionForPeriod(
+            now()->startOfDay(),
+            now()->endOfDay()
+        );
+    }
+
+    // Get commission earned this month
+    public function getThisMonthCommissionAttribute()
+    {
+        return $this->getCommissionForPeriod(
+            now()->startOfMonth(),
+            now()->endOfMonth()
+        );
     }
 } 

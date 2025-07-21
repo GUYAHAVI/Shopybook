@@ -12,13 +12,16 @@ use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\BusinessAnalysisController;
 use App\Http\Controllers\LanguageController;
 use App\Http\Controllers\Auth\PasswordVerificationController;
-use App\Http\Controllers\ServicesController;
+use App\Http\Controllers\ServiceController;
 use App\Http\Controllers\StaffController;
-use App\Http\Controllers\ServiceRecordsController;
+use App\Http\Controllers\ServiceBookingController;
 use App\Http\Controllers\CostController;
 use App\Http\Controllers\CommissionPayoutController;
 use App\Http\Controllers\SupplierController;
+
 use App\Http\Controllers\EmployeeController;
+use App\Http\Controllers\CategoryController;
+use App\Http\Controllers\BrandController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Route;
@@ -36,6 +39,11 @@ Route::get('/language/{language}', function ($language) {
 })->name('language.switch');
 
 Auth::routes();
+
+// Test route for flash messages
+Route::get('/test-flash', function () {
+    return redirect()->route('dashboard')->with('success', 'Flash message test successful! This message should appear immediately.');
+})->middleware('auth');
 
 Route::get('/dashboard', [DashboardController::class, 'dashboard'])->name('dashboard')->middleware('auth');
 
@@ -57,7 +65,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
             
         Route::post('/password/verify', function (Request $request) {
             try {
-                $valid = Hash::check($request->password, auth()->user()->getAuthPassword());
+                $valid = Hash::check($request->input('password'), auth()->user()->getAuthPassword());
 
                 return response()->json([
                     'valid' => $valid,
@@ -157,13 +165,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // Services Management Routes
     Route::prefix('services')->middleware('has.business')->group(function () {
-        Route::get('/', [ServicesController::class, 'index'])->name('services.index');
-        Route::get('/create', [ServicesController::class, 'create'])->name('services.create');
-        Route::post('/', [ServicesController::class, 'store'])->name('services.store');
-        Route::get('/{service}', [ServicesController::class, 'show'])->name('services.show');
-        Route::get('/{service}/edit', [ServicesController::class, 'edit'])->name('services.edit');
-        Route::put('/{service}', [ServicesController::class, 'update'])->name('services.update');
-        Route::delete('/{service}', [ServicesController::class, 'destroy'])->name('services.destroy');
+        Route::get('/', [ServiceController::class, 'index'])->name('services.index');
+        Route::get('/create', [ServiceController::class, 'create'])->name('services.create');
+        Route::post('/', [ServiceController::class, 'store'])->name('services.store');
+        Route::get('/{service}', [ServiceController::class, 'show'])->name('services.show');
+        Route::get('/{service}/edit', [ServiceController::class, 'edit'])->name('services.edit');
+        Route::put('/{service}', [ServiceController::class, 'update'])->name('services.update');
+        Route::delete('/{service}', [ServiceController::class, 'destroy'])->name('services.destroy');
     });
 
     // Staff Management Routes
@@ -177,21 +185,24 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::delete('/{staff}', [StaffController::class, 'destroy'])->name('staff.destroy');
     });
 
-    // Service Records Routes
-    Route::prefix('service-records')->middleware('has.business')->group(function () {
-        Route::get('/', [ServiceRecordsController::class, 'index'])->name('service-records.index');
-        Route::get('/create', [ServiceRecordsController::class, 'create'])->name('service-records.create');
-        Route::post('/', [ServiceRecordsController::class, 'store'])->name('service-records.store');
-        Route::get('/{serviceRecord}', [ServiceRecordsController::class, 'show'])->name('service-records.show');
-        Route::get('/{serviceRecord}/edit', [ServiceRecordsController::class, 'edit'])->name('service-records.edit');
-        Route::put('/{serviceRecord}', [ServiceRecordsController::class, 'update'])->name('service-records.update');
-        Route::delete('/{serviceRecord}', [ServiceRecordsController::class, 'destroy'])->name('service-records.destroy');
+    // Service Bookings Routes
+    Route::prefix('service-bookings')->middleware('has.business')->group(function () {
+        Route::get('/', [ServiceBookingController::class, 'index'])->name('service-bookings.index');
+        Route::get('/create', [ServiceBookingController::class, 'create'])->name('service-bookings.create');
+        Route::post('/', [ServiceBookingController::class, 'store'])->name('service-bookings.store');
+        Route::get('/{serviceBooking}', [ServiceBookingController::class, 'show'])->name('service-bookings.show');
+        Route::get('/{serviceBooking}/edit', [ServiceBookingController::class, 'edit'])->name('service-bookings.edit');
+        Route::put('/{serviceBooking}', [ServiceBookingController::class, 'update'])->name('service-bookings.update');
+        Route::delete('/{serviceBooking}', [ServiceBookingController::class, 'destroy'])->name('service-bookings.destroy');
         
-        // Additional service record routes
-        Route::post('/{serviceRecord}/add-service', [ServiceRecordsController::class, 'addService'])->name('service-records.add-service');
-        Route::delete('/service-item/{serviceItem}', [ServiceRecordsController::class, 'removeService'])->name('service-records.remove-service');
-        Route::put('/{serviceRecord}/complete', [ServiceRecordsController::class, 'complete'])->name('service-records.complete');
+        // Additional service booking routes
+        Route::post('/{serviceBooking}/add-service', [ServiceBookingController::class, 'addService'])->name('service-bookings.add-service');
+        Route::delete('/service-item/{serviceItem}', [ServiceBookingController::class, 'removeService'])->name('service-bookings.remove-service');
+        Route::put('/{serviceBooking}/complete', [ServiceBookingController::class, 'complete'])->name('service-bookings.complete');
     });
+
+    // Commission Reports Route
+    Route::get('/commission-reports', [StaffController::class, 'commissionReports'])->middleware('has.business')->name('commission-reports');
 
     // Costs Routes
     Route::prefix('costs')->middleware('has.business')->group(function () {
@@ -239,6 +250,28 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/{employee}/edit', [EmployeeController::class, 'edit'])->name('employees.edit');
         Route::put('/{employee}', [EmployeeController::class, 'update'])->name('employees.update');
         Route::delete('/{employee}', [EmployeeController::class, 'destroy'])->name('employees.destroy');
+    });
+
+    // Categories Routes  
+    Route::prefix('categories')->middleware('has.business')->group(function () {
+        Route::get('/', [CategoryController::class, 'index'])->name('categories.index');
+        Route::get('/create', [CategoryController::class, 'create'])->name('categories.create');
+        Route::post('/', [CategoryController::class, 'store'])->name('categories.store');
+        Route::get('/{category}', [CategoryController::class, 'show'])->name('categories.show');
+        Route::get('/{category}/edit', [CategoryController::class, 'edit'])->name('categories.edit');
+        Route::put('/{category}', [CategoryController::class, 'update'])->name('categories.update');
+        Route::delete('/{category}', [CategoryController::class, 'destroy'])->name('categories.destroy');
+    });
+
+    // Brands Routes
+    Route::prefix('brands')->middleware('has.business')->group(function () {
+        Route::get('/', [BrandController::class, 'index'])->name('brands.index');
+        Route::get('/create', [BrandController::class, 'create'])->name('brands.create');
+        Route::post('/', [BrandController::class, 'store'])->name('brands.store');
+        Route::get('/{brand}', [BrandController::class, 'show'])->name('brands.show');
+        Route::get('/{brand}/edit', [BrandController::class, 'edit'])->name('brands.edit');
+        Route::put('/{brand}', [BrandController::class, 'update'])->name('brands.update');
+        Route::delete('/{brand}', [BrandController::class, 'destroy'])->name('brands.destroy');
     });
 
     // Payment Routes
