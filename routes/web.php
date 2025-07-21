@@ -16,6 +16,7 @@ use App\Http\Controllers\ServiceController;
 use App\Http\Controllers\StaffController;
 use App\Http\Controllers\ServiceBookingController;
 use App\Http\Controllers\CostController;
+use App\Http\Controllers\InventoryController;
 use App\Http\Controllers\CommissionPayoutController;
 use App\Http\Controllers\SupplierController;
 
@@ -213,6 +214,20 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/{cost}/edit', [CostController::class, 'edit'])->name('costs.edit');
         Route::put('/{cost}', [CostController::class, 'update'])->name('costs.update');
         Route::delete('/{cost}', [CostController::class, 'destroy'])->name('costs.destroy');
+    });
+
+    // Inventory Management Routes
+    Route::prefix('inventory')->middleware('has.business')->group(function () {
+        Route::get('/', [InventoryController::class, 'index'])->name('inventory.index');
+        Route::get('/create', [InventoryController::class, 'create'])->name('inventory.create');
+        Route::post('/', [InventoryController::class, 'store'])->name('inventory.store');
+        Route::get('/low-stock', [InventoryController::class, 'lowStock'])->name('inventory.low-stock');
+        Route::get('/reports', [InventoryController::class, 'reports'])->name('inventory.reports');
+        Route::get('/{inventory}', [InventoryController::class, 'show'])->name('inventory.show');
+        Route::get('/{inventory}/edit', [InventoryController::class, 'edit'])->name('inventory.edit');
+        Route::put('/{inventory}', [InventoryController::class, 'update'])->name('inventory.update');
+        Route::delete('/{inventory}', [InventoryController::class, 'destroy'])->name('inventory.destroy');
+        Route::post('/{inventory}/adjust', [InventoryController::class, 'adjustQuantity'])->name('inventory.adjust');
     });
 
     // Commissions Routes

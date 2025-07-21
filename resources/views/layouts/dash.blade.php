@@ -68,6 +68,11 @@
             color: var(--gray-800);
         }
         
+        /* Prevent body scroll when mobile menu is open */
+        body.sidebar-open {
+            overflow: hidden;
+        }
+        
         .container-fluid, .dashboard-content, .main-content, .content {
             background: transparent;
             color: var(--gray-800);
@@ -80,8 +85,10 @@
             background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
             color: var(--white);
             position: fixed;
-            transition: all 0.3s;
-            z-index: 1000;
+            top: 0;
+            left: 0;
+            transition: all 0.3s ease-in-out;
+            z-index: 1040;
             box-shadow: 2px 0 15px rgba(0, 0, 0, 0.1);
         }
         
@@ -178,15 +185,17 @@
             
             #sidebar {
                 transform: translateX(-100%);
-                position: fixed;
+                position: fixed !important;
                 top: 0;
                 left: 0;
                 height: 100vh;
-                z-index: 1030;
+                width: 250px;
+                z-index: 1050 !important;
+                transition: transform 0.3s ease-in-out;
             }
             
             #sidebar.show {
-                transform: translateX(0);
+                transform: translateX(0) !important;
             }
 
             /* Mobile overlay */
@@ -199,10 +208,48 @@
                 background: rgba(0, 0, 0, 0.5);
                 z-index: 1025;
                 display: none;
+                opacity: 0;
+                transition: opacity 0.3s ease-in-out;
             }
 
             .mobile-overlay.show {
+                display: block !important;
+                opacity: 1 !important;
+            }
+            
+            /* Hide search bar on mobile, move to sidebar */
+            .desktop-search {
+                display: none;
+            }
+            
+            /* Show dark mode toggle only on mobile topbar */
+            .mobile-dark-toggle {
                 display: block;
+            }
+        }
+        
+        @media (min-width: 769px) {
+            /* Show search bar on desktop */
+            .desktop-search {
+                display: flex;
+            }
+            
+            /* Hide mobile dark mode toggle on desktop */
+            .mobile-dark-toggle {
+                display: none;
+            }
+            
+            /* Hide mobile overlay on desktop */
+            .mobile-overlay {
+                display: none !important;
+            }
+            
+            /* Ensure sidebar is positioned correctly on desktop */
+            #sidebar {
+                transform: translateX(0) !important;
+                position: fixed !important;
+                top: 0;
+                left: 0;
             }
         }
         
@@ -719,6 +766,132 @@
                 padding: 0.375rem 0.75rem;
                 font-size: 0.875rem;
             }
+            
+            /* Mobile Card Optimizations */
+            .mobile-card {
+                border: none;
+                border-radius: 12px;
+                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+                margin-bottom: 1rem;
+            }
+            
+            .mobile-card .card-body {
+                padding: 1rem;
+            }
+            
+            /* Replace tables with cards on mobile */
+            .table-mobile-cards .table {
+                display: none;
+            }
+            
+            .table-mobile-cards .mobile-cards-container {
+                display: block;
+            }
+            
+            /* Mobile card item styling */
+            .mobile-card-item {
+                background: var(--white);
+                border: 1px solid var(--gray-200);
+                border-radius: 8px;
+                padding: 1rem;
+                margin-bottom: 0.75rem;
+                box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            }
+            
+            .mobile-card-item:hover {
+                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+                transform: translateY(-1px);
+            }
+            
+            .mobile-card-header {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-bottom: 0.5rem;
+                padding-bottom: 0.5rem;
+                border-bottom: 1px solid var(--gray-200);
+            }
+            
+            .mobile-card-title {
+                font-weight: 600;
+                color: var(--primary-color);
+                margin: 0;
+                font-size: 1rem;
+            }
+            
+            .mobile-card-badge {
+                font-size: 0.75rem;
+            }
+            
+            .mobile-card-content {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 0.5rem;
+            }
+            
+            .mobile-card-field {
+                display: flex;
+                flex-direction: column;
+            }
+            
+            .mobile-card-field label {
+                font-size: 0.75rem;
+                color: var(--gray-600);
+                margin-bottom: 0.25rem;
+                font-weight: 500;
+            }
+            
+            .mobile-card-field span {
+                font-weight: 600;
+                color: var(--gray-800);
+            }
+            
+            .mobile-card-actions {
+                margin-top: 1rem;
+                padding-top: 0.75rem;
+                border-top: 1px solid var(--gray-200);
+                display: flex;
+                gap: 0.5rem;
+                flex-wrap: wrap;
+            }
+            
+            .mobile-card-actions .btn {
+                flex: 1;
+                min-width: auto;
+                font-size: 0.875rem;
+                padding: 0.5rem 0.75rem;
+            }
+            
+            /* Top navbar mobile responsive */
+            .top-navbar .container-fluid {
+                padding: 0 1rem;
+            }
+            
+            .top-navbar .btn-link {
+                padding: 0.5rem;
+                margin: 0;
+            }
+            
+            /* Ensure notifications and dark mode icons are properly spaced */
+            .top-navbar .d-flex {
+                gap: 0.25rem;
+            }
+            
+            .top-navbar .dropdown, 
+            .top-navbar button {
+                flex-shrink: 0;
+            }
+        }
+        
+        @media (min-width: 769px) {
+            /* Hide mobile cards on desktop */
+            .mobile-cards-container {
+                display: none;
+            }
+            
+            .table-mobile-cards .table {
+                display: table;
+            }
         }
         
         @media (max-width: 576px) {
@@ -968,8 +1141,21 @@
                                 </a>
                             </li>
                             <li class="nav-item">
+                                <a href="#" class="nav-link dropdown-toggle" data-bs-toggle="collapse" data-bs-target="#inventorySubmenu" aria-expanded="false" aria-controls="inventorySubmenu">
+                                    <i class="fas fa-boxes me-2"></i> Inventory Management
+                                </a>
+                                <div class="collapse" id="inventorySubmenu">
+                                    <ul class="list-unstyled ps-4">
+                                        <li><a href="{{ route('inventory.index') }}" class="dropdown-item"><i class="fas fa-tachometer-alt me-2"></i>Dashboard</a></li>
+                                        <li><a href="{{ route('inventory.create') }}" class="dropdown-item"><i class="fas fa-plus me-2"></i>Add Item</a></li>
+                                        <li><a href="{{ route('inventory.low-stock') }}" class="dropdown-item"><i class="fas fa-exclamation-triangle me-2"></i>Low Stock</a></li>
+                                        <li><a href="{{ route('inventory.reports') }}" class="dropdown-item"><i class="fas fa-chart-line me-2"></i>Reports</a></li>
+                                    </ul>
+                                </div>
+                            </li>
+                            <li class="nav-item">
                                 <a href="{{ route('costs.index') }}" class="nav-link">
-                                    <i class="fas fa-money-bill-wave me-2"></i> Costs
+                                    <i class="fas fa-money-bill-wave me-2"></i> Costs & Expenses
                                 </a>
                             </li>
                             <li class="nav-item">
@@ -1135,13 +1321,88 @@
         
         <!-- Bottom Menu -->
         <div class="mt-auto pb-3">
+            <!-- User Profile Section -->
+            <div class="border-top border-light border-opacity-10 pt-3 mb-3">
+                <div class="nav-item">
+                    <div class="d-flex align-items-center px-3 py-2">
+                        <img src="https://placehold.co/600x400/png" alt="Profile" class="rounded-circle me-3" width="40" height="40">
+                        <div class="flex-grow-1">
+                            <div class="fw-semibold text-white">{{ Auth::user()->name }}</div>
+                            <small class="text-white-50">{{ Auth::user()->email }}</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
             <ul class="nav flex-column">
+                <!-- Search -->
                 <li class="nav-item">
-                    <a href="#" class="nav-link">
-                        <i class="fas fa-cog fa-spin me-2"></i>
-                        {{ t('settings') }}
+                    <a href="#" class="nav-link" data-bs-toggle="modal" data-bs-target="#searchModal">
+                        <i class="fas fa-search me-2"></i>
+                        {{ t('search') }}
                     </a>
                 </li>
+                
+                <!-- Language Switcher -->
+                <li class="nav-item">
+                    <a class="nav-link dropdown-toggle" data-bs-toggle="collapse" href="#languageCollapse" role="button">
+                        <i class="fas fa-globe me-2"></i>
+                        {{ t('language') }}
+                    </a>
+                    <div class="collapse" id="languageCollapse">
+                        <div class="ps-4">
+                            @include('components.language-switcher')
+                        </div>
+                    </div>
+                </li>
+                
+                <!-- Dark Mode Toggle (for mobile in sidebar) -->
+                <li class="nav-item d-md-none">
+                    <a href="#" class="nav-link" id="sidebarDarkModeToggle">
+                        <i class="fas fa-moon me-2" id="sidebarDarkModeIcon"></i>
+                        <span id="sidebarDarkModeText">{{ t('dark_mode') }}</span>
+                    </a>
+                </li>
+                
+                <!-- Profile -->
+                <li class="nav-item">
+                    <a href="#" class="nav-link">
+                        <i class="fas fa-user me-2"></i>
+                        {{ t('profile') }}
+                    </a>
+                </li>
+                
+                <!-- Settings -->
+                <li class="nav-item">
+                    <a class="nav-link dropdown-toggle" data-bs-toggle="collapse" href="#settingsCollapse" role="button">
+                        <i class="fas fa-cog me-2"></i>
+                        {{ t('settings') }}
+                    </a>
+                    <div class="collapse" id="settingsCollapse">
+                        <ul class="nav flex-column ps-4">
+                            <li class="nav-item d-none d-md-block">
+                                <a href="#" class="nav-link" id="desktopSidebarDarkModeToggle">
+                                    <i class="fas fa-moon me-2" id="desktopSidebarDarkModeIcon"></i>
+                                    <span id="desktopSidebarDarkModeText">{{ t('dark_mode') }}</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="#" class="nav-link">
+                                    <i class="fas fa-bell me-2"></i>
+                                    {{ t('notifications') }}
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="#" class="nav-link">
+                                    <i class="fas fa-shield-alt me-2"></i>
+                                    {{ t('privacy') }}
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                </li>
+                
+                <!-- Logout -->
                 <li class="nav-item">
                     <a href="{{ route('logout') }}" class="nav-link" onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
                         <i class="fas fa-power-off me-2"></i>
@@ -1154,30 +1415,32 @@
 
     <!-- Main Content -->
     <div id="content">
-        <!-- Top Navbar -->
+        <!-- Top Navbar - Minimal Design -->
         <nav class="navbar top-navbar navbar-expand-lg navbar-light bg-white shadow-sm">
             <div class="container-fluid">
-                <!-- Sidebar Toggle -->
-                <button class="btn btn-link d-md-none" id="sidebarToggle">
-                    <i class="fas fa-bars"></i>
+                <!-- Left Side: Menu Toggle -->
+                <button class="btn btn-link" id="sidebarToggle">
+                    <i class="fas fa-bars fa-lg"></i>
                 </button>
                 
-                <!-- Search Form -->
-                <form class="d-flex ms-md-auto">
+                <!-- Center: Brand Logo for Mobile -->
+                <div class="d-md-none mx-auto">
+                    <span class="navbar-brand mb-0 h1 text-primary fw-bold">Shopybook</span>
+                </div>
+                
+                <!-- Desktop Search Bar (Hidden on Mobile) -->
+                <form class="d-none d-lg-flex ms-auto me-3 desktop-search">
                     <input class="form-control me-2" type="search" placeholder="{{ t('search_products_orders') }}" aria-label="Search">
                     <button class="btn btn-outline-primary" type="submit">
                         <i class="fas fa-search"></i>
                     </button>
                 </form>
                 
-                <!-- Right Side Nav Items -->
-                <div class="d-flex align-items-center ms-3">
-                    <!-- Language Switcher -->
-                    @include('components.language-switcher')
-                    
+                <!-- Right Side: Essential Icons -->
+                <div class="d-flex align-items-center">
                     <!-- Notifications -->
-                    <div class="dropdown me-3">
-                        <a class="position-relative" href="#" role="button" id="notificationDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                    <div class="dropdown me-2">
+                        <a class="position-relative btn btn-link p-2" href="#" role="button" id="notificationDropdown" data-bs-toggle="dropdown" aria-expanded="false">
                             <i class="fas fa-bell fa-lg"></i>
                             <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger notification-badge">3</span>
                         </a>
@@ -1190,25 +1453,9 @@
                     </div>
                     
                     <!-- Dark Mode Toggle -->
-                    <div class="me-3">
-                        <button class="btn btn-link p-0 border-0 bg-transparent" id="darkModeToggle" title="Toggle Dark Mode">
-                            <i class="fas fa-moon fa-lg" id="darkModeIcon"></i>
-                        </button>
-                    </div>
-                    
-                    <!-- User Profile -->
-                    <div class="dropdown">
-                        <a class="d-flex align-items-center text-decoration-none" href="#" role="button" id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-                            <img src="https://placehold.co/600x400/png" alt="Profile" class="rounded-circle me-2" width="40" height="40">
-                            <span class="d-none d-md-inline">{{ Auth::user()->name }}</span>
-                        </a>
-                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
-                            <li><a class="dropdown-item" href="#">{{ t('profile') }}</a></li>
-                            <li><a class="dropdown-item" href="#">{{ t('settings') }}</a></li>
-                            <li><hr class="dropdown-divider"></li>
-                            <li><a class="dropdown-item" href="{{ route('logout') }}" onclick="event.preventDefault(); document.getElementById('logout-form').submit();">{{ t('logout') }}</a></li>
-                        </ul>
-                    </div>
+                    <button class="btn btn-link p-2" id="darkModeToggle" title="Toggle Dark Mode">
+                        <i class="fas fa-moon fa-lg" id="darkModeIcon"></i>
+                    </button>
                 </div>
             </div>
         </nav>
@@ -1287,6 +1534,43 @@
             </div>
         </div>
     </div>
+
+    <!-- Hidden Logout Form -->
+    <form id="logout-form" action="{{ route('logout') }}" method="POST" class="d-none">
+        @csrf
+    </form>
+
+    <!-- Search Modal -->
+    <div class="modal fade" id="searchModal" tabindex="-1" aria-labelledby="searchModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="searchModalLabel">
+                        <i class="fas fa-search me-2"></i>{{ t('search') }}
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form class="d-flex">
+                        <input class="form-control me-2" type="search" placeholder="{{ t('search_products_orders') }}" aria-label="Search">
+                        <button class="btn btn-primary" type="submit">
+                            <i class="fas fa-search"></i>
+                        </button>
+                    </form>
+                    <div class="mt-3">
+                        <h6 class="text-muted">{{ t('quick_search') }}</h6>
+                        <div class="d-flex flex-wrap gap-2">
+                            <span class="badge bg-light text-dark">{{ t('products') }}</span>
+                            <span class="badge bg-light text-dark">{{ t('orders') }}</span>
+                            <span class="badge bg-light text-dark">{{ t('customers') }}</span>
+                            <span class="badge bg-light text-dark">{{ t('services') }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
 <div class="modal fade" id="deleteBusinessModal" tabindex="-1" aria-labelledby="deleteBusinessModalLabel" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content modal-danger">
@@ -1324,9 +1608,15 @@
     
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // Dark Mode Toggle
+            // Dark Mode Toggle - Multiple Elements
             const darkModeToggle = document.getElementById('darkModeToggle');
             const darkModeIcon = document.getElementById('darkModeIcon');
+            const sidebarDarkModeToggle = document.getElementById('sidebarDarkModeToggle');
+            const sidebarDarkModeIcon = document.getElementById('sidebarDarkModeIcon');
+            const sidebarDarkModeText = document.getElementById('sidebarDarkModeText');
+            const desktopSidebarDarkModeToggle = document.getElementById('desktopSidebarDarkModeToggle');
+            const desktopSidebarDarkModeIcon = document.getElementById('desktopSidebarDarkModeIcon');
+            const desktopSidebarDarkModeText = document.getElementById('desktopSidebarDarkModeText');
             const body = document.body;
             
             // Check for saved theme preference or default to light mode
@@ -1334,42 +1624,152 @@
             body.setAttribute('data-theme', savedTheme);
             updateDarkModeIcon(savedTheme);
             
-            darkModeToggle.addEventListener('click', function() {
+            // Add event listeners to all dark mode toggle buttons
+            if (darkModeToggle) {
+                darkModeToggle.addEventListener('click', toggleDarkMode);
+            }
+            if (sidebarDarkModeToggle) {
+                sidebarDarkModeToggle.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    toggleDarkMode();
+                });
+            }
+            if (desktopSidebarDarkModeToggle) {
+                desktopSidebarDarkModeToggle.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    toggleDarkMode();
+                });
+            }
+            
+            function toggleDarkMode() {
                 const currentTheme = body.getAttribute('data-theme');
                 const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
                 
                 body.setAttribute('data-theme', newTheme);
                 localStorage.setItem('theme', newTheme);
                 updateDarkModeIcon(newTheme);
-            });
+            }
             
             function updateDarkModeIcon(theme) {
-                if (theme === 'dark') {
-                    darkModeIcon.classList.remove('fa-moon');
-                    darkModeIcon.classList.add('fa-sun');
-                    darkModeToggle.title = 'Switch to Light Mode';
-                } else {
-                    darkModeIcon.classList.remove('fa-sun');
-                    darkModeIcon.classList.add('fa-moon');
-                    darkModeToggle.title = 'Switch to Dark Mode';
+                const isDark = theme === 'dark';
+                const iconClass = isDark ? 'fa-sun' : 'fa-moon';
+                const iconClassToRemove = isDark ? 'fa-moon' : 'fa-sun';
+                const title = isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode';
+                const text = isDark ? '{{ t("light_mode") }}' : '{{ t("dark_mode") }}';
+                
+                // Update topbar icon
+                if (darkModeIcon) {
+                    darkModeIcon.classList.remove(iconClassToRemove);
+                    darkModeIcon.classList.add(iconClass);
+                    darkModeToggle.title = title;
+                }
+                
+                // Update sidebar mobile icon
+                if (sidebarDarkModeIcon) {
+                    sidebarDarkModeIcon.classList.remove(iconClassToRemove);
+                    sidebarDarkModeIcon.classList.add(iconClass);
+                    sidebarDarkModeText.textContent = text;
+                }
+                
+                // Update sidebar desktop icon
+                if (desktopSidebarDarkModeIcon) {
+                    desktopSidebarDarkModeIcon.classList.remove(iconClassToRemove);
+                    desktopSidebarDarkModeIcon.classList.add(iconClass);
+                    desktopSidebarDarkModeText.textContent = text;
                 }
             }
             
-            // Sidebar Toggle
+            // Sidebar Toggle - Fixed Implementation
             const sidebar = document.getElementById('sidebar');
             const content = document.getElementById('content');
             const sidebarToggle = document.getElementById('sidebarToggle');
             const mobileOverlay = document.getElementById('mobileOverlay');
             
-            sidebarToggle.addEventListener('click', function() {
-                sidebar.classList.toggle('show');
-                mobileOverlay.classList.toggle('show');
+            console.log('Elements found:', {
+                sidebar: !!sidebar,
+                sidebarToggle: !!sidebarToggle,
+                mobileOverlay: !!mobileOverlay
             });
+            
+            if (sidebarToggle) {
+                sidebarToggle.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    console.log('Sidebar toggle clicked'); // Debug log
+                    
+                    if (sidebar) {
+                        const isCurrentlyShown = sidebar.classList.contains('show');
+                        console.log('Current sidebar state:', isCurrentlyShown);
+                        
+                        if (isCurrentlyShown) {
+                            sidebar.classList.remove('show');
+                            document.body.classList.remove('sidebar-open');
+                        } else {
+                            sidebar.classList.add('show');
+                            document.body.classList.add('sidebar-open');
+                        }
+                        
+                        console.log('New sidebar classes:', sidebar.className); // Debug log
+                    }
+                    
+                    if (mobileOverlay) {
+                        const isCurrentlyShown = mobileOverlay.classList.contains('show');
+                        if (isCurrentlyShown) {
+                            mobileOverlay.classList.remove('show');
+                        } else {
+                            mobileOverlay.classList.add('show');
+                        }
+                        console.log('New overlay classes:', mobileOverlay.className); // Debug log
+                    }
+                });
+            }
 
             // Close sidebar when clicking overlay
-            mobileOverlay.addEventListener('click', function() {
-                sidebar.classList.remove('show');
-                mobileOverlay.classList.remove('show');
+            if (mobileOverlay) {
+                mobileOverlay.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    console.log('Overlay clicked'); // Debug log
+                    
+                    if (sidebar) {
+                        sidebar.classList.remove('show');
+                        console.log('Sidebar closed via overlay, classes:', sidebar.className);
+                    }
+                    mobileOverlay.classList.remove('show');
+                    document.body.classList.remove('sidebar-open');
+                    console.log('Overlay hidden, classes:', mobileOverlay.className);
+                });
+            }
+            
+            // Close sidebar when clicking outside on mobile
+            document.addEventListener('click', function(e) {
+                // Only apply on mobile screens
+                if (window.innerWidth <= 768) {
+                    if (sidebar && sidebar.classList.contains('show')) {
+                        if (!sidebar.contains(e.target) && !sidebarToggle.contains(e.target)) {
+                            console.log('Clicked outside sidebar, closing');
+                            sidebar.classList.remove('show');
+                            document.body.classList.remove('sidebar-open');
+                            if (mobileOverlay) {
+                                mobileOverlay.classList.remove('show');
+                            }
+                        }
+                    }
+                }
+            });
+            
+            // Debug: Log window resize
+            window.addEventListener('resize', function() {
+                console.log('Window resized to:', window.innerWidth);
+                if (window.innerWidth > 768) {
+                    if (sidebar) {
+                        sidebar.classList.remove('show');
+                    }
+                    if (mobileOverlay) {
+                        mobileOverlay.classList.remove('show');
+                    }
+                    document.body.classList.remove('sidebar-open');
+                }
             });
             
             // AI Assistant Chat
