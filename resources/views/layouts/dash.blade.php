@@ -169,20 +169,33 @@
             right: 0;
             z-index: 1020;
             transition: all 0.3s;
+            padding: 0 1rem;
         }
 
-        /* Responsive adjustments for topbar */
-        @media (max-width: 768px) {
-            .top-navbar {
-                left: 0;
-                right: 0;
+        /* Ensure sidebar is always visible on desktop */
+        @media (min-width: 992px) {
+            #sidebar {
+                transform: translateX(0) !important;
             }
             
+            /* Hide mobile overlay on desktop */
+            .mobile-overlay {
+                display: none !important;
+            }
+            
+            /* Ensure content is properly offset */
             #content {
-                margin-left: 0 !important;
-                padding-top: 70px;
+                margin-left: 250px;
             }
             
+            /* Hide mobile menu toggle on desktop */
+            #sidebarToggle {
+                display: none !important;
+            }
+        }
+
+        /* Mobile styles */
+        @media (max-width: 992px) {
             #sidebar {
                 transform: translateX(-100%);
                 position: fixed !important;
@@ -197,7 +210,15 @@
             #sidebar.show {
                 transform: translateX(0) !important;
             }
-
+            
+            #content {
+                margin-left: 0 !important;
+            }
+            
+            .top-navbar {
+                left: 0;
+            }
+            
             /* Mobile overlay */
             .mobile-overlay {
                 position: fixed;
@@ -206,53 +227,23 @@
                 width: 100%;
                 height: 100%;
                 background: rgba(0, 0, 0, 0.5);
-                z-index: 1025;
+                z-index: 1045;
                 display: none;
                 opacity: 0;
                 transition: opacity 0.3s ease-in-out;
             }
-
+            
             .mobile-overlay.show {
                 display: block !important;
                 opacity: 1 !important;
             }
             
-            /* Hide search bar on mobile, move to sidebar */
-            .desktop-search {
-                display: none;
-            }
-            
-            /* Show dark mode toggle only on mobile topbar */
-            .mobile-dark-toggle {
-                display: block;
+            /* Prevent body scroll when sidebar is open */
+            body.sidebar-open {
+                overflow: hidden;
             }
         }
-        
-        @media (min-width: 769px) {
-            /* Show search bar on desktop */
-            .desktop-search {
-                display: flex;
-            }
-            
-            /* Hide mobile dark mode toggle on desktop */
-            .mobile-dark-toggle {
-                display: none;
-            }
-            
-            /* Hide mobile overlay on desktop */
-            .mobile-overlay {
-                display: none !important;
-            }
-            
-            /* Ensure sidebar is positioned correctly on desktop */
-            #sidebar {
-                transform: translateX(0) !important;
-                position: fixed !important;
-                top: 0;
-                left: 0;
-            }
-        }
-        
+
         .top-navbar .navbar-brand,
         .top-navbar .nav-link {
             color: var(--gray-700);
@@ -416,7 +407,7 @@
             padding: 2rem;
         }
         
-        .modal-danger .modal-body .text-danger {
+        .modal-danger .text-danger {
             color: var(--danger-color) !important;
         }
         
@@ -733,20 +724,14 @@
         
         /* Responsive Design */
         @media (max-width: 768px) {
-            #sidebar {
-                margin-left: -250px;
+            /* Hide search bar on mobile, move to sidebar */
+            .desktop-search {
+                display: none;
             }
             
-            #sidebar.active {
-                margin-left: 0;
-            }
-            
-            #content {
-                margin-left: 0;
-            }
-            
-            #content.active {
-                margin-left: 250px;
+            /* Show dark mode toggle only on mobile topbar */
+            .mobile-dark-toggle {
+                display: block;
             }
             
             .ai-chat-container {
@@ -864,7 +849,7 @@
             
             /* Top navbar mobile responsive */
             .top-navbar .container-fluid {
-                padding: 0 1rem;
+                padding: 0 0.5rem;
             }
             
             .top-navbar .btn-link {
@@ -880,6 +865,27 @@
             .top-navbar .dropdown, 
             .top-navbar button {
                 flex-shrink: 0;
+            }
+            
+            /* Hide brand text on very small screens */
+            @media (max-width: 400px) {
+                .navbar-brand {
+                    display: none !important;
+                }
+                
+                .top-navbar .container-fluid {
+                    padding: 0 0.25rem;
+                }
+                
+                .top-navbar .btn-link {
+                    padding: 0.375rem;
+                }
+                
+                .ai-chat-container {
+                    width: 280px;
+                    height: 350px;
+                    right: -10px;
+                }
             }
         }
         
@@ -1108,16 +1114,8 @@
                 </li>
                 @endif
                 
-                <!-- DEBUG: Business Type Check -->
-                @if(auth()->user()->business)
-                    <!-- Debug: Business Type = {{ auth()->user()->business->business_type }} -->
-                    <!-- Debug: Is Service/Hybrid = {{ in_array(auth()->user()->business->business_type, ['service', 'hybrid']) ? 'YES' : 'NO' }} -->
-                @else
-                    <!-- Debug: No business found for user -->
-                @endif
-                
                 <!-- Services - Show for service and hybrid businesses -->
-                <!-- @if(auth()->user()->business && in_array(auth()->user()->business->business_type, ['service', 'hybrid'])) -->
+                @if(auth()->user()->business && in_array(auth()->user()->business->business_type, ['service', 'hybrid']))
                 <li class="nav-item">
                     <a class="nav-link dropdown-toggle" data-bs-toggle="collapse" href="#servicesCollapse" role="button">
                         <i class="fas fa-cut me-2"></i>
@@ -1166,7 +1164,7 @@
                         </ul>
                     </div>
                 </li>
-                <!-- @endif -->
+                @endif
                 
                 <!-- Sales -->
                 <li class="nav-item">
@@ -1418,18 +1416,18 @@
         <!-- Top Navbar - Minimal Design -->
         <nav class="navbar top-navbar navbar-expand-lg navbar-light bg-white shadow-sm">
             <div class="container-fluid">
-                <!-- Left Side: Menu Toggle -->
-                <button class="btn btn-link" id="sidebarToggle">
+                <!-- Left Side: Menu Toggle (Hidden on desktop) -->
+                <button class="btn btn-link d-lg-none" id="sidebarToggle">
                     <i class="fas fa-bars fa-lg"></i>
                 </button>
                 
-                <!-- Center: Brand Logo for Mobile -->
-                <div class="d-md-none mx-auto">
-                    <span class="navbar-brand mb-0 h1 text-primary fw-bold">Shopybook</span>
+                <!-- Center: Brand Logo for Mobile (Hidden on desktop) -->
+                <div class="d-lg-none mx-auto">
+                    <span class="navbar-brand mb-0 h1 text-primary fw-bold d-none d-sm-inline">Shopybook</span>
                 </div>
                 
                 <!-- Desktop Search Bar (Hidden on Mobile) -->
-                <form class="d-none d-lg-flex ms-auto me-3 desktop-search">
+                <form class="d-none d-lg-flex ms-3 me-auto desktop-search">
                     <input class="form-control me-2" type="search" placeholder="{{ t('search_products_orders') }}" aria-label="Search">
                     <button class="btn btn-outline-primary" type="submit">
                         <i class="fas fa-search"></i>
@@ -1685,41 +1683,26 @@
             const sidebarToggle = document.getElementById('sidebarToggle');
             const mobileOverlay = document.getElementById('mobileOverlay');
             
-            console.log('Elements found:', {
-                sidebar: !!sidebar,
-                sidebarToggle: !!sidebarToggle,
-                mobileOverlay: !!mobileOverlay
-            });
-            
             if (sidebarToggle) {
                 sidebarToggle.addEventListener('click', function(e) {
                     e.preventDefault();
                     e.stopPropagation();
-                    console.log('Sidebar toggle clicked'); // Debug log
                     
-                    if (sidebar) {
-                        const isCurrentlyShown = sidebar.classList.contains('show');
-                        console.log('Current sidebar state:', isCurrentlyShown);
-                        
-                        if (isCurrentlyShown) {
-                            sidebar.classList.remove('show');
-                            document.body.classList.remove('sidebar-open');
-                        } else {
-                            sidebar.classList.add('show');
-                            document.body.classList.add('sidebar-open');
+                    // Toggle sidebar on mobile
+                    if (window.innerWidth <= 992) {
+                        if (sidebar) {
+                            const isCurrentlyShown = sidebar.classList.contains('show');
+                            
+                            if (isCurrentlyShown) {
+                                sidebar.classList.remove('show');
+                                document.body.classList.remove('sidebar-open');
+                                if (mobileOverlay) mobileOverlay.classList.remove('show');
+                            } else {
+                                sidebar.classList.add('show');
+                                document.body.classList.add('sidebar-open');
+                                if (mobileOverlay) mobileOverlay.classList.add('show');
+                            }
                         }
-                        
-                        console.log('New sidebar classes:', sidebar.className); // Debug log
-                    }
-                    
-                    if (mobileOverlay) {
-                        const isCurrentlyShown = mobileOverlay.classList.contains('show');
-                        if (isCurrentlyShown) {
-                            mobileOverlay.classList.remove('show');
-                        } else {
-                            mobileOverlay.classList.add('show');
-                        }
-                        console.log('New overlay classes:', mobileOverlay.className); // Debug log
                     }
                 });
             }
@@ -1729,25 +1712,24 @@
                 mobileOverlay.addEventListener('click', function(e) {
                     e.preventDefault();
                     e.stopPropagation();
-                    console.log('Overlay clicked'); // Debug log
                     
                     if (sidebar) {
                         sidebar.classList.remove('show');
-                        console.log('Sidebar closed via overlay, classes:', sidebar.className);
                     }
                     mobileOverlay.classList.remove('show');
                     document.body.classList.remove('sidebar-open');
-                    console.log('Overlay hidden, classes:', mobileOverlay.className);
                 });
             }
-            
+
             // Close sidebar when clicking outside on mobile
             document.addEventListener('click', function(e) {
                 // Only apply on mobile screens
-                if (window.innerWidth <= 768) {
+                if (window.innerWidth <= 992) {
                     if (sidebar && sidebar.classList.contains('show')) {
-                        if (!sidebar.contains(e.target) && !sidebarToggle.contains(e.target)) {
-                            console.log('Clicked outside sidebar, closing');
+                        const isClickInsideSidebar = sidebar.contains(e.target);
+                        const isClickOnToggle = sidebarToggle && sidebarToggle.contains(e.target);
+                        
+                        if (!isClickInsideSidebar && !isClickOnToggle) {
                             sidebar.classList.remove('show');
                             document.body.classList.remove('sidebar-open');
                             if (mobileOverlay) {
@@ -1757,20 +1739,26 @@
                     }
                 }
             });
-            
-            // Debug: Log window resize
-            window.addEventListener('resize', function() {
-                console.log('Window resized to:', window.innerWidth);
-                if (window.innerWidth > 768) {
-                    if (sidebar) {
-                        sidebar.classList.remove('show');
-                    }
-                    if (mobileOverlay) {
-                        mobileOverlay.classList.remove('show');
-                    }
+
+            // Handle window resize
+            function handleResize() {
+                if (window.innerWidth > 992) {
+                    // On desktop, ensure sidebar is visible and overlay is hidden
+                    if (sidebar) sidebar.classList.remove('show');
+                    if (mobileOverlay) mobileOverlay.classList.remove('show');
                     document.body.classList.remove('sidebar-open');
                 }
+            }
+
+            // Debounce resize events
+            let resizeTimer;
+            window.addEventListener('resize', function() {
+                clearTimeout(resizeTimer);
+                resizeTimer = setTimeout(handleResize, 250);
             });
+
+            // Initialize on load
+            handleResize();
             
             // AI Assistant Chat
             const aiAssistantBtn = document.getElementById('aiAssistantBtn');
@@ -1951,6 +1939,6 @@
     <!-- Logout Form -->
     <form id="logout-form" action="{{ route('logout') }}" method="POST" class="d-none">
         @csrf
-    </form>
+    </form> 
 </body>
 </html>

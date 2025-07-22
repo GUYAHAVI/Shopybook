@@ -1,62 +1,148 @@
 @extends('layouts.dash')
+
 @section('content')
 <div class="container py-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h2 class="fw-bold" style="color:#020258;">Services</h2>
-        <a href="{{ route('services.create') }}" class="btn btn-primary"><i class="fas fa-plus me-1"></i> Add Service</a>
+        <a href="{{ route('services.create') }}" class="btn btn-primary">
+            <i class="fas fa-plus me-1"></i> Add Service
+        </a>
     </div>
+
     @if(session('success'))
-        <div class="alert alert-success">{{ session('success') }}</div>
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="fas fa-check-circle me-2"></i>
+            {{ session('success') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
     @endif
-    <div class="card p-3">
-        <table class="table table-hover align-middle">
-            <thead>
-                <tr style="color:#020258;">
-                    <th>Name</th>
-                    <th>Price</th>
-                    <th>Duration</th>
-                    <th>Commission (%)</th>
-                    <th>Description</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                @forelse($services as $service)
-                <tr>
-                    <td>
-                        <div class="d-flex align-items-center">
-                            <div>
-                                <div class="fw-medium">{{ $service->name }}</div>
-                                @if($service->is_complimentary)
-                                    <small class="badge bg-info">Complimentary</small>
-                                @endif
-                                @if($service->is_bundle_trigger)
-                                    <small class="badge bg-warning">Bundle Trigger</small>
-                                @endif
+
+    @if(session('error'))
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="fas fa-exclamation-circle me-2"></i>
+            {{ session('error') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    @endif
+
+    <div class="card shadow-sm">
+        <div class="card-body">
+            @if($services && count($services) > 0)
+                <!-- Desktop Table View -->
+                <div class="d-none d-md-block">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle">
+                            <thead class="table-light">
+                                <tr style="color:#020258;">
+                                    <th>Name</th>
+                                    <th>Price</th>
+                                    <th>Duration</th>
+                                    <th>Commission (%)</th>
+                                    <th>Description</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach($services as $service)
+                                <tr>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <div>
+                                                <div class="fw-medium">{{ $service->name ?? 'Unknown Service' }}</div>
+                                                @if($service->is_complimentary)
+                                                    <small class="badge bg-info">Complimentary</small>
+                                                @endif
+                                                @if($service->is_bundle_trigger)
+                                                    <small class="badge bg-warning">Bundle Trigger</small>
+                                                @endif
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>KSh {{ number_format($service->price, 2) }}</td>
+                                    <td>{{ $service->duration ? $service->duration.' min' : '-' }}</td>
+                                    <td>{{ $service->commission_rate ? $service->commission_rate.'%' : '-' }}</td>
+                                    <td>{{ $service->description ?? '-' }}</td>
+                                    <td>
+                                        <a href="{{ route('services.edit', $service) }}" 
+                                           class="btn btn-sm btn-outline-primary me-1" 
+                                           title="Edit Service">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        <button type="button" 
+                                                class="btn btn-sm btn-outline-danger" 
+                                                data-bs-toggle="modal" 
+                                                data-bs-target="#deleteModal" 
+                                                data-service-id="{{ $service->id }}"
+                                                data-service-name="{{ $service->name }}"
+                                                data-service-price="KSh {{ number_format($service->price, 2) }}"
+                                                title="Delete Service">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Mobile Card View -->
+                <div class="d-block d-md-none">
+                    @foreach($services as $service)
+                        <div class="mobile-card-item mb-3">
+                            <div class="mobile-card-header">
+                                <h5 class="mobile-card-title">{{ $service->name }}</h5>
+                                <span class="badge bg-success mobile-card-badge">
+                                    KSh {{ number_format($service->price, 2) }}
+                                </span>
+                            </div>
+                            <div class="mobile-card-content">
+                                <div class="mobile-card-field">
+                                    <label>Duration:</label>
+                                    <span>{{ $service->duration ? $service->duration.' min' : '-' }}</span>
+                                </div>
+                                <div class="mobile-card-field">
+                                    <label>Commission:</label>
+                                    <span>{{ $service->commission_rate ? $service->commission_rate.'%' : '-' }}</span>
+                                </div>
+                                <div class="mobile-card-field">
+                                    <label>Description:</label>
+                                    <span>{{ $service->description ?? '-' }}</span>
+                                </div>
+                                <div class="mobile-card-field">
+                                    <label>Special Features:</label>
+                                    <span>
+                                        @if($service->is_complimentary) Complimentary @endif
+                                        @if($service->is_bundle_trigger) @if($service->is_complimentary), @endif Bundle Trigger @endif
+                                        @if(!$service->is_complimentary && !$service->is_bundle_trigger) None @endif
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="mobile-card-actions">
+                                <a href="{{ route('services.edit', $service) }}" 
+                                   class="btn btn-sm btn-outline-primary">
+                                    <i class="fas fa-edit me-1"></i> Edit
+                                </a>
+                                <button type="button" 
+                                        class="btn btn-sm btn-outline-danger"
+                                        onclick="openDeleteServiceModal('{{ $service->id }}', '{{ addslashes($service->name) }}', 'KSh {{ number_format($service->price, 2) }}')">
+                                    <i class="fas fa-trash me-1"></i> Delete
+                                </button>
                             </div>
                         </div>
-                    </td>
-                    <td>KSh {{ number_format($service->price,2) }}</td>
-                    <td>{{ $service->duration ? $service->duration.' min' : '-' }}</td>
-                    <td>{{ $service->commission_rate ?? '-' }}</td>
-                    <td>{{ $service->description }}</td>
-                    <td>
-                        <a href="{{ route('services.edit', $service) }}" class="btn btn-sm btn-outline-primary"><i class="fas fa-edit"></i></a>
-                        <button type="button" class="btn btn-sm btn-outline-danger" 
-                                data-bs-toggle="modal" 
-                                data-bs-target="#deleteModal" 
-                                data-service-id="{{ $service->id }}"
-                                data-service-name="{{ $service->name }}"
-                                data-service-price="KSh {{ number_format($service->price, 2) }}">
-                            <i class="fas fa-trash"></i>
-                        </button>
-                    </td>
-                </tr>
-                @empty
-                <tr><td colspan="6" class="text-center">No services found.</td></tr>
-                @endforelse
-            </tbody>
-        </table>
+                    @endforeach
+                </div>
+            @else
+                <div class="text-center py-5">
+                    <i class="fas fa-concierge-bell fa-3x text-muted mb-3"></i>
+                    <h5>No Services Found</h5>
+                    <p class="text-muted">Create your first service to get started.</p>
+                    <a href="{{ route('services.create') }}" class="btn btn-primary">
+                        <i class="fas fa-plus me-1"></i> Create Service
+                    </a>
+                </div>
+            @endif
+        </div>
     </div>
 </div>
 
@@ -73,30 +159,22 @@
             </div>
             <div class="modal-body">
                 <div class="alert alert-warning" role="alert">
-                    <i class="fas fa-shield-alt me-2"></i>
-                    <strong>Security Required:</strong> This action requires your account password for verification.
+                    <i class="fas fa-info-circle me-2"></i>
+                    <strong>Warning:</strong> This action cannot be undone. The service will be permanently removed from your system.
                 </div>
-                
-                <div class="mb-3">
-                    <p class="fw-bold mb-2">You are about to delete:</p>
-                    <div class="bg-light p-3 rounded border">
-                        <div class="row mb-2">
-                            <div class="col-sm-4"><strong>Service Name:</strong></div>
-                            <div class="col-sm-8" id="modal-service-name">-</div>
-                        </div>
-                        <div class="row">
-                            <div class="col-sm-4"><strong>Price:</strong></div>
-                            <div class="col-sm-8" id="modal-service-price">-</div>
-                        </div>
+
+                <div class="bg-light p-3 rounded border">
+                    <div class="row mb-2">
+                        <div class="col-sm-4"><strong>Service Name:</strong></div>
+                        <div class="col-sm-8" id="modal-service-name">-</div>
+                    </div>
+                    <div class="row">
+                        <div class="col-sm-4"><strong>Price:</strong></div>
+                        <div class="col-sm-8" id="modal-service-price">-</div>
                     </div>
                 </div>
 
-                <div class="alert alert-info" role="alert">
-                    <i class="fas fa-info-circle me-2"></i>
-                    <strong>Important:</strong> Deleting this service may affect existing service bookings and records. Services with active bookings cannot be deleted.
-                </div>
-
-                <div id="delete-error-alert" class="alert alert-danger d-none" role="alert">
+                <div id="delete-error-alert" class="alert alert-danger d-none mt-3" role="alert">
                     <i class="fas fa-times-circle me-2"></i>
                     <span id="delete-error-message"></span>
                 </div>
@@ -105,7 +183,7 @@
                     @csrf
                     @method('DELETE')
                     
-                    <div class="mb-3">
+                    <div class="mt-3">
                         <label for="password" class="form-label">
                             <i class="fas fa-lock me-1"></i>
                             Enter your account password to confirm deletion:
@@ -140,6 +218,71 @@
 </div>
 
 <style>
+.mobile-card-item {
+    background: #ffffff;
+    border: 1px solid #e9ecef;
+    border-radius: 8px;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.mobile-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 0.75rem;
+}
+
+.mobile-card-title {
+    font-weight: 600;
+    margin: 0;
+    flex: 1;
+}
+
+.mobile-card-badge {
+    font-size: 0.75rem;
+    margin-left: 0.5rem;
+}
+
+.mobile-card-content {
+    margin-bottom: 0.75rem;
+}
+
+.mobile-card-field {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.25rem 0;
+    border-bottom: 1px solid #f8f9fa;
+}
+
+.mobile-card-field:last-child {
+    border-bottom: none;
+}
+
+.mobile-card-field label {
+    font-weight: 500;
+    color: #6c757d;
+    margin: 0;
+    width: 40%;
+}
+
+.mobile-card-field span {
+    color: #212529;
+    width: 60%;
+    text-align: right;
+}
+
+.mobile-card-actions {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.mobile-card-actions .btn {
+    font-size: 0.875rem;
+}
+
 .modal-content {
     box-shadow: 0 10px 30px rgba(0,0,0,0.3);
 }
@@ -171,11 +314,20 @@
 document.addEventListener('DOMContentLoaded', function() {
     const deleteModal = document.getElementById('deleteModal');
     const deleteForm = document.getElementById('deleteForm');
-    const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
     const passwordInput = document.getElementById('password');
+    const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
     const deleteSpinner = document.getElementById('delete-spinner');
     const errorAlert = document.getElementById('delete-error-alert');
     const errorMessage = document.getElementById('delete-error-message');
+
+    function showError(message) {
+        errorMessage.textContent = message;
+        errorAlert.classList.remove('d-none');
+    }
+
+    function hideError() {
+        errorAlert.classList.add('d-none');
+    }
 
     // Handle modal show event
     deleteModal.addEventListener('show.bs.modal', function(event) {
@@ -193,7 +345,7 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Reset form and hide error
         passwordInput.value = '';
-        errorAlert.classList.add('d-none');
+        hideError();
         confirmDeleteBtn.disabled = false;
         deleteSpinner.classList.add('d-none');
         
@@ -209,30 +361,17 @@ document.addEventListener('DOMContentLoaded', function() {
         
         if (!password) {
             showError('Please enter your password.');
+            passwordInput.focus();
             return;
         }
-
-        // Get the service ID from the form action
-        const formAction = deleteForm.action;
-        const serviceId = formAction.split('/').pop();
 
         // Show loading state
         confirmDeleteBtn.disabled = true;
         deleteSpinner.classList.remove('d-none');
-        errorAlert.classList.add('d-none');
+        hideError();
 
-        // Create form data and ensure method override is included
+        // Create form data
         const formData = new FormData(deleteForm);
-        
-        // Ensure the DELETE method is properly set
-        if (!formData.has('_method')) {
-            formData.append('_method', 'DELETE');
-        }
-        
-        console.log('Form data entries:');
-        for (let [key, value] of formData.entries()) {
-            console.log(key, value);
-        }
 
         // Submit via fetch
         fetch(deleteForm.action, {
@@ -240,40 +379,11 @@ document.addEventListener('DOMContentLoaded', function() {
             body: formData,
             headers: {
                 'X-Requested-With': 'XMLHttpRequest',
-                'Accept': 'application/json',
                 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
             }
         })
         .then(response => {
-            console.log('Response status:', response.status);
-            console.log('Response headers:', response.headers);
-            console.log('Response content-type:', response.headers.get('content-type'));
-            
-            // Check if response is actually JSON
-            const contentType = response.headers.get('content-type');
-            if (!contentType || !contentType.includes('application/json')) {
-                // Log the actual response text for debugging
-                return response.text().then(text => {
-                    console.log('Response text:', text.substring(0, 200) + '...');
-                    throw new Error('Server returned HTML instead of JSON. This usually indicates a server error or redirect.');
-                });
-            }
-            
             if (!response.ok) {
-                // Handle different HTTP status codes
-                if (response.status === 422) {
-                    return response.json().then(data => {
-                        throw new Error(data.message || 'Validation failed');
-                    });
-                } else if (response.status === 403) {
-                    return response.json().then(data => {
-                        throw new Error(data.message || 'Access denied');
-                    });
-                } else if (response.status === 500) {
-                    return response.json().then(data => {
-                        throw new Error(data.message || 'Server error occurred');
-                    });
-                }
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
             return response.json();
@@ -284,85 +394,60 @@ document.addEventListener('DOMContentLoaded', function() {
                 const modal = bootstrap.Modal.getInstance(deleteModal);
                 modal.hide();
                 
-                // Create and show success alert
-                const alertDiv = document.createElement('div');
-                alertDiv.className = 'alert alert-success alert-dismissible fade show';
-                alertDiv.innerHTML = `
+                // Show success message and reload page
+                const successAlert = document.createElement('div');
+                successAlert.className = 'alert alert-success alert-dismissible fade show position-fixed';
+                successAlert.style.cssText = 'top: 20px; right: 20px; z-index: 1060; min-width: 300px;';
+                successAlert.innerHTML = `
                     <i class="fas fa-check-circle me-2"></i>
-                    ${data.message || 'Service deleted successfully.'}
+                    ${data.message}
                     <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                 `;
+                document.body.appendChild(successAlert);
                 
-                // Insert alert at the top of the container
-                const container = document.querySelector('.container.py-4');
-                const firstChild = container.firstElementChild;
-                container.insertBefore(alertDiv, firstChild);
-                
-                // Remove the deleted row from the table
-                const deletedRow = document.querySelector(`button[data-service-id="${serviceId}"]`)?.closest('tr');
-                if (deletedRow) {
-                    deletedRow.style.transition = 'opacity 0.5s';
-                    deletedRow.style.opacity = '0';
-                    setTimeout(() => {
-                        deletedRow.remove();
-                        
-                        // Check if table is now empty
-                        const tbody = document.querySelector('tbody');
-                        if (tbody && tbody.children.length === 1 && tbody.children[0].cells[0].textContent.includes('No services found')) {
-                            // Already shows "no services" message
-                        } else if (tbody && tbody.children.length === 0) {
-                            // Add "no services" row
-                            const noServicesRow = document.createElement('tr');
-                            noServicesRow.innerHTML = '<td colspan="6" class="text-center">No services found.</td>';
-                            tbody.appendChild(noServicesRow);
-                        }
-                    }, 500);
-                }
-                
-                // Auto-dismiss alert after 5 seconds
+                // Reload page after short delay
                 setTimeout(() => {
-                    if (alertDiv && alertDiv.parentNode) {
-                        alertDiv.remove();
-                    }
-                }, 5000);
-                
+                    window.location.reload();
+                }, 1500);
             } else {
                 showError(data.message || 'An error occurred while deleting the service.');
+                confirmDeleteBtn.disabled = false;
+                deleteSpinner.classList.add('d-none');
             }
         })
         .catch(error => {
-            console.error('Error details:', error);
-            
-            // Handle different types of errors
-            if (error.message.includes('HTML instead of JSON')) {
-                showError('Server error: The server returned an error page instead of the expected response. Please check the server logs and try again.');
-            } else if (error.message.includes('Failed to fetch')) {
-                showError('Network error: Please check your connection and try again.');
-            } else if (error.message.includes('422') || error.message.includes('validation')) {
-                showError(error.message);
-            } else {
-                showError(error.message || 'An unexpected error occurred. Please try again.');
-            }
-        })
-        .finally(() => {
-            // Reset loading state
+            console.error('Delete error:', error);
+            showError('An unexpected error occurred. Please try again.');
             confirmDeleteBtn.disabled = false;
             deleteSpinner.classList.add('d-none');
         });
     });
 
     // Handle Enter key in password field
-    passwordInput.addEventListener('keypress', function(event) {
-        if (event.key === 'Enter') {
-            event.preventDefault();
+    passwordInput.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
             confirmDeleteBtn.click();
         }
     });
 
-    function showError(message) {
-        errorMessage.textContent = message;
-        errorAlert.classList.remove('d-none');
-    }
+    // Helper function for mobile cards
+    window.openDeleteServiceModal = function(serviceId, serviceName, servicePrice) {
+        const modal = new bootstrap.Modal(deleteModal);
+        
+        // Set the data attributes on the modal trigger
+        const tempButton = document.createElement('button');
+        tempButton.setAttribute('data-service-id', serviceId);
+        tempButton.setAttribute('data-service-name', serviceName);
+        tempButton.setAttribute('data-service-price', servicePrice);
+        
+        // Trigger the modal show event
+        const event = new Event('show.bs.modal');
+        event.relatedTarget = tempButton;
+        deleteModal.dispatchEvent(event);
+        
+        modal.show();
+    };
 });
 </script>
-@endsection 
+@endsection

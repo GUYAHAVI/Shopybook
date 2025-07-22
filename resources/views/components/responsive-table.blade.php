@@ -2,14 +2,18 @@
 
 <div class="table-mobile-cards">
     <!-- Desktop Table -->
-    <div class="table-responsive">
-        {{ $table }}
+    <div class="d-none d-md-block">
+        {{ $tableContent }}
     </div>
     
     <!-- Mobile Cards -->
     <div class="mobile-cards-container d-md-none">
-        @if(count($mobileCards) > 0)
-            @foreach($mobileCards as $card)
+        @php
+            $mobileData = isset($mobileData) ? json_decode($mobileData, true) : [];
+        @endphp
+        
+        @if(count($mobileData) > 0)
+            @foreach($mobileData as $card)
                 <x-mobile-card 
                     :title="$card['title']"
                     :badge="$card['badge'] ?? null"

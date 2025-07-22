@@ -30,14 +30,37 @@
     @if(count($actions) > 0)
         <div class="mobile-card-actions">
             @foreach($actions as $action)
-                <a href="{{ $action['url'] }}" 
-                   class="btn {{ $action['class'] ?? 'btn-outline-primary' }}"
-                   @if(isset($action['onclick'])) onclick="{{ $action['onclick'] }}" @endif>
-                    @if(isset($action['icon']))
-                        <i class="{{ $action['icon'] }} me-1"></i>
-                    @endif
-                    {{ $action['text'] }}
-                </a>
+                @if($action['type'] === 'delete-form')
+                    <form action="{{ $action['url'] }}" method="POST" class="d-inline">
+                        @csrf @method('DELETE')
+                        <button type="submit" 
+                                class="btn {{ $action['class'] ?? 'btn-outline-danger' }}"
+                                onclick="return confirm('{{ $action['confirm'] ?? 'Are you sure?' }}')">
+                            @if(isset($action['icon']))
+                                <i class="{{ $action['icon'] }} me-1"></i>
+                            @endif
+                            {{ $action['text'] }}
+                        </button>
+                    </form>
+                @elseif($action['type'] === 'button')
+                    <button type="button"
+                            class="btn {{ $action['class'] ?? 'btn-outline-primary' }}"
+                            @if(isset($action['onclick'])) onclick="{{ $action['onclick'] }}" @endif>
+                        @if(isset($action['icon']))
+                            <i class="{{ $action['icon'] }} me-1"></i>
+                        @endif
+                        {{ $action['text'] }}
+                    </button>
+                @else
+                    <a href="{{ $action['url'] }}" 
+                       class="btn {{ $action['class'] ?? 'btn-outline-primary' }}"
+                       @if(isset($action['onclick'])) onclick="{{ $action['onclick'] }}" @endif>
+                        @if(isset($action['icon']))
+                            <i class="{{ $action['icon'] }} me-1"></i>
+                        @endif
+                        {{ $action['text'] }}
+                    </a>
+                @endif
             @endforeach
         </div>
     @endif
