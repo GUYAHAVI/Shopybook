@@ -4,71 +4,60 @@
 <style>
 .dashboard-main-content {
     margin-top: 0;
-}
 
-.quick-action-card {
-    background: var(--white);
-    border: 1px solid var(--gray-200);
-    border-radius: 10px;
-    color: var(--gray-800);
-    transition: all 0.3s ease;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
-}
+<div class="h5 mb-0 font-weight-bold card-text" id="today-orders">{{ $todayOrders }}</div>
+<div class="h5 mb-0 font-weight-bold card-text" id="today-sales">KSh {{ number_format($todaySales) }}</div>
+<div class="h5 mb-0 mr-3 font-weight-bold card-text" id="conversion-rate">{{ $conversionRate }}%</div>
+<div class="h5 mb-0 font-weight-bold text-gray-800" id="net-profit">KSh {{ number_format($netProfit) }}</div>
+<div class="h5 mb-0 font-weight-bold text-gray-800" id="new-customers">{{ $newCustomers }}</div>
+<div class="h5 mb-0 font-weight-bold text-gray-800" id="returning-rate">{{ $returningRate }}%</div>
+<div class="h5 mb-0 font-weight-bold text-gray-800">{{ $avgOrderValue ? 'KSh ' . number_format($avgOrderValue) : 'N/A' }}</div>
 
-.quick-action-card .card-title {
-    color: var(--primary-color);
-    font-weight: 600;
-}
-
-.quick-action-card .card-text {
-    color: var(--gray-600);
-}
-
-.quick-action-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 8px 25px rgba(0, 123, 255, 0.15);
-    border-color: var(--primary-color);
-}
-
-.quick-action-card:hover .card-title {
-    color: var(--primary-dark);
-}
-
-.quick-action-card:hover .card-text {
-    color: var(--gray-700);
-}
-
-.stats-card {
-    background: var(--white);
-    border: 1px solid var(--gray-200);
-    border-radius: 10px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
-    transition: all 0.3s ease;
-}
-
-.stats-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12);
-}
-
-.stats-card .card-title {
-    color: var(--gray-600);
-    font-size: 0.8rem;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-}
-
-.stats-card .card-text {
-    color: var(--gray-800);
-    font-size: 1.8rem;
-    font-weight: 700;
-}
-
-.stats-card .icon {
-    color: var(--primary-color);
-    opacity: 0.9;
-}
+<!-- Service Businesses Section -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card chart-card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-briefcase me-2" style="color: var(--primary-color);"></i>
+                    {{ t('service_businesses') }}
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <!-- Recent Services -->
+                    <div class="col-md-6">
+                        <h6>{{ t('recent_services') }}</h6>
+                        <ul class="list-group">
+                            @forelse($services as $service)
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    {{ $service->name }}
+                                    <span class="badge bg-primary">KSh {{ number_format($service->price) }}</span>
+                                </li>
+                            @empty
+                                <li class="list-group-item">{{ t('no_services_found') }}</li>
+                            @endforelse
+                        </ul>
+                    </div>
+                    <!-- Recent Service Bookings -->
+                    <div class="col-md-6">
+                        <h6>{{ t('recent_service_bookings') }}</h6>
+                        <ul class="list-group">
+                            @forelse($serviceBookings as $booking)
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    {{ $booking->customer->name ?? t('unknown_customer') }}
+                                    <span class="badge bg-success">{{ $booking->serviceItems->first()->service->name ?? t('service') }}</span>
+                                </li>
+                            @empty
+                                <li class="list-group-item">{{ t('no_bookings_found') }}</li>
+                            @endforelse
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 
 .quick-action-card .fa-3x {
     color: var(--primary-color);
@@ -301,13 +290,13 @@
             <div class="card stats-card h-100 py-2">
                 <div class="card-body">
                     <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-uppercase mb-1 card-title">
-                                {{ t('today_orders') }}</div>
-                            <div class="h5 mb-0 font-weight-bold card-text" id="today-orders">18</div>
+                        <div class="col-auto d-flex align-items-center justify-content-center me-2">
+                            <i class="fas fa-shopping-cart fa-2x icon text-primary"></i>
                         </div>
-                        <div class="col-auto">
-                            <i class="fas fa-shopping-cart fa-2x icon"></i>
+                        <div class="col">
+                            <div class="text-xs font-weight-bold text-cyan text-uppercase mb-1 card-title">
+                                {{ t('today_orders') }}</div>
+                            <div class="h5 mb-0 font-weight-bold card-text" id="today-orders">{{ $todayOrders }}</div>
                         </div>
                     </div>
                 </div>
@@ -318,13 +307,13 @@
             <div class="card stats-card h-100 py-2">
                 <div class="card-body">
                     <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-uppercase mb-1 card-title">
-                                {{ t('today_sales') }}</div>
-                            <div class="h5 mb-0 font-weight-bold card-text" id="today-sales">KSh 24,500</div>
+                        <div class="col-auto d-flex align-items-center justify-content-center me-2">
+                            <i class="fas fa-coins fa-2x icon text-primary"></i>
                         </div>
-                        <div class="col-auto">
-                            <i class="fas fa-coins fa-2x icon"></i>
+                        <div class="col">
+                            <div class="text-xs font-weight-bold text-cyan text-uppercase mb-1 card-title">
+                                {{ t('today_sales') }}</div>
+                            <div class="h5 mb-0 font-weight-bold card-text" id="today-sales">KSh {{ number_format($todaySales) }}</div>
                         </div>
                     </div>
                 </div>
@@ -335,22 +324,22 @@
             <div class="card stats-card h-100 py-2">
                 <div class="card-body">
                     <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-uppercase mb-1 card-title">
+                        <div class="col-auto d-flex align-items-center justify-content-center me-2">
+                            <i class="fas fa-percent fa-2x icon text-primary"></i>
+                        </div>
+                        <div class="col">
+                            <div class="text-xs font-weight-bold text-cyan text-uppercase mb-1 card-title">
                                 {{ t('conversion_rate') }}</div>
                             <div class="row no-gutters align-items-center">
                                 <div class="col-auto">
-                                    <div class="h5 mb-0 mr-3 font-weight-bold card-text" id="conversion-rate">32%</div>
+                                    <div class="h5 mb-0 mr-3 font-weight-bold card-text" id="conversion-rate">{{ $conversionRate }}%</div>
                                 </div>
                                 <div class="col">
                                     <div class="progress progress-sm mr-2" style="height: 8px; background: #fff;">
-                                        <div class="progress-bar" role="progressbar" style="width: 32%; background-color: var(--primary-color);" aria-valuenow="32" aria-valuemin="0" aria-valuemax="100"></div>
+                                        <div class="progress-bar" role="progressbar" style="width: {{ $conversionRate }}%; background-color: var(--primary-color);" aria-valuenow="{{ $conversionRate }}" aria-valuemin="0" aria-valuemax="100"></div>
                                     </div>
                                 </div>
                             </div>
-                        </div>
-                        <div class="col-auto">
-                            <i class="fas fa-percent fa-2x icon"></i>
                         </div>
                     </div>
                 </div>
@@ -361,13 +350,93 @@
             <div class="card stats-card h-100 py-2">
                 <div class="card-body">
                     <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-uppercase mb-1 card-title">
-                                {{ t('pending_orders') }}</div>
-                            <div class="h5 mb-0 font-weight-bold card-text">4</div>
+                        <div class="col-auto d-flex align-items-center justify-content-center me-2">
+                            <i class="fas fa-clock fa-2x icon text-primary"></i>
                         </div>
-                        <div class="col-auto">
-                            <i class="fas fa-clock fa-2x icon"></i>
+                        <div class="col">
+                            <div class="text-xs font-weight-bold text-cyan text-uppercase mb-1 card-title">
+                                {{ t('pending_orders') }}</div>
+                            <div class="h5 mb-0 font-weight-bold card-text">{{ $pendingOrders }}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toggle Button for Stats -->
+    <div class="d-flex justify-content-end mb-3">
+        <div class="btn-group" role="group">
+            <button type="button" class="btn btn-outline-primary active" id="toggleProductStats">{{ t('product_stats') }}</button>
+            <button type="button" class="btn btn-outline-primary" id="toggleServiceStats">{{ t('service_stats') }}</button>
+        </div>
+    </div>
+
+    <!-- Service Stats Row (hidden by default) -->
+    <div class="row" id="service-stats-row" style="display: none;">
+        <!-- Today's Services -->
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card stats-card h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col-auto d-flex align-items-center justify-content-center me-2">
+                            <i class="fas fa-concierge-bell fa-2x icon text-primary"></i>
+                        </div>
+                        <div class="col">
+                            <div class="text-xs font-weight-bold text-cyan text-uppercase mb-1 card-title">
+                                {{ t('todays_services') }}</div>
+                            <div class="h5 mb-0 font-weight-bold card-text">{{ $todaysServices ?? 0 }}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Total Earnings from Services -->
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card stats-card h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col-auto d-flex align-items-center justify-content-center me-2">
+                            <i class="fas fa-money-bill-wave fa-2x icon text-primary"></i>
+                        </div>
+                        <div class="col">
+                            <div class="text-xs font-weight-bold text-cyan text-uppercase mb-1 card-title">
+                                {{ t('service_earnings_today') }}</div>
+                            <div class="h5 mb-0 font-weight-bold card-text">KSh {{ isset($serviceEarningsToday) ? number_format($serviceEarningsToday) : 0 }}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Most Performing Staff -->
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card stats-card h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col-auto d-flex align-items-center justify-content-center me-2">
+                            <i class="fas fa-user-tie fa-2x icon text-primary"></i>
+                        </div>
+                        <div class="col">
+                            <div class="text-xs font-weight-bold text-cyan text-uppercase mb-1 card-title">
+                                {{ t('top_staff_today') }}</div>
+                            <div class="h5 mb-0 font-weight-bold card-text">{{ $topStaffToday->name ?? t('none') }}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Total Service Bookings -->
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card stats-card h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col-auto d-flex align-items-center justify-content-center me-2">
+                            <i class="fas fa-calendar-check fa-2x icon text-primary"></i>
+                        </div>
+                        <div class="col">
+                            <div class="text-xs font-weight-bold text-cyan text-uppercase mb-1 card-title">
+                                {{ t('service_bookings_today') }}</div>
+                            <div class="h5 mb-0 font-weight-bold card-text">{{ $serviceBookingsToday ?? 0 }}</div>
                         </div>
                     </div>
                 </div>
@@ -473,7 +542,7 @@
                         <div class="col mr-2">
                             <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
                                 {{ t('net_profit') }}</div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800" id="net-profit">KSh 0.00</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800" id="net-profit">KSh {{ number_format($netProfit) }}</div>
                             <div class="mt-2 text-success small">
                                 <i class="fas fa-arrow-up"></i> 12% from last period
                             </div>
@@ -494,7 +563,7 @@
                         <div class="col mr-2">
                             <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
                                 {{ t('new_customers') }}</div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800" id="new-customers">0</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800" id="new-customers">{{ $newCustomers }}</div>
                             <div class="mt-2 text-danger small">
                                 <i class="fas fa-arrow-down"></i> 5% from last period
                             </div>
@@ -515,7 +584,7 @@
                         <div class="col mr-2">
                             <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
                                 {{ t('returning_rate') }}</div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800" id="returning-rate">0%</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800" id="returning-rate">{{ $returningRate }}%</div>
                             <div class="mt-2 text-success small">
                                 <i class="fas fa-arrow-up"></i> 8% from last period
                             </div>
@@ -536,7 +605,7 @@
                         <div class="col mr-2">
                             <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
                                 Avg. Order Value</div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800">KSh 1,450</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ $avgOrderValue ? 'KSh ' . number_format($avgOrderValue) : 'N/A' }}</div>
                             <div class="mt-2 text-success small">
                                 <i class="fas fa-arrow-up"></i> 6% from last period
                             </div>
@@ -814,17 +883,32 @@
         initCustomerChart();
         initProductsChart();
         initFunnelChart();
-        
-        // Simulate loading data
-        setTimeout(() => {
-            document.getElementById('today-orders').textContent = '18';
-            document.getElementById('today-sales').textContent = 'KSh 24,500';
-            document.getElementById('conversion-rate').textContent = '32%';
-            document.querySelector('.progress-bar').style.width = '32%';
-            document.getElementById('net-profit').textContent = 'KSh 56,800';
-            document.getElementById('new-customers').textContent = '24';
-            document.getElementById('returning-rate').textContent = '42%';
-        }, 1000);
+
+        // Toggle logic for stats
+        const productStatsRow = document.querySelector('.row.stats-row');
+        const serviceStatsRow = document.getElementById('service-stats-row');
+        const toggleProductBtn = document.getElementById('toggleProductStats');
+        const toggleServiceBtn = document.getElementById('toggleServiceStats');
+
+        if (toggleProductBtn && toggleServiceBtn && productStatsRow && serviceStatsRow) {
+            toggleProductBtn.addEventListener('click', function() {
+                productStatsRow.style.display = '';
+                serviceStatsRow.style.display = 'none';
+                toggleProductBtn.classList.add('active');
+                toggleServiceBtn.classList.remove('active');
+            });
+            toggleServiceBtn.addEventListener('click', function() {
+                productStatsRow.style.display = 'none';
+                serviceStatsRow.style.display = '';
+                toggleServiceBtn.classList.add('active');
+                toggleProductBtn.classList.remove('active');
+            });
+        }
+        // Default: show product stats
+        if (productStatsRow && serviceStatsRow) {
+            productStatsRow.style.display = '';
+            serviceStatsRow.style.display = 'none';
+        }
     });
 
     function initProfitLossChart() {
@@ -956,5 +1040,18 @@
             }
         });
     }
+
+    // Toggle between Product and Service stats
+    document.getElementById('toggleServiceStats').addEventListener('click', function() {
+        document.getElementById('service-stats-row').style.display = 'flex';
+        this.classList.add('active');
+        document.getElementById('toggleProductStats').classList.remove('active');
+    });
+
+    document.getElementById('toggleProductStats').addEventListener('click', function() {
+        document.getElementById('service-stats-row').style.display = 'none';
+        this.classList.add('active');
+        document.getElementById('toggleServiceStats').classList.remove('active');
+    });
 </script>
 @endsection
