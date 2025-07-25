@@ -82,6 +82,7 @@
         #sidebar {
             width: 250px;
             min-height: 100vh;
+            max-height: 100vh;
             background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
             color: var(--white);
             position: fixed;
@@ -90,6 +91,9 @@
             transition: all 0.3s ease-in-out;
             z-index: 1040;
             box-shadow: 2px 0 15px rgba(0, 0, 0, 0.1);
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
         }
         
         #sidebar .brand {
@@ -1064,8 +1068,7 @@
                     </div>
                 </li>
                 
-                <!-- Products - Show for product and hybrid businesses -->
-                @if(auth()->user()->business && in_array(auth()->user()->business->business_type, ['product', 'hybrid']))
+              
                 <li class="nav-item">
                     <a class="nav-link dropdown-toggle" data-bs-toggle="collapse" href="#productsCollapse" role="button">
                         <i class="fas fa-boxes me-2"></i>
@@ -1112,10 +1115,9 @@
                         </ul>
                     </div>
                 </li>
-                @endif
+               
                 
-                <!-- Services - Show for service and hybrid businesses -->
-                @if(auth()->user()->business && in_array(auth()->user()->business->business_type, ['service', 'hybrid']))
+               
                 <li class="nav-item">
                     <a class="nav-link dropdown-toggle" data-bs-toggle="collapse" href="#servicesCollapse" role="button">
                         <i class="fas fa-cut me-2"></i>
@@ -1164,7 +1166,7 @@
                         </ul>
                     </div>
                 </li>
-                @endif
+               
                 
                 <!-- Sales -->
                 <li class="nav-item">
@@ -1174,14 +1176,14 @@
                     </a>
                     <div class="collapse" id="salesCollapse">
                         <ul class="nav flex-column ps-3">
-                            @if(auth()->user()->business && in_array(auth()->user()->business->business_type, ['product', 'hybrid']))
+                           
                             <li class="nav-item">
                                 <a href="{{ route('sales.pos') }}" class="nav-link">
                                     <i class="fas fa-shopping-cart me-2"></i>
                                     {{ t('pos_system') }}
                                 </a>
                             </li>
-                            @endif
+                            
                             <li class="nav-item">
                                 <a href="{{ route('sales.orders') }}" class="nav-link">
                                     <i class="fas fa-clipboard-list me-2"></i>
@@ -1243,6 +1245,15 @@
                                 </a>
                             </li>
                             <li class="nav-item">
+                                <a href="{{ route('marketing.social-media') }}" class="nav-link">
+                                    <i class="fas fa-share-alt me-2"></i>
+                                    Social Media
+                                    @if(!auth()->user()->business->isPremium())
+                                    <span class="badge bg-warning ms-2 text-dark">Premium</span>
+                                    @endif
+                                </a>
+                            </li>
+                            <li class="nav-item">
                                 <a href="{{ route('marketing.report') }}" class="nav-link">
                                     <i class="fas fa-chart-line me-2"></i>
                                     {{ t('marketing_report') }}
@@ -1253,14 +1264,14 @@
                 </li>
                 
                 <!-- Suppliers - Show for product and hybrid businesses -->
-                @if(auth()->user()->business && in_array(auth()->user()->business->business_type, ['product', 'hybrid']))
+                
                 <li class="nav-item">
                     <a href="{{ route('suppliers.index') }}" class="nav-link">
                         <i class="fas fa-truck me-2"></i>
                         {{ t('suppliers') }}
                     </a>
                 </li>
-                @endif
+               
                 <!-- Customers -->
                 <li class="nav-item">
                     <a href="{{ route('sales.customers') }}" class="nav-link">

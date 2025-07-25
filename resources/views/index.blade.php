@@ -1,5 +1,7 @@
 @extends('layouts.master')
-@section('title', 'Shopybook Pro')
+@section('title', 'Shopybook - Complete Business Management Platform for Small Businesses in Kenya')
+@section('meta_description', 'Transform your small business with Shopybook\'s all-in-one platform. Manage products, services, customers, inventory, staff, and sales with M-Pesa integration. Perfect for Kenyan businesses.')
+@section('meta_keywords', 'business management software Kenya, small business platform, inventory management, M-Pesa integration, POS system Kenya, customer management, staff management, service booking')
 @section('content')
 
 <style>
@@ -84,6 +86,169 @@ input.form-control::placeholder, textarea.form-control::placeholder {
     margin-bottom: 10px;
     display: inline-block;
 }
+
+/* SEO-optimized styles */
+.stat-card {
+    padding: 1rem;
+    margin-bottom: 1rem;
+}
+
+.stat-card h3 {
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+}
+
+.stat-card p {
+    font-size: 1rem;
+    margin: 0;
+    opacity: 0.9;
+}
+
+/* Enhanced cards */
+.uscard {
+    transition: all 0.3s ease;
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.uscard:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 30px rgba(19, 232, 233, 0.3);
+}
+
+.usicon {
+    background: rgba(19, 232, 233, 0.1);
+    padding: 2rem;
+    margin-bottom: 1.5rem;
+}
+
+.usicon i {
+    font-size: 3rem;
+    color: #13e8e9;
+}
+
+/* Pricing enhancements */
+.pricing-card {
+    background: #03104e !important;
+    border: 2px solid #13e8e9 !important;
+    border-radius: 12px;
+    transition: all 0.3s ease;
+}
+
+.pricing-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 30px rgba(19, 232, 233, 0.3);
+}
+
+.pricing-card.featured {
+    transform: scale(1.05);
+    border: 3px solid #13e8e9;
+    position: relative;
+    z-index: 2;
+}
+
+.pricing-card .card-title {
+    color: #13e8e9 !important;
+    font-weight: 600;
+    margin-bottom: 1rem;
+}
+
+.pricing-card .price {
+    font-size: 2.5rem;
+    font-weight: 700;
+}
+
+.pricing-card .price .currency,
+.pricing-card .price .amount {
+    color: #13e8e9 !important;
+}
+
+.pricing-card .price .period {
+    color: #fff !important;
+    opacity: 0.8;
+    font-size: 1rem;
+}
+
+.pricing-card .list-unstyled li {
+    color: #fff !important;
+    margin-bottom: 0.75rem;
+    padding-left: 0.5rem;
+}
+
+.pricing-card .btn-outline-light {
+    border-color: #13e8e9 !important;
+    color: #13e8e9 !important;
+    background: transparent !important;
+    font-weight: 600;
+}
+
+.pricing-card .btn-outline-light:hover {
+    background: #13e8e9 !important;
+    color: #020258 !important;
+    border-color: #13e8e9 !important;
+}
+
+.pricing-card .popular-badge {
+    background: #13e8e9 !important;
+    color: #020258 !important;
+    border-radius: 20px;
+    padding: 4px 12px;
+    font-weight: bold;
+    font-size: 0.8rem;
+    margin-bottom: 15px;
+    display: inline-block;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.pricing-card .period {
+    font-size: 1rem;
+    opacity: 0.7;
+}
+
+/* Contact form enhancements */
+.glass-card {
+    backdrop-filter: blur(10px);
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(19, 232, 233, 0.3);
+    border-radius: 12px;
+}
+
+.social-bubble {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background: rgba(19, 232, 233, 0.1);
+    border: 2px solid #13e8e9;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    transition: all 0.3s ease;
+}
+
+.social-bubble:hover {
+    background: #13e8e9;
+    color: #020258 !important;
+    transform: scale(1.1);
+}
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+    .stat-card h3 {
+        font-size: 2rem;
+    }
+    
+    .pricing-card.featured {
+        transform: none;
+        margin-top: 1rem;
+    }
+    
+    .display-4 {
+        font-size: 2rem;
+    }
+}
 </style>
 
     <div id="home" class="container-fluid px-0 hero-section">
@@ -96,11 +261,15 @@ input.form-control::placeholder, textarea.form-control::placeholder {
             <div class="brandtext ">
                 <div class="row">
                     <div class="col-md-7">
-                        <h1>Shopybook Pro</h1>
-                        <p class="lead">Smart Inventory Management for Modern Businesses</p>
+                        <h1>Transform Your Business with Shopybook</h1>
+                        <p class="lead">Complete Business Management Platform for Small Businesses in Kenya</p>
+                        <p class="mb-4">
+                            Manage products, services, customers, inventory, staff, and sales with M-Pesa integration. 
+                            All-in-one solution designed specifically for emerging markets.
+                        </p>
                         <div class="mt-4">
-                            <a href="#features" class="btn btn-primary btn-lg me-2">Explore Features</a>
-                            <a href="#signup" class="btn btn-outline-light btn-lg">Start Free Trial</a>
+                            <a href="{{ route('register') }}" class="btn btn-primary btn-lg me-2">Start Free Account</a>
+                            <a href="#features" class="btn btn-outline-light btn-lg">Explore Features</a>
                         </div>
                     </div>
                     <div class="col-md-5 position-relative">
@@ -143,14 +312,20 @@ input.form-control::placeholder, textarea.form-control::placeholder {
                 </div>
                 <div class="col-lg-6">
                     <h2 class="display-4 mb-4">
-                        Why <span class="text-primary">Shopybook Pro?</span>
+                        Why Choose <span class="text-primary">Shopybook?</span>
                     </h2>
-                    <p class="lead">Transform how you manage inventory and sales.</p>
+                    <p class="lead">The complete business management solution built for small businesses.</p>
                     <p>
-                        Shopybook Pro is an all-in-one inventory management solution designed for businesses that deal with
-                        measured products like greenhouse films, dam liners, and agricultural nets. Our AI-powered platform
-                        helps you track stock, analyze sales, and manage your business from anywhere.
+                        Shopybook is a comprehensive multi-tenant platform designed specifically for small businesses 
+                        in emerging markets. From product management and service bookings to customer relationships 
+                        and M-Pesa payments, we provide everything you need to grow your business efficiently.
                     </p>
+                    <ul class="list-unstyled mt-4">
+                        <li class="mb-2"><i class="fas fa-check text-primary me-2"></i> Multi-tenant architecture for unlimited growth</li>
+                        <li class="mb-2"><i class="fas fa-check text-primary me-2"></i> M-Pesa & PayPal payment integration</li>
+                        <li class="mb-2"><i class="fas fa-check text-primary me-2"></i> Multi-language support (English, Swahili, Sheng)</li>
+                        <li class="mb-2"><i class="fas fa-check text-primary me-2"></i> Mobile-first responsive design</li>
+                    </ul>
                 </div>
             </div>
         </div>
@@ -161,88 +336,153 @@ input.form-control::placeholder, textarea.form-control::placeholder {
         <div class="container">
             <div class="text-center mb-5">
                 <h2 class="display-4">
-                    Powerful <span class="text-primary">Features</span>
+                    Comprehensive <span class="text-primary">Business Features</span>
                 </h2>
                 <p class="lead">
-                    Everything you need to streamline your inventory
+                    Everything you need to manage and grow your business
                 </p>
             </div>
 
             <div class="row g-4">
-                <!-- Inventory Tracking -->
+                <!-- Product Management -->
                 <div class="col-md-4">
                     <div class="uscard h-100">
                         <div class="usicon text-center">
                             <i class="fa-solid fa-boxes-stacked"></i>
                         </div>
                         <div class="uscontent">
-                            <h3>Smart Inventory</h3>
+                            <h3>Product Management</h3>
                             <p>
-                                Track products by weight, area, or quantity with real-time stock alerts and automated
-                                replenishment suggestions.
+                                Complete inventory control with categories, brands, stock tracking, and low-stock alerts. 
+                                Manage unlimited products with barcode support.
                             </p>
                         </div>
                     </div>
                 </div>
 
-                <!-- AI Measurement -->
+                <!-- Service Booking -->
                 <div class="col-md-4">
                     <div class="uscard h-100">
                         <div class="usicon text-center">
-                            <i class="fa-solid fa-ruler-combined"></i>
+                            <i class="fa-solid fa-calendar-check"></i>
                         </div>
                         <div class="uscontent">
-                            <h3>AI Measurement</h3>
+                            <h3>Service Booking</h3>
                             <p>
-                                Upload product photos to automatically estimate dimensions and weight - perfect for films
-                                and liners.
+                                Manage service appointments, staff assignments, commission tracking, and bundled services. 
+                                Perfect for salons, repair shops, and service businesses.
                             </p>
                         </div>
                     </div>
                 </div>
 
-                <!-- Sales Analytics -->
+                <!-- Customer Management -->
+                <div class="col-md-4">
+                    <div class="uscard h-100">
+                        <div class="usicon text-center">
+                            <i class="fa-solid fa-users"></i>
+                        </div>
+                        <div class="uscontent">
+                            <h3>Customer Management</h3>
+                            <p>
+                                Build lasting relationships with comprehensive customer profiles, order history, 
+                                and personalized marketing campaigns.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Point of Sale -->
+                <div class="col-md-4">
+                    <div class="uscard h-100">
+                        <div class="usicon text-center">
+                            <i class="fa-solid fa-cash-register"></i>
+                        </div>
+                        <div class="uscontent">
+                            <h3>Point of Sale</h3>
+                            <p>
+                                Intuitive POS system with barcode scanning, multiple payment methods, 
+                                and real-time inventory updates. Perfect for retail operations.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- M-Pesa Integration -->
+                <div class="col-md-4">
+                    <div class="uscard h-100">
+                        <div class="usicon text-center">
+                            <i class="fa-solid fa-mobile-alt"></i>
+                        </div>
+                        <div class="uscontent">
+                            <h3>M-Pesa Integration</h3>
+                            <p>
+                                Seamless payment processing with M-Pesa and PayPal integration. 
+                                Accept payments securely and track all transactions automatically.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Staff Management -->
+                <div class="col-md-4">
+                    <div class="uscard h-100">
+                        <div class="usicon text-center">
+                            <i class="fa-solid fa-user-tie"></i>
+                        </div>
+                        <div class="uscontent">
+                            <h3>Staff & Employee Management</h3>
+                            <p>
+                                Manage your team with employee records, commission tracking, 
+                                performance analytics, and automated payroll calculations.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Inventory Tracking -->
+                <div class="col-md-4">
+                    <div class="uscard h-100">
+                        <div class="usicon text-center">
+                            <i class="fa-solid fa-warehouse"></i>
+                        </div>
+                        <div class="uscontent">
+                            <h3>Advanced Inventory</h3>
+                            <p>
+                                Real-time inventory tracking with transaction history, 
+                                multi-location support, and automated reorder alerts.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Analytics & Reports -->
                 <div class="col-md-4">
                     <div class="uscard h-100">
                         <div class="usicon text-center">
                             <i class="fa-solid fa-chart-line"></i>
                         </div>
                         <div class="uscontent">
-                            <h3>Sales Analytics</h3>
+                            <h3>Business Analytics</h3>
                             <p>
-                                Visualize your best-selling products, profit margins, and sales trends with interactive
-                                dashboards.
+                                Comprehensive reports and analytics for sales, inventory, 
+                                customer behavior, and staff performance. Make data-driven decisions.
                             </p>
                         </div>
                     </div>
                 </div>
 
-                <!-- Voice Commands -->
+                <!-- Marketing Tools -->
                 <div class="col-md-4">
                     <div class="uscard h-100">
                         <div class="usicon text-center">
-                            <i class="fa-solid fa-microphone"></i>
+                            <i class="fa-solid fa-bullhorn"></i>
                         </div>
                         <div class="uscontent">
-                            <h3>Voice Control</h3>
+                            <h3>Marketing & Promotions</h3>
                             <p>
-                                "Add 5 rolls of greenhouse film" - manage inventory hands-free with our voice command
-                                system.
-                            </p>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Multi-Store -->
-                <div class="col-md-4">
-                    <div class="uscard h-100">
-                        <div class="usicon text-center">
-                            <i class="fa-solid fa-shop"></i>
-                        </div>
-                        <div class="uscontent">
-                            <h3>Multi-Location</h3>
-                            <p>
-                                Manage inventory across multiple warehouses or stores from one centralized dashboard.
+                                Create targeted campaigns, manage promotions, track advertising spend, 
+                                and engage customers with automated marketing tools.
                             </p>
                         </div>
                     </div>
@@ -256,21 +496,47 @@ input.form-control::placeholder, textarea.form-control::placeholder {
         <div class="container px-5">
             <div class="text-center mb-5">
                 <h2 class="display-4">
-                    Trusted by <span class="text-primary">Businesses</span>
+                    Trusted by <span class="text-primary">Growing Businesses</span>
                 </h2>
-                <p class="lead">Join the growing community of Shopybook Pro users</p>
+                <p class="lead">Join the community of successful businesses using Shopybook across Kenya</p>
+                <div class="row mt-4">
+                    <div class="col-md-3 col-6 text-center">
+                        <div class="stat-card">
+                            <h3 class="text-primary">500+</h3>
+                            <p>Active Businesses</p>
+                        </div>
+                    </div>
+                    <div class="col-md-3 col-6 text-center">
+                        <div class="stat-card">
+                            <h3 class="text-primary">10,000+</h3>
+                            <p>Products Managed</p>
+                        </div>
+                    </div>
+                    <div class="col-md-3 col-6 text-center">
+                        <div class="stat-card">
+                            <h3 class="text-primary">25,000+</h3>
+                            <p>Orders Processed</p>
+                        </div>
+                    </div>
+                    <div class="col-md-3 col-6 text-center">
+                        <div class="stat-card">
+                            <h3 class="text-primary">KSh 5M+</h3>
+                            <p>Revenue Managed</p>
+                        </div>
+                    </div>
+                </div>
             </div>
-            </div>
+        </div>
 
-            <div class="container-fluid">
-               
-                 @include('partials.businesses', ['groupedBusinesses' => $groupedBusinesses])
-                
-               
+        <div class="container-fluid">
+           
+             @include('partials.businesses', ['groupedBusinesses' => $groupedBusinesses])
+            
+           
 
-               
-            </div>
-        
+           
+        </div>
+    
     </section>
 
 
@@ -279,9 +545,9 @@ input.form-control::placeholder, textarea.form-control::placeholder {
         <div class="container">
             <div class="text-center mb-5">
                 <h2 class="display-4">
-                    What <span class="text-primary">Users Say</span>
+                    What <span class="text-primary">Business Owners Say</span>
                 </h2>
-                <p class="lead">Businesses thriving with Shopybook Pro</p>
+                <p class="lead">Real success stories from Shopybook users across Kenya</p>
             </div>
 
             <div class="row g-4">
@@ -296,15 +562,15 @@ input.form-control::placeholder, textarea.form-control::placeholder {
                                 <i class="fas fa-star"></i>
                             </div>
                             <p class="card-text">
-                                "The AI measurement tool has saved us hours of manual work. We can now quote prices
-                                instantly just by taking a photo of the material."
+                                "Shopybook transformed my retail business. The M-Pesa integration and inventory management 
+                                have increased my efficiency by 300%. I can now focus on growing instead of tracking stock manually."
                             </p>
                             <div class="d-flex align-items-center mt-3">
                                 <img src="https://randomuser.me/api/portraits/men/32.jpg" class="rounded-circle me-3"
-                                    width="50" alt="Client" />
+                                    width="50" alt="Business Owner" />
                                 <div>
                                     <h6 class="mb-0">James Mwangi</h6>
-                                    <small class="text-muted">Greenhouse Supplies Ltd</small>
+                                    <small class="text-muted">Electronics Store, Nairobi</small>
                                 </div>
                             </div>
                         </div>
@@ -322,15 +588,41 @@ input.form-control::placeholder, textarea.form-control::placeholder {
                                 <i class="fas fa-star"></i>
                             </div>
                             <p class="card-text">
-                                "Our inventory accuracy went from 65% to 98% in just two months. The real-time tracking is a
-                                game-changer."
+                                "Managing my salon services and staff commissions was a nightmare before Shopybook. 
+                                Now everything is automated and my staff love the transparent commission tracking."
                             </p>
                             <div class="d-flex align-items-center mt-3">
                                 <img src="https://randomuser.me/api/portraits/women/45.jpg" class="rounded-circle me-3"
-                                    width="50" alt="Client" />
+                                    width="50" alt="Business Owner" />
                                 <div>
                                     <h6 class="mb-0">Wanjiku Kamau</h6>
-                                    <small class="text-muted">AgriNet Solutions</small>
+                                    <small class="text-muted">Beauty Salon, Mombasa</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-4">
+                    <div class="card h-100 bg-green text-light">
+                        <div class="card-body">
+                            <div class="mb-3 text-warning">
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                            </div>
+                            <p class="card-text">
+                                "The multi-language support and local payment methods make Shopybook perfect for our market. 
+                                Our customers love paying with M-Pesa, and we get instant confirmations."
+                            </p>
+                            <div class="d-flex align-items-center mt-3">
+                                <img src="https://randomuser.me/api/portraits/men/28.jpg" class="rounded-circle me-3"
+                                    width="50" alt="Business Owner" />
+                                <div>
+                                    <h6 class="mb-0">Peter Ochieng</h6>
+                                    <small class="text-muted">Hardware Store, Kisumu</small>
                                 </div>
                             </div>
                         </div>
@@ -341,37 +633,38 @@ input.form-control::placeholder, textarea.form-control::placeholder {
     </section>
 
     <!-- Pricing Section -->
-    <section id="signup" class="py-5 position-relative text-light">
+    <section id="signup" class="py-5 position-relative">
         <div class="container position-relative" style="z-index: 2">
             <div class="row justify-content-center">
                 <div class="col-lg-8 text-center">
-                    <h2 class="display-4 mb-4">
+                    <h2 class="display-4 mb-4 text-light">
                         Simple <span class="text-primary">Pricing</span>
                     </h2>
-                    <p class="lead mb-5">
-                        Choose the plan that fits your business needs
+                    <p class="lead mb-5 text-light">
+                        Affordable plans designed for Kenyan small businesses
                     </p>
                 </div>
             </div>
 
-            <div class="row">
-                <!-- Basic Plan -->
+            <div class="row justify-content-center">
+                <!-- Free Plan -->
                 <div class="col-md-4 mb-4">
                     <div class="card pricing-card h-100">
                         <div class="card-body text-center">
-                            <h3 class="card-title">Starter</h3>
+                            <h3 class="card-title text-primary">Free Starter</h3>
                             <div class="price mb-4">
-                                <span class="currency">Ksh</span>
-                                <span class="amount">1,500</span>
-                                <span class="period">/month</span>
+                                <span class="currency text-primary">KSh</span>
+                                <span class="amount text-primary">0</span>
+                                <span class="period text-light">/month</span>
                             </div>
-                            <ul class="list-unstyled mb-4">
-                                <li>Up to 100 products</li>
-                                <li>Basic inventory tracking</li>
-                                <li>Sales reports</li>
-                                <li>Email support</li>
+                            <ul class="list-unstyled mb-4 text-start">
+                                <li class="text-light"><i class="fas fa-check text-primary me-2"></i>Up to 50 products</li>
+                                <li class="text-light"><i class="fas fa-check text-primary me-2"></i>Basic inventory tracking</li>
+                                <li class="text-light"><i class="fas fa-check text-primary me-2"></i>Customer management</li>
+                                <li class="text-light"><i class="fas fa-check text-primary me-2"></i>Basic reporting</li>
+                                <li class="text-light"><i class="fas fa-check text-primary me-2"></i>M-Pesa integration</li>
                             </ul>
-                            <a href="#" class="btn btn-outline-primary">Start Free Trial</a>
+                            <a href="{{ route('register') }}" class="btn btn-outline-light">Get Started Free</a>
                         </div>
                     </div>
                 </div>
@@ -381,23 +674,57 @@ input.form-control::placeholder, textarea.form-control::placeholder {
                     <div class="card pricing-card featured h-100">
                         <div class="card-body text-center">
                             <div class="popular-badge">MOST POPULAR</div>
-                            <h3 class="card-title">Pro</h3>
+                            <h3 class="card-title text-primary">Business Pro</h3>
                             <div class="price mb-4">
-                                <span class="currency">Ksh</span>
-                                <span class="amount">3,500</span>
-                                <span class="period">/month</span>
+                                <span class="currency text-primary">KSh</span>
+                                <span class="amount text-primary">2,500</span>
+                                <span class="period text-light">/month</span>
                             </div>
-                            <ul class="list-unstyled mb-4">
-                                <li>Unlimited products</li>
-                                <li>AI measurement tools</li>
-                                <li>Voice commands</li>
-                                <li>Multi-location support</li>
-                                <li>Priority support</li>
+                            <ul class="list-unstyled mb-4 text-start">
+                                <li class="text-light"><i class="fas fa-check text-primary me-2"></i>Unlimited products & services</li>
+                                <li class="text-light"><i class="fas fa-check text-primary me-2"></i>Advanced inventory management</li>
+                                <li class="text-light"><i class="fas fa-check text-primary me-2"></i>Staff & commission management</li>
+                                <li class="text-light"><i class="fas fa-check text-primary me-2"></i>Service booking system</li>
+                                <li class="text-light"><i class="fas fa-check text-primary me-2"></i>Advanced analytics</li>
+                                <li class="text-light"><i class="fas fa-check text-primary me-2"></i>Marketing tools</li>
+                                <li class="text-light"><i class="fas fa-check text-primary me-2"></i>Priority support</li>
                             </ul>
-                            <a href="#" class="btn btn-primary">Start Free Trial</a>
+                            <a href="{{ route('register') }}" class="btn btn-primary">Start 30-Day Trial</a>
                         </div>
                     </div>
                 </div>
+
+                <!-- Enterprise Plan -->
+                <div class="col-md-4 mb-4">
+                    <div class="card pricing-card h-100">
+                        <div class="card-body text-center">
+                            <h3 class="card-title text-primary">Enterprise</h3>
+                            <div class="price mb-4">
+                                <span class="currency text-primary">KSh</span>
+                                <span class="amount text-primary">5,000</span>
+                                <span class="period text-light">/month</span>
+                            </div>
+                            <ul class="list-unstyled mb-4 text-start">
+                                <li class="text-light"><i class="fas fa-check text-primary me-2"></i>Everything in Pro</li>
+                                <li class="text-light"><i class="fas fa-check text-primary me-2"></i>Multi-location support</li>
+                                <li class="text-light"><i class="fas fa-check text-primary me-2"></i>Advanced user permissions</li>
+                                <li class="text-light"><i class="fas fa-check text-primary me-2"></i>Custom integrations</li>
+                                <li class="text-light"><i class="fas fa-check text-primary me-2"></i>Dedicated account manager</li>
+                                <li class="text-light"><i class="fas fa-check text-primary me-2"></i>Custom training</li>
+                            </ul>
+                            <a href="#contact" class="btn btn-outline-light">Contact Sales</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="text-center mt-4">
+                <p class="text-light" style="opacity: 0.8;">
+                    <i class="fas fa-shield-alt me-2"></i>30-day money-back guarantee • No setup fees • Cancel anytime
+                </p>
+            </div>
+        </div>
+    </section>
             </div>
         </div>
     </section>
@@ -411,68 +738,114 @@ input.form-control::placeholder, textarea.form-control::placeholder {
                         Ready to <span class="text-primary">Transform</span> Your Business?
                     </h2>
                     <p class="lead mb-5">
-                        Get in touch for a personalized demo
+                        Join hundreds of successful businesses already using Shopybook
                     </p>
                 </div>
             </div>
 
             <div class="row">
                 <div class="col-lg-6">
-                    <form class="glass-card p-4">
+                    <form class="glass-card p-4" action="#" method="POST">
+                        @csrf
+                        <h3 class="mb-4 text-primary">Get Started Today</h3>
                         <div class="mb-3">
-                            <input type="text" class="form-control bg-transparent text-light" placeholder="Your Name"
-                                required />
+                            <input type="text" name="name" class="form-control bg-transparent text-light" placeholder="Business Owner Name" required />
                         </div>
                         <div class="mb-3">
-                            <input type="email" class="form-control bg-transparent text-light" placeholder="Your Email"
-                                required />
+                            <input type="email" name="email" class="form-control bg-transparent text-light" placeholder="Business Email" required />
                         </div>
                         <div class="mb-3">
-                            <select class="form-select bg-dark text-light">
-                                <option>I'm interested in...</option>
-                                <option>Starter Plan</option>
-                                <option>Pro Plan</option>
-                                <option>Enterprise Solution</option>
-                                <option>Partnership</option>
+                            <input type="tel" name="phone" class="form-control bg-transparent text-light" placeholder="Phone Number (e.g., +254717745891)" required />
+                        </div>
+                        <div class="mb-3">
+                            <select name="business_type" class="form-select bg-dark text-light" required>
+                                <option value="">Select Your Business Type...</option>
+                                <option value="retail">Retail Store</option>
+                                <option value="service">Service Business</option>
+                                <option value="restaurant">Restaurant/Food</option>
+                                <option value="salon">Salon/Beauty</option>
+                                <option value="electronics">Electronics</option>
+                                <option value="hardware">Hardware Store</option>
+                                <option value="clothing">Clothing/Fashion</option>
+                                <option value="other">Other</option>
                             </select>
                         </div>
                         <div class="mb-3">
-                            <textarea class="form-control bg-transparent text-light" rows="5"
-                                placeholder="Tell us about your business needs" required></textarea>
+                            <textarea name="message" class="form-control bg-transparent text-light" rows="4"
+                                placeholder="Tell us about your business challenges or questions" required></textarea>
                         </div>
-                        <button type="submit" class="btn btn-primary btn-lg">
-                            Request Demo
+                        <button type="submit" class="btn btn-primary btn-lg w-100">
+                            <i class="fas fa-rocket me-2"></i>Start Free Account
                         </button>
+                        <p class="small text-center mt-3 text-muted">
+                            No credit card required • Setup takes less than 5 minutes
+                        </p>
                     </form>
                 </div>
 
                 <div class="col-lg-6 mt-4 mt-lg-0">
                     <div class="glass-card h-100 p-4">
-                        <h3 class="card-title mb-4 text-primary">Contact Us</h3>
+                        <h3 class="card-title mb-4 text-primary">Get in Touch</h3>
                         <ul class="list-unstyled contact-info">
                             <li class="mb-3">
-                                <i class="fas fa-envelope text-primary me-2"></i>
-                                <span>support@shopybookpro.com</span>
+                                <i class="fas fa-envelope text-primary me-3"></i>
+                                <div>
+                                    <strong>Email Support</strong><br>
+                                    <span>harveyelvis24@gmail.com</span>
+                                </div>
                             </li>
                             <li class="mb-3">
-                                <i class="fas fa-phone text-primary me-2"></i>
-                                <span>+254 700 123 456</span>
+                                <i class="fas fa-phone text-primary me-3"></i>
+                                <div>
+                                    <strong>Phone Support</strong><br>
+                                    <span>+254 717745891</span><br>
+                                    <small class="text-muted">Mon-Fri, 8AM-6PM EAT</small>
+                                </div>
+                            </li>
+                            <li class="mb-3">
+                                <i class="fas fa-whatsapp text-primary me-3"></i>
+                                <div>
+                                    <strong>WhatsApp Support</strong><br>
+                                    <span>+254 717745891</span><br>
+                                    <small class="text-muted">Quick responses</small>
+                                </div>
+                            </li>
+                            <li class="mb-3">
+                                <i class="fas fa-map-marker-alt text-primary me-3"></i>
+                                <div>
+                                    <strong>Location</strong><br>
+                                    <span>Nairobi, Kenya</span><br>
+                                    <small class="text-muted">Serving all of East Africa</small>
+                                </div>
                             </li>
                         </ul>
 
                         <div class="mt-4">
-                            <h5 class="mb-3 text-primary">Follow Our Journey</h5>
-                            <div class="social-bubbles">
-                                <a href="#" class="social-bubble">
-                                    <i class="fab fa-twitter"></i>
+                            <h5 class="mb-3 text-primary">Connect With Us</h5>
+                            <div class="social-bubbles d-flex gap-3">
+                                <a href="#" class="social-bubble text-primary">
+                                    <i class="fab fa-twitter fa-lg"></i>
                                 </a>
-                                <a href="#" class="social-bubble">
-                                    <i class="fab fa-linkedin-in"></i>
+                                <a href="#" class="social-bubble text-primary">
+                                    <i class="fab fa-linkedin-in fa-lg"></i>
                                 </a>
-                                <a href="#" class="social-bubble">
-                                    <i class="fab fa-facebook-f"></i>
+                                <a href="#" class="social-bubble text-primary">
+                                    <i class="fab fa-facebook-f fa-lg"></i>
+                                </a>
+                                <a href="#" class="social-bubble text-primary">
+                                    <i class="fab fa-instagram fa-lg"></i>
                                 </a>
                             </div>
+                        </div>
+
+                        <div class="mt-4 p-3 bg-dark rounded">
+                            <h6 class="text-primary mb-2">
+                                <i class="fas fa-headset me-2"></i>Need Immediate Help?
+                            </h6>
+                            <p class="mb-2 small">Our support team is ready to help you get started</p>
+                            <a href="tel:+254717745891" class="btn btn-outline-primary btn-sm">
+                                <i class="fas fa-phone me-1"></i>Call Now
+                            </a>
                         </div>
                     </div>
                 </div>

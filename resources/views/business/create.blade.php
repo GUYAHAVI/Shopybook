@@ -1,6 +1,8 @@
 @extends('layouts.master')
 
-@section('content')<style>
+@section('content')
+<style>
+
 /* Form Container */
 .form-container {
     width: 100%;
@@ -319,9 +321,7 @@ body, .container-fluid, .card, .main-content, .content {
     border-bottom: 1px solid #13e8e9 !important;
 }
 </style>
-<head>
 
-</head>
 <!-- Multi-step Business Registration Form -->
 <div class="form-container">
     <form id="businessRegistrationForm" method="POST" action="{{ route('business.store') }}" enctype="multipart/form-data">

@@ -8,6 +8,9 @@ use App\Http\Controllers\BusinessController;
 use App\Http\Controllers\ProductsController;
 use App\Http\Controllers\SalesController;
 use App\Http\Controllers\MarketingController;
+use App\Http\Controllers\MarketingPostController;
+use App\Http\Controllers\SocialMediaController;
+use App\Http\Controllers\BillingController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\BusinessAnalysisController;
 use App\Http\Controllers\LanguageController;
@@ -301,14 +304,71 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/paypal/cancel', [PaymentController::class, 'paypalCancel'])->name('payment.paypal.cancel');
     });
 
+    // Marketing & Social Media Routes
+    Route::prefix('marketing')->middleware('has.business')->group(function () {
+        Route::get('/social-media', [MarketingPostController::class, 'index'])->name('marketing.social-media');
+        
+        // Marketing Posts
+        Route::prefix('posts')->group(function () {
+            Route::post('/', [MarketingPostController::class, 'store'])->name('marketing.posts.store');
+            Route::get('/{post}', [MarketingPostController::class, 'show'])->name('marketing.posts.show');
+            Route::get('/{post}/edit', [MarketingPostController::class, 'edit'])->name('marketing.posts.edit');
+            Route::put('/{post}', [MarketingPostController::class, 'update'])->name('marketing.posts.update');
+            Route::delete('/{post}', [MarketingPostController::class, 'destroy'])->name('marketing.posts.destroy');
+            Route::post('/{post}/publish', [MarketingPostController::class, 'publish'])->name('marketing.posts.publish');
+            Route::get('/{post}/analytics', [MarketingPostController::class, 'analytics'])->name('marketing.posts.analytics');
+            Route::post('/{post}/duplicate', [MarketingPostController::class, 'duplicate'])->name('marketing.posts.duplicate');
+        });
+        
+        // Social Media Connections
+        Route::prefix('social')->group(function () {
+            Route::get('/connect/{platform}', [SocialMediaController::class, 'connect'])->name('social.connect');
+            Route::get('/callback/{platform}', [SocialMediaController::class, 'callback'])->name('social.callback');
+            Route::delete('/disconnect/{account}', [SocialMediaController::class, 'disconnect'])->name('social.disconnect');
+            Route::post('/refresh/{account}', [SocialMediaController::class, 'refreshToken'])->name('social.refresh');
+        });
+
+        // Billing Routes
+        Route::prefix('billing')->group(function () {
+            Route::get('/upgrade', [BillingController::class, 'upgrade'])->name('billing.upgrade');
+            Route::post('/upgrade', [BillingController::class, 'processUpgrade'])->name('billing.process-upgrade');
+            Route::get('/dashboard', [BillingController::class, 'dashboard'])->name('billing.dashboard');
+            Route::post('/cancel', [BillingController::class, 'cancel'])->name('billing.cancel');
+        });
+    });
+
     // API Routes for payment callbacks
     Route::prefix('api')->group(function () {
         Route::post('/mpesa/callback', [PaymentController::class, 'mpesaCallback'])->name('api.mpesa.callback');
     });
 });
 
+// Legal and Compliance Routes (Public - No Authentication Required)
+Route::get('/privacy-policy', function () {
+    return view('legal.privacy-policy');
+})->name('privacy-policy');
 
+Route::get('/terms-of-service', function () {
+    return view('legal.terms-of-service');
+})->name('terms-of-service');
 
-// Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
+Route::get('/data-deletion', function () {
+    return view('legal.data-deletion');
+})->name('data-deletion');
+
+Route::get('/help', function () {
+    return view('help.index');
+})->name('help');
+
+Route::get('/deauthorize-callback', function () {
+    return view('legal.deauthorize-callback');
+})->name('deauthorize-callback');
+
+// Facebook App Compliance Routes
+Route::post('/auth/facebook/deauthorize', [SocialMediaController::class, 'facebookDeauthorize'])->name('facebook.deauthorize');
+Route::get('/auth/facebook/data-deletion', function () {
+    return redirect()->route('data-deletion');
+})->name('facebook.data-deletion');
+
 
 

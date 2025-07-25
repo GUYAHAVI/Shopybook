@@ -39,10 +39,15 @@ class Business extends BaseTenant implements TenantWithDatabase
         'address',
         'city',
         'country',
+        'plan',
+        'upgraded_at',
+        'cancelled_at',
     ];
 
     protected $casts = [
         'business_hours' => 'array',
+        'upgraded_at' => 'datetime',
+        'cancelled_at' => 'datetime',
     ];
 
     public static function getCustomColumns(): array
@@ -158,6 +163,24 @@ class Business extends BaseTenant implements TenantWithDatabase
     public function commissionPayouts()
     {
         return $this->hasMany(CommissionPayout::class);
+    }
+
+    public function socialMediaAccounts()
+    {
+        return $this->hasMany(SocialMediaAccount::class);
+    }
+
+    public function marketingPosts()
+    {
+        return $this->hasMany(MarketingPost::class);
+    }
+
+    /**
+     * Check if business has premium subscription
+     */
+    public function isPremium(): bool
+    {
+        return in_array($this->plan ?? 'free', ['premium', 'basic']);
     }
 
     /**

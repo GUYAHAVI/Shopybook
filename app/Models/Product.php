@@ -83,6 +83,11 @@ class Product extends Model
         return $this->hasMany(Review::class);
     }
 
+    public function promotions()
+    {
+        return $this->belongsToMany(Promotion::class, 'promotion_product');
+    }
+
     public function getMainImageAttribute()
     {
         return $this->images ? $this->images[0] : null;

@@ -39,12 +39,12 @@ class Promotion extends Model
 
     public function products()
     {
-        return $this->belongsToMany(Product::class);
+        return $this->belongsToMany(Product::class, 'promotion_product');
     }
 
     public function customers()
     {
-        return $this->belongsToMany(Customer::class);
+        return $this->belongsToMany(Customer::class, 'promotion_customer');
     }
 
     public function usage()
