@@ -3,11 +3,13 @@
 namespace App\Http\Controllers;
 
 use App\Models\SocialMediaAccount;
+use App\Models\Business;
 use App\Services\SocialMediaService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Log;
 
 class SocialMediaController extends Controller
 {
@@ -24,81 +26,234 @@ class SocialMediaController extends Controller
     public function connect(Request $request, $platform)
     {
         $business = Auth::user()->business;
-        
+
         if (!$business->isPremium() && $business->socialMediaAccounts()->count() >= 1) {
             return redirect()->route('marketing.social-media')
                 ->with('error', 'Free plan allows only 1 social media connection. Upgrade to Premium for unlimited connections.');
         }
 
         $redirectUrl = $this->getOAuthUrl($platform);
-        
+
         if (!$redirectUrl) {
             return redirect()->route('marketing.social-media')
                 ->with('error', "Social media platform '{$platform}' is not supported yet.");
         }
 
-        // Store state for CSRF protection
-        session(['oauth_state' => Str::random(40), 'oauth_platform' => $platform]);
+        // Generate and store state
+        $state = Str::random(40);
+        session([
+            'oauth_state' => $state,
+            'oauth_platform' => $platform,
+            'oauth_business_id' => $business->id // Additional security
+        ]);
+
+        // Special handling for LinkedIn
+        if ($platform === 'linkedin') {
+            $redirectUrl .= (parse_url($redirectUrl, PHP_URL_QUERY) ? '&' : '?') . 'state=' . urlencode($state);
+        }
+
+        \Log::debug("Initiating OAuth connection", [
+            'platform' => $platform,
+            'state' => $state,
+            'redirect_url' => $redirectUrl
+        ]);
 
         return redirect($redirectUrl);
     }
-
     /**
      * Handle OAuth callback
      */
     public function callback(Request $request, $platform)
     {
-        $business = Auth::user()->business;
-        
-        // Verify state for CSRF protection
-        if ($request->get('state') !== session('oauth_state') || session('oauth_platform') !== $platform) {
-            return redirect()->route('marketing.social-media')
-                ->with('error', 'Invalid OAuth state. Please try connecting again.');
+        \Log::info("Social media callback initiated", [
+            'platform' => $platform,
+            'params' => $request->all(),
+            'ip' => $request->ip()
+        ]);
+
+        // Validate user session
+        if (!Auth::check()) {
+            \Log::error("No authenticated user in callback");
+            return redirect()->route('login')->with('error', 'Session expired. Please login again.');
         }
 
+        // Get business from session rather than fresh query for security
+        $businessId = session('oauth_business_id');
+        $business = Business::find($businessId);
+
+        if (!$business || $business->user_id !== Auth::id()) {
+            \Log::error("Business validation failed", [
+                'session_business_id' => $businessId,
+                'auth_user_id' => Auth::id()
+            ]);
+            return redirect()->route('dashboard')->with('error', 'Business account validation failed.');
+        }
+
+        // Modified state validation for LinkedIn
+        if ($platform !== 'linkedin') {
+            if ($request->missing('state') || $request->get('state') !== session('oauth_state')) {
+                \Log::error("OAuth state validation failed", [
+                    'session_state' => session('oauth_state'),
+                    'request_state' => $request->get('state')
+                ]);
+                return redirect()->route('marketing.social-media')
+                    ->with('error', 'Security validation failed. Please try connecting again.');
+            }
+        } elseif (session('oauth_platform') !== $platform) {
+            \Log::error("LinkedIn platform validation failed");
+            return redirect()->route('marketing.social-media')
+                ->with('error', 'Session validation failed. Please try connecting again.');
+        }
+
+        // Handle OAuth errors
         if ($request->has('error')) {
+            $errorDescription = $request->get('error_description', 'No description provided');
+            \Log::error("OAuth provider returned error", [
+                'error' => $request->get('error'),
+                'description' => $errorDescription
+            ]);
             return redirect()->route('marketing.social-media')
-                ->with('error', 'Social media connection was cancelled or failed.');
+                ->with('error', "Connection failed: {$errorDescription}");
         }
 
-        $code = $request->get('code');
-        if (!$code) {
+        // Validate authorization code
+        if (!$request->has('code')) {
+            \Log::error("Missing authorization code in callback");
             return redirect()->route('marketing.social-media')
-                ->with('error', 'No authorization code received from social platform.');
+                ->with('error', 'Authorization failed: No code received.');
         }
 
         try {
-            $tokenData = $this->exchangeCodeForToken($platform, $code);
-            $userInfo = $this->getUserInfo($platform, $tokenData['access_token']);
+            // Exchange code for token
+            \Log::debug("Exchanging code for token");
+            $tokenData = $this->exchangeCodeForToken($platform, $request->get('code'));
 
-            // Create or update social media account
-            $account = SocialMediaAccount::updateOrCreate([
-                'business_id' => $business->id,
+            if (!isset($tokenData['access_token'])) {
+                \Log::error("Token exchange failed", ['response' => $tokenData]);
+                throw new \Exception('Failed to obtain access token');
+            }
+
+            // Get user info (with special LinkedIn handling)
+            $userInfo = $platform === 'linkedin'
+                ? $this->getLinkedInUserInfo($tokenData['access_token'])
+                : $this->getUserInfo($platform, $tokenData['access_token']);
+
+            if (empty($userInfo['id'])) {
+                throw new \Exception('Invalid user information received');
+            }
+
+            // Create/update account
+            $account = SocialMediaAccount::updateOrCreate(
+                [
+                    'business_id' => $business->id,
+                    'platform' => $platform,
+                    'platform_user_id' => $userInfo['id'],
+                ],
+                [
+                    'username' => $userInfo['username'] ?? $userInfo['name'] ?? 'Unknown',
+                    'access_token' => encrypt($tokenData['access_token']),
+                    'refresh_token' => isset($tokenData['refresh_token']) ? encrypt($tokenData['refresh_token']) : null,
+                    'token_expires_at' => isset($tokenData['expires_in']) ? now()->addSeconds($tokenData['expires_in']) : null,
+                    'platform_data' => $userInfo,
+                    'is_active' => true,
+                    'last_connected_at' => now(),
+                ]
+            );
+
+            // Clean up session
+            session()->forget(['oauth_state', 'oauth_platform', 'oauth_business_id']);
+
+            \Log::info("Social account connected successfully", [
                 'platform' => $platform,
-                'platform_user_id' => $userInfo['id'],
-            ], [
-                'username' => $userInfo['username'] ?? $userInfo['name'] ?? null,
-                'access_token' => encrypt($tokenData['access_token']),
-                'refresh_token' => isset($tokenData['refresh_token']) ? encrypt($tokenData['refresh_token']) : null,
-                'token_expires_at' => isset($tokenData['expires_in']) ? now()->addSeconds($tokenData['expires_in']) : null,
-                'platform_data' => $userInfo,
-                'is_active' => true,
-                'last_connected_at' => now(),
+                'account_id' => $account->id
             ]);
 
-            session()->forget(['oauth_state', 'oauth_platform']);
-
             return redirect()->route('marketing.social-media')
-                ->with('success', ucfirst($platform) . ' account connected successfully!');
+                ->with('success', ucfirst($platform) . ' account connected successfully!')
+                ->with('connected_account', $account->id);
 
         } catch (\Exception $e) {
-            \Log::error("Social media connection failed for {$platform}", [
+            \Log::error("Social media connection failed", [
+                'platform' => $platform,
                 'error' => $e->getMessage(),
-                'business_id' => $business->id
+                'trace' => $e->getTraceAsString()
             ]);
 
             return redirect()->route('marketing.social-media')
-                ->with('error', 'Failed to connect ' . ucfirst($platform) . ' account. Please try again.');
+                ->with('error', "Failed to connect {$platform} account: " . $e->getMessage());
+        }
+    }
+
+    protected function getLinkedInUserInfo($accessToken)
+    {
+        try {
+            $response = Http::withToken($accessToken)
+                ->withHeaders([
+                    'X-RestLi-Protocol-Version' => '2.0.0',
+                    'LinkedIn-Version' => '202304'
+                ])
+                ->get('https://api.linkedin.com/v2/userinfo');
+
+            \Log::debug('LinkedIn userinfo response', ['body' => $response->body()]);
+
+            if (!$response->successful()) {
+                return [
+                    'id' => null,
+                    'name' => null,
+                    'email' => null,
+                    'error' => 'Userinfo API error: ' . $response->body()
+                ];
+            }
+
+            $data = $response->json();
+            // Build username: prefer name, then given_name + family_name, then sub
+            $username = $data['name'] ?? null;
+            if (!$username && isset($data['given_name'], $data['family_name'])) {
+                $username = $data['given_name'] . ' ' . $data['family_name'];
+            }
+            if (!$username && isset($data['sub'])) {
+                $username = $data['sub'];
+            }
+            if (!$username) {
+                $username = 'LinkedIn User';
+            }
+            return [
+                'id' => $data['sub'] ?? null,
+                'name' => $data['name'] ?? null,
+                'username' => $username,
+                'email' => $data['email'] ?? null,
+                'picture' => $data['picture'] ?? null,
+                'given_name' => $data['given_name'] ?? null,
+                'family_name' => $data['family_name'] ?? null,
+                'locale' => $data['locale'] ?? null
+            ];
+        } catch (\Exception $e) {
+            \Log::error('LinkedIn userinfo failed', ['error' => $e->getMessage()]);
+            return [
+                'id' => null,
+                'name' => null,
+                'email' => null,
+                'error' => 'Exception: ' . $e->getMessage()
+            ];
+        }
+    }
+
+    /**
+     * Updated getUserInfo method
+     */
+    protected function getUserInfo($platform, $accessToken)
+    {
+        try {
+            // Special handling for LinkedIn
+            if ($platform === 'linkedin') {
+                return $this->getLinkedInUserInfo($accessToken);
+            }
+
+            // ... rest of your existing platform handlers ...
+
+        } catch (\Exception $e) {
+            \Log::error("Failed to get user info from {$platform}", ['error' => $e->getMessage()]);
+            throw new \Exception("Failed to retrieve user information from {$platform}");
         }
     }
 
@@ -108,7 +263,7 @@ class SocialMediaController extends Controller
     public function disconnect(SocialMediaAccount $account)
     {
         $this->authorize('delete', $account);
-        
+
         $platform = $account->getAttribute('platform');
         $account->delete();
 
@@ -122,10 +277,10 @@ class SocialMediaController extends Controller
     public function refreshToken(SocialMediaAccount $account)
     {
         $this->authorize('update', $account);
-        
+
         try {
             $result = $this->socialMediaService->refreshToken($account);
-            
+
             if ($result['success']) {
                 return response()->json(['message' => 'Token refreshed successfully']);
             } else {
@@ -152,7 +307,6 @@ class SocialMediaController extends Controller
                 'state' => $state,
                 'response_type' => 'code',
             ]),
-            
             'instagram' => 'https://api.instagram.com/oauth/authorize?' . http_build_query([
                 'client_id' => config('services.instagram.client_id'),
                 'redirect_uri' => $redirectUri,
@@ -160,21 +314,11 @@ class SocialMediaController extends Controller
                 'state' => $state,
                 'response_type' => 'code',
             ]),
-            
-            'twitter' => 'https://twitter.com/i/oauth2/authorize?' . http_build_query([
-                'client_id' => config('services.twitter.client_id'),
-                'redirect_uri' => $redirectUri,
-                'scope' => 'tweet.read tweet.write users.read',
-                'state' => $state,
-                'response_type' => 'code',
-                'code_challenge' => 'challenge',
-                'code_challenge_method' => 'plain',
-            ]),
-            
+            'x' => null, // X (Twitter) uses direct API tokens, no OAuth for posting
             'linkedin' => 'https://www.linkedin.com/oauth/v2/authorization?' . http_build_query([
                 'client_id' => config('services.linkedin.client_id'),
                 'redirect_uri' => $redirectUri,
-                'scope' => 'w_member_social',
+                'scope' => 'openid profile w_member_social',
                 'state' => $state,
                 'response_type' => 'code',
             ]),
@@ -222,7 +366,7 @@ class SocialMediaController extends Controller
                 'response_type' => 'code',
                 'duration' => 'permanent',
             ]),
-            
+
             default => null,
         };
     }
@@ -241,7 +385,6 @@ class SocialMediaController extends Controller
                 'redirect_uri' => $redirectUri,
                 'code' => $code,
             ]),
-            
             'instagram' => Http::asForm()->post('https://api.instagram.com/oauth/access_token', [
                 'client_id' => config('services.instagram.client_id'),
                 'client_secret' => config('services.instagram.client_secret'),
@@ -249,27 +392,14 @@ class SocialMediaController extends Controller
                 'grant_type' => 'authorization_code',
                 'code' => $code,
             ]),
-            
-            'twitter' => Http::withHeaders([
-                'Authorization' => 'Basic ' . base64_encode(
-                    config('services.twitter.client_id') . ':' . config('services.twitter.client_secret')
-                ),
-                'Content-Type' => 'application/x-www-form-urlencoded',
-            ])->asForm()->post('https://api.twitter.com/2/oauth2/token', [
-                'grant_type' => 'authorization_code',
-                'code' => $code,
-                'redirect_uri' => $redirectUri,
-                'code_verifier' => 'challenge',
-            ]),
-            
+            'x' => null, // X (Twitter) uses direct API tokens, no OAuth for posting
             'linkedin' => Http::asForm()->post('https://www.linkedin.com/oauth/v2/accessToken', [
-                'grant_type' => 'authorization_code',
-                'code' => $code,
-                'redirect_uri' => $redirectUri,
                 'client_id' => config('services.linkedin.client_id'),
                 'client_secret' => config('services.linkedin.client_secret'),
+                'redirect_uri' => $redirectUri,
+                'code' => $code,
+                'grant_type' => 'authorization_code',
             ]),
-
             'tiktok' => Http::asForm()->post('https://open-api.tiktok.com/oauth/access_token/', [
                 'client_key' => config('services.tiktok.client_id'),
                 'client_secret' => config('services.tiktok.client_secret'),
@@ -308,10 +438,10 @@ class SocialMediaController extends Controller
                 ),
                 'User-Agent' => config('services.reddit.user_agent'),
             ])->asForm()->post('https://www.reddit.com/api/v1/access_token', [
-                'grant_type' => 'authorization_code',
-                'code' => $code,
-                'redirect_uri' => $redirectUri,
-            ]),
+                        'grant_type' => 'authorization_code',
+                        'code' => $code,
+                        'redirect_uri' => $redirectUri,
+                    ]),
 
             default => null,
         };
@@ -323,78 +453,7 @@ class SocialMediaController extends Controller
         return $response->json();
     }
 
-    /**
-     * Get user info from platform
-     */
-    protected function getUserInfo($platform, $accessToken)
-    {
-        $response = match ($platform) {
-            'facebook' => Http::get('https://graph.facebook.com/v18.0/me', [
-                'access_token' => $accessToken,
-                'fields' => 'id,name,email',
-            ]),
-            
-            'instagram' => Http::get('https://graph.instagram.com/me', [
-                'access_token' => $accessToken,
-                'fields' => 'id,username',
-            ]),
-            
-            'twitter' => Http::withToken($accessToken)->get('https://api.twitter.com/2/users/me'),
-            
-            'linkedin' => Http::withToken($accessToken)->get('https://api.linkedin.com/v2/people/~'),
 
-            'tiktok' => Http::post('https://open.tiktokapis.com/v2/user/info/', [
-                'access_token' => $accessToken
-            ]),
-
-            'youtube' => Http::withToken($accessToken)->get('https://www.googleapis.com/youtube/v3/channels?part=snippet&mine=true'),
-
-            'pinterest' => Http::withToken($accessToken)->get('https://api.pinterest.com/v5/user_account'),
-
-            'discord' => Http::withToken($accessToken)->get('https://discord.com/api/users/@me'),
-
-            'reddit' => Http::withHeaders([
-                'Authorization' => 'Bearer ' . $accessToken,
-                'User-Agent' => config('services.reddit.user_agent'),
-            ])->get('https://oauth.reddit.com/api/v1/me'),
-
-            default => null,
-        };
-
-        if (!$response->successful()) {
-            throw new \Exception('Failed to get user info: ' . $response->body());
-        }
-
-        $data = $response->json();
-
-        // Normalize response format
-        return match ($platform) {
-            'facebook' => [
-                'id' => $data['id'],
-                'name' => $data['name'],
-                'username' => $data['name'],
-                'email' => $data['email'] ?? null,
-            ],
-            
-            'instagram' => [
-                'id' => $data['id'],
-                'username' => $data['username'],
-                'name' => $data['username'],
-            ],
-            
-            'twitter' => [
-                'id' => $data['data']['id'],
-                'username' => $data['data']['username'],
-                'name' => $data['data']['name'],
-            ],
-            
-            'linkedin' => [
-                'id' => $data['id'],
-                'name' => $data['localizedFirstName'] . ' ' . $data['localizedLastName'],
-                'username' => $data['localizedFirstName'] . ' ' . $data['localizedLastName'],
-            ],
-        };
-    }
 
     /**
      * Handle Facebook deauthorize callback
@@ -404,7 +463,7 @@ class SocialMediaController extends Controller
     {
         // Facebook sends a signed request when user deauthorizes
         $signedRequest = $request->input('signed_request');
-        
+
         if (!$signedRequest) {
             return response()->json(['status' => 'error', 'message' => 'No signed request provided'], 400);
         }
@@ -413,16 +472,16 @@ class SocialMediaController extends Controller
             // Parse the signed request
             list($encodedSig, $payload) = explode('.', $signedRequest, 2);
             $data = json_decode(base64_decode(strtr($payload, '-_', '+/')), true);
-            
+
             // Get the user ID from the payload
             $facebookUserId = $data['user_id'] ?? null;
-            
+
             if ($facebookUserId) {
                 // Find and delete all Facebook accounts for this user
                 $deletedAccounts = SocialMediaAccount::where('platform', 'facebook')
                     ->where('platform_user_id', $facebookUserId)
                     ->delete();
-                
+
                 // Also delete Instagram accounts (they use same Facebook app)
                 $deletedInstagramAccounts = SocialMediaAccount::where('platform', 'instagram')
                     ->where('platform_user_id', $facebookUserId)
@@ -430,18 +489,18 @@ class SocialMediaController extends Controller
 
                 \Log::info("Facebook deauthorization: Deleted {$deletedAccounts} Facebook and {$deletedInstagramAccounts} Instagram accounts for user {$facebookUserId}");
             }
-            
+
             // Facebook expects a JSON response
             return response()->json([
                 'status' => 'success',
                 'message' => 'User data deleted successfully'
             ]);
-            
+
         } catch (\Exception $e) {
             \Log::error('Facebook deauthorization error: ' . $e->getMessage());
-            
+
             return response()->json([
-                'status' => 'error', 
+                'status' => 'error',
                 'message' => 'Failed to process deauthorization'
             ], 500);
         }

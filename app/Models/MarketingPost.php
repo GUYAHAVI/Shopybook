@@ -81,6 +81,22 @@ class MarketingPost extends Model
     }
 
     /**
+     * Get status color for UI display
+     */
+    public function getStatusColorAttribute(): string
+    {
+        return match ($this->status) {
+            'published' => 'success',
+            'pending' => 'warning',
+            'scheduled' => 'info',
+            'failed' => 'danger',
+            'partially_published' => 'warning',
+            'draft' => 'secondary',
+            default => 'secondary',
+        };
+    }
+
+    /**
      * Get total engagement across all platforms
      */
     public function getTotalEngagementAttribute(): array

@@ -14,52 +14,24 @@ return [
     |
     */
 
-    'postmark' => [
-        'token' => env('POSTMARK_TOKEN'),
+    'linkedin' => [
+        'client_id' => env('LINKEDIN_CLIENT_ID'),
+        'client_secret' => env('LINKEDIN_CLIENT_SECRET'),
+        'redirect' => env('LINKEDIN_REDIRECT_URI', 'https://shopybook.com/auth/linkedin/callback'),
     ],
-
-    'ses' => [
-        'key' => env('AWS_ACCESS_KEY_ID'),
-        'secret' => env('AWS_SECRET_ACCESS_KEY'),
-        'region' => env('AWS_DEFAULT_REGION', 'us-east-1'),
+    'x' => [
+        'access_token' => env('x_ACCESS_TOKEN'),
+        'access_token_secret' => env('x_ACCESS_TOKEN_SECRET'),
+        'bearer_token' => env('x_BEARER_TOKEN'),
     ],
-
-    'resend' => [
-        'key' => env('RESEND_KEY'),
-    ],
-
-    'slack' => [
-        'notifications' => [
-            'bot_user_oauth_token' => env('SLACK_BOT_USER_OAUTH_TOKEN'),
-            'channel' => env('SLACK_BOT_USER_DEFAULT_CHANNEL'),
-        ],
-    ],
-
-    'openai' => [
-        'api_key' => env('OPENAI_API_KEY', 'sk-ijklmnopqrstuvwxijklmnopqrstuvwxijklmnop'),
-    ],
-
-    // Social Media API Configurations
-    'facebook' => [
-        'client_id' => env('FACEBOOK_CLIENT_ID'),
-        'client_secret' => env('FACEBOOK_CLIENT_SECRET'),
-        'app_id' => env('FACEBOOK_APP_ID'),
-    ],
-
     'instagram' => [
         'client_id' => env('INSTAGRAM_CLIENT_ID'),
         'client_secret' => env('INSTAGRAM_CLIENT_SECRET'),
     ],
-
     'twitter' => [
         'client_id' => env('TWITTER_CLIENT_ID'),
         'client_secret' => env('TWITTER_CLIENT_SECRET'),
         'bearer_token' => env('TWITTER_BEARER_TOKEN'),
-    ],
-
-    'linkedin' => [
-        'client_id' => env('LINKEDIN_CLIENT_ID'),
-        'client_secret' => env('LINKEDIN_CLIENT_SECRET'),
     ],
 
     'tiktok' => [
@@ -103,5 +75,6 @@ return [
         'client_secret' => env('REDDIT_CLIENT_SECRET'),
         'user_agent' => env('REDDIT_USER_AGENT', 'Shopybook Social Media Manager v1.0'),
     ],
+
 
 ];

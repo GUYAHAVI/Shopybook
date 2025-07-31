@@ -89,9 +89,15 @@ return [
             'handler_with' => [
                 'host' => env('PAPERTRAIL_URL'),
                 'port' => env('PAPERTRAIL_PORT'),
-                'connectionString' => 'tls://'.env('PAPERTRAIL_URL').':'.env('PAPERTRAIL_PORT'),
+                'connectionString' => 'tls://' . env('PAPERTRAIL_URL') . ':' . env('PAPERTRAIL_PORT'),
             ],
             'processors' => [PsrLogMessageProcessor::class],
+        ],
+        'social_media' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/social-media.log'),
+            'level' => 'debug',
+            'days' => 14,
         ],
 
         'stderr' => [
