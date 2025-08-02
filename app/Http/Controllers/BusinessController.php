@@ -125,7 +125,7 @@ class BusinessController extends Controller
         // Handle logo upload
         if ($request->hasFile('logo')) {
             $path = $request->file('logo')->store('business/logos', 'public');
-            $business->update(['logo' => $path]);
+            $business->update(['logo_path' => $path]);
         }
 
         // Initialize the tenant (creates database, runs migrations, etc.)

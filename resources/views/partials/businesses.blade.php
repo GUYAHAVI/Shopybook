@@ -103,7 +103,7 @@ body, .container-fluid, .card, .main-content, .content {
             <div class="col-md-3 mb-4">
               <div class="cardx">
                 <div class="card-img">
-                  <img src="{{ $business->logo_path ? asset('storage/'.$business->logo_path) : asset('img/default-business.png') }}" 
+                  <img src="{{ $business->logo_path ? asset('storage/business/logos/'.$business->logo_path) : asset('img/default-business.png') }}" 
                        class="card-img-top" 
                        alt="{{ $business->name }}"
                        style="height: 180px; object-fit: cover;">

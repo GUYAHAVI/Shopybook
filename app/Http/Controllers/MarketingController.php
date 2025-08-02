@@ -326,7 +326,7 @@ class MarketingController extends Controller
             
             // Generate the video
             $result = $ltxVideoService->generateMarketingVideo(
-                $request->content,
+                $request->input('content'),
                 $businessBranding,
                 $productImagePath,
                 $options
@@ -420,7 +420,7 @@ class MarketingController extends Controller
             $method = $reflection->getMethod('createEnhancedPrompt');
             $method->setAccessible(true);
             
-            $prompt = $method->invoke($ltxVideoService, $request->content, $businessBranding, $options);
+            $prompt = $method->invoke($ltxVideoService, $request->input('content'), $businessBranding, $options);
             
             return response()->json([
                 'success' => true,

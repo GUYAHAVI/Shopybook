@@ -8,6 +8,7 @@ use Stancl\Tenancy\Database\Concerns\GeneratesIds;
 use Stancl\Tenancy\Database\Models\Tenant as BaseTenant;
 use Stancl\Tenancy\Contracts\TenantWithDatabase;
 use Stancl\Tenancy\DatabaseConfig;
+use App\Models\ServiceRecord;
 
 class Business extends BaseTenant implements TenantWithDatabase
 {

@@ -725,9 +725,8 @@ input.form-control::placeholder, textarea.form-control::placeholder {
             </div>
         </div>
     </section>
-            </div>
-        </div>
-    </section>
+           
+    
 
     <!-- Contact Section -->
     <section id="contact" class="position-relative py-5 text-light">

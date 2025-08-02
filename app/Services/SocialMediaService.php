@@ -205,6 +205,11 @@ class SocialMediaService
 private function publishToLinkedIn(MarketingPost $post, SocialMediaAccount $account): array
 {
     try {
+        // Force logging to default channel to ensure we see it
+        Log::info('=== LinkedIn Function Called ===', [
+            'post_id' => $post->getAttribute('id'),
+            'account_id' => $account->getAttribute('id')
+        ]);
         $accessToken = decrypt($account->getAttribute('access_token'));
         $content = $post->getAttribute('content');
         $authorUrn = 'urn:li:person:' . $account->getAttribute('platform_user_id');
@@ -218,10 +223,23 @@ private function publishToLinkedIn(MarketingPost $post, SocialMediaAccount $acco
         $mediaItems = [];
         $shareMediaCategory = 'NONE';
 
+        // Enhanced logging for media files debugging
+        Log::debug('LinkedIn media files processing', [
+            'media_files_count' => count($mediaFiles),
+            'media_files' => $mediaFiles,
+            'post_id' => $post->getAttribute('id')
+        ]);
+
         if (count($mediaFiles) > 0) {
             foreach ($mediaFiles as $mediaFile) {
                 try {
                     // 1. Register the image upload
+                    // Log the author URN being used
+                    Log::debug('LinkedIn registering image with owner', [
+                        'author_urn' => $authorUrn,
+                        'platform_user_id' => $account->getAttribute('platform_user_id')
+                    ]);
+                    
                     $registerResponse = Http::withToken($accessToken)
                         ->withHeaders([
                             'X-Restli-Protocol-Version' => '2.0.0',
@@ -235,7 +253,7 @@ private function publishToLinkedIn(MarketingPost $post, SocialMediaAccount $acco
                         ]);
 
                     if (!$registerResponse->successful()) {
-                        Log::error('LinkedIn image registration failed', [
+Log::error('LinkedIn image registration failed: Possible server error or malformed request.', [
                             'status' => $registerResponse->status(),
                             'response' => $registerResponse->body()
                         ]);
@@ -247,7 +265,7 @@ private function publishToLinkedIn(MarketingPost $post, SocialMediaAccount $acco
                     $imageUrn = $responseData['value']['image'] ?? null;
 
                     if (!$uploadUrl || !$imageUrn) {
-                        Log::error('LinkedIn image registration missing required fields', [
+Log::error('LinkedIn image registration missing required fields: Check uploadUrl and imageUrn.', [
                             'response' => $responseData
                         ]);
                         continue;
@@ -255,6 +273,23 @@ private function publishToLinkedIn(MarketingPost $post, SocialMediaAccount $acco
 
                     // 2. Upload the actual image file
                     $filePath = storage_path('app/public/' . str_replace('/storage/', '', $mediaFile));
+                    
+                    // Debug file path and existence
+                    Log::debug('LinkedIn file path processing', [
+                        'original_media_file' => $mediaFile,
+                        'resolved_file_path' => $filePath,
+                        'file_exists' => file_exists($filePath),
+                        'file_size' => file_exists($filePath) ? filesize($filePath) : 'N/A'
+                    ]);
+                    
+                    if (!file_exists($filePath)) {
+                        Log::error('LinkedIn image file not found', [
+                            'media_file' => $mediaFile,
+                            'file_path' => $filePath
+                        ]);
+                        continue;
+                    }
+                    
                     $imageData = file_get_contents($filePath);
                     
                     $uploadResponse = Http::withHeaders([
@@ -264,39 +299,30 @@ private function publishToLinkedIn(MarketingPost $post, SocialMediaAccount $acco
                       ->put($uploadUrl);
 
                     if (!$uploadResponse->successful()) {
-                        Log::error('LinkedIn image upload failed', [
+Log::error('LinkedIn image upload failed: Upload endpoint might be incorrect.', [
                             'status' => $uploadResponse->status(),
                             'response' => $uploadResponse->body()
                         ]);
                         continue;
                     }
 
-                    // 3. Verify image ownership before using in post
-                    $verifyResponse = Http::withToken($accessToken)
-                        ->withHeaders([
-                            'X-Restli-Protocol-Version' => '2.0.0',
-                            'LinkedIn-Version' => '202307'
-                        ])
-                        ->get("https://api.linkedin.com/rest/images/$imageUrn");
-
-                    if ($verifyResponse->successful()) {
-                        $mediaItems[] = [
-                            'status' => 'READY',
-                            'media' => $imageUrn,
-                            'originalUrl' => config('app.url'),
-                            'title' => ['text' => 'Post Image']
-                        ];
-                        $shareMediaCategory = 'IMAGE';
-                        Log::debug('LinkedIn image verified and ready', [
-                            'urn' => $imageUrn,
-                            'verifyResponse' => $verifyResponse->json()
-                        ]);
-                    } else {
-                        Log::error('LinkedIn image verification failed', [
-                            'status' => $verifyResponse->status(),
-                            'response' => $verifyResponse->body()
-                        ]);
-                    }
+                    // Skip verification - trust LinkedIn to handle image processing
+                    // Add image directly to media items after successful upload
+                    $mediaItems[] = [
+                        'status' => 'READY',
+                        'media' => $imageUrn,
+                        'originalUrl' => config('app.url'),
+                        'title' => ['text' => 'Post Image']
+                    ];
+                    $shareMediaCategory = 'IMAGE';
+                    
+                    Log::debug('LinkedIn image uploaded and added to post', [
+                        'urn' => $imageUrn,
+                        'upload_status' => $uploadResponse->status()
+                    ]);
+                    
+                    // Add a small delay between uploads to avoid rate limiting
+                    usleep(500000); // 0.5 seconds
                 } catch (\Exception $e) {
                     Log::error('Exception during LinkedIn image processing', [
                         'error' => $e->getMessage(),

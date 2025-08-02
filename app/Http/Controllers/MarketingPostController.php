@@ -89,12 +89,23 @@ class MarketingPostController extends Controller
             foreach ($request->file('media') as $file) {
                 try {
                     $path = $file->store('marketing-posts/' . $business->id, 'public');
-                    $mediaFiles[] = Storage::url($path);
-                    Log::channel('social_media')->debug('Media file stored', ['path' => $path]);
+                    $fullUrl = Storage::url($path);
+                    $mediaFiles[] = $fullUrl;
+                    
+                    // Enhanced logging for media file storage
+                    Log::channel('social_media')->debug('Media file stored with details', [
+                        'original_name' => $file->getClientOriginalName(),
+                        'stored_path' => $path,
+                        'full_url' => $fullUrl,
+                        'file_size' => $file->getSize(),
+                        'mime_type' => $file->getMimeType(),
+                        'storage_disk_path' => storage_path('app/public/' . $path)
+                    ]);
                 } catch (\Exception $e) {
                     Log::channel('social_media')->error('Media upload failed', [
                         'error' => $e->getMessage(),
-                        'file' => $file->getClientOriginalName()
+                        'file' => $file->getClientOriginalName(),
+                        'trace' => $e->getTraceAsString()
                     ]);
                 }
             }
