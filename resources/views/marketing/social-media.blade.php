@@ -587,13 +587,99 @@
                                         <i class="fas fa-cloud-upload-alt fs-1 text-muted mb-2"></i>
                                         <h6 class="mb-1">Drag & drop files here</h6>
                                         <p class="text-muted small mb-2">or click to browse</p>
-                                        <button type="button" class="btn btn-sm btn-outline-primary" onclick="document.getElementById('mediaInput').click()">
-                                            <i class="fas fa-plus me-1"></i> Add Files
-                                        </button>
+                                        <div class="d-flex gap-2 justify-content-center">
+                                            <button type="button" class="btn btn-sm btn-outline-primary" onclick="document.getElementById('mediaInput').click()">
+                                                <i class="fas fa-plus me-1"></i> Add Files
+                                            </button>
+                                            <button type="button" class="btn btn-sm btn-outline-success" id="generateVideoBtn">
+                                                <i class="fas fa-video me-1"></i> Generate Video
+                                            </button>
+                                        </div>
                                     </div>
                                     <div class="media-preview d-flex flex-wrap gap-2 mt-3"></div>
                                 </div>
-                                <div class="form-text">Supports JPG, PNG, GIF, MP4 (max 10MB each)</div>
+                                <div class="form-text">Supports JPG, PNG, GIF, MP4 (max 10MB each) • <strong>NEW:</strong> AI Video generation powered by LTX-Video</div>
+                            </div>
+
+                            <!-- Video Generation Section -->
+                            <div class="mb-4" id="videoGenerationSection" style="display: none;">
+                                <div class="card border-success">
+                                    <div class="card-header bg-light-success">
+                                        <h6 class="mb-0 text-success">
+                                            <i class="fas fa-magic me-2"></i>AI Video Generation
+                                            <span class="badge bg-success ms-2">Powered by LTX-Video</span>
+                                        </h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <div class="mb-3">
+                                                    <label class="form-label fw-semibold">Video Style</label>
+                                                    <select class="form-select" id="videoStyle">
+                                                        <option value="professional">Professional - Clean, corporate styling</option>
+                                                        <option value="dynamic">Dynamic - Energetic and fast-paced</option>
+                                                        <option value="minimal">Minimal - Simple and elegant</option>
+                                                        <option value="creative">Creative - Artistic and unique</option>
+                                                        <option value="social">Social Media - Optimized for platforms</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="mb-3">
+                                                    <label class="form-label fw-semibold">Duration</label>
+                                                    <select class="form-select" id="videoDuration">
+                                                        <option value="3">3 seconds - Quick teaser</option>
+                                                        <option value="4" selected>4 seconds - Standard</option>
+                                                        <option value="5">5 seconds - Extended</option>
+                                                        <option value="6">6 seconds - Detailed</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label fw-semibold">Product Image (Optional)</label>
+                                            <input type="file" class="form-control" id="productImageInput" accept="image/*">
+                                            <div class="form-text">Add a product image to create an image-to-video animation</div>
+                                        </div>
+                                        <div class="d-flex gap-2">
+                                            <button type="button" class="btn btn-success" id="startVideoGeneration">
+                                                <i class="fas fa-play me-2"></i>Generate Video
+                                            </button>
+                                            <button type="button" class="btn btn-outline-info" id="previewPrompt">
+                                                <i class="fas fa-eye me-2"></i>Preview Prompt
+                                            </button>
+                                            <button type="button" class="btn btn-outline-secondary" id="cancelVideoGeneration">
+                                                <i class="fas fa-times me-2"></i>Cancel
+                                            </button>
+                                        </div>
+                                        
+                                        <!-- Video Generation Progress -->
+                                        <div class="mt-3" id="videoGenerationProgress" style="display: none;">
+                                            <div class="d-flex align-items-center mb-2">
+                                                <div class="spinner-border spinner-border-sm text-success me-2" role="status"></div>
+                                                <span class="fw-semibold">Generating your video...</span>
+                                            </div>
+                                            <div class="progress mb-2">
+                                                <div class="progress-bar progress-bar-striped progress-bar-animated bg-success" role="progressbar" style="width: 0%" id="videoProgressBar"></div>
+                                            </div>
+                                            <div class="small text-muted" id="videoProgressText">Preparing generation...</div>
+                                        </div>
+                                        
+                                        <!-- Generated Video Preview -->
+                                        <div class="mt-3" id="generatedVideoPreview" style="display: none;">
+                                            <div class="alert alert-success">
+                                                <div class="d-flex align-items-center mb-2">
+                                                    <i class="fas fa-check-circle me-2"></i>
+                                                    <strong>Video generated successfully!</strong>
+                                                </div>
+                                                <video controls class="w-100 rounded" id="generatedVideo" style="max-height: 300px;">
+                                                    Your browser does not support the video tag.
+                                                </video>
+                                                <div class="mt-2 small text-muted" id="videoDetails"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                         
@@ -793,8 +879,14 @@ document.addEventListener('DOMContentLoaded', function() {
     const mediaPreview = document.querySelector('.media-preview');
     
     if (mediaDropzone && mediaInput) {
-        // Click handler
-        mediaDropzone.addEventListener('click', () => mediaInput.click());
+                        // Click handler - but not for generate video button
+                        mediaDropzone.addEventListener('click', (e) => {
+                            // Don't trigger file input if clicking generate video button
+                            if (e.target.id === 'generateVideoBtn' || e.target.closest('#generateVideoBtn')) {
+                                return;
+                            }
+                            mediaInput.click();
+                        });
         
         // Drag and drop handlers
         mediaDropzone.addEventListener('dragover', (e) => {
@@ -920,6 +1012,202 @@ document.addEventListener('DOMContentLoaded', function() {
             return false;
         }
     });
+
+    // Video Generation Functionality
+    const generateVideoBtn = document.getElementById('generateVideoBtn');
+    const videoGenerationSection = document.getElementById('videoGenerationSection');
+    const startVideoGeneration = document.getElementById('startVideoGeneration');
+    const cancelVideoGeneration = document.getElementById('cancelVideoGeneration');
+    const previewPromptBtn = document.getElementById('previewPrompt');
+    const videoGenerationProgress = document.getElementById('videoGenerationProgress');
+    const generatedVideoPreview = document.getElementById('generatedVideoPreview');
+    const videoProgressBar = document.getElementById('videoProgressBar');
+    const videoProgressText = document.getElementById('videoProgressText');
+
+    // Show video generation section when Generate Video button is clicked
+    if (generateVideoBtn) {
+        generateVideoBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            // Check if title and content are filled
+            const title = document.querySelector('input[name="title"]').value;
+            const content = document.querySelector('textarea[name="content"]').value;
+            
+            if (!title.trim() || !content.trim()) {
+                alert('Please fill in the post title and content before generating a video.');
+                return;
+            }
+            
+            videoGenerationSection.style.display = 'block';
+            videoGenerationSection.scrollIntoView({ behavior: 'smooth' });
+        });
+    }
+
+    // Cancel video generation
+    if (cancelVideoGeneration) {
+        cancelVideoGeneration.addEventListener('click', function() {
+            videoGenerationSection.style.display = 'none';
+            videoGenerationProgress.style.display = 'none';
+            generatedVideoPreview.style.display = 'none';
+        });
+    }
+
+    // Preview video prompt
+    if (previewPromptBtn) {
+        previewPromptBtn.addEventListener('click', function() {
+            const title = document.querySelector('input[name="title"]').value;
+            const content = document.querySelector('textarea[name="content"]').value;
+            const style = document.getElementById('videoStyle').value;
+            
+            if (!title.trim() || !content.trim()) {
+                alert('Please fill in the post title and content first.');
+                return;
+            }
+            
+            // Show loading state
+            previewPromptBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Loading...';
+            previewPromptBtn.disabled = true;
+            
+            // Make API call to preview prompt
+            fetch('{{ route("marketing.video.preview-prompt") }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '{{ csrf_token() }}'
+                },
+                body: JSON.stringify({
+                    content: content,
+                    style: style
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Generated Prompt:\n\n' + data.prompt);
+                } else {
+                    alert('Error: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred while generating the prompt preview.');
+            })
+            .finally(() => {
+                previewPromptBtn.innerHTML = '<i class="fas fa-eye me-2"></i>Preview Prompt';
+                previewPromptBtn.disabled = false;
+            });
+        });
+    }
+
+    // Start video generation
+    if (startVideoGeneration) {
+        startVideoGeneration.addEventListener('click', function() {
+            const title = document.querySelector('input[name="title"]').value;
+            const content = document.querySelector('textarea[name="content"]').value;
+            const style = document.getElementById('videoStyle').value;
+            const duration = document.getElementById('videoDuration').value;
+            const productImage = document.getElementById('productImageInput').files[0];
+            
+            if (!title.trim() || !content.trim()) {
+                alert('Please fill in the post title and content first.');
+                return;
+            }
+            
+            // Show progress
+            videoGenerationProgress.style.display = 'block';
+            generatedVideoPreview.style.display = 'none';
+            startVideoGeneration.disabled = true;
+            
+            // Animate progress bar
+            let progress = 0;
+            const progressInterval = setInterval(() => {
+                progress += Math.random() * 15;
+                if (progress > 90) progress = 90;
+                videoProgressBar.style.width = progress + '%';
+                
+                if (progress < 30) {
+                    videoProgressText.textContent = 'Analyzing your content...';
+                } else if (progress < 60) {
+                    videoProgressText.textContent = 'Creating video concept...';
+                } else if (progress < 90) {
+                    videoProgressText.textContent = 'Generating your video...';
+                }
+            }, 500);
+            
+            // Prepare form data
+            const formData = new FormData();
+            formData.append('title', title);
+            formData.append('content', content);
+            formData.append('style', style);
+            formData.append('duration', duration);
+            if (productImage) {
+                formData.append('product_image', productImage);
+            }
+            
+            // Make API call to generate video
+            fetch('{{ route("marketing.video.generate") }}', {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '{{ csrf_token() }}'
+                },
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                clearInterval(progressInterval);
+                videoProgressBar.style.width = '100%';
+                videoProgressText.textContent = 'Complete!';
+                
+                if (data.success) {
+                    // Show generated video
+                    setTimeout(() => {
+                        videoGenerationProgress.style.display = 'none';
+                        generatedVideoPreview.style.display = 'block';
+                        
+                        const videoElement = document.getElementById('generatedVideo');
+                        const videoDetails = document.getElementById('videoDetails');
+                        
+                        videoElement.src = data.video_url;
+                        videoDetails.innerHTML = `
+                            Duration: ${data.duration}s | 
+                            Generated in: ${data.generation_time}s | 
+                            Style: ${style.charAt(0).toUpperCase() + style.slice(1)}
+                        `;
+                        
+                        // Add the video to the media preview
+                        const mediaPreview = document.querySelector('.media-preview');
+                        const videoPreviewItem = document.createElement('div');
+                        videoPreviewItem.className = 'media-preview-item';
+                        videoPreviewItem.innerHTML = `
+                            <video src="${data.video_url}"></video>
+                            <div class="remove-media" data-filename="generated-video.mp4">&times;</div>
+                        `;
+                        mediaPreview.appendChild(videoPreviewItem);
+                        
+                        // Add remove functionality
+                        videoPreviewItem.querySelector('.remove-media').addEventListener('click', function() {
+                            videoPreviewItem.remove();
+                        });
+                        
+                        alert('Video generated successfully! It has been added to your media files.');
+                    }, 1000);
+                } else {
+                    alert('Error generating video: ' + data.message);
+                    videoGenerationProgress.style.display = 'none';
+                }
+            })
+            .catch(error => {
+                clearInterval(progressInterval);
+                console.error('Error:', error);
+                alert('An error occurred while generating the video. Please try again.');
+                videoGenerationProgress.style.display = 'none';
+            })
+            .finally(() => {
+                startVideoGeneration.disabled = false;
+            });
+        });
+    }
 });
 </script>
 @endsection

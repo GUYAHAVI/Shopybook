@@ -76,5 +76,35 @@ return [
         'user_agent' => env('REDDIT_USER_AGENT', 'Shopybook Social Media Manager v1.0'),
     ],
 
+    'ltx_video' => [
+        // Local installation (development)
+        'path' => env('LTX_VIDEO_PATH'), // No default - will trigger cloud API if not set
+        'python_executable' => env('LTX_VIDEO_PYTHON', 'python'),
+        'model_config' => env('LTX_VIDEO_MODEL', 'ltxv-13b-0.9.7-distilled'),
+        
+        // Cloud API configuration (production)
+        'provider' => env('LTX_VIDEO_PROVIDER', 'huggingface'), // replicate, fal, huggingface, mock
+        'api_endpoint' => env('LTX_VIDEO_API_ENDPOINT'),
+        'api_key' => env('LTX_VIDEO_API_KEY'),
+        'replicate_version' => env('LTX_REPLICATE_VERSION', 'lightricks/ltx-video:13b-distilled'),
+        
+        // General settings
+        'default_style' => env('LTX_VIDEO_DEFAULT_STYLE', 'professional'),
+        'cleanup_days' => env('LTX_VIDEO_CLEANUP_DAYS', 7),
+        'use_cloud' => env('LTX_VIDEO_USE_CLOUD', true), // Force cloud API usage
+    ],
+    
+    // Cloud API providers
+    'replicate' => [
+        'api_key' => env('REPLICATE_API_TOKEN'),
+    ],
+    
+    'fal' => [
+        'api_key' => env('FAL_KEY'),
+    ],
+    
+    'huggingface' => [
+        'api_key' => env('HUGGINGFACE_API_TOKEN', 'REMOVED_SECRET_TOKEN'),
+    ],
 
 ];

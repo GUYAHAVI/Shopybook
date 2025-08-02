@@ -158,6 +158,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
         
         // Marketing Report
         Route::get('/report', [MarketingController::class, 'marketingReport'])->name('marketing.report')->middleware('has.business');
+        
+        // Video Generation Routes
+        Route::post('/video/generate', [MarketingController::class, 'generateVideo'])->name('marketing.video.generate')->middleware('has.business');
+        Route::get('/video/styles', [MarketingController::class, 'getVideoStyles'])->name('marketing.video.styles')->middleware('has.business');
+        Route::post('/video/preview-prompt', [MarketingController::class, 'previewVideoPrompt'])->name('marketing.video.preview-prompt')->middleware('has.business');
+        Route::delete('/video/cleanup', [MarketingController::class, 'cleanupVideos'])->name('marketing.video.cleanup')->middleware('has.business');
     });
 
     // Business Analysis Routes
