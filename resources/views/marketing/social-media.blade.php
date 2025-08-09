@@ -353,8 +353,8 @@
                     <div class="mb-3">
                         <label for="postContent" class="form-label">Post Content</label>
                         <x-ai-enhanced-textarea name="postContent" 
-                                                   content-type="social-media" 
-                                                   tone="engaging" 
+                                                   content-type="business_description" 
+                                                   tone="professional" 
                                                    rows="4" 
                                                    placeholder="What's on your mind?">
                         </x-ai-enhanced-textarea>
