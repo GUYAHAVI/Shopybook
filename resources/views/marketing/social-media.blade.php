@@ -1,1212 +1,1011 @@
-@extends('layouts.master')
+@extends('layouts.dash')
 
 @section('title', 'Social Media Marketing')
 
 @section('content')
-<head>
-    
-<style>
-        /* Main Modal Styling */
-    #createPostModal .modal-content {
-        border-radius: 12px;
-        overflow: hidden;
-        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
-    }
-    
-    .modal-header.bg-gradient-primary {
-        background: linear-gradient(135deg, #020258 0%, #13e8e9 100%);
-        border-bottom: none;
-        padding: 1.5rem;
-    }
-    
-    /* Form Elements - Fixed text color */
-    .form-control, .form-select, .form-control-lg {
-        border-radius: 8px;
-        padding: 0.75rem 1rem;
-        border: 1px solid #e0e0e0;
-        background-color: #f9f9f9;
-        transition: all 0.2s ease;
-        color: #111 !important; /* Added explicit text color */
-    }
-    
-    /* Placeholder text color */
-    .form-control::placeholder,
-    .form-control-lg::placeholder {
-        color: #111 !important;
-        opacity: 1;
-    }
-    
-    .form-control:focus, .form-select:focus {
-        border-color: #020258;
-        box-shadow: 0 0 0 0.25rem rgba(78, 115, 223, 0.15);
-        background-color: #fff;
-        color: #111 !important; /* Ensure text stays visible on focus */
-    }
-    
-    /* Textarea specific styling */
-    textarea.form-control {
-        color: #111 !important;
-        background-color: #fff;
-        min-height: 200px;
-    }
-    
-    /* Rest of your existing styles... */
-    .platform-card {
-        transition: all 0.2s ease;
-        background: white;
-        border: 1px solid #e0e0e0;
-    }
-    /* Main Modal Styling */
-    #createPostModal .modal-content {
-        border-radius: 12px;
-        overflow: hidden;
-        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
-    }
-    
-    .modal-header.bg-gradient-primary {
-        background: linear-gradient(135deg, #020258 0%, #13e8e9 100%);
-        border-bottom: none;
-        padding: 1.5rem;
-    }
-    
-    /* Form Elements */
-    .form-control, .form-select {
-        border-radius: 8px;
-        padding: 0.75rem 1rem;
-        border: 1px solid #e0e0e0;
-        background-color: #f9f9f9;
-        transition: all 0.2s ease;
-    }
-    
-    .form-control:focus, .form-select:focus {
-        border-color: #020258;
-        box-shadow: 0 0 0 0.25rem rgba(78, 115, 223, 0.15);
-        background-color: #fff;
-    }
-    
-    /* Platform Cards */
-    .platform-card {
-        transition: all 0.2s ease;
-        background: white;
-        border: 1px solid #e0e0e0;
-    }
-    
-    .platform-card:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-    }
-    
-    .platform-card input[type="checkbox"]:checked + label {
-        background-color: rgba(78, 115, 223, 0.08);
-        border-color: #020258;
-    }
-    
-    .platform-icon {
-        width: 50px;
-        height: 50px;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        background: rgba(0,0,0,0.03);
-    }
-    
-    /* Platform Colors */
-    .text-facebook { color: #3b5998; }
-    .text-twitter { color: #1da1f2; }
-    .text-instagram { color: #e1306c; }
-    .text-linkedin { color: #0077b5; }
-    
-    /* Media Upload */
-    #mediaDropzone {
-        transition: all 0.3s ease;
-        cursor: pointer;
-        border: 2px dashed #e0e0e0;
-        background-color: #f9f9f9;
-    }
-    
-    #mediaDropzone:hover {
-        border-color: #020258;
-        background-color: rgba(78, 115, 223, 0.03);
-    }
-    
-    #mediaDropzone.dragover {
-        background-color: rgba(78, 115, 223, 0.08);
-        border-color: #020258;
-    }
-    
-    .media-preview-item {
-        width: 80px;
-        height: 80px;
-        border-radius: 8px;
-        overflow: hidden;
-        position: relative;
-        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-    }
-    
-    .media-preview-item img, 
-    .media-preview-item video {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-    }
-    
-    .media-preview-item .remove-media {
-        position: absolute;
-        top: 2px;
-        right: 2px;
-        background: rgba(0,0,0,0.5);
-        color: white;
-        width: 20px;
-        height: 20px;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 10px;
-        cursor: pointer;
-    }
-    
-    /* Character Counter */
-    #charCount {
-        font-weight: 600;
-        color: #020258;
-    }
-    
-    /* Responsive Adjustments */
-    @media (max-width: 992px) {
-        .modal-xl {
-            max-width: 95%;
-        }
-        
-        .bg-light {
-            background-color: white !important;
-        }
-    }
-</style>
-
-</head>
-
-<div class="container-fluid py-4">
-    <!-- Header -->
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <div>
-            <h1 class="h3 mb-0">Social Media Marketing</h1>
-            <p class="text-muted">Manage your social media accounts and create marketing posts</p>
-        </div>
-        <div class="d-flex gap-2">
-            <button class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#connectAccountModal">
-                <i class="fas fa-plus me-2"></i>Connect Account
-            </button>
-            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createPostModal">
-                <i class="fas fa-pen me-2"></i>Create Post
-            </button>
-        </div>
+@if(session('error'))
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="fas fa-exclamation-triangle me-2"></i>
+        {{ session('error') }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
     </div>
+@endif
 
-    <!-- Premium Feature Notice -->
-    @if(!auth()->user()->business->isPremium())
-    <div class="alert alert-info d-flex align-items-center mb-4">
-        <i class="fas fa-crown me-3 text-warning" style="font-size: 1.5rem;"></i>
-        <div class="flex-grow-1">
-            <h5 class="alert-heading mb-1">Unlock Social Media Automation</h5>
-            <p class="mb-2">Auto-post to multiple platforms, schedule content, and track engagement with our Premium plan.</p>
-            <small class="text-muted">Starting from KSh 2,500/month</small>
-        </div>
-        <a href="{{ route('billing.upgrade') }}" class="btn btn-warning ms-3">
-            <i class="fas fa-arrow-up me-2"></i>Upgrade Now
+@if(session('success'))
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        <i class="fas fa-check-circle me-2"></i>
+        {{ session('success') }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+@endif
+<!-- Sub-navigation for Marketing -->
+<div class="sub-navigation mb-4">
+    <div class="nav-tabs">
+        <a href="{{ route('marketing.social-media') }}" class="nav-tab active">
+            <i class="fas fa-share-alt me-1"></i> Social Media
         </a>
-    </div>
-    @endif
-
-    <!-- Connected Accounts -->
-    <div class="row mb-4">
-        <div class="col-12">
-            <div class="card">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0">Connected Accounts</h5>
-                    <span class="badge bg-secondary">{{ $connectedAccounts->count() }} connected</span>
-                </div>
-                <div class="card-body">
-                    @if($connectedAccounts->isEmpty())
-                        <div class="text-center py-5">
-                            <i class="fas fa-share-alt text-muted mb-3" style="font-size: 3rem;"></i>
-                            <h5 class="text-muted">No accounts connected yet</h5>
-                            <p class="text-muted mb-3">Connect your social media accounts to start auto-posting</p>
-                            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#connectAccountModal">
-                                <i class="fas fa-plus me-2"></i>Connect First Account
-                            </button>
-                        </div>
-                    @else
-                        <div class="row">
-                            @foreach($connectedAccounts as $account)
-                            <div class="col-md-6 col-lg-4 mb-3">
-                                <div class="card h-100 border-0 shadow-sm">
-                                    <div class="card-body">
-                                        <div class="d-flex align-items-center mb-3">
-                                            <div class="platform-icon me-3">
-                                                <i class="fab fa-{{ $account->platform_icon }} fa-2x text-{{ $account->platform_color }}"></i>
-                                            </div>
-                                            <div class="flex-grow-1 d-flex align-items-center">
-                                                @if($account->platform === 'linkedin' && !empty($account->platform_data['picture']))
-                                                    <img src="{{ $account->platform_data['picture'] }}" alt="Profile Picture" class="rounded-circle me-2" style="width:32px;height:32px;object-fit:cover;">
-                                                @endif
-                                                <div>
-                                                    <h6 class="mb-0">{{ ucfirst($account->platform) }}</h6>
-                                                    
-                                                    @if($account->platform === 'linkedin')
-                                                        @if(!empty($account->platform_data['name']))
-                                                            <div class="text-muted small">{{ $account->platform_data['name'] }}</div>
-                                                        @endif
-                                                        @if(!empty($account->platform_data['locale']))
-                                                            <div class="text-muted small">
-                                                                {{ $account->platform_data['locale']['country'] ?? '' }}
-                                                                @if(!empty($account->platform_data['locale']['language']))
-                                                                    | {{ $account->platform_data['locale']['language'] }}
-                                                                @endif
-                                                            </div>
-                                                        @endif
-                                                    @endif
-                                                </div>
-                                            </div>
-                                            <div class="dropdown">
-                                                <button class="btn btn-sm btn-outline-secondary" data-bs-toggle="dropdown">
-                                                    <i class="fas fa-ellipsis-v"></i>
-                                                </button>
-                                                <ul class="dropdown-menu">
-                                                    <li><a class="dropdown-item" href="#"><i class="fas fa-sync me-2"></i>Refresh Token</a></li>
-                                                    <li><a class="dropdown-item text-danger" href="#"><i class="fas fa-unlink me-2"></i>Disconnect</a></li>
-                                                </ul>
-                                            </div>
-                                        </div>
-                                        <div class="d-flex justify-content-between align-items-center">
-                                            <span class="badge bg-{{ $account->is_active ? 'success' : 'danger' }}">
-                                                {{ $account->is_active ? 'Active' : 'Inactive' }}
-                                            </span>
-                                            <small class="text-muted">
-                                                Last connected {{ $account->last_connected_at?->diffForHumans() ?? 'Never' }}
-                                            </small>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            @endforeach
-                        </div>
-                    @endif
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Recent Posts -->
-    <div class="row">
-        <div class="col-12">
-            <div class="card">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0">Recent Marketing Posts</h5>
-                    <div class="d-flex gap-2">
-                        <select class="form-select form-select-sm" style="width: auto;">
-                            <option>All Status</option>
-                            <option>Published</option>
-                            <option>Scheduled</option>
-                            <option>Draft</option>
-                            <option>Failed</option>
-                        </select>
-                        <select class="form-select form-select-sm" style="width: auto;">
-                            <option>All Platforms</option>
-                            <option>Facebook</option>
-                            <option>Instagram</option>
-                            <option>Twitter</option>
-                            <option>LinkedIn</option>
-                            <option>TikTok</option>
-                            <option>YouTube</option>
-                            <option>Pinterest</option>
-                            <option>Telegram</option>
-                            <option>Discord</option>
-                            <option>Reddit</option>
-                        </select>
-                    </div>
-                </div>
-                <div class="card-body">
-                    @if($recentPosts->isEmpty())
-                        <div class="text-center py-5">
-                            <i class="fas fa-newspaper text-muted mb-3" style="font-size: 3rem;"></i>
-                            <h5 class="text-muted">No posts created yet</h5>
-                            <p class="text-muted mb-3">Create your first marketing post to reach your audience</p>
-                            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createPostModal">
-                                <i class="fas fa-pen me-2"></i>Create First Post
-                            </button>
-                        </div>
-                    @else
-                        <div class="table-responsive">
-                            <table class="table table-hover">
-                                <thead>
-                                    <tr>
-                                        <th>Post</th>
-                                        <th>Platforms</th>
-                                        <th>Status</th>
-                                        <th>Scheduled</th>
-                                        <th>Engagement</th>
-                                        <th>Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @foreach($recentPosts as $post)
-                                    <tr>
-                                        <td>
-                                            <div class="d-flex align-items-start">
-                                                @if($post->media_files)
-                                                <img src="{{ $post->media_files[0] ?? '' }}" class="rounded me-3" style="width: 50px; height: 50px; object-fit: cover;">
-                                                @else
-                                                <div class="bg-light rounded me-3 d-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">
-                                                    <i class="fas fa-file-text text-muted"></i>
-                                                </div>
-                                                @endif
-                                                <div>
-                                                    <h6 class="mb-1">{{ $post->title }}</h6>
-                                                    <p class="text-muted small mb-0">{{ Str::limit($post->content, 80) }}</p>
-                                                </div>
-                                            </div>
-                                        </td>
-                                        <td>
-                                            <div class="d-flex gap-1">
-                                                @foreach($post->target_platforms as $platform)
-                                                <i class="fab fa-{{ $platform }} text-muted" title="{{ ucfirst($platform) }}"></i>
-                                                @endforeach
-                                            </div>
-                                        </td>
-                                        <td>
-                                            <span class="badge bg-{{ $post->status_color }}">{{ ucfirst($post->status) }}</span>
-                                        </td>
-                                        <td>
-                                            @if($post->scheduled_at)
-                                                <small>{{ $post->scheduled_at->format('M j, Y g:i A') }}</small>
-                                            @else
-                                                <small class="text-muted">Immediate</small>
-                                            @endif
-                                        </td>
-                                        <td>
-                                            @if($post->engagement_data)
-                                                <small>
-                                                    <i class="fas fa-heart text-danger"></i> {{ $post->engagement_data['likes'] ?? 0 }}
-                                                    <i class="fas fa-share text-primary ms-2"></i> {{ $post->engagement_data['shares'] ?? 0 }}
-                                                </small>
-                                            @else
-                                                <small class="text-muted">-</small>
-                                            @endif
-                                        </td>
-                                        <td>
-                                            <div class="btn-group btn-group-sm">
-                                                <button class="btn btn-outline-primary" title="View">
-                                                    <i class="fas fa-eye"></i>
-                                                </button>
-                                                <button class="btn btn-outline-secondary" title="Edit">
-                                                    <i class="fas fa-edit"></i>
-                                                </button>
-                                                <button class="btn btn-outline-danger" title="Delete">
-                                                    <i class="fas fa-trash"></i>
-                                                </button>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                    @endforeach
-                                </tbody>
-                            </table>
-                        </div>
-                        
-                        <!-- Pagination -->
-                        {{ $recentPosts->links() }}
-                    @endif
-                </div>
-            </div>
-        </div>
+        <a href="{{ route('marketing.promotions') }}" class="nav-tab">
+            <i class="fas fa-bullhorn me-1"></i> Promotions
+        </a>
+        <a href="{{ route('marketing.advertising') }}" class="nav-tab">
+            <i class="fas fa-ad me-1"></i> Advertising
+        </a>
+        <a href="{{ route('marketing.bulk-sms') }}" class="nav-tab">
+            <i class="fas fa-sms me-1"></i> Bulk SMS
+        </a>
     </div>
 </div>
 
-<!-- Connect Account Modal -->
-<div class="modal fade" id="connectAccountModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Connect Social Media Account</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <p class="text-muted mb-4">Choose a platform to connect your business account</p>
-                
-                <div class="row g-3">
-                    <div class="col-6 col-md-4">
-                        <a href="{{ route('social.connect', 'facebook') }}" class="btn btn-outline-primary w-100 h-100 d-flex flex-column align-items-center justify-content-center py-3">
-                            <i class="fab fa-facebook fa-2x mb-2"></i>
-                            <span>Facebook</span>
-                        </a>
-                    </div>
-                    <div class="col-6 col-md-4">
-                        <a href="{{ route('social.connect', 'instagram') }}" class="btn btn-outline-danger w-100 h-100 d-flex flex-column align-items-center justify-content-center py-3">
-                            <i class="fab fa-instagram fa-2x mb-2"></i>
-                            <span>Instagram</span>
-                        </a>
-                    </div>
-                    <div class="col-6 col-md-4">
-                        <a href="{{ route('social.connect', 'twitter') }}" class="btn btn-outline-info w-100 h-100 d-flex flex-column align-items-center justify-content-center py-3">
-                            <i class="fab fa-twitter fa-2x mb-2"></i>
-                            <span>Twitter</span>
-                        </a>
-                    </div>
-                    <div class="col-6 col-md-4">
-                        <a href="{{ route('social.connect', 'linkedin') }}" class="btn btn-outline-primary w-100 h-100 d-flex flex-column align-items-center justify-content-center py-3">
-                            <i class="fab fa-linkedin fa-2x mb-2"></i>
-                            <span>LinkedIn</span>
-                        </a>
-                    </div>
-                    <div class="col-6 col-md-4">
-                        <a href="{{ route('social.connect', 'tiktok') }}" class="btn btn-outline-dark w-100 h-100 d-flex flex-column align-items-center justify-content-center py-3">
-                            <i class="fab fa-tiktok fa-2x mb-2"></i>
-                            <span>TikTok</span>
-                        </a>
-                    </div>
-                    <div class="col-6 col-md-4">
-                        <a href="{{ route('social.connect', 'youtube') }}" class="btn btn-outline-danger w-100 h-100 d-flex flex-column align-items-center justify-content-center py-3">
-                            <i class="fab fa-youtube fa-2x mb-2"></i>
-                            <span>YouTube</span>
-                        </a>
-                    </div>
-                    <div class="col-6 col-md-4">
-                        <a href="{{ route('social.connect', 'pinterest') }}" class="btn btn-outline-danger w-100 h-100 d-flex flex-column align-items-center justify-content-center py-3">
-                            <i class="fab fa-pinterest fa-2x mb-2"></i>
-                            <span>Pinterest</span>
-                        </a>
-                    </div>
-                    <div class="col-6 col-md-4">
-                        <a href="{{ route('social.connect', 'telegram') }}" class="btn btn-outline-info w-100 h-100 d-flex flex-column align-items-center justify-content-center py-3">
-                            <i class="fab fa-telegram fa-2x mb-2"></i>
-                            <span>Telegram</span>
-                        </a>
-                    </div>
-                    <div class="col-6 col-md-4">
-                        <a href="{{ route('social.connect', 'discord') }}" class="btn btn-outline-primary w-100 h-100 d-flex flex-column align-items-center justify-content-center py-3">
-                            <i class="fab fa-discord fa-2x mb-2"></i>
-                            <span>Discord</span>
-                        </a>
-                    </div>
-                    <div class="col-6 col-md-4">
-                        <a href="{{ route('social.connect', 'reddit') }}" class="btn btn-outline-warning w-100 h-100 d-flex flex-column align-items-center justify-content-center py-3">
-                            <i class="fab fa-reddit fa-2x mb-2"></i>
-                            <span>Reddit</span>
-                        </a>
-                    </div>
-                    <div class="col-6 col-md-4">
-                        <button class="btn btn-outline-success w-100 h-100 d-flex flex-column align-items-center justify-content-center py-3" disabled>
-                            <i class="fab fa-whatsapp fa-2x mb-2"></i>
-                            <span>WhatsApp</span>
-                            <small class="text-muted">Coming Soon</small>
-                        </button>
-                    </div>
-                    <div class="col-6 col-md-4">
-                        <button class="btn btn-outline-warning w-100 h-100 d-flex flex-column align-items-center justify-content-center py-3" disabled>
-                            <i class="fab fa-snapchat fa-2x mb-2"></i>
-                            <span>Snapchat</span>
-                            <small class="text-muted">Coming Soon</small>
-                        </button>
-                    </div>
-                </div>
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h3 mb-0" style="color: var(--text-primary);">Social Media Marketing</h1>
+    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createPostModal">
+        <i class="fas fa-plus me-2"></i>Create Post
+    </button>
+</div>
 
-                @if(!auth()->user()->business->isPremium())
-                <div class="alert alert-warning mt-4">
-                    <i class="fas fa-lock me-2"></i>
-                    <strong>Premium Feature:</strong> Connect unlimited accounts and enable auto-posting with Premium.
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card shadow mb-4" style="background: var(--card-bg); border: 1px solid var(--border-color);">
+            <div class="card-header py-3" style="background: var(--bg-tertiary); border-bottom: 1px solid var(--border-color);">
+                <h6 class="m-0 font-weight-bold" style="color: var(--text-primary);">Connected Platforms</h6>
+            </div>
+            <div class="card-body">
+                @php
+                    $connectedAccounts = Auth::user()->business->socialMediaAccounts()->where('is_active', true)->get();
+                    $connectedPlatforms = $connectedAccounts->pluck('platform')->toArray();
+                    
+                    // Debug information
+                    $debugInfo = [
+                        'facebook_client_id' => config('services.facebook.client_id') ? 'Set' : 'Not set',
+                        'linkedin_client_id' => config('services.linkedin.client_id') ? 'Set' : 'Not set',
+                        'instagram_client_id' => config('services.instagram.client_id') ? 'Set' : 'Not set',
+                        'twitter_client_id' => config('services.twitter.client_id') ? 'Set' : 'Not set',
+                    ];
+                @endphp
+                
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <div class="platform-card card h-100" style="background: var(--card-bg); border: 1px solid var(--border-color);">
+                            <div class="card-body text-center">
+                                <i class="fab fa-facebook fa-3x mb-3" style="color: #1877f2;"></i>
+                                <h5 style="color: var(--text-primary);">Facebook</h5>
+                                @if(in_array('facebook', $connectedPlatforms))
+                                    @php $account = $connectedAccounts->where('platform', 'facebook')->first(); @endphp
+                                    <p style="color: var(--text-secondary);">Connected as: {{ $account->username }}</p>
+                                    <div class="btn-group" role="group">
+                                        <button class="btn btn-success btn-sm" disabled>
+                                            <i class="fas fa-check me-1"></i>Connected
+                                        </button>
+                                        <form action="{{ route('social.disconnect', $account) }}" method="POST" class="d-inline">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="btn btn-outline-danger btn-sm" onclick="return confirm('Are you sure you want to disconnect this account?')">
+                                                <i class="fas fa-unlink me-1"></i>Disconnect
+                                            </button>
+                                        </form>
+                                    </div>
+                                @else
+                                    <p style="color: var(--text-secondary);">Connect your Facebook page</p>
+                                    <button type="button" class="btn btn-outline-primary btn-sm" onclick="connectSocialMedia('facebook')">
+                                        <i class="fab fa-facebook me-1"></i>Connect
+                                    </button>
+                                @endif
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <div class="platform-card card h-100" style="background: var(--card-bg); border: 1px solid var(--border-color);">
+                            <div class="card-body text-center">
+                                <i class="fab fa-instagram fa-3x mb-3" style="color: #e4405f;"></i>
+                                <h5 style="color: var(--text-primary);">Instagram</h5>
+                                @if(in_array('instagram', $connectedPlatforms))
+                                    @php $account = $connectedAccounts->where('platform', 'instagram')->first(); @endphp
+                                    <p style="color: var(--text-secondary);">Connected as: {{ $account->username }}</p>
+                                    <div class="btn-group" role="group">
+                                        <button class="btn btn-success btn-sm" disabled>
+                                            <i class="fas fa-check me-1"></i>Connected
+                                        </button>
+                                        <form action="{{ route('social.disconnect', $account) }}" method="POST" class="d-inline">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="btn btn-outline-danger btn-sm" onclick="return confirm('Are you sure you want to disconnect this account?')">
+                                                <i class="fas fa-unlink me-1"></i>Disconnect
+                                            </button>
+                                        </form>
+                                    </div>
+                                @else
+                                    <p style="color: var(--text-secondary);">Connect your Instagram account</p>
+                                    <button type="button" class="btn btn-outline-primary btn-sm" onclick="connectSocialMedia('instagram')">
+                                        <i class="fab fa-instagram me-1"></i>Connect
+                                    </button>
+                                @endif
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <div class="platform-card card h-100" style="background: var(--card-bg); border: 1px solid var(--border-color);">
+                            <div class="card-body text-center">
+                                <i class="fab fa-x-twitter fa-3x mb-3" style="color: #000000;"></i>
+                                <h5 style="color: var(--text-primary);">X (Twitter)</h5>
+                                @if(in_array('twitter', $connectedPlatforms))
+                                    @php $account = $connectedAccounts->where('platform', 'twitter')->first(); @endphp
+                                    <p style="color: var(--text-secondary);">Connected as: {{ $account->username }}</p>
+                                    <div class="btn-group" role="group">
+                                        <button class="btn btn-success btn-sm" disabled>
+                                            <i class="fas fa-check me-1"></i>Connected
+                                        </button>
+                                        <form action="{{ route('social.disconnect', $account) }}" method="POST" class="d-inline">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="btn btn-outline-danger btn-sm" onclick="return confirm('Are you sure you want to disconnect this account?')">
+                                                <i class="fas fa-unlink me-1"></i>Disconnect
+                                            </button>
+                                        </form>
+                                    </div>
+                                @else
+                                    <p style="color: var(--text-secondary);">Connect your X account</p>
+                                    <button type="button" class="btn btn-outline-primary btn-sm" onclick="connectSocialMedia('twitter')">
+                                        <i class="fab fa-x-twitter me-1"></i>Connect
+                                    </button>
+                                @endif
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <div class="platform-card card h-100" style="background: var(--card-bg); border: 1px solid var(--border-color);">
+                            <div class="card-body text-center">
+                                <i class="fab fa-linkedin fa-3x mb-3" style="color: #0077b5;"></i>
+                                <h5 style="color: var(--text-primary);">LinkedIn</h5>
+                                @if(in_array('linkedin', $connectedPlatforms))
+                                    @php $account = $connectedAccounts->where('platform', 'linkedin')->first(); @endphp
+                                    <p style="color: var(--text-secondary);">Connected as: {{ $account->username }}</p>
+                                    <div class="btn-group" role="group">
+                                        <button class="btn btn-success btn-sm" disabled>
+                                            <i class="fas fa-check me-1"></i>Connected
+                                        </button>
+                                        <form action="{{ route('social.disconnect', $account) }}" method="POST" class="d-inline">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="btn btn-outline-danger btn-sm" onclick="return confirm('Are you sure you want to disconnect this account?')">
+                                                <i class="fas fa-unlink me-1"></i>Disconnect
+                                            </button>
+                                        </form>
+                                    </div>
+                                @else
+                                    <p style="color: var(--text-secondary);">Connect your LinkedIn page</p>
+                                    <button type="button" class="btn btn-outline-primary btn-sm" onclick="connectSocialMedia('linkedin')">
+                                        <i class="fab fa-linkedin me-1"></i>Connect
+                                    </button>
+                                @endif
+                            </div>
+                        </div>
+                    </div>
                 </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-4">
+        <div class="card shadow mb-4" style="background: var(--card-bg); border: 1px solid var(--border-color);">
+            <div class="card-header py-3" style="background: var(--bg-tertiary); border-bottom: 1px solid var(--border-color);">
+                <h6 class="m-0 font-weight-bold" style="color: var(--text-primary);">Recent Posts</h6>
+            </div>
+            <div class="card-body">
+                @php
+                    $recentPosts = Auth::user()->business->marketingPosts()->latest()->take(5)->get();
+                @endphp
+                
+                @if($recentPosts->count() > 0)
+                    <div class="list-group list-group-flush">
+                        @foreach($recentPosts as $post)
+                            <div class="list-group-item d-flex justify-content-between align-items-start" style="background: transparent; border: none; padding: 0.5rem 0;">
+                                <div class="ms-2 me-auto">
+                                    <div class="fw-bold" style="color: var(--text-primary);">{{ Str::limit($post->content, 50) }}</div>
+                                    <small style="color: var(--text-muted);">{{ $post->created_at->diffForHumans() }}</small>
+                                </div>
+                                <span class="badge bg-primary rounded-pill">{{ $post->publications->count() }} platforms</span>
+                            </div>
+                        @endforeach
+                    </div>
+                    <div class="text-center mt-3">
+                        <a href="{{ route('marketing.posts.index') }}" class="btn btn-outline-primary btn-sm">View All Posts</a>
+                    </div>
+                @else
+                    <div class="text-center py-4" style="color: var(--text-muted);">
+                        <i class="fas fa-share-alt fa-2x mb-3" style="color: var(--text-muted);"></i>
+                        <p style="color: var(--text-muted);">No posts yet</p>
+                        <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#createPostModal">
+                            Create Your First Post
+                        </button>
+                    </div>
                 @endif
             </div>
         </div>
     </div>
 </div>
 
-<!-- Create Post Modal -->
-<div class="modal fade" id="createPostModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-xl">
-        <div class="modal-content border-0">
-            <form action="{{ route('marketing.posts.store') }}" method="POST" enctype="multipart/form-data" id="postForm">
-                @csrf
-                <div class="modal-header bg-gradient-primary text-white">
-                    <div class="d-flex align-items-center">
-                        <i class="fas fa-pen-fancy fs-4 me-3"></i>
-                        <div>
-                            <h5 class="modal-title mb-0">Create New Post</h5>
-                            <small class="text-white-50">Reach your audience across multiple platforms</small>
+<!-- Debug Information (remove in production) -->
+@if(config('app.debug'))
+    <div class="card shadow mb-4" style="background: var(--card-bg); border: 1px solid var(--border-color);">
+        <div class="card-header py-3" style="background: var(--bg-tertiary); border-bottom: 1px solid var(--border-color);">
+            <h6 class="m-0 font-weight-bold" style="color: var(--text-primary);">Debug Information</h6>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <h6 style="color: var(--text-primary);">OAuth Configuration Status:</h6>
+                    <ul class="list-unstyled">
+                        @foreach($debugInfo as $key => $status)
+                            <li><strong>{{ ucfirst(str_replace('_', ' ', $key)) }}:</strong> 
+                                <span class="badge {{ $status === 'Set' ? 'bg-success' : 'bg-danger' }}">{{ $status }}</span>
+                            </li>
+                        @endforeach
+                    </ul>
+                </div>
+                <div class="col-md-6">
+                    <h6 style="color: var(--text-primary);">Connected Accounts:</h6>
+                    <ul class="list-unstyled">
+                        @foreach($connectedAccounts as $account)
+                            <li><strong>{{ ucfirst($account->platform) }}:</strong> {{ $account->username }}</li>
+                        @endforeach
+                        @if($connectedAccounts->count() === 0)
+                            <li><em style="color: var(--text-muted);">No accounts connected</em></li>
+                        @endif
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+@endif
+
+<!-- Upgrade Plan Modal -->
+<div class="modal fade" id="upgradeModal" tabindex="-1" aria-labelledby="upgradeModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content" style="background: var(--card-bg); border: 1px solid var(--border-color);">
+            <div class="modal-header" style="background: var(--bg-tertiary); border-bottom: 1px solid var(--border-color);">
+                <h5 class="modal-title" id="upgradeModalLabel" style="color: var(--text-primary);">
+                    <i class="fas fa-crown me-2"></i>Upgrade to Premium
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="card h-100" style="background: var(--bg-tertiary); border: 1px solid var(--border-color);">
+                            <div class="card-body text-center">
+                                <h4 style="color: var(--text-primary);">Free Plan</h4>
+                                <div class="mb-3">
+                                    <span class="h2" style="color: var(--text-primary);">KSh 0</span>
+                                    <span style="color: var(--text-muted);">/month</span>
+                                </div>
+                                <ul class="list-unstyled" style="color: var(--text-secondary);">
+                                    <li><i class="fas fa-check text-success me-2"></i>1 Social Media Connection</li>
+                                    <li><i class="fas fa-check text-success me-2"></i>Basic Analytics</li>
+                                    <li><i class="fas fa-check text-success me-2"></i>5 Posts per Month</li>
+                                    <li class="text-muted"><i class="fas fa-times text-danger me-2"></i>Advanced Features</li>
+                                </ul>
+                            </div>
                         </div>
                     </div>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <div class="col-md-6">
+                        <div class="card h-100 border-primary" style="background: var(--bg-tertiary); border: 2px solid var(--primary-color) !important;">
+                            <div class="card-body text-center">
+                                <h4 style="color: var(--text-primary);">Premium Plan</h4>
+                                <div class="mb-3">
+                                    <span class="h2" style="color: var(--primary-color);">KSh 1</span>
+                                    <span style="color: var(--text-muted);">/month</span>
+                                    <br><small class="text-muted">(Testing Price)</small>
+                                </div>
+                                <ul class="list-unstyled" style="color: var(--text-secondary);">
+                                    <li><i class="fas fa-check text-success me-2"></i>Unlimited Social Media Connections</li>
+                                    <li><i class="fas fa-check text-success me-2"></i>Advanced Analytics</li>
+                                    <li><i class="fas fa-check text-success me-2"></i>Unlimited Posts</li>
+                                    <li><i class="fas fa-check text-success me-2"></i>AI Content Generation</li>
+                                    <li><i class="fas fa-check text-success me-2"></i>Priority Support</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
                 </div>
                 
-                <div class="modal-body p-0">
-                    <div class="row g-0">
-                        <!-- Left Column - Content Creation -->
-                        <div class="col-lg-8 p-4">
-                            <div class="mb-4">
-                                <label class="form-label fw-semibold">Post Title <span class="text-danger">*</span></label>
-                                <input type="text" class="form-control form-control-lg border-2" name="title" placeholder="Catchy headline that grabs attention" required>
-                            </div>
-                            
-                            <div class="mb-4">
-                                <div class="d-flex justify-content-between align-items-center mb-2">
-                                    <label class="form-label fw-semibold">Content <span class="text-danger">*</span></label>
-                                    <div class="text-muted small"><span id="charCount">0</span>/2200 characters</div>
-                                </div>
-                                <textarea class="form-control border-2" name="content" rows="8" placeholder="What's on your mind? Share valuable content with your audience..." 
-                                          style="min-height: 200px;" required></textarea>
-                                <div class="d-flex justify-content-end mt-1">
-                                    <button type="button" class="btn btn-sm btn-outline-secondary me-2" data-bs-toggle="tooltip" title="Add emoji">
-                                        <i class="far fa-smile"></i>
-                                    </button>
-                                    <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-toggle="tooltip" title="Format text">
-                                        <i class="fas fa-text-height"></i>
-                                    </button>
-                                </div>
-                            </div>
-
-                            <div class="mb-4">
-                                <label class="form-label fw-semibold">Hashtags</label>
-                                <div class="input-group">
-                                    <span class="input-group-text bg-light"><i class="fas fa-hashtag"></i></span>
-                                    <input type="text" class="form-control" name="hashtags" placeholder="marketing, business, kenya">
-                                </div>
-                                <div class="form-text">Start typing to see trending hashtag suggestions</div>
-                                <div class="hashtag-suggestions mt-2 d-none">
-                                    <span class="badge bg-light text-dark me-1 mb-1 cursor-pointer">#digitalmarketing</span>
-                                    <span class="badge bg-light text-dark me-1 mb-1 cursor-pointer">#socialmedia</span>
-                                    <span class="badge bg-light text-dark me-1 mb-1 cursor-pointer">#entrepreneur</span>
-                                </div>
-                            </div>
-
-                            <div class="mb-4">
-                                <label class="form-label fw-semibold">Media Files</label>
-                                <div class="border-2 rounded-3 p-3 text-center position-relative" id="mediaDropzone" style="min-height: 120px; border-style: dashed;">
-                                    <input type="file" class="d-none" name="media[]" multiple accept="image/*,video/*" id="mediaInput">
-                                    <div class="dropzone-content">
-                                        <i class="fas fa-cloud-upload-alt fs-1 text-muted mb-2"></i>
-                                        <h6 class="mb-1">Drag & drop files here</h6>
-                                        <p class="text-muted small mb-2">or click to browse</p>
-                                        <div class="d-flex gap-2 justify-content-center">
-                                            <button type="button" class="btn btn-sm btn-outline-primary" onclick="document.getElementById('mediaInput').click()">
-                                                <i class="fas fa-plus me-1"></i> Add Files
-                                            </button>
-                                            <button type="button" class="btn btn-sm btn-outline-success" id="generateVideoBtn">
-                                                <i class="fas fa-video me-1"></i> Generate Video
-                                            </button>
-                                        </div>
-                                    </div>
-                                    <div class="media-preview d-flex flex-wrap gap-2 mt-3"></div>
-                                </div>
-                                <div class="form-text">Supports JPG, PNG, GIF, MP4 (max 10MB each) • <strong>NEW:</strong> AI Video generation powered by LTX-Video</div>
-                            </div>
-
-                            <!-- Video Generation Section -->
-                            <div class="mb-4" id="videoGenerationSection" style="display: none;">
-                                <div class="card border-success">
-                                    <div class="card-header bg-light-success">
-                                        <h6 class="mb-0 text-success">
-                                            <i class="fas fa-magic me-2"></i>AI Video Generation
-                                            <span class="badge bg-success ms-2">Powered by LTX-Video</span>
-                                        </h6>
-                                    </div>
-                                    <div class="card-body">
-                                        <div class="row">
-                                            <div class="col-md-6">
-                                                <div class="mb-3">
-                                                    <label class="form-label fw-semibold">Video Style</label>
-                                                    <select class="form-select" id="videoStyle">
-                                                        <option value="professional">Professional - Clean, corporate styling</option>
-                                                        <option value="dynamic">Dynamic - Energetic and fast-paced</option>
-                                                        <option value="minimal">Minimal - Simple and elegant</option>
-                                                        <option value="creative">Creative - Artistic and unique</option>
-                                                        <option value="social">Social Media - Optimized for platforms</option>
-                                                    </select>
-                                                </div>
-                                            </div>
-                                            <div class="col-md-6">
-                                                <div class="mb-3">
-                                                    <label class="form-label fw-semibold">Duration</label>
-                                                    <select class="form-select" id="videoDuration">
-                                                        <option value="3">3 seconds - Quick teaser</option>
-                                                        <option value="4" selected>4 seconds - Standard</option>
-                                                        <option value="5">5 seconds - Extended</option>
-                                                        <option value="6">6 seconds - Detailed</option>
-                                                    </select>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="mb-3">
-                                            <label class="form-label fw-semibold">Product Image (Optional)</label>
-                                            <input type="file" class="form-control" id="productImageInput" accept="image/*">
-                                            <div class="form-text">Add a product image to create an image-to-video animation</div>
-                                        </div>
-                                        <div class="d-flex gap-2">
-                                            <button type="button" class="btn btn-success" id="startVideoGeneration">
-                                                <i class="fas fa-play me-2"></i>Generate Video
-                                            </button>
-                                            <button type="button" class="btn btn-outline-info" id="previewPrompt">
-                                                <i class="fas fa-eye me-2"></i>Preview Prompt
-                                            </button>
-                                            <button type="button" class="btn btn-outline-secondary" id="cancelVideoGeneration">
-                                                <i class="fas fa-times me-2"></i>Cancel
-                                            </button>
-                                        </div>
-                                        
-                                        <!-- Video Generation Progress -->
-                                        <div class="mt-3" id="videoGenerationProgress" style="display: none;">
-                                            <div class="d-flex align-items-center mb-2">
-                                                <div class="spinner-border spinner-border-sm text-success me-2" role="status"></div>
-                                                <span class="fw-semibold">Generating your video...</span>
-                                            </div>
-                                            <div class="progress mb-2">
-                                                <div class="progress-bar progress-bar-striped progress-bar-animated bg-success" role="progressbar" style="width: 0%" id="videoProgressBar"></div>
-                                            </div>
-                                            <div class="small text-muted" id="videoProgressText">Preparing generation...</div>
-                                        </div>
-                                        
-                                        <!-- Generated Video Preview -->
-                                        <div class="mt-3" id="generatedVideoPreview" style="display: none;">
-                                            <div class="alert alert-success">
-                                                <div class="d-flex align-items-center mb-2">
-                                                    <i class="fas fa-check-circle me-2"></i>
-                                                    <strong>Video generated successfully!</strong>
-                                                </div>
-                                                <video controls class="w-100 rounded" id="generatedVideo" style="max-height: 300px;">
-                                                    Your browser does not support the video tag.
-                                                </video>
-                                                <div class="mt-2 small text-muted" id="videoDetails"></div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <!-- Right Column - Publishing Options -->
-                        <div class="col-lg-4 bg-light p-4">
-                            <div class="sticky-top" style="top: 20px;">
-                                <div class="card border-0 shadow-sm mb-4">
-                                    <div class="card-header bg-white border-0 py-3">
-                                        <h6 class="mb-0 fw-semibold"><i class="fas fa-paper-plane me-2"></i> Publishing Options</h6>
-                                    </div>
-                                    <div class="card-body pt-0">
-                                        <div class="mb-3">
-                                            <label class="form-label fw-semibold">Post Type</label>
-                                            <div class="btn-group w-100" role="group">
-                                                <input type="radio" class="btn-check" name="post_type" value="immediate" id="postTypeImmediate" autocomplete="off" checked>
-                                                <label class="btn btn-outline-primary" for="postTypeImmediate">
-                                                    <i class="fas fa-bolt me-1"></i> Post Now
-                                                </label>
-                                                
-                                                <input type="radio" class="btn-check" name="post_type" value="scheduled" id="postTypeScheduled" autocomplete="off">
-                                                <label class="btn btn-outline-primary" for="postTypeScheduled">
-                                                    <i class="fas fa-clock me-1"></i> Schedule
-                                                </label>
-                                            </div>
-                                        </div>
-
-                                        <div class="mb-3" id="scheduledFields" style="display: none;">
-                                            <label class="form-label fw-semibold">Schedule Date & Time</label>
-                                            <div class="input-group">
-                                                <span class="input-group-text bg-white"><i class="fas fa-calendar-alt"></i></span>
-                                                <input type="datetime-local" class="form-control" name="scheduled_at">
-                                            </div>
-                                            <div class="form-text">Your local timezone: {{ config('app.timezone') }}</div>
-                                        </div>
-
-                                        <div class="mb-4">
-                                            <div class="d-flex justify-content-between align-items-center mb-2">
-                                                <label class="form-label fw-semibold mb-0">Target Platforms</label>
-                                                <button type="button" class="btn btn-sm btn-link p-0" data-bs-toggle="modal" data-bs-target="#connectAccountModal">
-                                                    <small>Manage accounts</small>
-                                                </button>
-                                            </div>
-                                            
-                                            @if($connectedAccounts->isNotEmpty())
-                                                <div class="platform-selection">
-                                                    @foreach($connectedAccounts->groupBy('platform') as $platform => $accounts)
-                                                    <div class="platform-card mb-2 rounded-3 p-2 border cursor-pointer" data-platform="{{ $platform }}">
-                                                        <input type="checkbox" class="platform-checkbox" name="target_platforms[]" value="{{ $platform }}" id="platform_{{ $platform }}">
-                                                        <label for="platform_{{ $platform }}" class="d-flex align-items-center mb-0 w-100">
-                                                            <div class="platform-icon me-3 bg-white">
-                                                                <i class="fab fa-{{ $platform }} fs-4 text-{{ $platform }}"></i>
-                                                            </div>
-                                                            <div class="flex-grow-1">
-                                                                <div class="fw-semibold">{{ ucfirst($platform) }}</div>
-                                                                <div class="small text-muted">{{ $accounts->count() }} connected account(s)</div>
-                                                            </div>
-                                                            <div class="form-check">
-                                                                <i class="fas fa-check-circle text-success platform-check-icon" style="display: none;"></i>
-                                                                <i class="far fa-circle text-muted platform-uncheck-icon"></i>
-                                                            </div>
-                                                        </label>
-                                                    </div>
-                                                    @endforeach
-                                                </div>
-                                            @else
-                                                <div class="alert alert-warning mb-0">
-                                                    <i class="fas fa-exclamation-circle me-2"></i>
-                                                    <small>No accounts connected. <a href="#" class="alert-link" data-bs-toggle="modal" data-bs-target="#connectAccountModal">Connect accounts</a> to post.</small>
-                                                </div>
-                                            @endif
-                                        </div>
-
-                                        @if(!auth()->user()->business->isPremium())
-                                        <div class="alert alert-warning border-warning mb-0">
-                                            <div class="d-flex align-items-center">
-                                                <i class="fas fa-crown me-2"></i>
-                                                <div>
-                                                    <strong class="d-block">Premium Feature</strong>
-                                                    <small class="d-block">Upgrade to enable auto-posting to all platforms</small>
-                                                </div>
-                                            </div>
-                                        </div>
-                                @endif
-                                    </div>
-                                </div>
-                                
-                                <!-- Post Summary Preview -->
-                                <div class="card border-0 shadow-sm mb-4">
-                                    <div class="card-header bg-white border-0 py-3">
-                                        <h6 class="mb-0 fw-semibold"><i class="fas fa-eye me-2"></i> Post Preview</h6>
-                                    </div>
-                                    <div class="card-body pt-0">
-                                        <div class="post-summary">
-                                            <!-- Title Preview -->
-                                            <div class="mb-3">
-                                                <label class="form-label small fw-semibold text-muted">TITLE</label>
-                                                <div class="preview-title text-dark" id="previewTitle">
-                                                    <em class="text-muted">Enter a title...</em>
-                                                </div>
-                                            </div>
-                                            
-                                            <!-- Content Preview -->
-                                            <div class="mb-3">
-                                                <label class="form-label small fw-semibold text-muted">CONTENT</label>
-                                                <div class="preview-content text-dark" id="previewContent" style="font-size: 0.9rem; line-height: 1.4;">
-                                                    <em class="text-muted">Start typing your content...</em>
-                                                </div>
-                                            </div>
-                                            
-                                            <!-- Media Preview -->
-                                            <div class="mb-3" id="previewMediaSection" style="display: none;">
-                                                <label class="form-label small fw-semibold text-muted">MEDIA</label>
-                                                <div class="preview-media d-flex flex-wrap gap-1" id="previewMedia">
-                                                    <!-- Media thumbnails will be inserted here -->
-                                                </div>
-                                            </div>
-                                            
-                                            <!-- Platforms Preview -->
-                                            <div class="mb-3">
-                                                <label class="form-label small fw-semibold text-muted">PLATFORMS</label>
-                                                <div class="preview-platforms" id="previewPlatforms">
-                                                    <em class="text-muted">Select platforms to post to...</em>
-                                                </div>
-                                            </div>
-                                            
-                                            <!-- Schedule Preview -->
-                                            <div class="mb-0">
-                                                <label class="form-label small fw-semibold text-muted">SCHEDULE</label>
-                                                <div class="preview-schedule text-dark" id="previewSchedule">
-                                                    <i class="fas fa-bolt text-warning me-1"></i> Post immediately
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                
-                                <div class="d-grid gap-2">
-                                    <button type="submit" class="btn btn-primary btn-lg shadow-sm">
-                                        <i class="fas fa-paper-plane me-2"></i>Publish Post
-                                    </button>
-                                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
-                                        Save as Draft
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
+                <div class="mt-4">
+                    <h6 style="color: var(--text-primary);">Payment Method</h6>
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="payment_method" id="mpesa_payment" value="mpesa" checked>
+                        <label class="form-check-label" for="mpesa_payment" style="color: var(--text-primary);">
+                            <i class="fas fa-mobile-alt me-2"></i>M-Pesa
+                        </label>
                     </div>
                 </div>
-            </form>
+                
+                <div class="mt-3">
+                    <label for="phone_number" class="form-label" style="color: var(--text-primary);">M-Pesa Phone Number</label>
+                    <input type="tel" class="form-control" id="phone_number" name="phone_number" 
+                           placeholder="07XXXXXXXX or 254XXXXXXXXX" style="background: var(--card-bg); border: 1px solid var(--border-color); color: var(--text-primary);">
+                    <small class="text-muted">Enter your M-Pesa registered phone number (07XXXXXXXX or 254XXXXXXXXX)</small>
+                </div>
+            </div>
+            <div class="modal-footer" style="background: var(--bg-tertiary); border-top: 1px solid var(--border-color);">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="upgradeBtn" onclick="initiateUpgrade()">
+                    <i class="fas fa-crown me-1"></i>Upgrade Now
+                </button>
+            </div>
         </div>
     </div>
 </div>
 
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/2.9.2/umd/popper.min.js"></script>
-<script src="https://stackpath.bootstrapcdn.com/bootstrap/5.1.3/js/bootstrap.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/js/all.min.js"></script>
+<!-- Create Post Modal -->
+<div class="modal fade" id="createPostModal" tabindex="-1" aria-labelledby="createPostModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content" style="background: var(--card-bg); border: 1px solid var(--border-color);">
+            <div class="modal-header" style="background: var(--bg-tertiary); border-bottom: 1px solid var(--border-color);">
+                <h5 class="modal-title" id="createPostModalLabel" style="color: var(--text-primary);">Create New Post</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="createPostForm">
+                    <div class="mb-3">
+                        <label for="postTitle" class="form-label" style="color: var(--text-primary);">Post Title</label>
+                        <input type="text" class="form-control" id="postTitle" name="title" placeholder="Enter a catchy title for your post" style="background: var(--bg-secondary); border: 1px solid var(--border-color); color: var(--text-primary);">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="postContent" class="form-label">Post Content</label>
+                        <x-ai-enhanced-textarea name="postContent" 
+                                                   content-type="social-media" 
+                                                   tone="engaging" 
+                                                   rows="4" 
+                                                   placeholder="What's on your mind?">
+                        </x-ai-enhanced-textarea>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="postHashtags" class="form-label" style="color: var(--text-primary);">Hashtags</label>
+                        <input type="text" class="form-control" id="postHashtags" name="hashtags" placeholder="#marketing #business #socialmedia" style="background: var(--bg-secondary); border: 1px solid var(--border-color); color: var(--text-primary);">
+                        <small class="form-text text-muted">Separate hashtags with spaces</small>
+                    </div>
+                    
+                    <!-- Media Section -->
+                    <div class="mb-3">
+                        <label class="form-label" style="color: var(--text-primary);">Media Content</label>
+                        
+                        <!-- Media Type Selection -->
+                        <div class="btn-group w-100 mb-3" role="group">
+                            <input type="radio" class="btn-check" name="mediaType" id="noMedia" value="none" checked>
+                            <label class="btn btn-outline-secondary" for="noMedia">
+                                <i class="fas fa-text-width me-1"></i>Text Only
+                            </label>
+                            
+                            <input type="radio" class="btn-check" name="mediaType" id="uploadMedia" value="upload">
+                            <label class="btn btn-outline-secondary" for="uploadMedia">
+                                <i class="fas fa-upload me-1"></i>Upload Media
+                            </label>
+                            
+                            <input type="radio" class="btn-check" name="mediaType" id="generateVideo" value="generate">
+                            <label class="btn btn-outline-secondary" for="generateVideo">
+                                <i class="fas fa-magic me-1"></i>Generate Video
+                            </label>
+                        </div>
+                        
+                        <!-- Upload Media Section -->
+                        <div id="uploadMediaSection" class="media-section" style="display: none;">
+                            <div class="mb-3">
+                                <label for="postMedia" class="form-label" style="color: var(--text-primary);">Upload Image/Video</label>
+                                <input type="file" class="form-control" id="postMedia" name="media" accept="image/*,video/*" style="background: var(--bg-secondary); border: 1px solid var(--border-color); color: var(--text-primary);">
+                                <small class="form-text text-muted">Supported: JPG, PNG, GIF, MP4, MOV (Max 10MB)</small>
+                            </div>
+                        </div>
+                        
+                        <!-- Generate Video Section -->
+                        <div id="generateVideoSection" class="media-section" style="display: none;">
+                            <div class="card" style="background: var(--bg-tertiary); border: 1px solid var(--border-color);">
+                                <div class="card-body">
+                                    <h6 class="card-title" style="color: var(--text-primary);">
+                                        <i class="fas fa-magic me-2"></i>AI Video Generation
+                                    </h6>
+                                    
+                                    <div class="mb-3">
+                                        <label for="videoPrompt" class="form-label" style="color: var(--text-primary);">Video Description</label>
+                                        <textarea class="form-control" id="videoPrompt" name="video_prompt" rows="3" placeholder="Describe the video you want to generate..." style="background: var(--bg-secondary); border: 1px solid var(--border-color); color: var(--text-primary);"></textarea>
+                                        <small class="form-text text-muted">Describe the scene, style, and mood you want</small>
+                                    </div>
+                                    
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <label for="videoStyle" class="form-label" style="color: var(--text-primary);">Video Style</label>
+                                            <select class="form-select" id="videoStyle" name="video_style" style="background: var(--bg-secondary); border: 1px solid var(--border-color); color: var(--text-primary);">
+                                                <option value="professional">Professional</option>
+                                                <option value="dynamic">Dynamic</option>
+                                                <option value="minimal">Minimal</option>
+                                                <option value="creative">Creative</option>
+                                                <option value="social">Social</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label for="videoDuration" class="form-label" style="color: var(--text-primary);">Duration (seconds)</label>
+                                            <select class="form-select" id="videoDuration" name="video_duration" style="background: var(--bg-secondary); border: 1px solid var(--border-color); color: var(--text-primary);">
+                                                <option value="4">4 seconds</option>
+                                                <option value="8">8 seconds</option>
+                                                <option value="12">12 seconds</option>
+                                                <option value="16">16 seconds</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <label for="productImage" class="form-label" style="color: var(--text-primary);">Product Image (Optional)</label>
+                                        <input type="file" class="form-control" id="productImage" name="product_image" accept="image/*" style="background: var(--bg-secondary); border: 1px solid var(--border-color); color: var(--text-primary);">
+                                        <small class="form-text text-muted">Upload a product image to generate image-to-video</small>
+                                    </div>
+                                    
+                                    <button type="button" class="btn btn-primary" id="generateVideoBtn">
+                                        <i class="fas fa-play me-2"></i>Generate Video
+                                    </button>
+                                    
+                                    <!-- Video Generation Progress -->
+                                    <div id="videoGenerationProgress" class="mt-3" style="display: none;">
+                                        <div class="progress mb-2">
+                                            <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: 0%"></div>
+                                        </div>
+                                        <small class="text-muted">Generating your video... This may take 1-2 minutes.</small>
+                                    </div>
+                                    
+                                    <!-- Generated Video Preview -->
+                                    <div id="generatedVideoPreview" class="mt-3" style="display: none;">
+                                        <div class="card" style="background: var(--card-bg); border: 1px solid var(--border-color);">
+                                            <div class="card-body">
+                                                <h6 class="card-title" style="color: var(--text-primary);">Generated Video</h6>
+                                                <video id="previewVideo" controls class="w-100" style="max-height: 200px;">
+                                                    <source src="" type="video/mp4">
+                                                    Your browser does not support the video tag.
+                                                </video>
+                                                <div class="mt-2">
+                                                    <button type="button" class="btn btn-sm btn-outline-primary" id="regenerateVideoBtn">
+                                                        <i class="fas fa-redo me-1"></i>Regenerate
+                                                    </button>
+                                                    <button type="button" class="btn btn-sm btn-outline-success" id="useVideoBtn">
+                                                        <i class="fas fa-check me-1"></i>Use This Video
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label" style="color: var(--text-primary);">Select Platforms</label>
+                        @if(in_array('facebook', $connectedPlatforms))
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" value="facebook" id="facebookCheck">
+                                <label class="form-check-label" for="facebookCheck" style="color: var(--text-primary);">
+                                    <i class="fab fa-facebook me-1"></i>Facebook
+                                </label>
+                            </div>
+                        @else
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" value="facebook" id="facebookCheck" disabled>
+                                <label class="form-check-label" for="facebookCheck" style="color: var(--text-muted);">
+                                    <i class="fab fa-facebook me-1"></i>Facebook <small class="text-muted">(Not connected)</small>
+                                </label>
+                            </div>
+                        @endif
+                        
+                        @if(in_array('instagram', $connectedPlatforms))
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" value="instagram" id="instagramCheck">
+                                <label class="form-check-label" for="instagramCheck" style="color: var(--text-primary);">
+                                    <i class="fab fa-instagram me-1"></i>Instagram
+                                </label>
+                            </div>
+                        @else
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" value="instagram" id="instagramCheck" disabled>
+                                <label class="form-check-label" for="instagramCheck" style="color: var(--text-muted);">
+                                    <i class="fab fa-instagram me-1"></i>Instagram <small class="text-muted">(Not connected)</small>
+                                </label>
+                            </div>
+                        @endif
+                        
+                        @if(in_array('twitter', $connectedPlatforms))
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" value="twitter" id="twitterCheck">
+                                <label class="form-check-label" for="twitterCheck" style="color: var(--text-primary);">
+                                    <i class="fab fa-x-twitter me-1"></i>X (Twitter)
+                                </label>
+                            </div>
+                        @else
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" value="twitter" id="twitterCheck" disabled>
+                                <label class="form-check-label" for="twitterCheck" style="color: var(--text-muted);">
+                                    <i class="fab fa-x-twitter me-1"></i>X (Twitter) <small class="text-muted">(Not connected)</small>
+                                </label>
+                            </div>
+                        @endif
+                        
+                        @if(in_array('linkedin', $connectedPlatforms))
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" value="linkedin" id="linkedinCheck">
+                                <label class="form-check-label" for="linkedinCheck" style="color: var(--text-primary);">
+                                    <i class="fab fa-linkedin me-1"></i>LinkedIn
+                                </label>
+                            </div>
+                        @else
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" value="linkedin" id="linkedinCheck" disabled>
+                                <label class="form-check-label" for="linkedinCheck" style="color: var(--text-muted);">
+                                    <i class="fab fa-linkedin me-1"></i>LinkedIn <small class="text-muted">(Not connected)</small>
+                                </label>
+                            </div>
+                        @endif
+                    </div>
+                    <div class="mb-3">
+                        <label for="scheduleTime" class="form-label" style="color: var(--text-primary);">Schedule Post (Optional)</label>
+                        <input type="datetime-local" class="form-control" id="scheduleTime" style="background: var(--bg-secondary); border: 1px solid var(--border-color); color: var(--text-primary);">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer" style="background: var(--bg-tertiary); border-top: 1px solid var(--border-color);">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary">Create Post</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.sub-navigation {
+    background: var(--card-bg);
+    border-radius: 0.75rem;
+    padding: 1rem;
+    border: 1px solid var(--border-color);
+    margin-bottom: 2rem;
+}
+
+.sub-navigation .nav-tabs {
+    display: flex;
+    gap: 1rem;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    flex-wrap: wrap;
+}
+
+.sub-navigation .nav-tab {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--text-muted);
+    text-decoration: none;
+    padding: 0.5rem 1rem;
+    border-radius: 0.5rem;
+    transition: all 0.2s ease;
+    border: 1px solid transparent;
+}
+
+.sub-navigation .nav-tab:hover {
+    color: var(--text-primary);
+    background: var(--bg-tertiary);
+}
+
+.sub-navigation .nav-tab.active {
+    color: var(--primary-color);
+    background: var(--primary-color);
+    color: var(--white);
+}
+
+.platform-card {
+    transition: all 0.2s ease;
+}
+
+.platform-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 6px -1px var(--shadow-color);
+}
+
+@media (max-width: 768px) {
+    .sub-navigation .nav-tabs {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    
+    .sub-navigation .nav-tab {
+        text-align: center;
+        padding: 0.75rem 1rem;
+    }
+}
+
+</style>
 
 <script>
+// Social Media Connection Functions - Global scope
+window.connectSocialMedia = function(platform) {
+    // Show loading state
+    const button = event.target;
+    const originalText = button.innerHTML;
+    button.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Connecting...';
+    button.disabled = true;
+
+    // Make AJAX request to check if upgrade is needed
+    fetch(`{{ route('social.connect', ':platform') }}`.replace(':platform', platform), {
+        method: 'GET',
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+            'Accept': 'application/json',
+        },
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.error === 'upgrade_required') {
+            // Show upgrade modal
+            showUpgradeModal(platform);
+        } else {
+            // Redirect to OAuth
+            window.location.href = data.redirect_url || `{{ route('social.connect', ':platform') }}`.replace(':platform', platform);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        // Fallback to direct redirect
+        window.location.href = `{{ route('social.connect', ':platform') }}`.replace(':platform', platform);
+    })
+    .finally(() => {
+        // Reset button
+        button.innerHTML = originalText;
+        button.disabled = false;
+    });
+}
+
+window.showUpgradeModal = function(platform) {
+    // Store the platform for later use
+    window.pendingPlatform = platform;
+    
+    // Show the upgrade modal
+    const upgradeModal = new bootstrap.Modal(document.getElementById('upgradeModal'));
+    upgradeModal.show();
+}
+
+window.initiateUpgrade = function() {
+    const phoneNumber = document.getElementById('phone_number').value;
+    const upgradeBtn = document.getElementById('upgradeBtn');
+    
+    if (!phoneNumber) {
+        alert('Please enter your M-Pesa phone number');
+        return;
+    }
+
+    // Show loading state
+    const originalText = upgradeBtn.innerHTML;
+    upgradeBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Processing...';
+    upgradeBtn.disabled = true;
+
+    // Make payment request
+    fetch('{{ route("billing.process-upgrade") }}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+            'Accept': 'application/json',
+        },
+        body: JSON.stringify({
+            phone_number: phoneNumber,
+            platform: window.pendingPlatform
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Show success message and redirect to OAuth
+            alert('Payment successful! Redirecting to connect your account...');
+            window.location.href = `{{ route('social.connect', ':platform') }}`.replace(':platform', window.pendingPlatform);
+        } else {
+            alert('Payment failed: ' + (data.message || 'Unknown error'));
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Payment failed. Please try again.');
+    })
+    .finally(() => {
+        // Reset button
+        upgradeBtn.innerHTML = originalText;
+        upgradeBtn.disabled = false;
+    });
+}
+
+// Enhanced Social Media Modal Functionality
 document.addEventListener('DOMContentLoaded', function() {
-    // Initialize tooltips (Bootstrap 5 native JS)
-    if (window.bootstrap && typeof bootstrap.Tooltip === 'function') {
-        document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(function (el) {
-            new bootstrap.Tooltip(el);
-        });
-    }
-
-    // Character counter
-    const contentTextarea = document.querySelector('textarea[name="content"]');
-    const charCount = document.getElementById('charCount');
+    // Media type switching
+    const mediaTypeRadios = document.querySelectorAll('input[name="mediaType"]');
+    const mediaSections = document.querySelectorAll('.media-section');
     
-    if (contentTextarea && charCount) {
-        // Set initial count
-        charCount.textContent = contentTextarea.value.length;
-        
-        contentTextarea.addEventListener('input', function() {
-            charCount.textContent = this.value.length;
-        });
-    }
-
-    // Post type toggle (Immediate/Scheduled)
-    const postTypeRadios = document.querySelectorAll('input[name="post_type"]');
-    const scheduledFields = document.getElementById('scheduledFields');
-    
-    if (postTypeRadios.length && scheduledFields) {
-        postTypeRadios.forEach(radio => {
+    if (mediaTypeRadios.length > 0) {
+        mediaTypeRadios.forEach(radio => {
             radio.addEventListener('change', function() {
-                scheduledFields.style.display = 
-                    this.value === 'scheduled' ? 'block' : 'none';
-            });
-        });
-    }
-
-    // Media upload handling
-    const mediaDropzone = document.getElementById('mediaDropzone');
-    const mediaInput = document.getElementById('mediaInput');
-    const mediaPreview = document.querySelector('.media-preview');
-    
-    if (mediaDropzone && mediaInput) {
-                        // Click handler - but not for generate video button
-                        mediaDropzone.addEventListener('click', (e) => {
-                            // Don't trigger file input if clicking generate video button
-                            if (e.target.id === 'generateVideoBtn' || e.target.closest('#generateVideoBtn')) {
-                                return;
-                            }
-                            mediaInput.click();
-                        });
-        
-        // Drag and drop handlers
-        mediaDropzone.addEventListener('dragover', (e) => {
-            e.preventDefault();
-            mediaDropzone.classList.add('dragover');
-        });
-        
-        mediaDropzone.addEventListener('dragleave', () => {
-            mediaDropzone.classList.remove('dragover');
-        });
-        
-        mediaDropzone.addEventListener('drop', (e) => {
-            e.preventDefault();
-            mediaDropzone.classList.remove('dragover');
-            if (e.dataTransfer.files.length) {
-                handleFiles(e.dataTransfer.files);
-            }
-        });
-        
-        // File input change handler
-        mediaInput.addEventListener('change', () => {
-            if (mediaInput.files.length) {
-                handleFiles(mediaInput.files);
-            }
-        });
-        
-        // Handle uploaded files
-        function handleFiles(files) {
-            if (!mediaPreview) return;
-            
-            mediaPreview.innerHTML = '';
-            
-            Array.from(files).forEach(file => {
-                if (!file.type.match('image.*|video.*')) return;
+                // Hide all media sections
+                mediaSections.forEach(section => {
+                    section.style.display = 'none';
+                });
                 
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    const previewItem = document.createElement('div');
-                    previewItem.className = 'media-preview-item';
-                    
-                    if (file.type.startsWith('image/')) {
-                        previewItem.innerHTML = `
-                            <img src="${e.target.result}" alt="${file.name}">
-                            <div class="remove-media" data-filename="${file.name}">&times;</div>
-                        `;
-                    } else if (file.type.startsWith('video/')) {
-                        previewItem.innerHTML = `
-                            <video src="${e.target.result}"></video>
-                            <div class="remove-media" data-filename="${file.name}">&times;</div>
-                        `;
-                    }
-                    
-                    mediaPreview.appendChild(previewItem);
-                    
-                    // Add remove event listener
-                    previewItem.querySelector('.remove-media').addEventListener('click', function() {
-                        removeMedia(this);
-                    });
-                };
-                reader.readAsDataURL(file);
+                // Show selected section
+                if (this.value === 'upload') {
+                    const uploadSection = document.getElementById('uploadMediaSection');
+                    if (uploadSection) uploadSection.style.display = 'block';
+                } else if (this.value === 'generate') {
+                    const generateSection = document.getElementById('generateVideoSection');
+                    if (generateSection) generateSection.style.display = 'block';
+                }
             });
-        }
-        
-        // Remove media item
-        function removeMedia(element) {
-            const item = element.closest('.media-preview-item');
-            if (item) {
-                item.remove();
-                // Additional logic to update file input if needed
-            }
-        }
+        });
     }
-
-    // Platform card selection - Fixed to handle proper checkbox selection
-    document.querySelectorAll('.platform-card').forEach(card => {
-        const checkbox = card.querySelector('.platform-checkbox');
-        const checkIcon = card.querySelector('.platform-check-icon');
-        const uncheckIcon = card.querySelector('.platform-uncheck-icon');
-        
-        function updateVisualState() {
-            if (checkbox.checked) {
-                card.classList.add('selected');
-                card.style.backgroundColor = 'rgba(78, 115, 223, 0.08)';
-                card.style.borderColor = '#020258';
-                if (checkIcon) checkIcon.style.display = 'inline';
-                if (uncheckIcon) uncheckIcon.style.display = 'none';
-            } else {
-                card.classList.remove('selected');
-                card.style.backgroundColor = '';
-                card.style.borderColor = '';
-                if (checkIcon) checkIcon.style.display = 'none';
-                if (uncheckIcon) uncheckIcon.style.display = 'inline';
-            }
-        }
-        
-        // Initialize visual state
-        updateVisualState();
-        
-        // Handle card click (toggle checkbox)
-        card.addEventListener('click', function(e) {
-            // Don't handle if clicking directly on checkbox or label
-            if (e.target.type === 'checkbox' || e.target.tagName === 'LABEL') {
-                return;
-            }
-            
-            e.preventDefault();
-            checkbox.checked = !checkbox.checked;
-            updateVisualState();
-        });
-        
-        // Handle checkbox change (for direct clicks on checkbox)
-        checkbox.addEventListener('change', function() {
-            updateVisualState();
-        });
-    });
     
-    // Ensure at least one platform is selected before submission
-    document.getElementById('postForm').addEventListener('submit', function(e) {
-        const selectedPlatforms = document.querySelectorAll('.platform-checkbox:checked');
-        if (selectedPlatforms.length === 0) {
-            e.preventDefault();
-            alert('Please select at least one platform to post to.');
-            return false;
-        }
-    });
-
-    // Video Generation Functionality
+    // Video generation functionality
     const generateVideoBtn = document.getElementById('generateVideoBtn');
-    const videoGenerationSection = document.getElementById('videoGenerationSection');
-    const startVideoGeneration = document.getElementById('startVideoGeneration');
-    const cancelVideoGeneration = document.getElementById('cancelVideoGeneration');
-    const previewPromptBtn = document.getElementById('previewPrompt');
+    const regenerateVideoBtn = document.getElementById('regenerateVideoBtn');
+    const useVideoBtn = document.getElementById('useVideoBtn');
     const videoGenerationProgress = document.getElementById('videoGenerationProgress');
     const generatedVideoPreview = document.getElementById('generatedVideoPreview');
-    const videoProgressBar = document.getElementById('videoProgressBar');
-    const videoProgressText = document.getElementById('videoProgressText');
-
-    // Show video generation section when Generate Video button is clicked
+    const previewVideo = document.getElementById('previewVideo');
+    const progressBar = document.querySelector('#videoGenerationProgress .progress-bar');
+    
+    let generatedVideoUrl = null;
+    let generatedVideoId = null;
+    
+    // Generate video function
+    function generateVideo() {
+        const videoPrompt = document.getElementById('videoPrompt')?.value || '';
+        const videoStyle = document.getElementById('videoStyle')?.value || 'professional';
+        const videoDuration = document.getElementById('videoDuration')?.value || '8';
+        const productImage = document.getElementById('productImage')?.files[0];
+        const postContent = document.getElementById('postContent')?.value || '';
+        
+        if (!videoPrompt && !postContent) {
+            alert('Please provide either a video description or post content to generate a video.');
+            return;
+        }
+        
+        // Show progress
+        if (videoGenerationProgress) videoGenerationProgress.style.display = 'block';
+        if (generatedVideoPreview) generatedVideoPreview.style.display = 'none';
+        if (generateVideoBtn) {
+            generateVideoBtn.disabled = true;
+            generateVideoBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Generating...';
+        }
+        
+        // Simulate progress
+        let progress = 0;
+        const progressInterval = setInterval(() => {
+            progress += Math.random() * 15;
+            if (progress > 90) progress = 90;
+            if (progressBar) progressBar.style.width = progress + '%';
+        }, 1000);
+        
+        // Prepare form data
+        const formData = new FormData();
+        formData.append('content', videoPrompt || postContent);
+        formData.append('title', document.getElementById('postTitle').value || 'Social Media Post');
+        formData.append('style', videoStyle);
+        formData.append('duration', videoDuration);
+        
+        if (productImage) {
+            formData.append('product_image', productImage);
+        }
+        
+        // Make API request
+        fetch('{{ route("marketing.video.generate") }}', {
+            method: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                'Accept': 'application/json',
+            },
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            clearInterval(progressInterval);
+            progressBar.style.width = '100%';
+            
+            if (data.success) {
+                generatedVideoUrl = data.video_url;
+                generatedVideoId = data.video_id;
+                
+                // Update video preview
+                if (previewVideo) {
+                    previewVideo.src = data.video_url;
+                    previewVideo.load();
+                }
+                
+                // Show preview
+                if (videoGenerationProgress) videoGenerationProgress.style.display = 'none';
+                if (generatedVideoPreview) generatedVideoPreview.style.display = 'block';
+                
+                // Reset button
+                if (generateVideoBtn) {
+                    generateVideoBtn.disabled = false;
+                    generateVideoBtn.innerHTML = '<i class="fas fa-play me-2"></i>Generate Video';
+                }
+                
+                // Show success message
+                showAlert('Video generated successfully!', 'success');
+            } else {
+                throw new Error(data.message || 'Video generation failed');
+            }
+        })
+        .catch(error => {
+            clearInterval(progressInterval);
+            if (progressBar) progressBar.style.width = '0%';
+            if (videoGenerationProgress) videoGenerationProgress.style.display = 'none';
+            
+            // Reset button
+            if (generateVideoBtn) {
+                generateVideoBtn.disabled = false;
+                generateVideoBtn.innerHTML = '<i class="fas fa-play me-2"></i>Generate Video';
+            }
+            
+            // Show error
+            showAlert('Video generation failed: ' + error.message, 'error');
+        });
+    }
+    
+    // Event listeners
     if (generateVideoBtn) {
-        generateVideoBtn.addEventListener('click', function(e) {
-            e.preventDefault();
-            e.stopPropagation();
-            
-            // Check if title and content are filled
-            const title = document.querySelector('input[name="title"]').value;
-            const content = document.querySelector('textarea[name="content"]').value;
-            
-            if (!title.trim() || !content.trim()) {
-                alert('Please fill in the post title and content before generating a video.');
-                return;
-            }
-            
-            videoGenerationSection.style.display = 'block';
-            videoGenerationSection.scrollIntoView({ behavior: 'smooth' });
-        });
+        generateVideoBtn.addEventListener('click', generateVideo);
     }
-
-    // Cancel video generation
-    if (cancelVideoGeneration) {
-        cancelVideoGeneration.addEventListener('click', function() {
-            videoGenerationSection.style.display = 'none';
-            videoGenerationProgress.style.display = 'none';
-            generatedVideoPreview.style.display = 'none';
-        });
+    
+    if (regenerateVideoBtn) {
+        regenerateVideoBtn.addEventListener('click', generateVideo);
     }
-
-    // Preview video prompt
-    if (previewPromptBtn) {
-        previewPromptBtn.addEventListener('click', function() {
-            const title = document.querySelector('input[name="title"]').value;
-            const content = document.querySelector('textarea[name="content"]').value;
-            const style = document.getElementById('videoStyle').value;
-            
-            if (!title.trim() || !content.trim()) {
-                alert('Please fill in the post title and content first.');
-                return;
-            }
-            
-            // Show loading state
-            previewPromptBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Loading...';
-            previewPromptBtn.disabled = true;
-            
-            // Make API call to preview prompt
-            fetch('{{ route("marketing.video.preview-prompt") }}', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '{{ csrf_token() }}'
-                },
-                body: JSON.stringify({
-                    content: content,
-                    style: style
-                })
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    alert('Generated Prompt:\n\n' + data.prompt);
-                } else {
-                    alert('Error: ' + data.message);
+    
+    if (useVideoBtn) {
+        useVideoBtn.addEventListener('click', function() {
+            if (generatedVideoUrl) {
+                // Create a hidden input for the generated video
+                let videoInput = document.getElementById('generatedVideoInput');
+                if (!videoInput) {
+                    videoInput = document.createElement('input');
+                    videoInput.type = 'hidden';
+                    videoInput.id = 'generatedVideoInput';
+                    videoInput.name = 'generated_video_url';
+                    document.getElementById('createPostForm').appendChild(videoInput);
                 }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('An error occurred while generating the prompt preview.');
-            })
-            .finally(() => {
-                previewPromptBtn.innerHTML = '<i class="fas fa-eye me-2"></i>Preview Prompt';
-                previewPromptBtn.disabled = false;
-            });
-        });
-    }
-
-    // Start video generation
-    if (startVideoGeneration) {
-        startVideoGeneration.addEventListener('click', function() {
-            const title = document.querySelector('input[name="title"]').value;
-            const content = document.querySelector('textarea[name="content"]').value;
-            const style = document.getElementById('videoStyle').value;
-            const duration = document.getElementById('videoDuration').value;
-            const productImage = document.getElementById('productImageInput').files[0];
-            
-            if (!title.trim() || !content.trim()) {
-                alert('Please fill in the post title and content first.');
-                return;
-            }
-            
-            // Show progress
-            videoGenerationProgress.style.display = 'block';
-            generatedVideoPreview.style.display = 'none';
-            startVideoGeneration.disabled = true;
-            
-            // Animate progress bar
-            let progress = 0;
-            const progressInterval = setInterval(() => {
-                progress += Math.random() * 15;
-                if (progress > 90) progress = 90;
-                videoProgressBar.style.width = progress + '%';
+                videoInput.value = generatedVideoUrl;
                 
-                if (progress < 30) {
-                    videoProgressText.textContent = 'Analyzing your content...';
-                } else if (progress < 60) {
-                    videoProgressText.textContent = 'Creating video concept...';
-                } else if (progress < 90) {
-                    videoProgressText.textContent = 'Generating your video...';
-                }
-            }, 500);
-            
-            // Prepare form data
-            const formData = new FormData();
-            formData.append('title', title);
-            formData.append('content', content);
-            formData.append('style', style);
-            formData.append('duration', duration);
-            if (productImage) {
-                formData.append('product_image', productImage);
-            }
-            
-            // Make API call to generate video
-            fetch('{{ route("marketing.video.generate") }}', {
-                method: 'POST',
-                headers: {
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '{{ csrf_token() }}'
-                },
-                body: formData
-            })
-            .then(response => response.json())
-            .then(data => {
-                clearInterval(progressInterval);
-                videoProgressBar.style.width = '100%';
-                videoProgressText.textContent = 'Complete!';
+                // Switch to upload media type and show the video
+                const uploadMediaRadio = document.getElementById('uploadMedia');
+                const uploadMediaSection = document.getElementById('uploadMediaSection');
+                const generateVideoSection = document.getElementById('generateVideoSection');
                 
-                if (data.success) {
-                    // Show generated video
-                    setTimeout(() => {
-                        videoGenerationProgress.style.display = 'none';
-                        generatedVideoPreview.style.display = 'block';
-                        
-                        const videoElement = document.getElementById('generatedVideo');
-                        const videoDetails = document.getElementById('videoDetails');
-                        
-                        videoElement.src = data.video_url;
-                        videoDetails.innerHTML = `
-                            Duration: ${data.duration}s | 
-                            Generated in: ${data.generation_time}s | 
-                            Style: ${style.charAt(0).toUpperCase() + style.slice(1)}
-                        `;
-                        
-                        // Add the video to the media preview
-                        const mediaPreview = document.querySelector('.media-preview');
-                        const videoPreviewItem = document.createElement('div');
-                        videoPreviewItem.className = 'media-preview-item';
-                        videoPreviewItem.innerHTML = `
-                            <video src="${data.video_url}"></video>
-                            <div class="remove-media" data-filename="generated-video.mp4">&times;</div>
-                        `;
-                        mediaPreview.appendChild(videoPreviewItem);
-                        
-                        // Add remove functionality
-                        videoPreviewItem.querySelector('.remove-media').addEventListener('click', function() {
-                            videoPreviewItem.remove();
-                        });
-                        
-                        alert('Video generated successfully! It has been added to your media files.');
-                    }, 1000);
-                } else {
-                    alert('Error generating video: ' + data.message);
-                    videoGenerationProgress.style.display = 'none';
+                if (uploadMediaRadio) uploadMediaRadio.checked = true;
+                if (uploadMediaSection) uploadMediaSection.style.display = 'block';
+                if (generateVideoSection) generateVideoSection.style.display = 'none';
+                
+                // Create a preview of the generated video in the upload section
+                const uploadSection = document.getElementById('uploadMediaSection');
+                let previewDiv = uploadSection.querySelector('.generated-video-preview');
+                if (!previewDiv) {
+                    previewDiv = document.createElement('div');
+                    previewDiv.className = 'generated-video-preview mt-3';
+                    uploadSection.appendChild(previewDiv);
                 }
-            })
-            .catch(error => {
-                clearInterval(progressInterval);
-                console.error('Error:', error);
-                alert('An error occurred while generating the video. Please try again.');
-                videoGenerationProgress.style.display = 'none';
-            })
-            .finally(() => {
-                startVideoGeneration.disabled = false;
-            });
+                
+                previewDiv.innerHTML = `
+                    <div class="alert alert-success">
+                        <i class="fas fa-check-circle me-2"></i>Generated video ready for posting
+                        <video controls class="w-100 mt-2" style="max-height: 150px;">
+                            <source src="${generatedVideoUrl}" type="video/mp4">
+                        </video>
+                    </div>
+                `;
+                
+                showAlert('Video added to your post!', 'success');
+            }
         });
+    }
+    
+    // Form submission
+    const createPostBtn = document.querySelector('#createPostModal .btn-primary');
+    if (createPostBtn) {
+        createPostBtn.addEventListener('click', function() {
+            submitPost();
+        });
+    }
+    
+    function submitPost() {
+        const form = document.getElementById('createPostForm');
+        if (!form) {
+            showAlert('Form not found!', 'error');
+            return;
+        }
+        
+        const formData = new FormData(form);
+        
+        // Get selected platforms
+        const selectedPlatforms = [];
+        document.querySelectorAll('input[type="checkbox"]:checked').forEach(checkbox => {
+            selectedPlatforms.push(checkbox.value);
+        });
+        
+        if (selectedPlatforms.length === 0) {
+            showAlert('Please select at least one platform to post to.', 'error');
+            return;
+        }
+        
+        // Add platforms to form data
+        formData.append('platforms', JSON.stringify(selectedPlatforms));
+        
+        // Add media type
+        const mediaTypeElement = document.querySelector('input[name="mediaType"]:checked');
+        const mediaType = mediaTypeElement ? mediaTypeElement.value : 'none';
+        formData.append('media_type', mediaType);
+        
+        // Add generated video if exists
+        if (generatedVideoUrl) {
+            formData.append('generated_video_url', generatedVideoUrl);
+            formData.append('generated_video_id', generatedVideoId);
+        }
+        
+        // Show loading
+        if (!createPostBtn) {
+            showAlert('Submit button not found!', 'error');
+            return;
+        }
+        
+        const originalText = createPostBtn.innerHTML;
+        createPostBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Creating Post...';
+        createPostBtn.disabled = true;
+        
+        // Submit to backend
+        fetch('{{ route("marketing.posts.store") }}', {
+            method: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                'Accept': 'application/json',
+            },
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showAlert('Post created successfully!', 'success');
+                // Close modal and refresh page
+                const modal = bootstrap.Modal.getInstance(document.getElementById('createPostModal'));
+                modal.hide();
+                setTimeout(() => window.location.reload(), 1000);
+            } else {
+                throw new Error(data.message || 'Failed to create post');
+            }
+        })
+        .catch(error => {
+            showAlert('Failed to create post: ' + error.message, 'error');
+        })
+        .finally(() => {
+            // Reset button
+            createPostBtn.innerHTML = originalText;
+            createPostBtn.disabled = false;
+        });
+    }
+    
+    // Helper function to show alerts
+    function showAlert(message, type) {
+        const alertDiv = document.createElement('div');
+        alertDiv.className = `alert alert-${type === 'error' ? 'danger' : type} alert-dismissible fade show`;
+        alertDiv.innerHTML = `
+            <i class="fas fa-${type === 'error' ? 'exclamation-triangle' : 'check-circle'} me-2"></i>
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        `;
+        
+        // Insert at the top of the modal body
+        const modalBody = document.querySelector('#createPostModal .modal-body');
+        modalBody.insertBefore(alertDiv, modalBody.firstChild);
+        
+        // Auto-remove after 5 seconds
+        setTimeout(() => {
+            if (alertDiv.parentNode) {
+                alertDiv.remove();
+            }
+        }, 5000);
     }
 });
 </script>

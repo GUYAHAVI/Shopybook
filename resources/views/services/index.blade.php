@@ -2,8 +2,23 @@
 
 @section('content')
 <div class="container py-4">
+    <!-- Sub-navigation for Services -->
+    <div class="sub-navigation mb-4">
+        <div class="nav-tabs">
+            <a href="{{ route('services.index') }}" class="nav-tab active">
+                <i class="fas fa-list me-1"></i> All Services
+            </a>
+            <a href="{{ route('services.create') }}" class="nav-tab">
+                <i class="fas fa-plus me-1"></i> Add Service
+            </a>
+            <a href="{{ route('service-bookings.index') }}" class="nav-tab">
+                <i class="fas fa-calendar-check me-1"></i> Bookings
+            </a>
+        </div>
+    </div>
+
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2 class="fw-bold" style="color:#020258;">Services</h2>
+        <h2 class="fw-bold" style="color:var(--text-primary);">Services Management</h2>
         <a href="{{ route('services.create') }}" class="btn btn-primary">
             <i class="fas fa-plus me-1"></i> Add Service
         </a>
@@ -25,27 +40,27 @@
         </div>
     @endif
 
-    <div class="card shadow-sm">
+    <div class="card shadow-sm" style="background: var(--card-bg); border: 1px solid var(--border-color);">
         <div class="card-body">
             @if($services && count($services) > 0)
                 <!-- Desktop Table View -->
                 <div class="d-none d-md-block">
                     <div class="table-responsive">
                         <table class="table table-hover align-middle">
-                            <thead class="table-light">
-                                <tr style="color:#020258;">
-                                    <th>Name</th>
-                                    <th>Price</th>
-                                    <th>Duration</th>
-                                    <th>Commission (%)</th>
-                                    <th>Description</th>
-                                    <th>Actions</th>
+                            <thead style="background-color: var(--bg-tertiary);">
+                                <tr>
+                                    <th style="color: var(--text-secondary); border-bottom: 2px solid var(--border-color);">Name</th>
+                                    <th style="color: var(--text-secondary); border-bottom: 2px solid var(--border-color);">Price</th>
+                                    <th style="color: var(--text-secondary); border-bottom: 2px solid var(--border-color);">Duration</th>
+                                    <th style="color: var(--text-secondary); border-bottom: 2px solid var(--border-color);">Commission (%)</th>
+                                    <th style="color: var(--text-secondary); border-bottom: 2px solid var(--border-color);">Description</th>
+                                    <th style="color: var(--text-secondary); border-bottom: 2px solid var(--border-color);">Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 @foreach($services as $service)
                                 <tr>
-                                    <td>
+                                    <td style="color: var(--text-primary);">
                                         <div class="d-flex align-items-center">
                                             <div>
                                                 <div class="fw-medium">{{ $service->name ?? 'Unknown Service' }}</div>
@@ -58,10 +73,10 @@
                                             </div>
                                         </div>
                                     </td>
-                                    <td>KSh {{ number_format($service->price, 2) }}</td>
-                                    <td>{{ $service->duration ? $service->duration.' min' : '-' }}</td>
-                                    <td>{{ $service->commission_rate ? $service->commission_rate.'%' : '-' }}</td>
-                                    <td>{{ $service->description ?? '-' }}</td>
+                                    <td style="color: var(--text-primary);">KSh {{ number_format($service->price, 2) }}</td>
+                                    <td style="color: var(--text-primary);">{{ $service->duration ? $service->duration.' min' : '-' }}</td>
+                                    <td style="color: var(--text-primary);">{{ $service->commission_rate ? $service->commission_rate.'%' : '-' }}</td>
+                                    <td style="color: var(--text-primary);">{{ $service->description ?? '-' }}</td>
                                     <td>
                                         <a href="{{ route('services.edit', $service) }}" 
                                            class="btn btn-sm btn-outline-primary me-1" 
@@ -89,29 +104,29 @@
                 <!-- Mobile Card View -->
                 <div class="d-block d-md-none">
                     @foreach($services as $service)
-                        <div class="mobile-card-item mb-3">
+                        <div class="mobile-card-item mb-3" style="background: var(--card-bg); border: 1px solid var(--border-color); box-shadow: 0 1px 3px var(--shadow-color);">
                             <div class="mobile-card-header">
-                                <h5 class="mobile-card-title">{{ $service->name }}</h5>
+                                <h5 class="mobile-card-title" style="color: var(--text-primary);">{{ $service->name }}</h5>
                                 <span class="badge bg-success mobile-card-badge">
                                     KSh {{ number_format($service->price, 2) }}
                                 </span>
                             </div>
                             <div class="mobile-card-content">
                                 <div class="mobile-card-field">
-                                    <label>Duration:</label>
-                                    <span>{{ $service->duration ? $service->duration.' min' : '-' }}</span>
+                                    <label style="color: var(--text-secondary);">Duration:</label>
+                                    <span style="color: var(--text-primary);">{{ $service->duration ? $service->duration.' min' : '-' }}</span>
                                 </div>
                                 <div class="mobile-card-field">
-                                    <label>Commission:</label>
-                                    <span>{{ $service->commission_rate ? $service->commission_rate.'%' : '-' }}</span>
+                                    <label style="color: var(--text-secondary);">Commission:</label>
+                                    <span style="color: var(--text-primary);">{{ $service->commission_rate ? $service->commission_rate.'%' : '-' }}</span>
                                 </div>
                                 <div class="mobile-card-field">
-                                    <label>Description:</label>
-                                    <span>{{ $service->description ?? '-' }}</span>
+                                    <label style="color: var(--text-secondary);">Description:</label>
+                                    <span style="color: var(--text-primary);">{{ $service->description ?? '-' }}</span>
                                 </div>
                                 <div class="mobile-card-field">
-                                    <label>Special Features:</label>
-                                    <span>
+                                    <label style="color: var(--text-secondary);">Special Features:</label>
+                                    <span style="color: var(--text-primary);">
                                         @if($service->is_complimentary) Complimentary @endif
                                         @if($service->is_bundle_trigger) @if($service->is_complimentary), @endif Bundle Trigger @endif
                                         @if(!$service->is_complimentary && !$service->is_bundle_trigger) None @endif
@@ -134,9 +149,9 @@
                 </div>
             @else
                 <div class="text-center py-5">
-                    <i class="fas fa-concierge-bell fa-3x text-muted mb-3"></i>
-                    <h5>No Services Found</h5>
-                    <p class="text-muted">Create your first service to get started.</p>
+                    <i class="fas fa-concierge-bell fa-3x" style="color: var(--text-muted);" class="mb-3"></i>
+                    <h5 style="color: var(--text-primary);">No Services Found</h5>
+                    <p style="color: var(--text-muted);">Create your first service to get started.</p>
                     <a href="{{ route('services.create') }}" class="btn btn-primary">
                         <i class="fas fa-plus me-1"></i> Create Service
                     </a>
@@ -149,7 +164,7 @@
 <!-- Delete Confirmation Modal -->
 <div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
+        <div class="modal-content" style="background: var(--card-bg); border: 1px solid var(--border-color);">
             <div class="modal-header bg-danger text-white">
                 <h5 class="modal-title" id="deleteModalLabel">
                     <i class="fas fa-exclamation-triangle me-2"></i>
@@ -163,14 +178,14 @@
                     <strong>Warning:</strong> This action cannot be undone. The service will be permanently removed from your system.
                 </div>
 
-                <div class="bg-light p-3 rounded border">
+                <div class="bg-light p-3 rounded border" style="background: var(--bg-tertiary) !important; border: 1px solid var(--border-color) !important;">
                     <div class="row mb-2">
-                        <div class="col-sm-4"><strong>Service Name:</strong></div>
-                        <div class="col-sm-8" id="modal-service-name">-</div>
+                        <div class="col-sm-4"><strong style="color: var(--text-primary);">Service Name:</strong></div>
+                        <div class="col-sm-8" id="modal-service-name" style="color: var(--text-primary);">-</div>
                     </div>
                     <div class="row">
-                        <div class="col-sm-4"><strong>Price:</strong></div>
-                        <div class="col-sm-8" id="modal-service-price">-</div>
+                        <div class="col-sm-4"><strong style="color: var(--text-primary);">Price:</strong></div>
+                        <div class="col-sm-8" id="modal-service-price" style="color: var(--text-primary);">-</div>
                     </div>
                 </div>
 
@@ -184,7 +199,7 @@
                     @method('DELETE')
                     
                     <div class="mt-3">
-                        <label for="password" class="form-label">
+                        <label for="password" class="form-label" style="color: var(--text-primary);">
                             <i class="fas fa-lock me-1"></i>
                             Enter your account password to confirm deletion:
                         </label>
@@ -194,15 +209,16 @@
                                name="password" 
                                required
                                placeholder="Your account password"
-                               autocomplete="current-password">
-                        <div class="form-text">
+                               autocomplete="current-password"
+                               style="border: 1px solid var(--border-color); background: var(--card-bg); color: var(--text-primary);">
+                        <div class="form-text" style="color: var(--text-muted);">
                             <i class="fas fa-info-circle me-1"></i>
                             This is a permanent action and cannot be undone.
                         </div>
                     </div>
                 </form>
             </div>
-            <div class="modal-footer">
+            <div class="modal-footer" style="border-top: 1px solid var(--border-color);">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
                     <i class="fas fa-times me-1"></i>
                     Cancel
@@ -218,13 +234,56 @@
 </div>
 
 <style>
+.sub-navigation {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 0.5rem;
+    padding: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.nav-tabs {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.nav-tab {
+    display: flex;
+    align-items: center;
+    padding: 0.5rem 1rem;
+    color: var(--text-muted);
+    text-decoration: none;
+    border-radius: 0.375rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    border: 1px solid transparent;
+}
+
+.nav-tab:hover {
+    color: var(--text-primary);
+    background: var(--bg-tertiary);
+    border-color: var(--border-color);
+}
+
+.nav-tab.active {
+    color: var(--white);
+    background: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
 .mobile-card-item {
-    background: #ffffff;
-    border: 1px solid #e9ecef;
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
     border-radius: 8px;
     padding: 1rem;
     margin-bottom: 1rem;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    box-shadow: 0 1px 3px var(--shadow-color);
+}
+
+.mobile-card-item:hover {
+    box-shadow: 0 4px 6px var(--shadow-color);
 }
 
 .mobile-card-header {
@@ -238,6 +297,7 @@
     font-weight: 600;
     margin: 0;
     flex: 1;
+    color: var(--text-primary);
 }
 
 .mobile-card-badge {
@@ -253,7 +313,7 @@
     display: flex;
     justify-content: space-between;
     padding: 0.25rem 0;
-    border-bottom: 1px solid #f8f9fa;
+    border-bottom: 1px solid var(--border-color);
 }
 
 .mobile-card-field:last-child {
@@ -262,13 +322,13 @@
 
 .mobile-card-field label {
     font-weight: 500;
-    color: #6c757d;
+    color: var(--text-secondary);
     margin: 0;
     width: 40%;
 }
 
 .mobile-card-field span {
-    color: #212529;
+    color: var(--text-primary);
     width: 60%;
     text-align: right;
 }
@@ -284,7 +344,7 @@
 }
 
 .modal-content {
-    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    box-shadow: 0 10px 30px var(--shadow-color);
 }
 
 .modal-header.bg-danger {
@@ -307,6 +367,28 @@
 .fade-out-row {
     opacity: 0;
     transition: opacity 0.5s ease-out;
+}
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+    .nav-tabs {
+        flex-direction: column;
+        gap: 0.25rem;
+    }
+    
+    .nav-tab {
+        justify-content: center;
+        padding: 0.75rem 1rem;
+    }
+    
+    .mobile-card-actions {
+        flex-direction: column;
+    }
+    
+    .mobile-card-actions .btn {
+        width: 100%;
+        justify-content: center;
+    }
 }
 </style>
 

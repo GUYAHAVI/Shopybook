@@ -117,7 +117,7 @@
                         </div>
                         <div class="text-right">
                             <div class="h6 mb-0">{{ $promotion->usage_count }} uses</div>
-                            <small class="text-muted">{{ $promotion->discount_value }}{{ $promotion->discount_type === 'percentage' ? '%' : '₦' }} off</small>
+                            <small class="text-muted">{{ $promotion->discount_value }}{{ $promotion->discount_type === 'percentage' ? '%' : 'KSh' }} off</small>
                         </div>
                     </div>
                     @empty

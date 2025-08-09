@@ -74,7 +74,7 @@
                                                id="discount_value" name="discount_value" value="{{ old('discount_value', $promotion->discount_value) }}" 
                                                step="0.01" min="0" required>
                                         <div class="input-group-append">
-                                            <span class="input-group-text" id="discount_suffix">{{ $promotion->discount_type === 'percentage' ? '%' : '₦' }}</span>
+                                            <span class="input-group-text" id="discount_suffix">{{ $promotion->discount_type === 'percentage' ? '%' : 'KSh' }}</span>
                                         </div>
                                     </div>
                                     @error('discount_value')
@@ -87,7 +87,7 @@
                                     <label for="minimum_amount">Minimum Order Amount</label>
                                     <div class="input-group">
                                         <div class="input-group-prepend">
-                                            <span class="input-group-text">₦</span>
+                                            <span class="input-group-text">KSh</span>
                                         </div>
                                         <input type="number" class="form-control @error('minimum_amount') is-invalid @enderror" 
                                                id="minimum_amount" name="minimum_amount" value="{{ old('minimum_amount', $promotion->minimum_amount) }}" 
@@ -159,7 +159,7 @@
                                                value="{{ $product->id }}" 
                                                {{ in_array($product->id, old('product_ids', $promotion->products->pluck('id')->toArray())) ? 'checked' : '' }}>
                                         <label class="custom-control-label" for="product_{{ $product->id }}">
-                                            {{ $product->name }} - ₦{{ number_format($product->price) }}
+                                            {{ $product->name }} - KSh {{ number_format($product->price) }}
                                         </label>
                                     </div>
                                 </div>
@@ -263,7 +263,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (this.value === 'percentage') {
             discountSuffix.textContent = '%';
         } else {
-            discountSuffix.textContent = '₦';
+            discountSuffix.textContent = 'KSh';
         }
     });
 });

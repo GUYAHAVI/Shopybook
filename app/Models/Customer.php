@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Customer extends Model
 {
@@ -44,5 +45,10 @@ class Customer extends Model
     public function getCompletedOrderCountAttribute()
     {
         return $this->orders()->where('status', 'completed')->count();
+    }
+
+    public function serviceBookings(): HasMany
+    {
+        return $this->hasMany(ServiceBooking::class);
     }
 }

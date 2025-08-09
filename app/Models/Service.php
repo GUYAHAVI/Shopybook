@@ -10,14 +10,15 @@ class Service extends Model
     use HasFactory;
 
     protected $fillable = [
-        'business_id', 'name', 'price', 'duration', 'commission_rate', 'description',
+        'business_id', 'name', 'price', 'duration', 'commission_rate', 'description', 'is_active',
         'is_bundle_trigger', 'bundled_services', 'is_complimentary', 'parent_service_id'
     ];
 
     protected $casts = [
         'bundled_services' => 'array',
         'is_bundle_trigger' => 'boolean',
-        'is_complimentary' => 'boolean'
+        'is_complimentary' => 'boolean',
+        'is_active' => 'boolean'
     ];
 
     public function business()
@@ -49,5 +50,13 @@ class Service extends Model
         }
         
         return Service::whereIn('id', $this->bundled_services)->get();
+    }
+
+    /**
+     * Scope a query to only include active services.
+     */
+    public function scopeActive($query)
+    {
+        return $query->where('is_active', true);
     }
 } 

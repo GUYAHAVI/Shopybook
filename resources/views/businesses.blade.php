@@ -1,50 +1,68 @@
 @extends('layouts.master')
-@section(	'content')
+@section('content')
 
- <div id="home" class="container-fluid px-0">
-        <div>
-            <div class="morphing-bubbles-hero">
-                <div class="morphing-bubble main-bubble"></div>
-                <div class="morphing-bubble secondary-bubble"></div>
-                <div class="morphing-bubble accent-bubble"></div>
-            </div>
-            <div class="brandtext">
-                <div class="row">
-                    <div class="col-md-7">
-                        <h1>Havi Greenhouse Materials</h1>
-                        <p class="lead">Description for Havi Greenhouse Materials</p>
-                        <div class="mt-4">
-                            <a href="#features" class="btn btn-primary btn-lg me-2">Contact Us</a>
-                            <a href="#signup" class="btn btn-outline-light btn-lg">Make a purchase</a>
+<div id="home" class="container-fluid px-0">
+    <div class="hero-section">
+        <!-- Background Video -->
+        <div class="hero-video-container">
+            <video autoplay muted loop playsinline class="hero-video">
+                <source src="{{ asset('video/video1.mp4') }}" type="video/mp4">
+                <source src="{{ asset('video/video2.mp4') }}" type="video/mp4">
+                Your browser does not support the video tag.
+            </video>
+        </div>
+        
+        <!-- Dark Overlay with Gradient -->
+        <div class="hero-overlay"></div>
+        
+        <!-- Hero Content -->
+        <div class="hero-content">
+            <div class="container">
+                <div class="row align-items-center min-vh-100">
+                    <div class="col-lg-8 col-md-10 mx-auto text-center">
+                        <h1 class="hero-title">Discover Amazing Businesses</h1>
+                        <p class="hero-subtitle">
+                            @if($type)
+                                Browse {{ ucfirst($type) }} businesses in our community
+                            @else
+                                Explore our wide range of business solutions tailored to your needs
+                            @endif
+                        </p>
+                        <div class="hero-buttons mt-4">
+                            @if($type)
+                                <a href="{{ route('businesses') }}" class="btn btn-outline-light btn-lg me-3">View All Businesses</a>
+                            @endif
+                            <a href="#businesses" class="btn btn-primary btn-lg">Explore Now</a>
                         </div>
                     </div>
-                    <div class="col-md-5 position-relative">
-                        <div class="brandimgs-container">
-                            <div class="image-bubble brand-bubble-1">
-                                <img src="{{ asset('img/img-1.jpeg') }}" alt="Product 1">
-                            </div>
-                            <div class="image-bubble brand-bubble-2">
-                                <img src="{{ asset('img/img-2.jpeg') }}" alt="Product 2">
-                            </div>
-                           
-
-                        </div>
-
-                    </div>
-
                 </div>
             </div>
         </div>
     </div>
+</div>
 
-    <!-- PRODUCTS -->
+    <!-- BUSINESSES -->
 
-    <section class="businesses">
-<h3>Need something else? </h3>
-<p class="lead">Explore our wide range of business solutions tailored to your needs.</p>
-<div class="row">
-  @include('partials.businesses', ['groupedBusinesses' => $groupedBusinesses])
-    </div>
+    <section id="businesses" class="businesses">
+        <div class="container">
+            @if($type)
+                <div class="row mb-4">
+                    <div class="col-12">
+                        <div class="alert alert-info">
+                            <i class="fas fa-filter me-2"></i>
+                            Showing {{ ucfirst($type) }} businesses only. 
+                            <a href="{{ route('businesses') }}" class="alert-link">View all businesses</a>
+                        </div>
+                    </div>
+                </div>
+            @endif
+            
+            <h3>Need something else?</h3>
+            <p class="lead">Explore our wide range of business solutions tailored to your needs.</p>
+            <div class="row">
+                @include('partials.businesses', ['groupedBusinesses' => $groupedBusinesses])
+            </div>
+        </div>
     </section>
 
     <script>
@@ -233,6 +251,157 @@ function connectImagesWithLines() {
 </script>
 
 <style>
+/* Hero Section Styles */
+.hero-section {
+    position: relative;
+    height: 100vh;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.hero-video-container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+}
+
+.hero-video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+}
+
+.hero-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+        135deg,
+        rgba(2, 2, 88, 0.8) 0%,
+        rgba(19, 232, 233, 0.6) 100%
+    );
+    z-index: 2;
+}
+
+.hero-content {
+    position: relative;
+    z-index: 3;
+    width: 100%;
+}
+
+.hero-title {
+    font-size: 3.5rem;
+    font-weight: 700;
+    color: #ffffff;
+    margin-bottom: 1.5rem;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+    animation: fadeInUp 1s ease-out;
+}
+
+.hero-subtitle {
+    font-size: 1.25rem;
+    color: #ffffff;
+    margin-bottom: 2rem;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+    animation: fadeInUp 1s ease-out 0.3s both;
+}
+
+.hero-buttons {
+    animation: fadeInUp 1s ease-out 0.6s both;
+}
+
+.hero-buttons .btn {
+    padding: 12px 30px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-radius: 50px;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+.hero-buttons .btn-primary {
+    background: linear-gradient(135deg, #020258, #13e8e9);
+    border: none;
+    color: #ffffff;
+}
+
+.hero-buttons .btn-primary:hover {
+    background: linear-gradient(135deg, #13e8e9, #020258);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+}
+
+.hero-buttons .btn-outline-light {
+    border: 2px solid #ffffff;
+    color: #ffffff;
+    background: transparent;
+}
+
+.hero-buttons .btn-outline-light:hover {
+    background: #ffffff;
+    color: #020258;
+    transform: translateY(-2px);
+}
+
+/* Animations */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .hero-title {
+        font-size: 2.5rem;
+    }
+    
+    .hero-subtitle {
+        font-size: 1.1rem;
+    }
+    
+    .hero-buttons .btn {
+        padding: 10px 25px;
+        font-size: 0.9rem;
+    }
+}
+
+@media (max-width: 576px) {
+    .hero-title {
+        font-size: 2rem;
+    }
+    
+    .hero-subtitle {
+        font-size: 1rem;
+    }
+    
+    .hero-buttons {
+        flex-direction: column;
+        gap: 1rem;
+    }
+    
+    .hero-buttons .btn {
+        width: 100%;
+        max-width: 250px;
+        margin: 0 auto;
+    }
+}
+
+/* General Styles */
 body, .container-fluid, .card, .main-content, .content {
     background: #fff !important;
     color: #020258 !important;

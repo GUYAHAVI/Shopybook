@@ -28,6 +28,15 @@ class SocialMediaController extends Controller
         $business = Auth::user()->business;
 
         if (!$business->isPremium() && $business->socialMediaAccounts()->count() >= 1) {
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'error' => 'upgrade_required',
+                    'message' => 'Free plan allows only 1 social media connection. Upgrade to Premium for unlimited connections.',
+                    'current_connections' => $business->socialMediaAccounts()->count(),
+                    'upgrade_url' => route('billing.upgrade')
+                ], 403);
+            }
+            
             return redirect()->route('marketing.social-media')
                 ->with('error', 'Free plan allows only 1 social media connection. Upgrade to Premium for unlimited connections.');
         }
@@ -314,7 +323,15 @@ class SocialMediaController extends Controller
                 'state' => $state,
                 'response_type' => 'code',
             ]),
-            'x' => null, // X (Twitter) uses direct API tokens, no OAuth for posting
+            'twitter' => 'https://twitter.com/i/oauth2/authorize?' . http_build_query([
+                'client_id' => config('services.twitter.client_id'),
+                'redirect_uri' => $redirectUri,
+                'scope' => 'tweet.read tweet.write users.read offline.access',
+                'state' => $state,
+                'response_type' => 'code',
+                'code_challenge_method' => 'S256',
+                'code_challenge' => $this->generateCodeChallenge(),
+            ]),
             'linkedin' => 'https://www.linkedin.com/oauth/v2/authorization?' . http_build_query([
                 'client_id' => config('services.linkedin.client_id'),
                 'redirect_uri' => $redirectUri,
@@ -392,7 +409,14 @@ class SocialMediaController extends Controller
                 'grant_type' => 'authorization_code',
                 'code' => $code,
             ]),
-            'x' => null, // X (Twitter) uses direct API tokens, no OAuth for posting
+            'twitter' => Http::asForm()->post('https://api.twitter.com/2/oauth2/token', [
+                'client_id' => config('services.twitter.client_id'),
+                'client_secret' => config('services.twitter.client_secret'),
+                'redirect_uri' => $redirectUri,
+                'code' => $code,
+                'grant_type' => 'authorization_code',
+                'code_verifier' => session('code_verifier'),
+            ]),
             'linkedin' => Http::asForm()->post('https://www.linkedin.com/oauth/v2/accessToken', [
                 'client_id' => config('services.linkedin.client_id'),
                 'client_secret' => config('services.linkedin.client_secret'),
@@ -504,5 +528,16 @@ class SocialMediaController extends Controller
                 'message' => 'Failed to process deauthorization'
             ], 500);
         }
+    }
+
+    /**
+     * Generate PKCE code challenge for Twitter OAuth 2.0
+     */
+    protected function generateCodeChallenge()
+    {
+        $codeVerifier = Str::random(128);
+        session(['code_verifier' => $codeVerifier]);
+        
+        return base64_encode(hash('sha256', $codeVerifier, true));
     }
 }

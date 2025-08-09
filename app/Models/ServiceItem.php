@@ -21,6 +21,24 @@ class ServiceItem extends Model
         'notes'
     ];
 
+    protected static function boot()
+    {
+        parent::boot();
+        
+        // Clear staff cache when service items are created, updated, or deleted
+        static::saved(function ($serviceItem) {
+            if ($serviceItem->staff) {
+                $serviceItem->staff->clearCalculatedAttributesCache();
+            }
+        });
+        
+        static::deleted(function ($serviceItem) {
+            if ($serviceItem->staff) {
+                $serviceItem->staff->clearCalculatedAttributesCache();
+            }
+        });
+    }
+
     protected $casts = [
         'amount' => 'decimal:2',
         'commission_rate' => 'decimal:2',

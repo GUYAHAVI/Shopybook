@@ -90,10 +90,15 @@
                             </div>
                         </div>
                         <!-- Description -->
-                        <div class="mt-6">
-                            <label for="description" class="block text-sm font-medium text-cyan-700 mb-1"><i class="fas fa-align-left mr-1"></i> Business Description</label>
-                            <textarea id="description" name="description" rows="3" class="form-control block w-full">{{ old('description', $business->description) }}</textarea>
-                            <x-input-error :messages="$errors->get('description')" class="mt-2" />
+                        <div class="form-group">
+                            <label for="description" class="form-label">Business Description</label>
+                            <x-ai-enhanced-textarea name="description" 
+                                                   content-type="description" 
+                                                   tone="professional" 
+                                                   rows="3" 
+                                                   placeholder="Describe your business...">
+                                {{ old('description', $business->description) }}
+                            </x-ai-enhanced-textarea>
                         </div>
                         <hr class="my-6 border-cyan-200">
                         <div class="flex items-center justify-between mt-6">

@@ -39,16 +39,25 @@
 
             <!-- Summary Cards -->
             <div class="row mb-4 summary-cards">
-                <div class="col-md-4">
+                <div class="col-md-3">
                     <div class="card bg-primary text-white">
                         <div class="card-body">
-                            <h5 class="card-title">Total Commissions</h5>
+                            <h5 class="card-title">Total Earnings</h5>
+                            <h3 class="mb-0">KSh {{ number_format($totalEarnings ?? 0, 2) }}</h3>
+                            <small>Salary + Commission</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card bg-info text-white">
+                        <div class="card-body">
+                            <h5 class="card-title">Commissions Only</h5>
                             <h3 class="mb-0">KSh {{ number_format($totalCommissions, 2) }}</h3>
                             <small>{{ \Carbon\Carbon::parse($startDate)->format('M j') }} - {{ \Carbon\Carbon::parse($endDate)->format('M j, Y') }}</small>
                         </div>
                     </div>
                 </div>
-                <div class="col-md-4">
+                <div class="col-md-3">
                     <div class="card bg-success text-white">
                         <div class="card-body">
                             <h5 class="card-title">Active Staff</h5>
@@ -57,8 +66,8 @@
                         </div>
                     </div>
                 </div>
-                <div class="col-md-4">
-                    <div class="card bg-info text-white">
+                <div class="col-md-3">
+                    <div class="card bg-warning text-white">
                         <div class="card-body">
                             <h5 class="card-title">Total Services</h5>
                             <h3 class="mb-0">{{ $staffCommissions->sum('service_count') }}</h3>
@@ -81,10 +90,10 @@
                                     <tr>
                                         <th>Staff Member</th>
                                         <th class="d-none d-md-table-cell">Role</th>
+                                        <th class="text-center d-none d-lg-table-cell">Salary</th>
                                         <th class="text-center">Services</th>
-                                        <th class="text-center d-none d-lg-table-cell">Today</th>
-                                        <th class="text-center d-none d-lg-table-cell">This Month</th>
-                                        <th class="text-center">Period Total</th>
+                                        <th class="text-center d-none d-lg-table-cell">Commission</th>
+                                        <th class="text-center">Total Earnings</th>
                                         <th class="text-center">Action</th>
                                     </tr>
                                 </thead>
@@ -107,20 +116,20 @@
                                             <td class="d-none d-md-table-cell">
                                                 <span class="badge bg-secondary">{{ $staffData['staff']->role }}</span>
                                             </td>
+                                            <td class="text-center d-none d-lg-table-cell">
+                                                <strong class="text-info">KSh {{ number_format($staffData['salary'] ?? 0, 2) }}</strong>
+                                            </td>
                                             <td class="text-center">
                                                 <span class="badge bg-info">{{ $staffData['service_count'] }}</span>
                                             </td>
                                             <td class="text-center d-none d-lg-table-cell">
-                                                <strong class="text-success">KSh {{ number_format($staffData['today_commission'], 2) }}</strong>
-                                            </td>
-                                            <td class="text-center d-none d-lg-table-cell">
-                                                <strong class="text-primary">KSh {{ number_format($staffData['this_month_commission'], 2) }}</strong>
+                                                <strong class="text-primary">KSh {{ number_format($staffData['total_commission'], 2) }}</strong>
                                             </td>
                                             <td class="text-center">
-                                                <strong class="text-dark">KSh {{ number_format($staffData['total_commission'], 2) }}</strong>
+                                                <strong class="text-success">KSh {{ number_format($staffData['total_earnings'] ?? 0, 2) }}</strong>
                                                 <div class="d-lg-none">
-                                                    <small class="text-muted d-block">Today: KSh {{ number_format($staffData['today_commission'], 2) }}</small>
-                                                    <small class="text-muted">Month: KSh {{ number_format($staffData['this_month_commission'], 2) }}</small>
+                                                    <small class="text-muted d-block">Salary: KSh {{ number_format($staffData['salary'] ?? 0, 2) }}</small>
+                                                    <small class="text-muted">Commission: KSh {{ number_format($staffData['total_commission'], 2) }}</small>
                                                 </div>
                                             </td>
                                             <td class="text-center">

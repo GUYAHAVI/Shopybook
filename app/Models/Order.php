@@ -14,10 +14,23 @@ class Order extends Model
         'payment_method',
         'total_amount',
         'notes',
+        // Public order fields
+        'customer_name',
+        'customer_phone',
+        'customer_email',
+        'delivery_address',
+        'quantity',
+        'unit_price',
+        'total_price',
+        'order_type',
+        'payment_status',
+        'product_id',
     ];
 
     protected $casts = [
         'total_amount' => 'decimal:2',
+        'unit_price' => 'decimal:2',
+        'total_price' => 'decimal:2',
     ];
 
     public function business()
@@ -45,6 +58,11 @@ class Order extends Model
         return $this->hasMany(Payment::class);
     }
 
+    public function product()
+    {
+        return $this->belongsTo(Product::class);
+    }
+
     public function getStatusColorAttribute()
     {
         switch ($this->status) {
@@ -69,5 +87,13 @@ class Order extends Model
     public function getFormattedTotalAttribute()
     {
         return 'KSh ' . number_format($this->total_amount, 2);
+    }
+
+    /**
+     * Get the route key for the model.
+     */
+    public function getRouteKeyName()
+    {
+        return 'id';
     }
 }

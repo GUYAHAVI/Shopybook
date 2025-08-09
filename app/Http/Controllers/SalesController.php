@@ -10,13 +10,26 @@ use App\Models\Invoice;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 use App\Models\OrganizationCustomer;
+use Illuminate\Support\Facades\Hash;
+// date
 
 class SalesController extends Controller
 {
     public function pos()
     {
-        $products = auth()->user()->business->products()->active()->inStock()->get();
-        $customers = auth()->user()->business->customers()->get();
+        $business = auth()->user()->business;
+        $products = $business->products()->active()->inStock()->get();
+        $customers = $business->customers()->get();
+        
+        // Debug logging
+        \Log::info('POS Debug', [
+            'business_id' => $business->id,
+            'business_name' => $business->name,
+            'total_products' => $business->products()->count(),
+            'active_products' => $business->products()->active()->count(),
+            'in_stock_products' => $products->count(),
+            'customers_count' => $customers->count()
+        ]);
         
         return view('sales.pos', compact('products', 'customers'));
     }
@@ -24,7 +37,7 @@ class SalesController extends Controller
     public function orders()
     {
         $orders = auth()->user()->business->orders()
-            ->with(['customer', 'items.product'])
+            ->with(['customer', 'items.product', 'product'])
             ->latest()
             ->paginate(15);
             
@@ -33,6 +46,12 @@ class SalesController extends Controller
 
     public function orderDetails(Order $order)
     {
+        \Log::info('OrderDetails called', [
+            'order_id' => $order->id,
+            'business_id' => $order->business_id,
+            'user_business_id' => auth()->user()->business->id ?? 'null'
+        ]);
+        
         $this->authorize('view', $order);
         
         return view('sales.order-details', compact('order'));
@@ -71,9 +90,10 @@ class SalesController extends Controller
                 $order->customer_id = $validated['customer_id'];
             }
             $order->order_number = 'ORD-' . strtoupper(uniqid());
-            $order->status = 'pending';
-            $order->payment_method = $validated['payment_method'];
-            $order->notes = $validated['notes'];
+                    $order->status = 'completed'; // POS orders are automatically completed
+        $order->payment_status = 'paid'; // POS orders are automatically paid
+        $order->payment_method = $validated['payment_method'];
+        $order->notes = $validated['notes'];
             $order->subtotal = $validated['subtotal'];
             $order->tax = $validated['tax'];
             $order->total_amount = $validated['total'];
@@ -127,17 +147,43 @@ class SalesController extends Controller
 
     public function updateOrderStatus(Request $request, Order $order)
     {
-        $request->validate([
-            'status' => 'required|in:pending,processing,completed,cancelled'
+        \Log::info('UpdateOrderStatus called', [
+            'order_id' => $order->id,
+            'business_id' => $order->business_id,
+            'user_business_id' => auth()->user()->business->id ?? 'null',
+            'request_status' => $request->input('status')
         ]);
         
-        $order->status = $request->status;
-        $order->save();
+        $this->authorize('update', $order);
+        
+        $validated = $request->validate([
+            'status' => 'required|in:pending,processing,completed,cancelled',
+            'password' => 'required|string'
+        ]);
+
+        // Verify user password (same as service deletion)
+        if (!Hash::check($validated['password'], auth()->user()->getAuthPassword())) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Invalid password. Please check your password and try again.'
+            ], 422);
+        }
+        
+        $order->update(['status' => $validated['status']]);
         
         return response()->json([
             'success' => true,
             'message' => 'Order status updated successfully'
         ]);
+    }
+
+    public function printReceipt(Order $order)
+    {
+        $this->authorize('view', $order);
+        
+        $business = auth()->user()->business;
+        
+        return view('sales.receipt', compact('order', 'business'));
     }
 
     public function invoices()
@@ -174,7 +220,7 @@ class SalesController extends Controller
 
     public function createOrganizationCustomer()
     {
-        return view('sales.add-organization-customer');
+        return view('sales.customers.add-organization-customer');
     }
 
     public function storeOrganizationCustomer(Request $request)

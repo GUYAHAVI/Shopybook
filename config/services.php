@@ -14,6 +14,11 @@ return [
     |
     */
 
+    'facebook' => [
+        'client_id' => env('FACEBOOK_CLIENT_ID'),
+        'client_secret' => env('FACEBOOK_CLIENT_SECRET'),
+        'redirect' => env('FACEBOOK_REDIRECT_URI', 'https://shopybook.com/auth/facebook/callback'),
+    ],
     'linkedin' => [
         'client_id' => env('LINKEDIN_CLIENT_ID'),
         'client_secret' => env('LINKEDIN_CLIENT_SECRET'),
@@ -105,6 +110,36 @@ return [
     
     'huggingface' => [
         'api_key' => env('HUGGINGFACE_API_TOKEN', 'REMOVED_SECRET_TOKEN'),
+    ],
+
+    'mpesa' => [
+        'consumer_key' => env('MPESA_CONSUMER_KEY'),
+        'consumer_secret' => env('MPESA_CONSUMER_SECRET'),
+        'business_shortcode' => env('MPESA_BUSINESS_SHORTCODE'),
+        'passkey' => env('MPESA_PASSKEY'),
+        'environment' => env('MPESA_ENVIRONMENT', 'sandbox'), // sandbox or live
+        
+        // URLs
+        'auth_url' => env('MPESA_AUTH_URL', 'https://sandbox.safaricom.co.ke/oauth/v1/generate?grant_type=client_credentials'),
+        'stk_push_url' => env('MPESA_STK_PUSH_URL', 'https://sandbox.safaricom.co.ke/mpesa/stkpush/v1/processrequest'),
+        'callback_url' => env('MPESA_CALLBACK_URL', 'https://shopybook.com/api/mpesa/callback'),
+        
+        // Transaction details
+        'transaction_type' => env('MPESA_TRANSACTION_TYPE', 'CustomerPayBillOnline'),
+        // 'amount' => env('MPESA_AMOUNT', 1), // Amount in KSh
+        'account_reference' => env('MPESA_ACCOUNT_REFERENCE', 'Shopybook Premium'),
+        'transaction_desc' => env('MPESA_TRANSACTION_DESC', 'Premium Plan Upgrade'),
+    ],
+
+    'paypal' => [
+        'client_id' => env('PAYPAL_CLIENT_ID'),
+        'client_secret' => env('PAYPAL_CLIENT_SECRET'),
+        'mode' => env('PAYPAL_MODE', 'sandbox'), // sandbox or live
+        'currency' => env('PAYPAL_CURRENCY', 'USD'),
+        
+        // URLs
+        'auth_url' => env('PAYPAL_AUTH_URL', 'https://api-m.sandbox.paypal.com/v1/oauth2/token'),
+        'orders_url' => env('PAYPAL_ORDERS_URL', 'https://api-m.sandbox.paypal.com/v2/checkout/orders'),
     ],
 
 ];

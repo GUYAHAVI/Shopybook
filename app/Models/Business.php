@@ -31,8 +31,10 @@ class Business extends BaseTenant implements TenantWithDatabase
         'name',
         'slug',
         'email',
+        'kra_pin',
         'phone',
         'business_type',
+        'business_category',
         'description',
         'logo_path',
         'cover_path',
@@ -61,6 +63,7 @@ class Business extends BaseTenant implements TenantWithDatabase
             'email',
             'phone',
             'business_type',
+            'business_category',
             'description',
             'logo_path',
             'cover_path',
@@ -200,4 +203,35 @@ class Business extends BaseTenant implements TenantWithDatabase
         return 'tenant_' . $this->id;
     }
     
+    /**
+     * Get the business category (product, service, hybrid)
+     */
+    public function getBusinessCategoryAttribute()
+    {
+        return $this->getRawOriginal('business_category') ?? 'product';
+    }
+    
+    /**
+     * Check if business is product-based
+     */
+    public function isProductBusiness()
+    {
+        return $this->business_category === 'product';
+    }
+    
+    /**
+     * Check if business is service-based
+     */
+    public function isServiceBusiness()
+    {
+        return $this->business_category === 'service';
+    }
+    
+    /**
+     * Check if business is hybrid
+     */
+    public function isHybridBusiness()
+    {
+        return $this->business_category === 'hybrid';
+    }
 }

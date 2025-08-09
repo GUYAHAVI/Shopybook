@@ -19,22 +19,36 @@ class BusinessController extends Controller
     {
         $sort = $request->get('sort', 'name');
         $order = $request->get('order', 'asc');
+        $type = $request->get('type');
 
-        $businessTypes = Business::select('business_type')
+        $query = Business::where('active', true);
+
+        // Filter by business category if type is specified
+        if ($type) {
+            $query->where('business_category', $type);
+        }
+
+        $businessTypes = $query->select('business_type')
             ->distinct()
             ->orderBy('business_type')
             ->pluck('business_type');
 
         $groupedBusinesses = [];
 
-        foreach ($businessTypes as $type) {
-            $groupedBusinesses[$type] = Business::where('business_type', $type)
-                ->where('active', true)
+        foreach ($businessTypes as $businessType) {
+            $businessQuery = Business::where('business_type', $businessType)
+                ->where('active', true);
+            
+            if ($type) {
+                $businessQuery->where('business_category', $type);
+            }
+            
+            $groupedBusinesses[$businessType] = $businessQuery
                 ->orderBy($sort, $order)
                 ->get();
         }
 
-        return view('businesses', compact('groupedBusinesses', 'sort', 'order'));
+        return view('businesses', compact('groupedBusinesses', 'sort', 'order', 'type'));
     }
     public function chooseType()
     {
@@ -108,6 +122,9 @@ class BusinessController extends Controller
             'logo' => 'nullable|image|max:2048',
         ]);
 
+        // Determine business category based on business type
+        $businessCategory = $this->getBusinessCategory($validated['business_type']);
+        
         // Create the tenant (business)
         $business = Business::create([
             'user_id' => auth()->id(),
@@ -116,6 +133,7 @@ class BusinessController extends Controller
             'email' => $validated['email'] ?? null,
             'phone' => $validated['phone'],
             'business_type' => $validated['business_type'],
+            'business_category' => $businessCategory,
             'description' => $validated['description'] ?? null,
             'address' => $validated['address'] ?? null,
             'city' => $validated['city'],
@@ -171,11 +189,15 @@ class BusinessController extends Controller
             'city' => 'required|string|max:100',
         ]);
 
+        // Determine business category based on business type
+        $businessCategory = $this->getBusinessCategory($validated['business_type']);
+        
         $updateData = [
             'name' => $validated['name'],
             'email' => $validated['email'],
             'phone' => $validated['phone'],
             'business_type' => $validated['business_type'],
+            'business_category' => $businessCategory,
             'description' => $validated['description'],
             'address' => $validated['address'],
             'city' => $validated['city'],
@@ -234,14 +256,61 @@ class BusinessController extends Controller
             return back()->with('error', 'Failed to delete business: ' . $e->getMessage());
         }
     }
-    public function show(Business $business)
-    {
-        // Ensure the business is active
-        if (!$business->getAttribute('active')) {
-            return redirect()->route('business.index')->with('error', 'This business is not active.');
-        }
 
-        return view('business.show', compact('business'));
+    public function show($slug)
+    {
+        $business = Business::where('slug', $slug)
+            ->where('active', true)
+            ->firstOrFail();
+
+        $products = $business->products()
+            ->where('is_active', true)
+            ->orderBy('name')
+            ->get();
+
+        $services = $business->services()
+            ->orderBy('name')
+            ->get();
+
+        return view('business.show', compact('business', 'products', 'services'));
+    }
+    
+    /**
+     * Get business category based on business type
+     */
+    private function getBusinessCategory($businessType)
+    {
+        $typeToCategory = [
+            // Product types
+            'retail' => 'product',
+            'online' => 'product',
+            'fashion' => 'product',
+            'electronics' => 'product',
+            'grocery' => 'product',
+            'beauty' => 'product',
+            'wholesale' => 'product',
+            'other_product' => 'product',
+            
+            // Service types
+            'consulting' => 'service',
+            'beauty_service' => 'service',
+            'repair' => 'service',
+            'cleaning' => 'service',
+            'education' => 'service',
+            'healthcare' => 'service',
+            'professional' => 'service',
+            'other_service' => 'service',
+            
+            // Hybrid types
+            'restaurant' => 'hybrid',
+            'salon' => 'hybrid',
+            'auto_service' => 'hybrid',
+            'retail_service' => 'hybrid',
+            'tech_service' => 'hybrid',
+            'other_hybrid' => 'hybrid',
+        ];
+        
+        return $typeToCategory[$businessType] ?? 'product';
     }
 
 }

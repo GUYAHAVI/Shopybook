@@ -11,6 +11,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use App\Models\Business; // Added this import for the new method
 
 class ServiceBookingController extends Controller
 {
@@ -72,6 +73,8 @@ class ServiceBookingController extends Controller
             'customer_id' => 'nullable|exists:customers,id',
             'payment_method' => 'required|string|in:cash,mpesa,card,bank_transfer,other',
             'notes' => 'nullable|string',
+            'discount_type' => 'nullable|string|in:none,percentage,fixed',
+            'discount_value' => 'nullable|numeric|min:0',
         ]);
 
         DB::transaction(function () use ($request, $business) {
@@ -99,11 +102,30 @@ class ServiceBookingController extends Controller
                 ];
             }
 
+            // Calculate discount amounts
+            $discountType = $request->input('discount_type', 'none');
+            $discountValue = $request->input('discount_value', 0);
+            $subtotal = $totalAmount;
+            
+            $discountAmount = 0;
+            if ($discountType === 'percentage' && $discountValue > 0) {
+                $discountAmount = ($subtotal * $discountValue) / 100;
+            } elseif ($discountType === 'fixed' && $discountValue > 0) {
+                $discountAmount = min($discountValue, $subtotal); // Don't exceed subtotal
+            }
+            
+            $finalAmount = max(0, $subtotal - $discountAmount); // Don't go below 0
+
             // Create the service booking
             $serviceBooking = ServiceBooking::create([
                 'business_id' => $business->id,
                 'customer_id' => $request->input('customer_id'),
                 'total_amount' => $totalAmount,
+                'discount_type' => $discountType,
+                'discount_value' => $discountValue > 0 ? $discountValue : null,
+                'discount_amount' => $discountAmount > 0 ? $discountAmount : null,
+                'subtotal' => $subtotal,
+                'final_amount' => $finalAmount,
                 'payment_status' => 'paid',
                 'payment_method' => $request->input('payment_method'),
                 'notes' => $request->input('notes'),
@@ -322,5 +344,141 @@ class ServiceBookingController extends Controller
 
         return redirect()->route('service-bookings.show', $serviceBooking)
             ->with('success', 'Service booking marked as complete.');
+    }
+
+    /**
+     * Store a public service booking from business show page
+     */
+    public function storePublic(Request $request)
+    {
+        $request->validate([
+            'business_id' => 'required|exists:businesses,id',
+            'service_id' => 'required|exists:services,id',
+            'customer_name' => 'required|string|max:255',
+            'customer_phone' => 'required|string|max:20',
+            'customer_email' => 'nullable|email|max:255',
+            'booking_date' => 'required|date|after_or_equal:today',
+            'booking_time' => 'required|date_format:H:i',
+            'special_requirements' => 'nullable|string|max:1000',
+        ]);
+
+        try {
+            DB::transaction(function () use ($request) {
+                // Get the business and service
+                $business = Business::findOrFail($request->business_id);
+                $service = Service::findOrFail($request->service_id);
+                
+                // Verify the service belongs to the business
+                if ($service->business_id !== $business->id) {
+                    throw new \Exception('Service does not belong to this business.');
+                }
+
+                // Create or find customer
+                $customer = Customer::firstOrCreate(
+                    [
+                        'business_id' => $business->id,
+                        'phone' => $request->customer_phone
+                    ],
+                    [
+                        'name' => $request->customer_name,
+                        'email' => $request->customer_email
+                    ]
+                );
+
+                // Create the service booking without staff assignment
+                $serviceBooking = ServiceBooking::create([
+                    'business_id' => $business->id,
+                    'customer_id' => $customer->id,
+                    'total_amount' => $service->price,
+                    'subtotal' => $service->price,
+                    'final_amount' => $service->price,
+                    'payment_status' => 'pending',
+                    'payment_method' => 'pending',
+                    'notes' => $request->special_requirements,
+                    'service_date' => $request->booking_date . ' ' . $request->booking_time,
+                ]);
+
+                // Create the service item without staff assignment
+                ServiceItem::create([
+                    'service_booking_id' => $serviceBooking->id,
+                    'service_id' => $service->id,
+                    'staff_id' => null, // No staff assigned initially
+                    'amount' => $service->price,
+                    'commission_rate' => $service->commission_rate,
+                    'commission_amount' => ($service->price * $service->commission_rate) / 100,
+                    'sequence_order' => 1,
+                    'notes' => $request->special_requirements,
+                ]);
+
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Service booking created successfully!',
+                    'booking_id' => $serviceBooking->id
+                ]);
+            });
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Service booked successfully! The business will assign staff and contact you to confirm your appointment.'
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error booking service: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Assign staff to a service item
+     */
+    public function assignStaff(Request $request)
+    {
+        $request->validate([
+            'service_item_id' => 'required|exists:service_items,id',
+            'staff_id' => 'required|exists:staff,id',
+        ]);
+
+        try {
+            $serviceItem = ServiceItem::findOrFail($request->service_item_id);
+            
+            // Check if the service item belongs to the current business
+            $business = Auth::user()->business;
+            if ($serviceItem->serviceBooking->business_id !== $business->id) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Unauthorized access to this service item.'
+                ], 403);
+            }
+
+            // Check if the staff member belongs to the current business
+            $staff = Staff::where('id', $request->staff_id)
+                         ->where('business_id', $business->id)
+                         ->first();
+            
+            if (!$staff) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Selected staff member does not belong to this business.'
+                ], 400);
+            }
+
+            // Update the service item with the assigned staff
+            $serviceItem->update([
+                'staff_id' => $request->staff_id
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Staff assigned successfully!'
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error assigning staff: ' . $e->getMessage()
+            ], 500);
+        }
     }
 }

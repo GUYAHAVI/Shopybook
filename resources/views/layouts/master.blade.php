@@ -9,6 +9,7 @@
     <meta name="keywords" content="@yield('meta_keywords', 'business management software Kenya, small business platform, inventory management, M-Pesa integration, POS system Kenya')">
     <meta name="author" content="Shopybook">
     <meta name="robots" content="index, follow">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <link rel="canonical" href="{{ url()->current() }}">
 
     <!-- Open Graph Meta Tags -->
@@ -127,8 +128,21 @@
                         <li class="nav-item">
                             <a class="nav-link" href="#">Features</a>
                         </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="{{ route('businesses') }}">Businesses</a>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="businessDropdown" role="button"
+                                data-bs-toggle="dropdown" aria-expanded="false">
+                                Businesses
+                            </a>
+                            <ul class="dropdown-menu" aria-labelledby="businessDropdown"
+                                style="color:#020258 !important;">
+                                <li><a class="dropdown-item" href="{{ route('businesses') }}?type=product">Products</a></li>
+                                <li><a class="dropdown-item" href="{{ route('businesses') }}?type=service">Services</a></li>
+                                <li><a class="dropdown-item" href="{{ route('businesses') }}?type=hybrid">Hybrid</a></li>
+                                <li>
+                                    <hr class="dropdown-divider">
+                                </li>
+                                <li><a class="dropdown-item" href="{{ route('businesses') }}">All Businesses</a></li>
+                            </ul>
                         </li>
                         <li class="nav-item dropdown">
                             <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button"

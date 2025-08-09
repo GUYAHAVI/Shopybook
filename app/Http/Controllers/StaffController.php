@@ -45,7 +45,7 @@ class StaffController extends Controller
             'name' => 'required|string|max:255',
             'role' => 'required|string|max:255',
             'contact' => 'nullable|string|max:255',
-            'commission_rate' => 'nullable|numeric|min:0|max:100',
+            'salary' => 'nullable|integer|min:0',
         ]);
 
         Staff::create([
@@ -53,7 +53,7 @@ class StaffController extends Controller
             'name' => $validated['name'],
             'role' => $validated['role'],
             'contact' => $validated['contact'],
-            'commission_rate' => $validated['commission_rate'],
+            'salary' => $validated['salary'],
         ]);
 
         return redirect()->route('staff.index')
@@ -80,7 +80,7 @@ class StaffController extends Controller
             'name' => 'required|string|max:255',
             'role' => 'required|string|max:255',
             'contact' => 'nullable|string|max:255',
-            'commission_rate' => 'nullable|numeric|min:0|max:100',
+            'salary' => 'nullable|integer|min:0',
         ]);
 
         $staff->update($validated);
@@ -122,42 +122,153 @@ class StaffController extends Controller
             return redirect()->route('business.choose-type');
         }
 
-        // Get date range from request or default to current month
-        $startDate = $request->input('start_date', now()->startOfMonth()->format('Y-m-d'));
-        $endDate = $request->input('end_date', now()->endOfMonth()->format('Y-m-d'));
+        $startDate = $request->get('start_date', now()->startOfMonth()->format('Y-m-d'));
+        $endDate = $request->get('end_date', now()->endOfMonth()->format('Y-m-d'));
 
-        $staff = Staff::where('business_id', $business->id)
+        $staffCommissions = Staff::where('business_id', $business->id)
             ->with(['serviceItems' => function ($query) use ($startDate, $endDate) {
-                $query->whereHas('serviceBooking', function ($subQuery) use ($startDate, $endDate) {
-                    $subQuery->whereBetween('created_at', [$startDate . ' 00:00:00', $endDate . ' 23:59:59']);
-                })
-                ->with(['service', 'serviceBooking']);
+                $query->whereBetween('created_at', [$startDate, $endDate]);
             }])
-            ->get();
+            ->get()
+            ->map(function ($staff) {
+                $totalCommission = $staff->serviceItems->sum('amount');
+                $serviceCount = $staff->serviceItems->count();
+                
+                return [
+                    'staff' => $staff,
+                    'total_commission' => $totalCommission,
+                    'service_count' => $serviceCount,
+                    'salary' => $staff->salary ?? 0,
+                    'total_earnings' => ($staff->salary ?? 0) + $totalCommission,
+                ];
+            });
 
-        // Calculate commission summaries
-        $staffCommissions = $staff->map(function ($staffMember) use ($startDate, $endDate) {
-            $serviceItems = $staffMember->serviceItems;
-            $totalCommission = $serviceItems->sum('commission_amount');
-            $serviceCount = $serviceItems->count();
+        $totalCommissions = $staffCommissions->sum('total_commission');
+        $totalEarnings = $staffCommissions->sum('total_earnings');
 
-            return [
-                'staff' => $staffMember,
-                'total_commission' => $totalCommission,
-                'service_count' => $serviceCount,
-                'service_items' => $serviceItems,
-                'today_commission' => $staffMember->todayCommission,
-                'this_month_commission' => $staffMember->thisMonthCommission,
+        return view('commission-reports', compact(
+            'staffCommissions',
+            'totalCommissions',
+            'totalEarnings',
+            'startDate',
+            'endDate'
+        ));
+    }
+
+    public function salaryCalculations(Request $request)
+    {
+        $business = Auth::user()->business;
+        if (!$business) {
+            return redirect()->route('business.choose-type');
+        }
+
+        $selectedMonth = $request->get('month', now()->format('Y-m'));
+        $selectedStaffId = $request->get('staff_id');
+        
+        $startDate = \Carbon\Carbon::parse($selectedMonth . '-01')->startOfMonth();
+        $endDate = $startDate->copy()->endOfMonth();
+
+        $query = Staff::where('business_id', $business->id);
+        
+        if ($selectedStaffId) {
+            $query->where('id', $selectedStaffId);
+        }
+
+        $allStaff = Staff::where('business_id', $business->id)->get();
+
+        $salaryCalculations = $query->get()->map(function ($staff) use ($startDate, $endDate) {
+            // Get commissions for the month
+            $commissions = $staff->serviceItems()
+                ->whereBetween('created_at', [$startDate, $endDate])
+                ->sum('amount');
+            
+            $servicesCount = $staff->serviceItems()
+                ->whereBetween('created_at', [$startDate, $endDate])
+                ->count();
+
+            // Get salary advances for the month
+            $advances = $staff->salaryAdvances()
+                ->whereBetween('advance_date', [$startDate, $endDate])
+                ->where('status', 'paid')
+                ->sum('amount');
+            
+            $advancesCount = $staff->salaryAdvances()
+                ->whereBetween('advance_date', [$startDate, $endDate])
+                ->where('status', 'paid')
+                ->count();
+
+            // Calculate net salary
+            $baseSalary = $staff->salary ?? 0;
+            $netSalary = $baseSalary + $commissions - $advances;
+
+            return (object) [
+                'staff' => $staff,
+                'base_salary' => $baseSalary,
+                'commissions' => $commissions,
+                'services_count' => $servicesCount,
+                'advances' => $advances,
+                'advances_count' => $advancesCount,
+                'net_salary' => $netSalary,
             ];
         });
 
-        $totalCommissions = $staffCommissions->sum('total_commission');
+        $totalNetSalaries = $salaryCalculations->sum('net_salary');
+        $totalCommissions = $salaryCalculations->sum('commissions');
+        $totalAdvances = $salaryCalculations->sum('advances');
 
-        return view('commission-reports', compact(
-            'staffCommissions', 
-            'totalCommissions', 
-            'startDate', 
-            'endDate'
+        return view('staff.salary-calculations', compact(
+            'salaryCalculations',
+            'allStaff',
+            'selectedMonth',
+            'selectedStaffId',
+            'totalNetSalaries',
+            'totalCommissions',
+            'totalAdvances'
+        ));
+    }
+
+    public function salaryDetails(Request $request, $staff)
+    {
+        $business = Auth::user()->business;
+        if (!$business) {
+            return redirect()->route('business.choose-type');
+        }
+
+        // $staff is already the Staff model instance from route model binding
+        if ($staff->business_id !== $business->id) {
+            abort(404);
+        }
+
+        $selectedMonth = $request->get('month', now()->format('Y-m'));
+        $startDate = \Carbon\Carbon::parse($selectedMonth . '-01')->startOfMonth();
+        $endDate = $startDate->copy()->endOfMonth();
+
+        // Get detailed commission breakdown
+        $commissionDetails = $staff->serviceItems()
+            ->whereBetween('created_at', [$startDate, $endDate])
+            ->with(['serviceBooking', 'service'])
+            ->get();
+
+        // Get detailed advances breakdown
+        $advanceDetails = $staff->salaryAdvances()
+            ->whereBetween('advance_date', [$startDate, $endDate])
+            ->where('status', 'paid')
+            ->get();
+
+        $baseSalary = $staff->salary ?? 0;
+        $totalCommissions = $commissionDetails->sum('amount');
+        $totalAdvances = $advanceDetails->sum('amount');
+        $netSalary = $baseSalary + $totalCommissions - $totalAdvances;
+
+        return view('staff.salary-details', compact(
+            'staff',
+            'selectedMonth',
+            'baseSalary',
+            'commissionDetails',
+            'advanceDetails',
+            'totalCommissions',
+            'totalAdvances',
+            'netSalary'
         ));
     }
 }

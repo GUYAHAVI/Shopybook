@@ -1,184 +1,261 @@
 @extends('layouts.dash')
 
+@section('title', 'Promotions')
+
 @section('content')
-<div class="container-fluid">
-    <!-- Page Heading -->
-    <div class="d-sm-flex align-items-center justify-content-between mb-4">
-        <h1 class="h3 mb-0 text-gray-800">Promotions</h1>
-        <a href="{{ route('marketing.promotions.create') }}" class="btn btn-primary btn-sm">
-            <i class="fas fa-plus fa-sm"></i> Create Promotion
+<!-- Sub-navigation for Marketing -->
+<div class="sub-navigation mb-4">
+    <div class="nav-tabs">
+        <a href="{{ route('marketing.social-media') }}" class="nav-tab">
+            <i class="fas fa-share-alt me-1"></i> Social Media
+        </a>
+        <a href="{{ route('marketing.promotions') }}" class="nav-tab active">
+            <i class="fas fa-bullhorn me-1"></i> Promotions
+        </a>
+        <a href="{{ route('marketing.advertising') }}" class="nav-tab">
+            <i class="fas fa-ad me-1"></i> Advertising
+        </a>
+        <a href="{{ route('marketing.bulk-sms') }}" class="nav-tab">
+            <i class="fas fa-sms me-1"></i> Bulk SMS
         </a>
     </div>
+</div>
 
-    @if(session('success'))
-        <div class="alert alert-success alert-dismissible fade show" role="alert">
-            {{ session('success') }}
-            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                <span aria-hidden="true">&times;</span>
-            </button>
-        </div>
-    @endif
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h3 mb-0" style="color: var(--text-primary);">Promotions</h1>
+    <a href="{{ route('marketing.create-promotion') }}" class="btn btn-primary">
+        <i class="fas fa-plus me-2"></i>Create Promotion
+    </a>
+</div>
 
-    <!-- Promotions Cards -->
-    <div class="row">
-        @forelse($promotions as $promotion)
-        <div class="col-xl-4 col-md-6 mb-4">
-            <div class="card border-left-primary shadow h-100 py-2">
-                <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="d-flex justify-content-between align-items-start">
-                                <div>
-                                    <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
-                                        {{ $promotion->discount_type === 'percentage' ? 'Percentage Discount' : 'Fixed Amount' }}
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card shadow mb-4" style="background: var(--card-bg); border: 1px solid var(--border-color);">
+            <div class="card-header py-3" style="background: var(--bg-tertiary); border-bottom: 1px solid var(--border-color);">
+                <h6 class="m-0 font-weight-bold" style="color: var(--text-primary);">Active Promotions</h6>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover" style="color: var(--text-primary);">
+                        <thead style="background: var(--bg-tertiary);">
+                            <tr>
+                                <th style="color: var(--text-primary);">Promotion</th>
+                                <th style="color: var(--text-primary);">Discount</th>
+                                <th style="color: var(--text-primary);">Status</th>
+                                <th style="color: var(--text-primary);">Expires</th>
+                                <th style="color: var(--text-primary);">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <div class="promotion-icon me-3" style="background: var(--primary-color); color: var(--white); width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                                            <i class="fas fa-tag"></i>
+                                        </div>
+                                        <div>
+                                            <h6 class="mb-0" style="color: var(--text-primary);">Summer Sale</h6>
+                                            <small style="color: var(--text-muted);">All products</small>
+                                        </div>
                                     </div>
-                                    <div class="h5 mb-0 font-weight-bold text-gray-800">{{ $promotion->name }}</div>
-                                    <div class="text-sm text-gray-600 mb-2">{{ $promotion->code }}</div>
-                                </div>
-                                <div class="text-right">
-                                    <span class="badge badge-{{ $promotion->isActive() ? 'success' : 'secondary' }}">
-                                        {{ $promotion->isActive() ? 'Active' : 'Inactive' }}
-                                    </span>
-                                </div>
-                            </div>
-                            
-                            <div class="text-sm text-gray-600 mb-2">
-                                <strong>{{ $promotion->discount_value }}{{ $promotion->discount_type === 'percentage' ? '%' : ' ₦' }}</strong> off
-                                @if($promotion->minimum_amount)
-                                    on orders above ₦{{ number_format($promotion->minimum_amount) }}
-                                @endif
-                            </div>
-                            
-                            <div class="text-xs text-gray-500 mb-2">
-                                <i class="fas fa-calendar"></i> {{ $promotion->start_date->format('M d') }} - {{ $promotion->end_date->format('M d, Y') }}
-                            </div>
-                            
-                            @if($promotion->usage_limit)
-                            <div class="text-xs text-gray-500 mb-2">
-                                <i class="fas fa-users"></i> {{ $promotion->used_count }}/{{ $promotion->usage_limit }} used
-                            </div>
-                            @endif
-                            
-                            <div class="btn-group btn-group-sm" role="group">
-                                <a href="{{ route('marketing.promotions.edit', $promotion) }}" class="btn btn-outline-primary">
-                                    <i class="fas fa-edit"></i>
-                                </a>
-                                <button type="button" class="btn btn-outline-danger" onclick="deletePromotion({{ $promotion->id }})">
-                                    <i class="fas fa-trash"></i>
-                                </button>
-                            </div>
+                                </td>
+                                <td>
+                                    <span class="badge bg-success" style="background: var(--success-color) !important;">20% OFF</span>
+                                </td>
+                                <td>
+                                    <span class="badge bg-success" style="background: var(--success-color) !important;">Active</span>
+                                </td>
+                                <td style="color: var(--text-secondary);">Dec 31, 2024</td>
+                                <td>
+                                    <div class="btn-group" role="group">
+                                        <button class="btn btn-sm btn-outline-primary">Edit</button>
+                                        <button class="btn btn-sm btn-outline-danger">Delete</button>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <div class="promotion-icon me-3" style="background: var(--warning-color); color: var(--white); width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                                            <i class="fas fa-gift"></i>
+                                        </div>
+                                        <div>
+                                            <h6 class="mb-0" style="color: var(--text-primary);">Buy One Get One</h6>
+                                            <small style="color: var(--text-muted);">Selected items</small>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="badge bg-warning" style="background: var(--warning-color) !important;">BOGO</span>
+                                </td>
+                                <td>
+                                    <span class="badge bg-success" style="background: var(--success-color) !important;">Active</span>
+                                </td>
+                                <td style="color: var(--text-secondary);">Jan 15, 2025</td>
+                                <td>
+                                    <div class="btn-group" role="group">
+                                        <button class="btn btn-sm btn-outline-primary">Edit</button>
+                                        <button class="btn btn-sm btn-outline-danger">Delete</button>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-4">
+        <div class="card shadow mb-4" style="background: var(--card-bg); border: 1px solid var(--border-color);">
+            <div class="card-header py-3" style="background: var(--bg-tertiary); border-bottom: 1px solid var(--border-color);">
+                <h6 class="m-0 font-weight-bold" style="color: var(--text-primary);">Promotion Stats</h6>
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-6 mb-3">
+                        <div class="stat-card">
+                            <h3 class="mb-0" style="color: var(--text-primary);">2</h3>
+                            <small style="color: var(--text-muted);">Active</small>
+                        </div>
+                    </div>
+                    <div class="col-6 mb-3">
+                        <div class="stat-card">
+                            <h3 class="mb-0" style="color: var(--text-primary);">15</h3>
+                            <small style="color: var(--text-muted);">Total Used</small>
+                        </div>
+                    </div>
+                    <div class="col-6 mb-3">
+                        <div class="stat-card">
+                            <h3 class="mb-0" style="color: var(--success-color);">KSh 1,250</h3>
+                            <small style="color: var(--text-muted);">Revenue</small>
+                        </div>
+                    </div>
+                    <div class="col-6 mb-3">
+                        <div class="stat-card">
+                            <h3 class="mb-0" style="color: var(--warning-color);">KSh 320</h3>
+                            <small style="color: var(--text-muted);">Discounts</small>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-        @empty
-        <div class="col-12">
-            <div class="card shadow">
-                <div class="card-body text-center py-5">
-                    <i class="fas fa-tag fa-3x text-gray-300 mb-3"></i>
-                    <h5 class="text-gray-500">No promotions yet</h5>
-                    <p class="text-gray-400">Create your first promotion to start attracting customers</p>
-                    <a href="{{ route('marketing.promotions.create') }}" class="btn btn-primary">
-                        <i class="fas fa-plus"></i> Create Promotion
+        
+        <div class="card shadow" style="background: var(--card-bg); border: 1px solid var(--border-color);">
+            <div class="card-header py-3" style="background: var(--bg-tertiary); border-bottom: 1px solid var(--border-color);">
+                <h6 class="m-0 font-weight-bold" style="color: var(--text-primary);">Quick Actions</h6>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <a href="{{ route('marketing.create-promotion') }}" class="btn btn-primary">
+                        <i class="fas fa-plus me-2"></i>New Promotion
                     </a>
+                    <button class="btn btn-outline-primary">
+                        <i class="fas fa-chart-line me-2"></i>View Analytics
+                    </button>
+                    <button class="btn btn-outline-secondary">
+                        <i class="fas fa-download me-2"></i>Export Data
+                    </button>
                 </div>
             </div>
         </div>
-        @endforelse
-    </div>
-
-    <!-- Pagination -->
-    @if($promotions->hasPages())
-    <div class="d-flex justify-content-center">
-        {{ $promotions->links() }}
-    </div>
-    @endif
-</div>
-
-<!-- Delete Confirmation Modal -->
-<div class="modal fade" id="deleteModal" tabindex="-1" role="dialog">
-    <div class="modal-dialog" role="document">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Delete Promotion</h5>
-                <button type="button" class="close" data-dismiss="modal">
-                    <span>&times;</span>
-                </button>
-            </div>
-            <div class="modal-body">
-                <p>Are you sure you want to delete this promotion? This action cannot be undone.</p>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
-                <form id="deleteForm" method="POST" style="display: inline;">
-                    @csrf
-                    @method('DELETE')
-                    <button type="submit" class="btn btn-danger">Delete</button>
-                </form>
-            </div>
-        </div>
     </div>
 </div>
-
-@endsection
-
-@push('scripts')
-<script>
-function deletePromotion(promotionId) {
-    if (confirm('Are you sure you want to delete this promotion?')) {
-        fetch(`/marketing/promotions/${promotionId}`, {
-            method: 'DELETE',
-            headers: {
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-                'Accept': 'application/json',
-                'Content-Type': 'application/json'
-            }
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                location.reload();
-            } else {
-                alert('Error deleting promotion');
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            alert('Error deleting promotion');
-        });
-    }
-}
-</script>
-@endpush
 
 <style>
-body, .container-fluid, .card, .main-content, .content {
-    background: #fff !important;
-    color: #020258 !important;
+.sub-navigation {
+    background: var(--card-bg);
+    border-radius: 0.75rem;
+    padding: 1rem;
+    border: 1px solid var(--border-color);
+    margin-bottom: 2rem;
 }
-.btn-primary {
-    background: #020258 !important;
-    color: #fff !important;
-    border: 2px solid #13e8e9 !important;
+
+.sub-navigation .nav-tabs {
+    display: flex;
+    gap: 1rem;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    flex-wrap: wrap;
 }
-.btn-primary:hover {
-    background: #13e8e9 !important;
-    color: #020258 !important;
-    border: 2px solid #020258 !important;
+
+.sub-navigation .nav-tab {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--text-muted);
+    text-decoration: none;
+    padding: 0.5rem 1rem;
+    border-radius: 0.5rem;
+    transition: all 0.2s ease;
+    border: 1px solid transparent;
 }
-.form-control {
-    background: #f8f9fa !important;
-    color: #020258 !important;
-    border: 2px solid #13e8e9 !important;
+
+.sub-navigation .nav-tab:hover {
+    color: var(--text-primary);
+    background: var(--bg-tertiary);
 }
-.form-control:focus {
-    border-color: #020258 !important;
-    box-shadow: 0 0 0 3px rgba(19, 232, 233, 0.1) !important;
+
+.sub-navigation .nav-tab.active {
+    color: var(--primary-color);
+    background: var(--primary-color);
+    color: var(--white);
 }
-.card-header {
-    background: #f8f9fa !important;
-    color: #020258 !important;
-    border-bottom: 1px solid #13e8e9 !important;
+
+.stat-card {
+    padding: 1rem;
+    border-radius: 0.5rem;
+    background: var(--bg-tertiary);
+    transition: all 0.2s ease;
 }
-</style> 
+
+.stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 6px -1px var(--shadow-color);
+}
+
+.table th {
+    border-top: none;
+    font-weight: 600;
+    font-size: 0.875rem;
+}
+
+.table td {
+    vertical-align: middle;
+    border-top: 1px solid var(--border-color);
+}
+
+.promotion-icon {
+    transition: all 0.2s ease;
+}
+
+.promotion-icon:hover {
+    transform: scale(1.1);
+}
+
+@media (max-width: 768px) {
+    .sub-navigation .nav-tabs {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    
+    .sub-navigation .nav-tab {
+        text-align: center;
+        padding: 0.75rem 1rem;
+    }
+    
+    .table-responsive {
+        font-size: 0.875rem;
+    }
+    
+    .btn-group {
+        flex-direction: column;
+        gap: 0.25rem;
+    }
+    
+    .btn-group .btn {
+        width: 100%;
+    }
+}
+</style>
+@endsection 

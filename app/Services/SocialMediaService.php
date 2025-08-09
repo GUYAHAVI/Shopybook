@@ -212,7 +212,14 @@ private function publishToLinkedIn(MarketingPost $post, SocialMediaAccount $acco
         ]);
         $accessToken = decrypt($account->getAttribute('access_token'));
         $content = $post->getAttribute('content');
-        $authorUrn = 'urn:li:person:' . $account->getAttribute('platform_user_id');
+        
+        // Determine the correct URN by querying LinkedIn API
+        $authorUrn = $this->getCorrectLinkedInURN($accessToken, $account);
+        
+        Log::debug('Determined LinkedIn URN', [
+            'urn' => $authorUrn,
+            'platform_user_id' => $account->getAttribute('platform_user_id')
+        ]);
         
         // Process hashtags
         if ($post->getAttribute('hashtags')) {
@@ -233,140 +240,213 @@ private function publishToLinkedIn(MarketingPost $post, SocialMediaAccount $acco
         if (count($mediaFiles) > 0) {
             foreach ($mediaFiles as $mediaFile) {
                 try {
-                    // 1. Register the image upload
-                    // Log the author URN being used
-                    Log::debug('LinkedIn registering image with owner', [
-                        'author_urn' => $authorUrn,
-                        'platform_user_id' => $account->getAttribute('platform_user_id')
-                    ]);
-                    
-                    $registerResponse = Http::withToken($accessToken)
-                        ->withHeaders([
-                            'X-Restli-Protocol-Version' => '2.0.0',
-                            'LinkedIn-Version' => '202307',
-                            'Content-Type' => 'application/json'
-                        ])
-                        ->post('https://api.linkedin.com/rest/images?action=initializeUpload', [
-                            'initializeUploadRequest' => [
-                                'owner' => $authorUrn,
-                            ]
-                        ]);
-
-                    if (!$registerResponse->successful()) {
-Log::error('LinkedIn image registration failed: Possible server error or malformed request.', [
-                            'status' => $registerResponse->status(),
-                            'response' => $registerResponse->body()
-                        ]);
-                        continue;
-                    }
-
-                    $responseData = $registerResponse->json();
-                    $uploadUrl = $responseData['value']['uploadUrl'] ?? null;
-                    $imageUrn = $responseData['value']['image'] ?? null;
-
-                    if (!$uploadUrl || !$imageUrn) {
-Log::error('LinkedIn image registration missing required fields: Check uploadUrl and imageUrn.', [
-                            'response' => $responseData
-                        ]);
-                        continue;
-                    }
-
-                    // 2. Upload the actual image file
                     $filePath = storage_path('app/public/' . str_replace('/storage/', '', $mediaFile));
                     
-                    // Debug file path and existence
-                    Log::debug('LinkedIn file path processing', [
-                        'original_media_file' => $mediaFile,
-                        'resolved_file_path' => $filePath,
-                        'file_exists' => file_exists($filePath),
-                        'file_size' => file_exists($filePath) ? filesize($filePath) : 'N/A'
-                    ]);
-                    
                     if (!file_exists($filePath)) {
-                        Log::error('LinkedIn image file not found', [
+                        Log::error('LinkedIn media file not found', [
                             'media_file' => $mediaFile,
                             'file_path' => $filePath
                         ]);
                         continue;
                     }
                     
-                    $imageData = file_get_contents($filePath);
+                    // Determine if this is a video or image
+                    $mimeType = mime_content_type($filePath);
+                    $isVideo = strpos($mimeType, 'video/') === 0;
                     
-                    $uploadResponse = Http::withHeaders([
-                        'Content-Type' => 'application/octet-stream',
-                        'Authorization' => 'Bearer ' . $accessToken
-                    ])->withBody($imageData, 'application/octet-stream')
-                      ->put($uploadUrl);
-
-                    if (!$uploadResponse->successful()) {
-Log::error('LinkedIn image upload failed: Upload endpoint might be incorrect.', [
-                            'status' => $uploadResponse->status(),
-                            'response' => $uploadResponse->body()
-                        ]);
-                        continue;
-                    }
-
-                    // Skip verification - trust LinkedIn to handle image processing
-                    // Add image directly to media items after successful upload
-                    $mediaItems[] = [
-                        'status' => 'READY',
-                        'media' => $imageUrn,
-                        'originalUrl' => config('app.url'),
-                        'title' => ['text' => 'Post Image']
-                    ];
-                    $shareMediaCategory = 'IMAGE';
-                    
-                    Log::debug('LinkedIn image uploaded and added to post', [
-                        'urn' => $imageUrn,
-                        'upload_status' => $uploadResponse->status()
+                    Log::debug('LinkedIn media file detected', [
+                        'file' => $mediaFile,
+                        'mime_type' => $mimeType,
+                        'is_video' => $isVideo,
+                        'file_size' => filesize($filePath)
                     ]);
                     
-                    // Add a small delay between uploads to avoid rate limiting
-                    usleep(500000); // 0.5 seconds
+                    if ($isVideo) {
+                        // Process video file
+                        $videoUrn = $this->uploadLinkedInVideo($accessToken, $authorUrn, $filePath);
+                        if ($videoUrn) {
+                            $mediaItems[] = [
+                                'status' => 'READY',
+                                'media' => $videoUrn,
+                                'type' => 'video'
+                            ];
+                            $shareMediaCategory = 'VIDEO';
+                            
+                            Log::debug('LinkedIn video uploaded successfully', [
+                                'urn' => $videoUrn
+                            ]);
+                        }
+                    } else {
+                        // Process image file (existing logic)
+                        Log::debug('LinkedIn registering image with owner', [
+                            'author_urn' => $authorUrn,
+                            'platform_user_id' => $account->getAttribute('platform_user_id')
+                        ]);
+                        
+                        $registerResponse = Http::withToken($accessToken)
+                            ->withHeaders([
+                                'X-Restli-Protocol-Version' => '2.0.0',
+                                'LinkedIn-Version' => '202307',
+                                'Content-Type' => 'application/json'
+                            ])
+                            ->post('https://api.linkedin.com/rest/images?action=initializeUpload', [
+                                'initializeUploadRequest' => [
+                                    'owner' => $authorUrn,
+                                ]
+                            ]);
+
+                        if (!$registerResponse->successful()) {
+                            Log::error('LinkedIn image registration failed', [
+                                'status' => $registerResponse->status(),
+                                'response' => $registerResponse->body()
+                            ]);
+                            continue;
+                        }
+
+                        $responseData = $registerResponse->json();
+                        $uploadUrl = $responseData['value']['uploadUrl'] ?? null;
+                        $imageUrn = $responseData['value']['image'] ?? null;
+
+                        if (!$uploadUrl || !$imageUrn) {
+                            Log::error('LinkedIn image registration missing required fields', [
+                                'response' => $responseData
+                            ]);
+                            continue;
+                        }
+
+                        $imageData = file_get_contents($filePath);
+                        
+                        $uploadResponse = Http::withHeaders([
+                            'Content-Type' => 'application/octet-stream',
+                            'Authorization' => 'Bearer ' . $accessToken
+                        ])->withBody($imageData, 'application/octet-stream')
+                          ->put($uploadUrl);
+
+                        if (!$uploadResponse->successful()) {
+                            Log::error('LinkedIn image upload failed', [
+                                'status' => $uploadResponse->status(),
+                                'response' => $uploadResponse->body()
+                            ]);
+                            continue;
+                        }
+
+                        $mediaItems[] = [
+                            'status' => 'READY',
+                            'media' => $imageUrn,
+                            'type' => 'image',
+                            'title' => ['text' => 'Post Image']
+                        ];
+                        $shareMediaCategory = 'IMAGE';
+                        
+                        Log::debug('LinkedIn image uploaded successfully', [
+                            'urn' => $imageUrn
+                        ]);
+                    }
+                    
+                    // Add delay to ensure processing
+                    sleep(2);
+                    
                 } catch (\Exception $e) {
-                    Log::error('Exception during LinkedIn image processing', [
+                    Log::error('Exception during LinkedIn media processing', [
                         'error' => $e->getMessage(),
+                        'file' => $mediaFile,
                         'trace' => $e->getTraceAsString()
                     ]);
                 }
             }
         }
 
-        // Build the share content
-        $shareContent = [
-            'shareCommentary' => [
-                'text' => $content
-            ],
-            'shareMediaCategory' => $shareMediaCategory
-        ];
-
-        // Only add media if we have valid items
-        if ($shareMediaCategory === 'IMAGE' && !empty($mediaItems)) {
-            $shareContent['media'] = $mediaItems;
-        }
-
-        // Final post payload
-        $shareData = [
+        // Build the post content using REST API format
+        $postData = [
             'author' => $authorUrn,
-            'lifecycleState' => 'PUBLISHED',
-            'specificContent' => [
-                'com.linkedin.ugc.ShareContent' => $shareContent
-            ],
-            'visibility' => [
-                'com.linkedin.ugc.MemberNetworkVisibility' => 'PUBLIC'
-            ]
+            'commentary' => $content,
+            'visibility' => 'PUBLIC',
+            'lifecycleState' => 'PUBLISHED'
         ];
 
-        Log::debug('Final LinkedIn post payload', ['payload' => $shareData]);
+        // Add media if we have content
+        if (!empty($mediaItems)) {
+            // Check if we have videos
+            $hasVideo = collect($mediaItems)->contains('type', 'video');
+            $hasImages = collect($mediaItems)->contains('type', 'image');
+            
+            if ($hasVideo && !$hasImages) {
+                // Video post (LinkedIn only supports one video per post)
+                $videoItem = collect($mediaItems)->where('type', 'video')->first();
+                $postData['content'] = [
+                    'media' => [
+                        'title' => 'Video Post',
+                        'id' => $videoItem['media']
+                    ]
+                ];
+                Log::debug('LinkedIn video post structure', [
+                    'video_urn' => $videoItem['media']
+                ]);
+            } elseif ($hasImages && !$hasVideo) {
+                // Image post(s)
+                $imageItems = collect($mediaItems)->where('type', 'image')->values()->toArray();
+                
+                if (count($imageItems) === 1) {
+                    // Single image post
+                    $postData['content'] = [
+                        'media' => [
+                            'title' => 'Post with Image',
+                            'id' => $imageItems[0]['media']
+                        ]
+                    ];
+                } else {
+                    // Multiple images - create carousel
+                    $carouselItems = [];
+                    foreach ($imageItems as $index => $imageItem) {
+                        $carouselItems[] = [
+                            'id' => $imageItem['media'],
+                            'title' => 'Image ' . ($index + 1)
+                        ];
+                    }
+                    
+                    $postData['content'] = [
+                        'multiImage' => [
+                            'images' => $carouselItems
+                        ]
+                    ];
+                }
+            } else {
+                // Mixed content - LinkedIn doesn't support this, use first video or first image
+                Log::warning('LinkedIn mixed media detected, using first item only');
+                $firstItem = $mediaItems[0];
+                $postData['content'] = [
+                    'media' => [
+                        'title' => $firstItem['type'] === 'video' ? 'Video Post' : 'Post with Image',
+                        'id' => $firstItem['media']
+                    ]
+                ];
+            }
+            
+            Log::debug('LinkedIn media content structure', [
+                'media_count' => count($mediaItems),
+                'has_video' => $hasVideo,
+                'has_images' => $hasImages,
+                'content_structure' => $postData['content']
+            ]);
+        }
+        
+        // Add required distribution field
+        $postData['distribution'] = [
+            'feedDistribution' => 'MAIN_FEED',
+            'targetEntities' => [],
+            'thirdPartyDistributionChannels' => []
+        ];
 
-        // Make the API request
+        Log::debug('Final LinkedIn post payload', ['payload' => $postData]);
+
+        // Make the API request using REST API
         $response = Http::withToken($accessToken)
             ->withHeaders([
-                'X-Restli-Protocol-Version' => '2.0.0',
                 'LinkedIn-Version' => '202307',
+                'X-Restli-Protocol-Version' => '2.0.0',
                 'Content-Type' => 'application/json'
             ])
-            ->post('https://api.linkedin.com/v2/ugcPosts', $shareData);
+            ->post('https://api.linkedin.com/rest/posts', $postData);
 
         $responseData = $response->json();
         $statusCode = $response->status();
@@ -374,13 +454,50 @@ Log::error('LinkedIn image upload failed: Upload endpoint might be incorrect.', 
         if ($response->successful()) {
             Log::info('LinkedIn post successful', [
                 'post_id' => $responseData['id'] ?? null,
-                'shareMediaCategory' => $shareMediaCategory
+                'has_media' => !empty($mediaItems)
             ]);
             return [
                 'success' => true,
                 'post_id' => $responseData['id'] ?? null,
                 'message' => 'Posted to LinkedIn successfully'
             ];
+        }
+
+        // If we get an error and have media, try text-only as fallback
+        if (($statusCode === 400 || $statusCode === 422) && !empty($mediaItems)) {
+            
+            Log::warning('LinkedIn error with images, trying text-only fallback', [
+                'status' => $statusCode,
+                'response' => $responseData
+            ]);
+            
+            // Retry with text-only post using REST API
+            $fallbackPostData = [
+                'author' => $authorUrn,
+                'commentary' => $content . ' (Images could not be attached due to API limitations)',
+                'visibility' => 'PUBLIC',
+                'lifecycleState' => 'PUBLISHED'
+            ];
+            
+            $fallbackResponse = Http::withToken($accessToken)
+                ->withHeaders([
+                    'LinkedIn-Version' => '202307',
+                    'X-Restli-Protocol-Version' => '2.0.0',
+                    'Content-Type' => 'application/json'
+                ])
+                ->post('https://api.linkedin.com/rest/posts', $fallbackPostData);
+                
+            if ($fallbackResponse->successful()) {
+                $fallbackData = $fallbackResponse->json();
+                Log::info('LinkedIn fallback text-only post successful', [
+                    'post_id' => $fallbackData['id'] ?? null
+                ]);
+                return [
+                    'success' => true,
+                    'post_id' => $fallbackData['id'] ?? null,
+                    'message' => 'Posted to LinkedIn successfully (text-only due to image ownership issues)'
+                ];
+            }
         }
 
         Log::error('LinkedIn API error', [
@@ -576,5 +693,164 @@ Log::error('LinkedIn image upload failed: Upload endpoint might be incorrect.', 
         ];
 
         return $templates[$businessType] ?? $templates['retail'];
+    }
+
+    /**
+     * Determine the correct LinkedIn URN by querying the API
+     */
+    private function getCorrectLinkedInURN(string $accessToken, SocialMediaAccount $account): string
+    {
+        try {
+            // Query LinkedIn API to get user profile info using REST API
+            $response = Http::withToken($accessToken)
+                ->withHeaders([
+                    'LinkedIn-Version' => '202307',
+                    'X-Restli-Protocol-Version' => '2.0.0'
+                ])
+                ->get('https://api.linkedin.com/rest/people?q=viewer&projection=(id)');
+
+            if ($response->successful()) {
+                $userInfo = $response->json();
+                $userId = $userInfo['elements'][0]['id'] ?? null;
+                
+                Log::debug('LinkedIn people API response', [
+                    'user_info' => $userInfo,
+                    'extracted_user_id' => $userId
+                ]);
+                
+                if ($userId) {
+                    // Update the stored platform_user_id if it's different
+                    if ($account->getAttribute('platform_user_id') !== $userId) {
+                        $account->update(['platform_user_id' => $userId]);
+                        Log::debug('Updated LinkedIn platform_user_id', [
+                            'old_id' => $account->getAttribute('platform_user_id'),
+                            'new_id' => $userId
+                        ]);
+                    }
+                    
+                    return 'urn:li:person:' . $userId;
+                }
+            }
+            
+            Log::warning('LinkedIn people API call failed, using stored ID', [
+                'status' => $response->status(),
+                'response' => $response->body()
+            ]);
+            
+        } catch (\Exception $e) {
+            Log::error('Exception while determining LinkedIn URN', [
+                'error' => $e->getMessage()
+            ]);
+        }
+        
+        // Fallback to stored platform_user_id
+        return 'urn:li:person:' . $account->getAttribute('platform_user_id');
+    }
+    
+    /**
+     * Upload video to LinkedIn
+     */
+    private function uploadLinkedInVideo(string $accessToken, string $authorUrn, string $filePath): ?string
+    {
+        try {
+            $fileSize = filesize($filePath);
+            
+            // Step 1: Initialize video upload
+            Log::debug('LinkedIn initializing video upload', [
+                'author_urn' => $authorUrn,
+                'file_size' => $fileSize
+            ]);
+            
+            $initResponse = Http::withToken($accessToken)
+                ->withHeaders([
+                    'X-Restli-Protocol-Version' => '2.0.0',
+                    'LinkedIn-Version' => '202307',
+                    'Content-Type' => 'application/json'
+                ])
+                ->post('https://api.linkedin.com/rest/videos?action=initializeUpload', [
+                    'initializeUploadRequest' => [
+                        'owner' => $authorUrn,
+                        'fileSizeBytes' => $fileSize,
+                        'uploadCaptions' => false,
+                        'uploadThumbnail' => false
+                    ]
+                ]);
+
+            if (!$initResponse->successful()) {
+                Log::error('LinkedIn video initialization failed', [
+                    'status' => $initResponse->status(),
+                    'response' => $initResponse->body()
+                ]);
+                return null;
+            }
+
+            $initData = $initResponse->json();
+            $uploadUrl = $initData['value']['uploadInstructions'][0]['uploadUrl'] ?? null;
+            $videoUrn = $initData['value']['video'] ?? null;
+
+            if (!$uploadUrl || !$videoUrn) {
+                Log::error('LinkedIn video initialization missing data', [
+                    'response' => $initData
+                ]);
+                return null;
+            }
+
+            // Step 2: Upload the video file
+            Log::debug('LinkedIn uploading video file', [
+                'video_urn' => $videoUrn,
+                'upload_url' => $uploadUrl
+            ]);
+            
+            $videoData = file_get_contents($filePath);
+            
+            $uploadResponse = Http::withHeaders([
+                'Content-Type' => 'application/octet-stream',
+                'Authorization' => 'Bearer ' . $accessToken
+            ])->withBody($videoData, 'application/octet-stream')
+              ->put($uploadUrl);
+
+            if (!$uploadResponse->successful()) {
+                Log::error('LinkedIn video upload failed', [
+                    'status' => $uploadResponse->status(),
+                    'response' => $uploadResponse->body()
+                ]);
+                return null;
+            }
+
+            // Step 3: Finalize upload
+            $finalizeResponse = Http::withToken($accessToken)
+                ->withHeaders([
+                    'X-Restli-Protocol-Version' => '2.0.0',
+                    'LinkedIn-Version' => '202307',
+                    'Content-Type' => 'application/json'
+                ])
+                ->post('https://api.linkedin.com/rest/videos?action=finalizeUpload', [
+                    'finalizeUploadRequest' => [
+                        'video' => $videoUrn,
+                        'uploadToken' => $initData['value']['uploadInstructions'][0]['uploadToken'] ?? ''
+                    ]
+                ]);
+
+            if (!$finalizeResponse->successful()) {
+                Log::error('LinkedIn video finalization failed', [
+                    'status' => $finalizeResponse->status(),
+                    'response' => $finalizeResponse->body()
+                ]);
+                return null;
+            }
+
+            Log::debug('LinkedIn video upload completed', [
+                'video_urn' => $videoUrn
+            ]);
+            
+            return $videoUrn;
+            
+        } catch (\Exception $e) {
+            Log::error('Exception during LinkedIn video upload', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            return null;
+        }
     }
 }

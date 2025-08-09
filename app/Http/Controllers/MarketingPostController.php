@@ -23,11 +23,11 @@ class MarketingPostController extends Controller
     {
         $business = Auth::user()->business;
         
-        $connectedAccounts = SocialMediaAccount::where('business_id', $business->id)
+        $connectedAccounts = SocialMediaAccount::where('business_id', $business->getKey())
             ->where('is_active', true)
             ->get();
 
-        $recentPosts = MarketingPost::where('business_id', $business->id)
+        $recentPosts = MarketingPost::where('business_id', $business->getKey())
             ->with(['publications.socialMediaAccount'])
             ->orderBy('created_at', 'desc')
             ->paginate(20);
@@ -44,8 +44,10 @@ class MarketingPostController extends Controller
             $user = Auth::user();
             if (!$user->business) {
                 Log::channel('social_media')->error('User has no business', ['user_id' => $user->id]);
-                return redirect()->route('marketing.social-media')
-                    ->with('error', 'You must have a business profile to create posts.');
+                return response()->json([
+                    'success' => false,
+                    'message' => 'You must have a business profile to create posts.'
+                ], 400);
             }
             
             Log::channel('social_media')->debug('Validating request data', ['request_data' => $request->all()]);
@@ -54,107 +56,176 @@ class MarketingPostController extends Controller
                 'title' => 'required|string|max:255',
                 'content' => 'required|string|max:2200',
                 'hashtags' => 'nullable|string',
-                'target_platforms' => 'required|array|min:1',
-                'target_platforms.*' => 'string|in:facebook,instagram,twitter,linkedin',
-                'post_type' => 'required|in:immediate,scheduled',
+                'platforms' => 'required|string', // JSON string from frontend
+                'media_type' => 'required|in:none,upload,generate',
+                'media' => 'nullable|file|mimes:jpg,jpeg,png,gif,mp4,mov|max:10240',
+                'generated_video_url' => 'nullable|string|url',
+                'generated_video_id' => 'nullable|string',
                 'scheduled_at' => 'nullable|date|after:now',
-                'media.*' => 'nullable|file|mimes:jpg,jpeg,png,gif,mp4,mov|max:10240'
             ]);
             
             Log::channel('social_media')->info('Validation passed', ['validated_data' => $validatedData]);
 
             $business = $user->business;
-            Log::channel('social_media')->debug('Business loaded', ['business_id' => $business->id, 'is_premium' => $business->isPremium()]);
+            Log::channel('social_media')->debug('Business loaded', ['business_id' => $business->getKey(), 'is_premium' => $business->isPremium()]);
+            
+            // Parse platforms from JSON
+            $targetPlatforms = json_decode($validatedData['platforms'], true);
+            if (!is_array($targetPlatforms) || empty($targetPlatforms)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Please select at least one platform to post to.'
+                ], 400);
+            }
+            
+            // Validate platforms
+            $validPlatforms = ['facebook', 'instagram', 'twitter', 'linkedin'];
+            foreach ($targetPlatforms as $platform) {
+                if (!in_array($platform, $validPlatforms)) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => "Invalid platform: {$platform}"
+                    ], 400);
+                }
+            }
+            
+            // Check if user has connected accounts for selected platforms
+            $connectedAccounts = $business->socialMediaAccounts()
+                ->whereIn('platform', $targetPlatforms)
+                ->where('is_active', true)
+                ->get();
+                
+            if ($connectedAccounts->count() !== count($targetPlatforms)) {
+                $missingPlatforms = array_diff($targetPlatforms, $connectedAccounts->pluck('platform')->toArray());
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Please connect your accounts for: ' . implode(', ', $missingPlatforms)
+                ], 400);
+            }
             
         } catch (\Illuminate\Validation\ValidationException $e) {
             Log::channel('social_media')->error('Validation failed', [
                 'errors' => $e->errors(),
                 'user_id' => Auth::id()
             ]);
-            return redirect()->back()->withErrors($e->errors())->withInput();
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation failed',
+                'errors' => $e->errors()
+            ], 422);
         } catch (\Exception $e) {
             Log::channel('social_media')->error('Unexpected error in store method start', [
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString(),
                 'user_id' => Auth::id()
             ]);
-            return redirect()->route('marketing.social-media')
-                ->with('error', 'An error occurred: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'An error occurred: ' . $e->getMessage()
+            ], 500);
         }
 
-        // Handle media uploads
+        // Handle media files based on media type
         $mediaFiles = [];
-        if ($request->hasFile('media')) {
-            Log::channel('social_media')->debug('Processing media files', ['count' => count($request->file('media'))]);
-            foreach ($request->file('media') as $file) {
-                try {
-                    $path = $file->store('marketing-posts/' . $business->id, 'public');
-                    $fullUrl = Storage::url($path);
-                    $mediaFiles[] = $fullUrl;
-                    
-                    // Enhanced logging for media file storage
-                    Log::channel('social_media')->debug('Media file stored with details', [
-                        'original_name' => $file->getClientOriginalName(),
-                        'stored_path' => $path,
-                        'full_url' => $fullUrl,
-                        'file_size' => $file->getSize(),
-                        'mime_type' => $file->getMimeType(),
-                        'storage_disk_path' => storage_path('app/public/' . $path)
-                    ]);
-                } catch (\Exception $e) {
-                    Log::channel('social_media')->error('Media upload failed', [
-                        'error' => $e->getMessage(),
-                        'file' => $file->getClientOriginalName(),
-                        'trace' => $e->getTraceAsString()
-                    ]);
-                }
+        
+        if ($validatedData['media_type'] === 'upload' && $request->hasFile('media')) {
+            Log::channel('social_media')->debug('Processing uploaded media files', ['count' => 1]);
+            try {
+                $file = $request->file('media');
+                $path = $file->store('marketing-posts/' . $business->getKey(), 'public');
+                $fullUrl = Storage::url($path);
+                $mediaFiles[] = $fullUrl;
+                
+                Log::channel('social_media')->debug('Media file stored with details', [
+                    'original_name' => $file->getClientOriginalName(),
+                    'stored_path' => $path,
+                    'full_url' => $fullUrl,
+                    'file_size' => $file->getSize(),
+                    'mime_type' => $file->getMimeType()
+                ]);
+            } catch (\Exception $e) {
+                Log::channel('social_media')->error('Failed to store media file', [
+                    'error' => $e->getMessage(),
+                    'file_name' => $file->getClientOriginalName() ?? 'unknown'
+                ]);
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Failed to upload media file: ' . $e->getMessage()
+                ], 500);
             }
+        } elseif ($validatedData['media_type'] === 'generate' && $validatedData['generated_video_url']) {
+            // Use generated video URL
+            $mediaFiles[] = $validatedData['generated_video_url'];
+            Log::channel('social_media')->debug('Using generated video', [
+                'video_url' => $validatedData['generated_video_url'],
+                'video_id' => $validatedData['generated_video_id'] ?? 'unknown'
+            ]);
         }
-
-        // Process hashtags
-        $hashtags = [];
-        if ($request->input('hashtags')) {
-            $hashtags = array_filter(array_map(function($tag) {
-                return '#' . ltrim(trim($tag), '#');
-            }, explode(' ', $request->input('hashtags'))));
-            Log::channel('social_media')->debug('Processed hashtags', ['hashtags' => $hashtags]);
-        }
-
+        
+        // Create the marketing post
         try {
             $post = MarketingPost::create([
-                'business_id' => $business->id,
-                'user_id' => Auth::id(),
-                'title' => $request->input('title'),
-                'content' => $request->input('content'),
+                'business_id' => $business->getKey(),
+                'title' => $validatedData['title'],
+                'content' => $validatedData['content'],
+                'hashtags' => $validatedData['hashtags'],
                 'media_files' => $mediaFiles,
-                'hashtags' => $hashtags,
-                'target_platforms' => $request->input('target_platforms'),
-                'post_type' => $request->input('post_type'),
-                'scheduled_at' => $request->input('post_type') === 'scheduled' ? $request->input('scheduled_at') : null,
-                'status' => $request->input('post_type') === 'immediate' ? 'pending' : 'scheduled',
+                'target_platforms' => $targetPlatforms,
+                'status' => 'draft',
+                'post_type' => $validatedData['scheduled_at'] ? 'scheduled' : 'immediate',
+                'scheduled_at' => $validatedData['scheduled_at'],
+                'metadata' => [
+                    'media_type' => $validatedData['media_type'],
+                    'generated_video_id' => $validatedData['generated_video_id'] ?? null,
+                    'created_via' => 'enhanced_modal'
+                ]
             ]);
-
-            Log::channel('social_media')->info('Post created successfully', [
-                'post_id' => $post->id,
-                'target_platforms' => $post->target_platforms,
-                'post_type' => $post->post_type
+            
+            Log::channel('social_media')->info('Marketing post created successfully', [
+                'post_id' => $post->getKey(),
+                'business_id' => $business->getKey(),
+                'platforms' => $targetPlatforms,
+                'has_media' => !empty($mediaFiles)
             ]);
-
-            // If immediate posting and business is premium, publish now
-            if ($request->input('post_type') === 'immediate' && $business->isPremium()) {
-                Log::channel('social_media')->info('Attempting immediate publication');
-                $this->publishPost($post);
+            
+            // Publish immediately if not scheduled
+            if (!$validatedData['scheduled_at']) {
+                $publishResult = $this->publishPost($post);
+                
+                if ($publishResult['success']) {
+                    return response()->json([
+                        'success' => true,
+                        'message' => 'Post created and published successfully!',
+                        'post_id' => $post->getKey(),
+                        'publications' => $publishResult['publications']
+                    ]);
+                } else {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Post created but publishing failed: ' . $publishResult['message'],
+                        'post_id' => $post->getKey()
+                    ], 500);
+                }
+            } else {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Post scheduled successfully!',
+                    'post_id' => $post->getKey(),
+                    'scheduled_at' => $validatedData['scheduled_at']
+                ]);
             }
-
-            return redirect()->route('marketing.social-media')
-                ->with('success', 'Marketing post created successfully!');
-
+            
         } catch (\Exception $e) {
-            Log::channel('social_media')->error('Post creation failed', [
+            Log::channel('social_media')->error('Failed to create marketing post', [
                 'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
+                'trace' => $e->getTraceAsString(),
+                'business_id' => $business->getKey()
             ]);
-            return back()->with('error', 'Failed to create post: ' . $e->getMessage());
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to create post: ' . $e->getMessage()
+            ], 500);
         }
     }
 
@@ -172,7 +243,7 @@ class MarketingPostController extends Controller
     {
         $this->authorize('update', $post);
         
-        $connectedAccounts = SocialMediaAccount::where('business_id', $post->business->id)
+        $connectedAccounts = SocialMediaAccount::where('business_id', $post->business->getKey())
             ->where('is_active', true)
             ->get();
 
@@ -245,7 +316,7 @@ class MarketingPostController extends Controller
         }
 
         Log::channel('social_media')->info('Manual publish initiated', [
-            'post_id' => $post->id,
+            'post_id' => $post->getKey(),
             'user_id' => Auth::id()
         ]);
 
@@ -253,13 +324,13 @@ class MarketingPostController extends Controller
 
         if ($result['success']) {
             Log::channel('social_media')->info('Manual publish successful', [
-                'post_id' => $post->id,
+                'post_id' => $post->getKey(),
                 'result' => $result
             ]);
             return response()->json(['message' => 'Post published successfully!']);
         } else {
             Log::channel('social_media')->error('Manual publish failed', [
-                'post_id' => $post->id,
+                'post_id' => $post->getKey(),
                 'error' => $result['message']
             ]);
             return response()->json(['error' => $result['message']], 500);
@@ -275,13 +346,13 @@ class MarketingPostController extends Controller
         $errors = [];
 
         Log::channel('social_media')->info('Starting post publication', [
-            'post_id' => $post->id,
-            'business_id' => $business->id,
+            'post_id' => $post->getKey(),
+            'business_id' => $business->getKey(),
             'target_platforms' => $post->target_platforms
         ]);
 
         // Get connected accounts for target platforms
-        $accounts = SocialMediaAccount::where('business_id', $business->id)
+        $accounts = SocialMediaAccount::where('business_id', $business->getKey())
             ->whereIn('platform', $post->target_platforms)
             ->where('is_active', true)
             ->get();
@@ -295,9 +366,9 @@ class MarketingPostController extends Controller
             try {
                 Log::channel('social_media')->info('Attempting to publish to account', [
                     'platform' => $account->platform,
-                    'account_id' => $account->id,
-                    'post_id' => $post->id,
-                    'post_title' => $post->title,
+                    'account_id' => $account->getKey(),
+                    'post_id' => $post->getKey(),
+                    'post_title' => $post->getAttribute('title'),
                     'media_count' => count($post->media_files)
                 ]);
 
@@ -313,7 +384,7 @@ class MarketingPostController extends Controller
                 
                 Log::channel('social_media')->info('Publish result', [
                     'platform' => $account->platform,
-                    'account_id' => $account->id,
+                    'account_id' => $account->getKey(),
                     'result' => $result
                 ]);
 
@@ -328,7 +399,7 @@ class MarketingPostController extends Controller
                     $errors[] = $account->platform . ': ' . $result['message'];
                     Log::channel('social_media')->error('Publish failed', [
                         'platform' => $account->platform,
-                        'account_id' => $account->id,
+                        'account_id' => $account->getKey(),
                         'error' => $result['message'],
                         'response' => $result['response'] ?? null
                     ]);
@@ -338,7 +409,7 @@ class MarketingPostController extends Controller
                 $errors[] = $account->platform . ': ' . $e->getMessage();
                 Log::channel('social_media')->error('Exception during publish', [
                     'platform' => $account->platform,
-                    'account_id' => $account->id,
+                    'account_id' => $account->getKey(),
                     'exception' => $e->getMessage(),
                     'trace' => $e->getTraceAsString(),
                 ]);
@@ -356,7 +427,7 @@ class MarketingPostController extends Controller
         $post->update(['status' => $status]);
 
         Log::channel('social_media')->info('Publication summary', [
-            'post_id' => $post->id,
+            'post_id' => $post->getKey(),
             'status' => $status,
             'success_count' => $successCount,
             'failure_count' => $failureCount,
@@ -367,7 +438,13 @@ class MarketingPostController extends Controller
             'success' => $successCount > 0,
             'message' => $successCount > 0 
                 ? "Published to {$successCount} platform(s)" . ($failureCount > 0 ? " with {$failureCount} failure(s)" : '')
-                : 'Failed to publish to any platform: ' . implode(', ', $errors)
+                : 'Failed to publish to any platform: ' . implode(', ', $errors),
+            'publications' => [
+                'success_count' => $successCount,
+                'failure_count' => $failureCount,
+                'errors' => $errors,
+                'status' => $status
+            ]
         ];
     }
 
@@ -402,7 +479,7 @@ class MarketingPostController extends Controller
         $this->authorize('view', $post);
         
         $newPost = $post->replicate();
-        $newPost->title = 'Copy of ' . $post->getAttribute('title');
+        $newPost->setAttribute('title', 'Copy of ' . $post->getAttribute('title'));
         $newPost->status = 'draft';
         $newPost->scheduled_at = null;
         $newPost->created_at = now();

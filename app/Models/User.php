@@ -49,8 +49,16 @@ class User extends Authenticatable
     /**
      * Get the user's business.
      */
-public function business()
-{
+    public function business()
+    {
         return $this->hasOne(Business::class);
-}
+    }
+
+    /**
+     * Get the user's businesses.
+     */
+    public function businesses()
+    {
+        return $this->hasMany(Business::class);
+    }
 }

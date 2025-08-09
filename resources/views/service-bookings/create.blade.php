@@ -1,11 +1,29 @@
 @extends('layouts.dash')
 @section('content')
 <div class="container py-4">
+    <!-- Sub-navigation for Services -->
+    <div class="sub-navigation mb-4">
+        <div class="nav-tabs">
+            <a href="{{ route('services.index') }}" class="nav-tab">
+                <i class="fas fa-list me-1"></i> All Services
+            </a>
+            <a href="{{ route('services.create') }}" class="nav-tab">
+                <i class="fas fa-plus me-1"></i> Add Service
+            </a>
+            <a href="{{ route('service-bookings.index') }}" class="nav-tab">
+                <i class="fas fa-calendar-check me-1"></i> Bookings
+            </a>
+            <a href="{{ route('service-bookings.create') }}" class="nav-tab active">
+                <i class="fas fa-plus-circle me-1"></i> New Booking
+            </a>
+        </div>
+    </div>
+
     <div class="row justify-content-center">
         <div class="col-md-10">
-            <div class="card p-4">
-                <h2 class="fw-bold mb-4" style="color:#020258;">Record Service Payment</h2>
-                <div class="alert alert-info mb-4">
+            <div class="card p-4" style="background: var(--card-bg); border: 1px solid var(--border-color);">
+                <h2 class="fw-bold mb-4" style="color: var(--text-primary);">Record Service Payment</h2>
+                <div class="alert alert-info mb-4" style="background: var(--bg-tertiary); border: 1px solid var(--border-color); color: var(--text-primary);">
                     <i class="fas fa-info-circle"></i> Record services that have been completed and paid for. Service date and time will be automatically captured.
                 </div>
                 
@@ -21,8 +39,9 @@
                     <div class="row">
                         <div class="col-md-6">
                             <div class="mb-3">
-                                <label for="customer_id" class="form-label">Customer</label>
-                                <select class="form-control" id="customer_id" name="customer_id">
+                                <label for="customer_id" class="form-label" style="color: var(--text-primary);">Customer</label>
+                                <select class="form-control" id="customer_id" name="customer_id"
+                                        style="border: 1px solid var(--border-color); background: var(--card-bg); color: var(--text-primary);">
                                     <option value="">Walk-in/Anonymous</option>
                                     @foreach($customers as $customer)
                                         <option value="{{ $customer->id }}" @if(old('customer_id') == $customer->id) selected @endif>{{ $customer->name }}</option>
@@ -34,8 +53,9 @@
                         
                         <div class="col-md-6">
                             <div class="mb-3">
-                                <label for="payment_method" class="form-label">Payment Method *</label>
-                                <select class="form-control" id="payment_method" name="payment_method" required>
+                                <label for="payment_method" class="form-label" style="color: var(--text-primary);">Payment Method *</label>
+                                <select class="form-control" id="payment_method" name="payment_method" required
+                                        style="border: 1px solid var(--border-color); background: var(--card-bg); color: var(--text-primary);">
                                     <option value="">Select Payment Method</option>
                                     <option value="cash" @if(old('payment_method') == 'cash') selected @endif>Cash</option>
                                     <option value="mpesa" @if(old('payment_method') == 'mpesa') selected @endif>M-Pesa</option>
@@ -48,12 +68,49 @@
                         </div>
                     </div>
 
+                    <!-- Discount Section -->
+                    <div class="card mb-4" style="background: var(--bg-tertiary); border: 1px solid var(--border-color);">
+                        <div class="card-body">
+                            <h6 class="fw-bold mb-3" style="color: var(--text-primary);"><i class="fas fa-percentage me-2"></i>Discount (Optional)</h6>
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <div class="mb-3">
+                                        <label for="discount_type" class="form-label" style="color: var(--text-primary);">Discount Type</label>
+                                        <select class="form-control" id="discount_type" name="discount_type"
+                                                style="border: 1px solid var(--border-color); background: var(--card-bg); color: var(--text-primary);">
+                                            <option value="none" @if(old('discount_type') == 'none' || !old('discount_type')) selected @endif>No Discount</option>
+                                            <option value="percentage" @if(old('discount_type') == 'percentage') selected @endif>Percentage (%)</option>
+                                            <option value="fixed" @if(old('discount_type') == 'fixed') selected @endif>Fixed Amount (KSh)</option>
+                                        </select>
+                                        @error('discount_type')<div class="text-danger small">{{ $message }}</div>@enderror
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="mb-3">
+                                        <label for="discount_value" class="form-label" style="color: var(--text-primary);">Discount Value</label>
+                                        <input type="number" step="0.01" min="0" class="form-control" id="discount_value" name="discount_value" value="{{ old('discount_value') }}" placeholder="0.00" disabled
+                                               style="border: 1px solid var(--border-color); background: var(--card-bg); color: var(--text-primary);">
+                                        @error('discount_value')<div class="text-danger small">{{ $message }}</div>@enderror
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="mb-3">
+                                        <label class="form-label" style="color: var(--text-primary);">Discount Preview</label>
+                                        <div class="form-control-plaintext" id="discount_preview" style="color: var(--text-muted);">
+                                            <small style="color: var(--text-muted);">Select discount type to preview</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                     <div class="mb-4">
-                        <h5 class="fw-bold mb-3">Select Services *</h5>
+                        <h5 class="fw-bold mb-3" style="color: var(--text-primary);">Select Services *</h5>
                         <div class="row">
                             @foreach($services as $service)
                                 <div class="col-md-6 mb-3">
-                                    <div class="card service-card" style="cursor: pointer;">
+                                    <div class="card service-card" style="cursor: pointer; background: var(--card-bg); border: 1px solid var(--border-color);">
                                         <div class="card-body">
                                             <div class="form-check">
                                                 <input class="form-check-input service-checkbox" type="checkbox" 
@@ -63,24 +120,17 @@
                                                        data-commission-rate="{{ $service->commission_rate }}"
                                                        data-name="{{ $service->name }}"
                                                        data-bundle-trigger="{{ $service->is_bundle_trigger ? 'true' : 'false' }}"
-                                                       data-bundled-services="{{ $service->bundled_services ? json_encode($service->bundled_services) : '[]' }}"
-                                                       data-is-complimentary="{{ $service->is_complimentary ? 'true' : 'false' }}"
-                                                       data-parent-service-id="{{ $service->parent_service_id }}">
-                                                <label class="form-check-label w-100" for="service_{{ $service->id }}">
-                                                    <div class="d-flex justify-content-between">
-                                                        <div>
-                                                            <strong>{{ $service->name }}</strong>
-                                                            @if($service->description)
-                                                                <p class="text-muted small mb-0">{{ $service->description }}</p>
-                                                            @endif
-                                                        </div>
-                                                        <div class="text-end">
-                                                            <span class="fw-bold">KSh {{ number_format($service->price, 2) }}</span>
-                                                            @if($service->commission_rate > 0)
-                                                                <br><small class="text-muted">{{ $service->commission_rate }}% commission</small>
-                                                            @endif
-                                                        </div>
-                                                    </div>
+                                                       data-is-complimentary="false"
+                                                       data-parent-service-id=""
+                                                       data-bundled-services="[]"
+                                                       style="border-color: var(--border-color);">
+                                                <label class="form-check-label" for="service_{{ $service->id }}" style="color: var(--text-primary);">
+                                                    <strong>{{ $service->name }}</strong>
+                                                    <br>
+                                                    <small style="color: var(--text-muted);">KSh {{ number_format($service->price, 2) }}</small>
+                                                    @if($service->is_bundle_trigger)
+                                                        <br><small class="badge bg-warning" style="color: var(--text-primary);">Bundle Trigger</small>
+                                                    @endif
                                                 </label>
                                             </div>
                                         </div>
@@ -88,88 +138,162 @@
                                 </div>
                             @endforeach
                         </div>
-                        @error('selected_services')<div class="text-danger small">{{ $message }}</div>@enderror
                     </div>
 
-                    <!-- Dynamic Service-Staff Mapping Section -->
-                    <div id="service-staff-section" style="display: none;">
-                        <h5 class="fw-bold mb-3">Assign Staff to Services</h5>
-                        <div id="service-staff-mappings"></div>
-                    </div>
-
-                    <div class="mb-3">
-                        <label for="notes" class="form-label">Notes</label>
-                        <textarea class="form-control" id="notes" name="notes">{{ old('notes') }}</textarea>
-                        @error('notes')<div class="text-danger small">{{ $message }}</div>@enderror
-                    </div>
-
-                    <!-- Summary Section -->
-                    <div class="card bg-light mb-3" id="summary-section" style="display: none;">
+                    <!-- Staff Assignment Section -->
+                    <div class="card mb-4" id="service-staff-section" style="display: none; background: var(--bg-tertiary); border: 1px solid var(--border-color);">
                         <div class="card-body">
-                            <h6 class="fw-bold mb-2">Payment Summary</h6>
-                            <div id="summary-content"></div>
-                            <hr>
-                            <div class="d-flex justify-content-between">
-                                <strong>Total Amount: </strong>
-                                <strong id="total-amount">KSh 0.00</strong>
+                            <h6 class="fw-bold mb-3" style="color: var(--text-primary);"><i class="fas fa-users me-2"></i>Assign Staff to Services</h6>
+                            <div id="service-staff-mappings">
+                                <!-- Staff assignments will be dynamically generated here -->
                             </div>
                         </div>
                     </div>
-                    
-                    <div class="d-flex justify-content-end">
-                        <a href="{{ route('service-bookings.index') }}" class="btn btn-outline-secondary me-2">Cancel</a>
+
+                    <!-- Summary Section -->
+                    <div class="card mb-4" id="summary-section" style="display: none; background: var(--bg-tertiary); border: 1px solid var(--border-color);">
+                        <div class="card-body">
+                            <h6 class="fw-bold mb-3" style="color: var(--text-primary);"><i class="fas fa-calculator me-2"></i>Payment Summary</h6>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label" style="color: var(--text-primary);">Selected Services</label>
+                                        <div id="summary-content" style="color: var(--text-secondary);">
+                                            <small style="color: var(--text-muted);">No services selected</small>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label" style="color: var(--text-primary);">Payment Summary</label>
+                                        <div class="d-flex justify-content-between mb-1">
+                                            <span style="color: var(--text-secondary);">Subtotal:</span>
+                                            <span id="subtotal-amount" style="color: var(--text-primary);">KSh 0.00</span>
+                                        </div>
+                                        <div class="d-flex justify-content-between mb-1" id="discount-row" style="display: none;">
+                                            <span style="color: var(--text-secondary);">Discount:</span>
+                                            <span id="discount-amount" style="color: var(--text-success);">- KSh 0.00</span>
+                                        </div>
+                                        <hr class="my-2">
+                                        <div class="d-flex justify-content-between">
+                                            <span style="color: var(--text-primary); font-weight: bold;">Total Amount:</span>
+                                            <span class="h5 mb-0" id="total-amount" style="color: var(--text-primary);">KSh 0.00</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-between">
+                        <a href="{{ route('service-bookings.index') }}" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left me-1"></i> Back to Bookings
+                        </a>
                         <button type="submit" class="btn btn-primary" id="submit-btn" disabled>
-                            <span class="submit-text">Record Payment</span>
-                            <span class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
+                            <span class="submit-text"><i class="fas fa-save me-1"></i> Record Payment</span>
+                            <span class="spinner-border spinner-border-sm d-none me-1" role="status"></span>
                             <span class="loading-text d-none">Recording...</span>
                         </button>
                     </div>
                 </form>
-
-                <!-- Commission Summary Modal -->
-                <div class="modal fade" id="commissionSummaryModal" tabindex="-1" aria-labelledby="commissionSummaryModalLabel" aria-hidden="true">
-                    <div class="modal-dialog modal-lg">
-                        <div class="modal-content">
-                            <div class="modal-header">
-                                <h5 class="modal-title" id="commissionSummaryModalLabel">Commission Summary</h5>
-                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                            </div>
-                            <div class="modal-body">
-                                <div id="commission-summary-content">
-                                    <!-- Commission summary will be populated here -->
-                                </div>
-                            </div>
-                            <div class="modal-footer">
-                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                                <a href="{{ route('service-bookings.index') }}" class="btn btn-primary">View All Bookings</a>
-                            </div>
-                        </div>
-                    </div>
-                </div>
             </div>
         </div>
     </div>
 </div>
 
 <style>
-.service-card {
-    transition: all 0.2s;
-    border: 2px solid #e9ecef;
+.sub-navigation {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 0.5rem;
+    padding: 1rem;
+    margin-bottom: 1.5rem;
 }
+
+.nav-tabs {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.nav-tab {
+    display: flex;
+    align-items: center;
+    padding: 0.5rem 1rem;
+    color: var(--text-muted);
+    text-decoration: none;
+    border-radius: 0.375rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    border: 1px solid transparent;
+}
+
+.nav-tab:hover {
+    color: var(--text-primary);
+    background: var(--bg-tertiary);
+    border-color: var(--border-color);
+}
+
+.nav-tab.active {
+    color: var(--white);
+    background: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+.form-control:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 0.2rem rgba(19, 232, 233, 0.25);
+}
+
+.form-check-input:checked {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
 .service-card:hover {
-    border-color: #4a5cff;
-    box-shadow: 0 2px 4px rgba(74, 92, 255, 0.1);
+    box-shadow: 0 4px 6px var(--shadow-color);
+    transition: box-shadow 0.2s ease;
 }
+
 .service-card.selected {
-    border-color: #4a5cff;
-    background-color: rgba(74, 92, 255, 0.05);
+    border-color: var(--primary-color);
+    background: var(--bg-tertiary);
 }
+
 .staff-assignment {
-    border: 1px solid #dee2e6;
-    border-radius: 8px;
-    padding: 15px;
-    margin-bottom: 15px;
-    background-color: #f8f9fa;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    border: 1px solid var(--border-color);
+    border-radius: 0.5rem;
+    background: var(--card-bg);
+}
+
+.staff-assignment:last-child {
+    margin-bottom: 0;
+}
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+    .nav-tabs {
+        flex-direction: column;
+        gap: 0.25rem;
+    }
+    
+    .nav-tab {
+        justify-content: center;
+        padding: 0.75rem 1rem;
+    }
+    
+    .d-flex.justify-content-between {
+        flex-direction: column;
+        gap: 1rem;
+    }
+    
+    .d-flex.justify-content-between .btn {
+        width: 100%;
+        justify-content: center;
+    }
 }
 </style>
 
@@ -179,9 +303,11 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Validate staffData
     if (!staffData || !Array.isArray(staffData)) {
-        console.error('Staff data is not available or invalid');
+        console.error('Staff data is not available or invalid:', staffData);
         return;
     }
+    
+    console.log('Staff data loaded:', staffData.length, 'staff members');
     
     const serviceCheckboxes = document.querySelectorAll('.service-checkbox');
     const serviceStaffSection = document.getElementById('service-staff-section');
@@ -277,6 +403,8 @@ document.addEventListener('DOMContentLoaded', function() {
     function updateServiceStaffMappings() {
         const selectedServices = Array.from(serviceCheckboxes).filter(cb => cb.checked);
         
+        console.log('Selected services:', selectedServices.length);
+        
         // Update card styling
         serviceCheckboxes.forEach(checkbox => {
             const card = checkbox.closest('.service-card');
@@ -296,6 +424,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
         serviceStaffSection.style.display = 'block';
         summarySection.style.display = 'block';
+        
+        console.log('Staff section and summary section should now be visible');
 
         // Clear existing mappings
         serviceStaffMappings.innerHTML = '';
@@ -307,6 +437,8 @@ document.addEventListener('DOMContentLoaded', function() {
             const commissionRate = parseFloat(checkbox.dataset.commissionRate);
             const isComplimentary = checkbox.dataset.isComplimentary === 'true';
             const parentServiceId = checkbox.dataset.parentServiceId;
+            
+            console.log('Creating staff assignment for service:', serviceName, 'Price:', servicePrice, 'Commission:', commissionRate);
             
             // Calculate commission based on service type
             let commissionAmount;
@@ -355,10 +487,14 @@ document.addEventListener('DOMContentLoaded', function() {
             serviceStaffMappings.appendChild(mappingDiv);
         });
 
+        console.log('Staff assignments created, adding event listeners...');
+
         // Add event listeners to staff selects
         document.querySelectorAll('.staff-select').forEach(select => {
             select.addEventListener('change', updateSummaryAndValidation);
         });
+        
+        console.log('Event listeners added to', document.querySelectorAll('.staff-select').length, 'staff selects');
 
         updateSummaryAndValidation();
     }
@@ -368,9 +504,13 @@ document.addEventListener('DOMContentLoaded', function() {
         const staffSelects = document.querySelectorAll('.staff-select');
         const paymentMethod = document.getElementById('payment_method').value;
         
+        console.log('Summary validation - Services:', selectedServices.length, 'Staff selects:', staffSelects.length, 'Payment method:', paymentMethod);
+        
         // Check if all requirements are met
         const allStaffAssigned = Array.from(staffSelects).every(select => select.value !== '');
         const hasPaymentMethod = paymentMethod !== '';
+        
+        console.log('Validation - All staff assigned:', allStaffAssigned, 'Has payment method:', hasPaymentMethod);
         
         submitBtn.disabled = !allStaffAssigned || selectedServices.length === 0 || !hasPaymentMethod;
 
@@ -399,7 +539,10 @@ document.addEventListener('DOMContentLoaded', function() {
         });
 
         summaryContent.innerHTML = summaryHtml;
-        totalAmountElement.textContent = `KSh ${totalAmount.toFixed(2)}`;
+        
+        // Calculate discount and final amount
+        const discountInfo = calculateDiscount(totalAmount);
+        updateSummaryDisplay(totalAmount, discountInfo);
         
         // Update commission summary
         updateCommissionSummary();
@@ -500,6 +643,94 @@ document.addEventListener('DOMContentLoaded', function() {
         localStorage.removeItem('booking_submitting');
         localStorage.removeItem('booking_submit_time');
     });
+
+    // Discount functionality
+    const discountTypeSelect = document.getElementById('discount_type');
+    const discountValueInput = document.getElementById('discount_value');
+    const discountPreview = document.getElementById('discount_preview');
+
+    // Enable/disable discount value input based on type
+    discountTypeSelect.addEventListener('change', function() {
+        if (this.value === 'none') {
+            discountValueInput.disabled = true;
+            discountValueInput.value = '';
+            discountPreview.innerHTML = '<small class="text-muted">No discount applied</small>';
+        } else {
+            discountValueInput.disabled = false;
+            discountPreview.innerHTML = '<small class="text-muted">Enter value to preview</small>';
+        }
+        updateSummaryIfServicesSelected();
+    });
+
+    // Update preview when discount value changes
+    discountValueInput.addEventListener('input', function() {
+        updateSummaryIfServicesSelected();
+    });
+
+    function calculateDiscount(subtotal) {
+        const discountType = discountTypeSelect.value;
+        const discountValue = parseFloat(discountValueInput.value) || 0;
+        
+        if (discountType === 'none' || discountValue <= 0) {
+            return {
+                type: 'none',
+                value: 0,
+                amount: 0,
+                display: 'No discount'
+            };
+        }
+
+        let discountAmount = 0;
+        let discountDisplay = '';
+
+        if (discountType === 'percentage') {
+            discountAmount = (subtotal * discountValue) / 100;
+            discountDisplay = `${discountValue}% off`;
+        } else if (discountType === 'fixed') {
+            discountAmount = Math.min(discountValue, subtotal); // Don't exceed subtotal
+            discountDisplay = `KSh ${discountValue.toFixed(2)} off`;
+        }
+
+        return {
+            type: discountType,
+            value: discountValue,
+            amount: discountAmount,
+            display: discountDisplay
+        };
+    }
+
+    function updateSummaryDisplay(subtotal, discountInfo) {
+        const subtotalElement = document.getElementById('subtotal-amount');
+        const discountRow = document.getElementById('discount-row');
+        const discountAmountElement = document.getElementById('discount-amount');
+        const totalAmountElement = document.getElementById('total-amount');
+        const finalAmount = subtotal - discountInfo.amount;
+
+        // Update subtotal
+        subtotalElement.textContent = `KSh ${subtotal.toFixed(2)}`;
+
+        // Update discount display
+        if (discountInfo.amount > 0) {
+            discountRow.style.display = 'flex';
+            discountAmountElement.textContent = `- KSh ${discountInfo.amount.toFixed(2)}`;
+            discountPreview.innerHTML = `<small class="text-success"><i class="fas fa-check"></i> ${discountInfo.display}</small>`;
+        } else {
+            discountRow.style.display = 'none';
+            discountPreview.innerHTML = discountInfo.type === 'none' ? 
+                '<small class="text-muted">No discount applied</small>' : 
+                '<small class="text-muted">Enter value to preview</small>';
+        }
+
+        // Update final amount
+        totalAmountElement.textContent = `KSh ${finalAmount.toFixed(2)}`;
+    }
+
+    function updateSummaryIfServicesSelected() {
+        const selectedServices = Array.from(serviceCheckboxes).filter(cb => cb.checked);
+        if (selectedServices.length > 0) {
+            updateSummaryAndValidation();
+        }
+    }
 });
 </script>
 @endsection

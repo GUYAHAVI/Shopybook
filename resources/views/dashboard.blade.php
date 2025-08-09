@@ -1,57 +1,175 @@
 @extends('layouts.dash')
-@section('title', 'Shopybook Dashboard')
+@section('title', 'Dashboard')
+
 @section('content')
-<style>
-.dashboard-main-content {
-    margin-top: 0;
+<!-- KPI Cards -->
+<div class="kpi-grid">
+    <div class="kpi-card">
+        <div class="kpi-header">
+            <h6 class="kpi-title">Today's Sales</h6>
+            <i class="fas fa-dollar-sign"></i>
+        </div>
+        <h2 class="kpi-value">KSh {{ number_format($todaySales ?? 0, 0) }}</h2>
+        <div class="kpi-change positive">
+            <i class="fas fa-arrow-up"></i>
+            <span>{{ $todayOrders ?? 0 }} orders</span>
+        </div>
+    </div>
+    
+    <div class="kpi-card">
+        <div class="kpi-header">
+            <h6 class="kpi-title">Today's Orders</h6>
+            <i class="fas fa-shopping-cart"></i>
+        </div>
+        <h2 class="kpi-value">{{ $todayOrders ?? 0 }}</h2>
+        <div class="kpi-change positive">
+            <i class="fas fa-arrow-up"></i>
+            <span>{{ $conversionRate ?? 0 }}% completed</span>
+        </div>
+    </div>
+    
+    <div class="kpi-card">
+        <div class="kpi-header">
+            <h6 class="kpi-title">Pending Orders</h6>
+            <i class="fas fa-clock"></i>
+        </div>
+        <h2 class="kpi-value">{{ $pendingOrders ?? 0 }}</h2>
+        <div class="kpi-change neutral">
+            <i class="fas fa-minus"></i>
+            <span>Awaiting completion</span>
+        </div>
+    </div>
+    
+    <div class="kpi-card">
+        <div class="kpi-header">
+            <h6 class="kpi-title">New Customers</h6>
+            <i class="fas fa-users"></i>
+        </div>
+        <h2 class="kpi-value">{{ $newCustomers ?? 0 }}</h2>
+        <div class="kpi-change positive">
+            <i class="fas fa-arrow-up"></i>
+            <span>Today</span>
+        </div>
+    </div>
+</div>
 
-<div class="h5 mb-0 font-weight-bold card-text" id="today-orders">{{ $todayOrders }}</div>
-<div class="h5 mb-0 font-weight-bold card-text" id="today-sales">KSh {{ number_format($todaySales) }}</div>
-<div class="h5 mb-0 mr-3 font-weight-bold card-text" id="conversion-rate">{{ $conversionRate }}%</div>
-<div class="h5 mb-0 font-weight-bold text-gray-800" id="net-profit">KSh {{ number_format($netProfit) }}</div>
-<div class="h5 mb-0 font-weight-bold text-gray-800" id="new-customers">{{ $newCustomers }}</div>
-<div class="h5 mb-0 font-weight-bold text-gray-800" id="returning-rate">{{ $returningRate }}%</div>
-<div class="h5 mb-0 font-weight-bold text-gray-800">{{ $avgOrderValue ? 'KSh ' . number_format($avgOrderValue) : 'N/A' }}</div>
-
-<!-- Service Businesses Section -->
-<div class="row mb-4">
-    <div class="col-12">
-        <div class="card chart-card">
-            <div class="card-header">
-                <h5 class="mb-0">
-                    <i class="fas fa-briefcase me-2" style="color: var(--primary-color);"></i>
-                    {{ t('service_businesses') }}
-                </h5>
+<!-- Business Overview Cards -->
+<div class="business-overview mb-4">
+    <div class="row g-4">
+        <!-- Product Metrics -->
+        <div class="col-xl-3 col-lg-6 col-md-6">
+            <div class="overview-card product-card">
+                <div class="overview-icon">
+                    <i class="fas fa-shopping-cart"></i>
+                </div>
+                <div class="overview-content">
+                    <h3 class="overview-value">{{ $todayOrders ?? 0 }}</h3>
+                    <p class="overview-label">Product Orders</p>
+                    <small class="overview-subtitle">Today</small>
+                </div>
             </div>
-            <div class="card-body">
-                <div class="row">
-                    <!-- Recent Services -->
-                    <div class="col-md-6">
-                        <h6>{{ t('recent_services') }}</h6>
-                        <ul class="list-group">
-                            @forelse($services as $service)
-                                <li class="list-group-item d-flex justify-content-between align-items-center">
-                                    {{ $service->name }}
-                                    <span class="badge bg-primary">KSh {{ number_format($service->price) }}</span>
-                                </li>
-                            @empty
-                                <li class="list-group-item">{{ t('no_services_found') }}</li>
-                            @endforelse
-                        </ul>
+        </div>
+        
+        <!-- Service Metrics -->
+        <div class="col-xl-3 col-lg-6 col-md-6">
+            <div class="overview-card service-card">
+                <div class="overview-icon">
+                    <i class="fas fa-calendar-check"></i>
+                </div>
+                <div class="overview-content">
+                    <h3 class="overview-value">{{ $todayServiceBookings ?? 0 }}</h3>
+                    <p class="overview-label">Service Bookings</p>
+                    <small class="overview-subtitle">Today</small>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Combined Revenue -->
+        <div class="col-xl-3 col-lg-6 col-md-6">
+            <div class="overview-card revenue-card">
+                <div class="overview-icon">
+                    <i class="fas fa-dollar-sign"></i>
+                </div>
+                <div class="overview-content">
+                    <h3 class="overview-value">KSh {{ number_format($totalTodayRevenue ?? 0, 0) }}</h3>
+                    <p class="overview-label">Total Revenue</p>
+                    <small class="overview-subtitle">Today</small>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Customer Metrics -->
+        <div class="col-xl-3 col-lg-6 col-md-6">
+            <div class="overview-card customer-card">
+                <div class="overview-icon">
+                    <i class="fas fa-users"></i>
+                </div>
+                <div class="overview-content">
+                    <h3 class="overview-value">{{ $newCustomers ?? 0 }}</h3>
+                    <p class="overview-label">New Customers</p>
+                    <small class="overview-subtitle">Today</small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Detailed Metrics Section -->
+<div class="detailed-metrics mb-4">
+    <div class="row g-4">
+        <!-- Product Performance -->
+        <div class="col-xl-6 col-lg-6 col-md-12">
+            <div class="metric-card">
+                <div class="metric-header">
+                    <h5 class="metric-title">
+                        <i class="fas fa-shopping-cart me-2"></i>Product Performance
+                    </h5>
+                </div>
+                <div class="metric-content">
+                    <div class="metric-row">
+                        <span class="metric-label">Revenue:</span>
+                        <span class="metric-value">KSh {{ number_format($todaySales ?? 0, 0) }}</span>
                     </div>
-                    <!-- Recent Service Bookings -->
-                    <div class="col-md-6">
-                        <h6>{{ t('recent_service_bookings') }}</h6>
-                        <ul class="list-group">
-                            @forelse($serviceBookings as $booking)
-                                <li class="list-group-item d-flex justify-content-between align-items-center">
-                                    {{ $booking->customer->name ?? t('unknown_customer') }}
-                                    <span class="badge bg-success">{{ $booking->serviceItems->first()->service->name ?? t('service') }}</span>
-                                </li>
-                            @empty
-                                <li class="list-group-item">{{ t('no_bookings_found') }}</li>
-                            @endforelse
-                        </ul>
+                    <div class="metric-row">
+                        <span class="metric-label">Pending Orders:</span>
+                        <span class="metric-value">{{ $pendingOrders ?? 0 }}</span>
+                    </div>
+                    <div class="metric-row">
+                        <span class="metric-label">Conversion Rate:</span>
+                        <span class="metric-value">{{ $conversionRate ?? 0 }}%</span>
+                    </div>
+                    <div class="metric-row">
+                        <span class="metric-label">Avg. Order Value:</span>
+                        <span class="metric-value">KSh {{ number_format($avgOrderValue ?? 0, 0) }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Service Performance -->
+        <div class="col-xl-6 col-lg-6 col-md-12">
+            <div class="metric-card">
+                <div class="metric-header">
+                    <h5 class="metric-title">
+                        <i class="fas fa-calendar-check me-2"></i>Service Performance
+                    </h5>
+                </div>
+                <div class="metric-content">
+                    <div class="metric-row">
+                        <span class="metric-label">Revenue:</span>
+                        <span class="metric-value">KSh {{ number_format($todayServiceRevenue ?? 0, 0) }}</span>
+                    </div>
+                    <div class="metric-row">
+                        <span class="metric-label">Pending Bookings:</span>
+                        <span class="metric-value">{{ $pendingServiceBookings ?? 0 }}</span>
+                    </div>
+                    <div class="metric-row">
+                        <span class="metric-label">Conversion Rate:</span>
+                        <span class="metric-value">{{ $serviceConversionRate ?? 0 }}%</span>
+                    </div>
+                    <div class="metric-row">
+                        <span class="metric-label">Avg. Booking Value:</span>
+                        <span class="metric-value">KSh {{ number_format($avgServiceValue ?? 0, 0) }}</span>
                     </div>
                 </div>
             </div>
@@ -59,999 +177,962 @@
     </div>
 </div>
 
-.quick-action-card .fa-3x {
-    color: var(--primary-color);
-    opacity: 0.9;
+<!-- Quick Actions -->
+<div class="quick-actions mb-4">
+    <div class="row g-4">
+        <!-- Product Management -->
+        <div class="col-xl-6 col-lg-6 col-md-12">
+            <div class="action-card product-action">
+                <div class="action-header">
+                    <h5 class="action-title">
+                        <i class="fas fa-shopping-cart me-2"></i>Product Management
+                    </h5>
+                    <a href="{{ route('sales.orders') }}" class="btn btn-sm btn-primary">View Orders</a>
+                </div>
+                <div class="action-content">
+                    <div class="action-stat">
+                        <span class="stat-label">Pending Orders:</span>
+                        <span class="stat-value">{{ $pendingOrders ?? 0 }}</span>
+                    </div>
+                    <div class="action-stat">
+                        <span class="stat-label">Today's Revenue:</span>
+                        <span class="stat-value">KSh {{ number_format($todaySales ?? 0, 0) }}</span>
+                    </div>
+                    <div class="action-stat">
+                        <span class="stat-label">Conversion Rate:</span>
+                        <span class="stat-value">{{ $conversionRate ?? 0 }}%</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Service Management -->
+        <div class="col-xl-6 col-lg-6 col-md-12">
+            <div class="action-card service-action">
+                <div class="action-header">
+                    <h5 class="action-title">
+                        <i class="fas fa-calendar-check me-2"></i>Service Management
+                    </h5>
+                    <a href="{{ route('service-bookings.index') }}" class="btn btn-sm btn-primary">View Bookings</a>
+                </div>
+                <div class="action-content">
+                    <div class="action-stat">
+                        <span class="stat-label">Pending Bookings:</span>
+                        <span class="stat-value">{{ $pendingServiceBookings ?? 0 }}</span>
+                    </div>
+                    <div class="action-stat">
+                        <span class="stat-label">Today's Revenue:</span>
+                        <span class="stat-value">KSh {{ number_format($todayServiceRevenue ?? 0, 0) }}</span>
+                    </div>
+                    <div class="action-stat">
+                        <span class="stat-label">Conversion Rate:</span>
+                        <span class="stat-value">{{ $serviceConversionRate ?? 0 }}%</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Service Performance Section -->
+@if($topServices && $topServices->count() > 0)
+<div class="service-performance mb-4">
+    <div class="row g-4">
+        <!-- Top Performing Services -->
+        <div class="col-xl-6 col-lg-6 col-md-12">
+            <div class="performance-card">
+                <div class="performance-header">
+                    <h5 class="performance-title">
+                        <i class="fas fa-star me-2"></i>Top Performing Services
+                    </h5>
+                </div>
+                <div class="performance-content">
+                    @foreach($topServices as $service)
+                    <div class="performance-item">
+                        <div class="performance-info">
+                            <h6 class="service-name">{{ $service->service->name ?? 'Unknown Service' }}</h6>
+                            <small class="service-stats">
+                                {{ $service->booking_count }} bookings • KSh {{ number_format($service->total_revenue, 0) }}
+                            </small>
+                        </div>
+                        <div class="performance-value">
+                            <span class="revenue-amount">KSh {{ number_format($service->total_revenue, 0) }}</span>
+                        </div>
+                    </div>
+                    @endforeach
+                </div>
+            </div>
+        </div>
+        
+        <!-- Staff Performance -->
+        @if($staffPerformance && $staffPerformance->count() > 0)
+        <div class="col-xl-6 col-lg-6 col-md-12">
+            <div class="performance-card">
+                <div class="performance-header">
+                    <h5 class="performance-title">
+                        <i class="fas fa-user-tie me-2"></i>Top Performing Staff
+                    </h5>
+                </div>
+                <div class="performance-content">
+                    @foreach($staffPerformance as $staff)
+                    <div class="performance-item">
+                        <div class="performance-info">
+                            <h6 class="staff-name">{{ $staff->staff->name ?? 'Unknown Staff' }}</h6>
+                            <small class="staff-stats">
+                                {{ $staff->service_count }} services • KSh {{ number_format($staff->total_revenue, 0) }}
+                            </small>
+                        </div>
+                        <div class="performance-value">
+                            <span class="revenue-amount">KSh {{ number_format($staff->total_revenue, 0) }}</span>
+                        </div>
+                    </div>
+                    @endforeach
+                </div>
+            </div>
+        </div>
+        @endif
+    </div>
+</div>
+@endif
+
+<!-- Charts Section -->
+<div class="charts-section">
+    <div class="row g-4">
+        <div class="col-xl-8 col-lg-7 col-md-12">
+            <div class="chart-container">
+                <div class="chart-header">
+                    <h5 class="chart-title">Cash Flow</h5>
+                    <div class="chart-legend">
+                        <div class="legend-item">
+                            <div class="legend-dot investments"></div>
+                            <span>Investments</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-dot reinvestment"></div>
+                            <span>Reinvestment</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="chart-content">
+                    <canvas id="cashFlowChart"></canvas>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-xl-4 col-lg-5 col-md-12">
+            <div class="row g-4">
+                <div class="col-12">
+                    <div class="chart-container">
+                        <div class="chart-header">
+                            <h5 class="chart-title">Investor Reports</h5>
+                        </div>
+                        <div class="investor-list">
+                            <div class="investor-item d-flex align-items-center mb-3">
+                                <div class="investor-avatar me-3">
+                                    <img src="https://via.placeholder.com/40x40" alt="Jakob Jones" class="rounded-circle">
+                                </div>
+                                <div class="investor-info">
+                                    <h6 class="mb-0">Jakob Jones</h6>
+                                    <small class="text-muted">CHIEF EXECUTIVE OFFICER</small>
+                                </div>
+                            </div>
+                            
+                            <div class="investor-item d-flex align-items-center mb-3">
+                                <div class="investor-avatar me-3">
+                                    <img src="https://via.placeholder.com/40x40" alt="Wode Warren" class="rounded-circle">
+                                </div>
+                                <div class="investor-info">
+                                    <h6 class="mb-0">Wode Warren</h6>
+                                    <small class="text-muted">MANAGING DIRECTOR</small>
+                                </div>
+                            </div>
+                            
+                            <div class="investor-item d-flex align-items-center mb-3">
+                                <div class="investor-avatar me-3">
+                                    <img src="https://via.placeholder.com/40x40" alt="Barbara John" class="rounded-circle">
+                                </div>
+                                <div class="investor-info">
+                                    <h6 class="mb-0">Barbara John</h6>
+                                    <small class="text-muted">TRADER</small>
+                                </div>
+                            </div>
+                            
+                            <button class="btn btn-primary w-100 mt-3">
+                                <i class="fas fa-search me-2"></i>Search
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-12">
+                    <div class="chart-container">
+                        <div class="chart-header">
+                            <h5 class="chart-title">Total Balance</h5>
+                            <i class="fas fa-plus"></i>
+                        </div>
+                        <div class="balance-chart">
+                            <canvas id="balanceChart"></canvas>
+                            <div class="balance-info mt-3">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <div class="d-flex align-items-center">
+                                        <div class="legend-dot investments me-2"></div>
+                                        <span>$57.436 Investments</span>
+                                    </div>
+                                </div>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div class="d-flex align-items-center">
+                                        <div class="legend-dot reinvestment me-2"></div>
+                                        <span>$40.564 Reinvestment</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.charts-section {
+    margin-top: 1rem;
 }
 
-.chart-card .fa-bolt {
-    color: var(--primary-color);
+.investor-list {
+    max-height: 300px;
+    overflow-y: auto;
 }
 
-.performance-card .fa-2x {
-    color: var(--primary-color);
-    opacity: 0.8;
+.investor-item {
+    padding: 0.75rem;
+    border-radius: 0.5rem;
+    transition: background-color 0.2s ease;
 }
 
-.chart-card {
-    background: var(--white);
-    border: 1px solid var(--gray-200);
-    border-radius: 10px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+.investor-item:hover {
+    background-color: var(--gray-50);
 }
 
-.chart-card .card-header {
-    background: var(--gray-50);
-    border-bottom: 1px solid var(--gray-200);
-    border-radius: 10px 10px 0 0;
+.investor-avatar img {
+    width: 40px;
+    height: 40px;
+    object-fit: cover;
 }
 
-.chart-card .card-header h6 {
-    color: var(--gray-800);
+.investor-info h6 {
+    font-size: 0.875rem;
     font-weight: 600;
     margin: 0;
 }
 
-.performance-card {
-    background: var(--white);
-    border: 1px solid var(--gray-200);
-    border-radius: 10px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+.investor-info small {
+    font-size: 0.75rem;
+}
+
+.chart-content {
+    position: relative;
+    height: 300px;
+    width: 100%;
+}
+
+.balance-chart {
+    text-align: center;
+    height: 300px;
+    position: relative;
+}
+
+.balance-info {
+    font-size: 0.875rem;
+}
+
+.balance-info .legend-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    display: inline-block;
+}
+
+.legend-dot.investments {
+    background: var(--primary-color);
+}
+
+.legend-dot.reinvestment {
+    background: var(--primary-light);
+}
+
+/* Business Overview Cards */
+.business-overview {
+    margin-bottom: 2rem;
+}
+
+.overview-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
     transition: all 0.3s ease;
+    box-shadow: 0 2px 8px var(--shadow-color);
+}
+
+.overview-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px var(--shadow-color);
+}
+
+.overview-icon {
+    width: 60px;
+    height: 60px;
+    background: linear-gradient(135deg, var(--primary-color), var(--primary-light));
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 1.5rem;
+}
+
+.overview-content {
+    flex: 1;
+}
+
+.overview-value {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0;
+    line-height: 1.2;
+}
+
+.overview-label {
+    color: var(--text-muted);
+    margin: 0;
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+/* Quick Actions */
+.quick-actions {
+    margin-bottom: 2rem;
+}
+
+.action-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 1.5rem;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px var(--shadow-color);
+}
+
+.action-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px var(--shadow-color);
+}
+
+.action-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.action-title {
+    color: var(--text-primary);
+    font-weight: 600;
+    margin: 0;
+    font-size: 1rem;
+}
+
+.action-content {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.action-stat {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.action-stat:last-child {
+    border-bottom: none;
+}
+
+.stat-label {
+    color: var(--text-muted);
+    font-size: 0.875rem;
+}
+
+.stat-value {
+    color: var(--text-primary);
+    font-weight: 600;
+    font-size: 0.875rem;
+}
+
+/* Enhanced Mobile Responsive Design */
+@media (max-width: 1200px) {
+    .kpi-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1rem;
+    }
+    
+    .chart-content {
+        height: 250px;
+    }
+    
+    .balance-chart {
+        height: 250px;
+    }
+}
+
+@media (max-width: 768px) {
+    .dashboard-grid {
+        padding: 1rem;
+    }
+    
+    .kpi-grid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .overview-card {
+        padding: 1rem;
+    }
+    
+    .overview-icon {
+        width: 50px;
+        height: 50px;
+        font-size: 1.25rem;
+    }
+    
+    .overview-value {
+        font-size: 1.5rem;
+    }
+    
+    .action-card {
+        padding: 1rem;
+    }
+    
+    .action-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+    }
+    
+    .kpi-card {
+        padding: 1.25rem;
+    }
+    
+    .kpi-value {
+        font-size: 1.75rem;
+    }
+    
+    .kpi-title {
+        font-size: 0.8rem;
+    }
+    
+    .charts-section {
+        margin-top: 0.5rem;
+    }
+    
+    .chart-container {
+        padding: 1.25rem;
+        margin-bottom: 1rem;
+    }
+    
+    .chart-header {
+        flex-direction: column;
+        gap: 0.75rem;
+        align-items: flex-start;
+        margin-bottom: 1rem;
+    }
+    
+    .chart-legend {
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+    
+    .legend-item {
+        font-size: 0.8rem;
+    }
+    
+    .chart-content {
+        height: 200px;
+    }
+    
+    .balance-chart {
+        height: 200px;
+    }
+    
+    .investor-list {
+        max-height: 200px;
+    }
+    
+    .investor-item {
+        padding: 0.5rem;
+    }
+    
+    .investor-avatar img {
+        width: 32px;
+        height: 32px;
+    }
+    
+    .investor-info h6 {
+        font-size: 0.8rem;
+    }
+    
+    .investor-info small {
+        font-size: 0.7rem;
+    }
+    
+    .balance-info {
+        font-size: 0.8rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .dashboard-grid {
+        padding: 0.75rem;
+    }
+    
+    .kpi-card {
+        padding: 1rem;
+    }
+    
+    .kpi-value {
+        font-size: 1.5rem;
+    }
+    
+    .kpi-title {
+        font-size: 0.75rem;
+    }
+    
+    .chart-container {
+        padding: 1rem;
+    }
+    
+    .chart-content {
+        height: 180px;
+    }
+    
+    .balance-chart {
+        height: 180px;
+    }
+    
+    .investor-list {
+        max-height: 150px;
+    }
+    
+    .investor-item {
+        padding: 0.375rem;
+    }
+    
+    .investor-avatar img {
+        width: 28px;
+        height: 28px;
+    }
+    
+    .investor-info h6 {
+        font-size: 0.75rem;
+    }
+    
+    .investor-info small {
+        font-size: 0.65rem;
+    }
+    
+    .balance-info {
+        font-size: 0.75rem;
+    }
+    
+    .legend-item {
+        font-size: 0.7rem;
+    }
+}
+
+/* Touch-friendly improvements */
+@media (max-width: 768px) {
+    .btn {
+        min-height: 44px;
+        padding: 0.75rem 1rem;
+    }
+    
+    .investor-item {
+        cursor: pointer;
+        min-height: 48px;
+    }
+    
+    .chart-container {
+        border-radius: 0.75rem;
+    }
+    
+    .kpi-card {
+        border-radius: 0.75rem;
+    }
+}
+
+/* Fix for blank space */
+.dashboard-grid {
+    min-height: auto;
+    padding-bottom: 2rem;
+}
+
+.charts-section {
+    margin-bottom: 0;
+}
+
+/* Ensure proper chart responsiveness */
+canvas {
+    max-width: 100%;
+    height: auto !important;
+}
+</style>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Get current theme
+    const isDarkMode = document.body.getAttribute('data-theme') === 'dark';
+    
+    // Responsive chart options
+    const responsiveOptions = {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                display: false
+            }
+        },
+        scales: {
+            y: {
+                beginAtZero: true,
+                max: 50,
+                ticks: {
+                    callback: function(value) {
+                        return value + 'K';
+                    },
+                    color: isDarkMode ? '#cbd5e1' : '#475569'
+                },
+                grid: {
+                    color: isDarkMode ? '#334155' : '#e2e8f0'
+                }
+            },
+            x: {
+                ticks: {
+                    color: isDarkMode ? '#cbd5e1' : '#475569'
+                },
+                grid: {
+                    color: isDarkMode ? '#334155' : '#e2e8f0'
+                }
+            }
+        },
+        elements: {
+            point: {
+                radius: window.innerWidth < 768 ? 3 : 4,
+                hoverRadius: window.innerWidth < 768 ? 5 : 6
+            }
+        }
+    };
+    
+    // Cash Flow Chart
+    const cashFlowCtx = document.getElementById('cashFlowChart').getContext('2d');
+    const cashFlowChart = new Chart(cashFlowCtx, {
+        type: 'line',
+        data: {
+            labels: ['JUL', 'JUN', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC', 'JAN'],
+            datasets: [{
+                label: 'Investments',
+                data: [10, 15, 20, 35, 25, 30, 40, 35],
+                borderColor: '#020258',
+                backgroundColor: 'rgba(2, 2, 88, 0.1)',
+                tension: 0.4,
+                fill: false
+            }, {
+                label: 'Reinvestment',
+                data: [5, 10, 15, 25, 20, 25, 30, 28],
+                borderColor: '#13e8e9',
+                backgroundColor: 'rgba(19, 232, 233, 0.1)',
+                tension: 0.4,
+                fill: true
+            }]
+        },
+        options: responsiveOptions
+    });
+    
+    // Balance Chart (Donut)
+    const balanceCtx = document.getElementById('balanceChart').getContext('2d');
+    const balanceChart = new Chart(balanceCtx, {
+        type: 'doughnut',
+        data: {
+            labels: ['Investments', 'Reinvestment'],
+            datasets: [{
+                data: [57.436, 40.564],
+                backgroundColor: ['#020258', '#13e8e9'],
+                borderWidth: 0,
+                cutout: window.innerWidth < 768 ? '60%' : '70%'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return context.label + ': $' + context.parsed.toFixed(3) + 'k';
+                        }
+                    }
+                }
+            },
+            elements: {
+                arc: {
+                    borderWidth: 0
+                }
+            }
+        }
+    });
+    
+    // Add center text to donut chart
+    const centerText = {
+        id: 'centerText',
+        afterDatasetsDraw(chart, args, options) {
+            const { ctx, chartArea: { left, right, top, bottom } } = chart;
+            
+            ctx.save();
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            
+            const centerX = (left + right) / 2;
+            const centerY = (top + bottom) / 2;
+            
+            const fontSize = window.innerWidth < 768 ? '14px' : '16px';
+            const smallFontSize = window.innerWidth < 768 ? '10px' : '12px';
+            
+            ctx.font = `bold ${fontSize} Inter`;
+            ctx.fillStyle = isDarkMode ? '#f1f5f9' : '#1e293b';
+            ctx.fillText('98k', centerX, centerY - 8);
+            
+            ctx.font = `${smallFontSize} Inter`;
+            ctx.fillStyle = isDarkMode ? '#94a3b8' : '#64748b';
+            ctx.fillText('Amount', centerX, centerY + 8);
+            
+            ctx.restore();
+        }
+    };
+    
+    balanceChart.options.plugins.centerText = centerText;
+    balanceChart.update();
+    
+    // Handle window resize for responsive charts
+    window.addEventListener('resize', function() {
+        cashFlowChart.resize();
+        balanceChart.resize();
+        balanceChart.update();
+    });
+    
+    // Global function to update charts for theme changes
+    window.updateChartsForTheme = function() {
+        const isDarkMode = document.body.getAttribute('data-theme') === 'dark';
+        
+        // Update chart colors
+        if (cashFlowChart) {
+            cashFlowChart.options.scales.y.ticks.color = isDarkMode ? '#cbd5e1' : '#475569';
+            cashFlowChart.options.scales.y.grid.color = isDarkMode ? '#334155' : '#e2e8f0';
+            cashFlowChart.options.scales.x.ticks.color = isDarkMode ? '#cbd5e1' : '#475569';
+            cashFlowChart.options.scales.x.grid.color = isDarkMode ? '#334155' : '#e2e8f0';
+            cashFlowChart.update();
+        }
+        
+        if (balanceChart) {
+            balanceChart.update();
+        }
+    };
+});
+</script>
+
+<style>
+/* New Dashboard Styles */
+.overview-subtitle {
+    color: var(--text-muted);
+    font-size: 0.75rem;
+    margin-top: 0.25rem;
+}
+
+.product-card {
+    border-left: 4px solid #28a745;
+}
+
+.service-card {
+    border-left: 4px solid #17a2b8;
+}
+
+.revenue-card {
+    border-left: 4px solid #ffc107;
+}
+
+.customer-card {
+    border-left: 4px solid #6f42c1;
+}
+
+.metric-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 1.5rem;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px var(--shadow-color);
+}
+
+.metric-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px var(--shadow-color);
+}
+
+.metric-header {
+    margin-bottom: 1rem;
+}
+
+.metric-title {
+    color: var(--text-primary);
+    font-weight: 600;
+    margin: 0;
+    font-size: 1rem;
+}
+
+.metric-content {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.metric-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.metric-row:last-child {
+    border-bottom: none;
+}
+
+.metric-label {
+    color: var(--text-muted);
+    font-size: 0.875rem;
+}
+
+.metric-value {
+    color: var(--text-primary);
+    font-weight: 600;
+    font-size: 0.875rem;
+}
+
+.product-action {
+    border-left: 4px solid #28a745;
+}
+
+.service-action {
+    border-left: 4px solid #17a2b8;
+}
+
+.performance-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 1.5rem;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px var(--shadow-color);
 }
 
 .performance-card:hover {
     transform: translateY(-2px);
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12);
+    box-shadow: 0 4px 16px var(--shadow-color);
 }
 
-.performance-card.border-left-success {
-    border-left: 4px solid var(--success-color);
-}
-
-.performance-card.border-left-primary {
-    border-left: 4px solid var(--primary-color);
-}
-
-.performance-card.border-left-info {
-    border-left: 4px solid var(--info-color);
-}
-
-.performance-card.border-left-warning {
-    border-left: 4px solid var(--warning-color);
-}
-
-.performance-card .text-success {
-    color: var(--success-color) !important;
-}
-
-.performance-card .text-primary {
-    color: var(--primary-color) !important;
-}
-
-.performance-card .text-info {
-    color: var(--info-color) !important;
-}
-
-.performance-card .text-warning {
-    color: #856404 !important;
-}
-
-.performance-card .text-danger {
-    color: var(--danger-color) !important;
-}
-
-.performance-card .text-gray-800 {
-    color: var(--gray-800) !important;
-    font-weight: 700;
-}
-
-.performance-card .text-gray-300 {
-    color: var(--gray-400) !important;
-}
-
-.ai-recommendation-card {
-    background: var(--white);
-    border: 1px solid var(--gray-200);
-    border-radius: 10px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
-    transition: all 0.3s ease;
-}
-
-.ai-recommendation-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12);
-}
-
-.ai-recommendation-card.border-left-info {
-    border-left: 4px solid var(--info-color);
-}
-
-.ai-recommendation-card.border-left-warning {
-    border-left: 4px solid var(--warning-color);
-}
-
-.ai-recommendation-card.border-left-success {
-    border-left: 4px solid var(--success-color);
-}
-
-.list-group-item {
-    background: var(--white);
-    border: 1px solid var(--gray-200);
-    color: var(--gray-800);
-}
-
-.badge.bg-secondary {
-    background: var(--gray-600) !important;
-}
-
-.badge.bg-success {
-    background: var(--success-color) !important;
-}
-
-.dropdown-menu {
-    background: var(--white);
-    border: 1px solid var(--gray-200);
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-}
-
-.dropdown-item {
-    color: var(--gray-800);
-}
-
-.dropdown-item:hover {
-    background: var(--gray-100);
-    color: var(--gray-900);
-}
-
-.table {
-    background: var(--white);
-    color: var(--gray-800);
-}
-
-.table th {
-    background: var(--gray-50);
-    color: var(--gray-700);
-    font-weight: 600;
-    border-bottom: 2px solid var(--gray-200);
-}
-
-.table td {
-    border-bottom: 1px solid var(--gray-200);
-}
-
-.dashboard-title {
-    font-family: 'Cinzel Decorative', serif;
-    color: var(--primary-color);
-    font-weight: 700;
-    text-shadow: 0 2px 4px rgba(0, 123, 255, 0.1);
-}
-
-/* All icons should use the primary color */
-.dashboard-main-content .fa,
-.dashboard-main-content .fas,
-.dashboard-main-content .far,
-.dashboard-main-content .fab {
-    color: var(--primary-color);
-}
-
-/* Override for specific icon contexts */
-.icon-circle .fa,
-.icon-circle .fas {
-    color: var(--white) !important;
-}
-
-.text-white .fa,
-.text-white .fas {
-    color: var(--white) !important;
-}
-
-.badge .fa,
-.badge .fas {
-    color: var(--white) !important;
-}
-
-/* Icon sizes and spacing */
-.fa-3x {
-    font-size: 3rem;
+.performance-header {
     margin-bottom: 1rem;
 }
 
-.fa-2x {
-    font-size: 2rem;
-    opacity: 0.8;
+.performance-title {
+    color: var(--text-primary);
+    font-weight: 600;
+    margin: 0;
+    font-size: 1rem;
 }
 
-/* Icon circle styling */
-.icon-circle {
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
+.performance-content {
     display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.performance-item {
+    display: flex;
+    justify-content: space-between;
     align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
+    padding: 0.75rem;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 8px;
+    transition: all 0.3s ease;
+}
+
+.performance-item:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.performance-info {
+    flex: 1;
+}
+
+.service-name, .staff-name {
+    color: var(--text-primary);
+    font-weight: 600;
+    margin: 0;
+    font-size: 0.9rem;
+}
+
+.service-stats, .staff-stats {
+    color: var(--text-muted);
+    font-size: 0.75rem;
+    margin-top: 0.25rem;
+}
+
+.performance-value {
+    text-align: right;
+}
+
+.revenue-amount {
+    color: var(--text-primary);
+    font-weight: 600;
+    font-size: 0.875rem;
+}
+
+/* Mobile Responsive for New Elements */
+@media (max-width: 768px) {
+    .metric-card, .performance-card {
+        margin-bottom: 1rem;
+    }
+    
+    .performance-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+    }
+    
+    .performance-value {
+        text-align: left;
+    }
 }
 </style>
-<div class="dashboard-main-content">
-<div class="container-fluid px-4">
-    <!-- Page Heading -->
-    <div class="d-sm-flex align-items-center justify-content-between mb-4">
-        <h1 class="h3 mb-0 dashboard-title">{{ t('dashboard') }}</h1>
-        <a href="#" class="btn btn-primary btn-sm shadow-sm">
-            <i class="fas fa-download fa-sm me-2"></i>{{ t('generate_report') }}
-        </a>
-    </div>
-
-    <!-- Stats Row -->
-    <div class="row">
-        <!-- Today's Orders -->
-        <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card stats-card h-100 py-2">
-                <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col-auto d-flex align-items-center justify-content-center me-2">
-                            <i class="fas fa-shopping-cart fa-2x icon text-primary"></i>
-                        </div>
-                        <div class="col">
-                            <div class="text-xs font-weight-bold text-cyan text-uppercase mb-1 card-title">
-                                {{ t('today_orders') }}</div>
-                            <div class="h5 mb-0 font-weight-bold card-text" id="today-orders">{{ $todayOrders }}</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <!-- Today's Sales -->
-        <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card stats-card h-100 py-2">
-                <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col-auto d-flex align-items-center justify-content-center me-2">
-                            <i class="fas fa-coins fa-2x icon text-primary"></i>
-                        </div>
-                        <div class="col">
-                            <div class="text-xs font-weight-bold text-cyan text-uppercase mb-1 card-title">
-                                {{ t('today_sales') }}</div>
-                            <div class="h5 mb-0 font-weight-bold card-text" id="today-sales">KSh {{ number_format($todaySales) }}</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <!-- Conversion Rate -->
-        <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card stats-card h-100 py-2">
-                <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col-auto d-flex align-items-center justify-content-center me-2">
-                            <i class="fas fa-percent fa-2x icon text-primary"></i>
-                        </div>
-                        <div class="col">
-                            <div class="text-xs font-weight-bold text-cyan text-uppercase mb-1 card-title">
-                                {{ t('conversion_rate') }}</div>
-                            <div class="row no-gutters align-items-center">
-                                <div class="col-auto">
-                                    <div class="h5 mb-0 mr-3 font-weight-bold card-text" id="conversion-rate">{{ $conversionRate }}%</div>
-                                </div>
-                                <div class="col">
-                                    <div class="progress progress-sm mr-2" style="height: 8px; background: #fff;">
-                                        <div class="progress-bar" role="progressbar" style="width: {{ $conversionRate }}%; background-color: var(--primary-color);" aria-valuenow="{{ $conversionRate }}" aria-valuemin="0" aria-valuemax="100"></div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <!-- Pending Orders -->
-        <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card stats-card h-100 py-2">
-                <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col-auto d-flex align-items-center justify-content-center me-2">
-                            <i class="fas fa-clock fa-2x icon text-primary"></i>
-                        </div>
-                        <div class="col">
-                            <div class="text-xs font-weight-bold text-cyan text-uppercase mb-1 card-title">
-                                {{ t('pending_orders') }}</div>
-                            <div class="h5 mb-0 font-weight-bold card-text">{{ $pendingOrders }}</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Toggle Button for Stats -->
-    <div class="d-flex justify-content-end mb-3">
-        <div class="btn-group" role="group">
-            <button type="button" class="btn btn-outline-primary active" id="toggleProductStats">{{ t('product_stats') }}</button>
-            <button type="button" class="btn btn-outline-primary" id="toggleServiceStats">{{ t('service_stats') }}</button>
-        </div>
-    </div>
-
-    <!-- Service Stats Row (hidden by default) -->
-    <div class="row" id="service-stats-row" style="display: none;">
-        <!-- Today's Services -->
-        <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card stats-card h-100 py-2">
-                <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col-auto d-flex align-items-center justify-content-center me-2">
-                            <i class="fas fa-concierge-bell fa-2x icon text-primary"></i>
-                        </div>
-                        <div class="col">
-                            <div class="text-xs font-weight-bold text-cyan text-uppercase mb-1 card-title">
-                                {{ t('todays_services') }}</div>
-                            <div class="h5 mb-0 font-weight-bold card-text">{{ $todaysServices ?? 0 }}</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <!-- Total Earnings from Services -->
-        <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card stats-card h-100 py-2">
-                <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col-auto d-flex align-items-center justify-content-center me-2">
-                            <i class="fas fa-money-bill-wave fa-2x icon text-primary"></i>
-                        </div>
-                        <div class="col">
-                            <div class="text-xs font-weight-bold text-cyan text-uppercase mb-1 card-title">
-                                {{ t('service_earnings_today') }}</div>
-                            <div class="h5 mb-0 font-weight-bold card-text">KSh {{ isset($serviceEarningsToday) ? number_format($serviceEarningsToday) : 0 }}</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <!-- Most Performing Staff -->
-        <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card stats-card h-100 py-2">
-                <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col-auto d-flex align-items-center justify-content-center me-2">
-                            <i class="fas fa-user-tie fa-2x icon text-primary"></i>
-                        </div>
-                        <div class="col">
-                            <div class="text-xs font-weight-bold text-cyan text-uppercase mb-1 card-title">
-                                {{ t('top_staff_today') }}</div>
-                            <div class="h5 mb-0 font-weight-bold card-text">{{ $topStaffToday->name ?? t('none') }}</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <!-- Total Service Bookings -->
-        <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card stats-card h-100 py-2">
-                <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col-auto d-flex align-items-center justify-content-center me-2">
-                            <i class="fas fa-calendar-check fa-2x icon text-primary"></i>
-                        </div>
-                        <div class="col">
-                            <div class="text-xs font-weight-bold text-cyan text-uppercase mb-1 card-title">
-                                {{ t('service_bookings_today') }}</div>
-                            <div class="h5 mb-0 font-weight-bold card-text">{{ $serviceBookingsToday ?? 0 }}</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Quick Actions Section -->
-    <div class="row mb-4">
-        <div class="col-12">
-            <div class="card chart-card">
-                <div class="card-header">
-                    <h5 class="mb-0">
-                        <i class="fas fa-bolt me-2" style="color: var(--primary-color);"></i>
-                        {{ t('quick_actions') }}
-                    </h5>
-                </div>
-                <div class="card-body">
-                    <div class="row">
-                        <!-- Add New Product -->
-                        <div class="col-lg-3 col-md-6 mb-3">
-                            <a href="{{ route('products.create') }}" class="text-decoration-none">
-                                <div class="card h-100 quick-action-card">
-                                    <div class="card-body text-center">
-                                        <div class="mb-3">
-                                            <i class="fas fa-plus-circle fa-3x"></i>
-                                        </div>
-                                        <h6 class="card-title">{{ t('add_new_product') }}</h6>
-                                        <p class="card-text small">{{ t('add_new_product_description') }}</p>
-                                    </div>
-                                </div>
-                            </a>
-                        </div>
-                        <!-- New Sale -->
-                        <div class="col-lg-3 col-md-6 mb-3">
-                            <a href="{{ route('sales.pos') }}" class="text-decoration-none">
-                                <div class="card h-100 quick-action-card">
-                                    <div class="card-body text-center">
-                                        <div class="mb-3">
-                                            <i class="fas fa-cash-register fa-3x"></i>
-                                        </div>
-                                        <h6 class="card-title">{{ t('new_sale') }}</h6>
-                                        <p class="card-text small">{{ t('new_sale_description') }}</p>
-                                    </div>
-                                </div>
-                            </a>
-                        </div>
-                        <!-- Bulk Import -->
-                        <div class="col-lg-3 col-md-6 mb-3">
-                            <a href="{{ route('products.bulk-import') }}" class="text-decoration-none">
-                                <div class="card h-100 quick-action-card">
-                                    <div class="card-body text-center">
-                                        <div class="mb-3">
-                                            <i class="fas fa-file-import fa-3x"></i>
-                                        </div>
-                                        <h6 class="card-title">{{ t('bulk_import') }}</h6>
-                                        <p class="card-text small">{{ t('bulk_import_description') }}</p>
-                                    </div>
-                                </div>
-                            </a>
-                        </div>
-                        <!-- Business Analysis -->
-                        <div class="col-lg-3 col-md-6 mb-3">
-                            <a href="{{ route('business.analysis.index') }}" class="text-decoration-none">
-                                <div class="card h-100 quick-action-card">
-                                    <div class="card-body text-center">
-                                        <div class="mb-3">
-                                            <i class="fas fa-chart-line fa-3x"></i>
-                                        </div>
-                                        <h6 class="card-title">{{ t('business_analytics') }}</h6>
-                                        <p class="card-text small">{{ t('business_analytics_description') }}</p>
-                                    </div>
-                                </div>
-                            </a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Business Analytics Section -->
-    <div class="d-sm-flex align-items-center justify-content-between mb-4">
-        <h1 class="h3 mb-0 text-gray-800">{{ t('business_analysis') }}</h1>
-        <div class="d-flex">
-            <select id="analytics-period" class="form-control form-control-sm">
-                <option value="7">{{ t('last_7_days') }}</option>
-                <option value="30" selected>{{ t('last_30_days') }}</option>
-                <option value="90">{{ t('last_quarter') }}</option>
-                <option value="365">{{ t('last_year') }}</option>
-                <option value="custom">{{ t('custom_range') }}</option>
-            </select>
-        </div>
-    </div>
-
-    <!-- Performance Metrics Row -->
-    <div class="row">
-        <!-- Net Profit -->
-        <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card performance-card border-left-success shadow h-100 py-2">
-                <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
-                                {{ t('net_profit') }}</div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800" id="net-profit">KSh {{ number_format($netProfit) }}</div>
-                            <div class="mt-2 text-success small">
-                                <i class="fas fa-arrow-up"></i> 12% from last period
-                            </div>
-                        </div>
-                        <div class="col-auto">
-                            <i class="fas fa-wallet fa-2x text-gray-300"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- New Customers -->
-        <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card performance-card border-left-primary shadow h-100 py-2">
-                <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
-                                {{ t('new_customers') }}</div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800" id="new-customers">{{ $newCustomers }}</div>
-                            <div class="mt-2 text-danger small">
-                                <i class="fas fa-arrow-down"></i> 5% from last period
-                            </div>
-                        </div>
-                        <div class="col-auto">
-                            <i class="fas fa-user-plus fa-2x text-gray-300"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Returning Rate -->
-        <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card performance-card border-left-info shadow h-100 py-2">
-                <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
-                                {{ t('returning_rate') }}</div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800" id="returning-rate">{{ $returningRate }}%</div>
-                            <div class="mt-2 text-success small">
-                                <i class="fas fa-arrow-up"></i> 8% from last period
-                            </div>
-                        </div>
-                        <div class="col-auto">
-                            <i class="fas fa-redo fa-2x text-gray-300"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Avg. Order Value -->
-        <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card performance-card border-left-warning shadow h-100 py-2">
-                <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
-                                Avg. Order Value</div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ $avgOrderValue ? 'KSh ' . number_format($avgOrderValue) : 'N/A' }}</div>
-                            <div class="mt-2 text-success small">
-                                <i class="fas fa-arrow-up"></i> 6% from last period
-                            </div>
-                        </div>
-                        <div class="col-auto">
-                            <i class="fas fa-receipt fa-2x text-gray-300"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Charts Row -->
-    <div class="row">
-        <!-- Profit/Loss Trend Chart -->
-        <div class="col-xl-8 col-lg-7 mb-4">
-            <div class="card chart-card shadow mb-4">
-                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
-                    <h6 class="m-0 font-weight-bold text-primary">Profit & Loss Trend</h6>
-                    <div class="dropdown no-arrow">
-                        <a class="dropdown-toggle" href="#" role="button" id="dropdownMenuLink" 
-                            data-bs-toggle="dropdown" aria-expanded="false" style="color: var(--gray-600);">
-                            <i class="fas fa-ellipsis-v fa-sm fa-fw"></i>
-                        </a>
-                        <ul class="dropdown-menu dropdown-menu-end shadow animated--fade-in"
-                            aria-labelledby="dropdownMenuLink">
-                            <li><a class="dropdown-item" href="#">This Week</a></li>
-                            <li><a class="dropdown-item" href="#">This Month</a></li>
-                            <li><a class="dropdown-item" href="#">This Year</a></li>
-                        </ul>
-                    </div>
-                </div>
-                <div class="card-body">
-                    <div class="chart-area">
-                        <canvas id="profitLossChart"></canvas>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Customer Acquisition Chart -->
-        <div class="col-xl-4 col-lg-5 mb-4">
-            <div class="card chart-card shadow mb-4">
-                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
-                    <h6 class="m-0 font-weight-bold text-primary">Customer Acquisition</h6>
-                </div>
-                <div class="card-body">
-                    <div class="chart-pie pt-4 pb-2">
-                        <canvas id="customerChart"></canvas>
-                    </div>
-                    <div class="mt-4 text-center small">
-                        <span class="me-2" style="color: var(--gray-600);">
-                            <i class="fas fa-circle text-primary"></i> New
-                        </span>
-                        <span class="me-2" style="color: var(--gray-600);">
-                            <i class="fas fa-circle text-success"></i> Returning
-                        </span>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Secondary Charts Row -->
-    <div class="row">
-        <!-- Top Products Chart -->
-        <div class="col-xl-6 col-lg-6 mb-4">
-            <div class="card chart-card shadow mb-4">
-                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
-                    <h6 class="m-0 font-weight-bold text-primary">Top Selling Products</h6>
-                    <a href="#" class="btn btn-sm btn-link">View All</a>
-                </div>
-                <div class="card-body">
-                    <div class="chart-bar">
-                        <canvas id="productsChart"></canvas>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Sales Funnel Chart -->
-        <div class="col-xl-6 col-lg-6 mb-4">
-            <div class="card chart-card shadow mb-4">
-                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
-                    <h6 class="m-0 font-weight-bold text-primary">Sales Conversion Funnel</h6>
-                </div>
-                <div class="card-body">
-                    <div class="chart-bar">
-                        <canvas id="funnelChart"></canvas>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- AI Recommendations Section -->
-    <div class="row mb-4">
-        <div class="col-12">
-            <div class="card chart-card shadow mb-4">
-                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
-                    <h6 class="m-0 font-weight-bold text-primary">
-                        <i class="fas fa-robot me-2"></i>AI Business Recommendations
-                    </h6>
-                </div>
-                <div class="card-body">
-                    <div class="row">
-                        <div class="col-md-4 mb-4">
-                            <div class="card ai-recommendation-card border-left-info h-100">
-                                <div class="card-body">
-                                    <div class="d-flex align-items-center mb-3">
-                                        <div class="icon-circle bg-info me-3">
-                                            <i class="fas fa-bolt text-white"></i>
-                                        </div>
-                                        <h5 class="mb-0">Boost Product Visibility</h5>
-                                    </div>
-                                    <p class="card-text">Your "Handmade Soaps" have high conversion but low views. Consider promoting them on social media.</p>
-                                    <div class="d-flex">
-                                        <button class="btn btn-sm btn-info me-2">Create Promotion</button>
-                                        <button class="btn btn-sm btn-outline-secondary">Dismiss</button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-4 mb-4">
-                            <div class="card ai-recommendation-card border-left-warning h-100">
-                                <div class="card-body">
-                                    <div class="d-flex align-items-center mb-3">
-                                        <div class="icon-circle bg-warning me-3">
-                                            <i class="fas fa-clock text-white"></i>
-                                        </div>
-                                        <h5 class="mb-0">Best Time to Post</h5>
-                                    </div>
-                                    <p class="card-text">Your customers are most active between 7-9pm. Schedule posts and promotions during this window.</p>
-                                    <button class="btn btn-sm btn-warning">Set Reminder</button>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-4 mb-4">
-                            <div class="card ai-recommendation-card border-left-success h-100">
-                                <div class="card-body">
-                                    <div class="d-flex align-items-center mb-3">
-                                        <div class="icon-circle bg-success me-3">
-                                            <i class="fas fa-box-open text-white"></i>
-                                        </div>
-                                        <h5 class="mb-0">Product Suggestion</h5>
-                                    </div>
-                                    <p class="card-text">Based on your soap sales, consider adding complementary products like loofahs or bath salts.</p>
-                                    <button class="btn btn-sm btn-success">View Suppliers</button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Customer Trends and Quick Actions -->
-    <div class="row">
-        <!-- Customer Purchase Trends -->
-        <div class="col-xl-8 col-lg-7 mb-4">
-            <div class="card chart-card shadow mb-4">
-                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
-                    <h6 class="m-0 font-weight-bold text-primary">Customer Purchase Trends</h6>
-                    <div class="dropdown no-arrow">
-                        <a class="dropdown-toggle" href="#" role="button" id="dropdownMenuLink" 
-                            data-bs-toggle="dropdown" aria-expanded="false" style="color: var(--gray-600);">
-                            <i class="fas fa-filter fa-sm fa-fw"></i>
-                        </a>
-                        <ul class="dropdown-menu dropdown-menu-end shadow" aria-labelledby="dropdownMenuLink">
-                            <li><a class="dropdown-item" href="#">This Week</a></li>
-                            <li><a class="dropdown-item" href="#">This Month</a></li>
-                            <li><a class="dropdown-item" href="#">This Year</a></li>
-                        </ul>
-                    </div>
-                </div>
-                <div class="card-body">
-                    <div class="table-responsive">
-                        <table class="table table-bordered" width="100%" cellspacing="0">
-                            <thead>
-                                <tr>
-                                    <th>Customer</th>
-                                    <th>Last Purchase</th>
-                                    <th>Frequency</th>
-                                    <th>Avg. Spend</th>
-                                    <th>Trend</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td>
-                                        <div class="d-flex align-items-center">
-                                            <img src="https://placehold.co/600x400/png" class="rounded-circle me-3" width="40" height="40">
-                                            <div>James Mwangi</div>
-                                        </div>
-                                    </td>
-                                    <td>2 days ago</td>
-                                    <td>Weekly</td>
-                                    <td>KSh 1,200</td>
-                                    <td><span class="badge bg-success"><i class="fas fa-arrow-up me-1"></i>15%</span></td>
-                                </tr>
-                                <tr>
-                                    <td>
-                                        <div class="d-flex align-items-center">
-                                            <img src="https://placehold.co/600x400/png" class="rounded-circle me-3" width="40" height="40">
-                                            <div>Sarah Kamau</div>
-                                        </div>
-                                    </td>
-                                    <td>1 week ago</td>
-                                    <td>Monthly</td>
-                                    <td>KSh 2,500</td>
-                                    <td><span class="badge bg-secondary"><i class="fas fa-arrow-right me-1"></i>2%</span></td>
-                                </tr>
-                                <tr>
-                                    <td>
-                                        <div class="d-flex align-items-center">
-                                            <img src="https://placehold.co/600x400/png" class="rounded-circle me-3" width="40" height="40">
-                                            <div>David Ochieng</div>
-                                        </div>
-                                    </td>
-                                    <td>3 weeks ago</td>
-                                    <td>Quarterly</td>
-                                    <td>KSh 3,800</td>
-                                    <td><span class="badge bg-danger"><i class="fas fa-arrow-down me-1"></i>10%</span></td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Quick Actions -->
-        <div class="col-xl-4 col-lg-5 mb-4">
-            <div class="card chart-card shadow mb-4">
-                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
-                    <h6 class="m-0 font-weight-bold text-primary">Quick Actions</h6>
-                    <button class="btn btn-sm btn-primary">
-                        <i class="fas fa-plus"></i>
-                    </button>
-                </div>
-                <div class="card-body">
-                    <ul class="list-group list-group-flush">
-                        <li class="list-group-item d-flex justify-content-between align-items-center">
-                            Contact top 3 customers with personalized offers
-                            <span class="badge bg-secondary">Pending</span>
-                        </li>
-                        <li class="list-group-item d-flex justify-content-between align-items-center">
-                            Reorder best-selling products
-                            <span class="badge bg-success">Completed</span>
-                        </li>
-                        <li class="list-group-item d-flex justify-content-between align-items-center">
-                            Analyze weekend sales spike
-                            <span class="badge bg-secondary">Pending</span>
-                        </li>
-                        <li class="list-group-item d-flex justify-content-between align-items-center">
-                            Setup email campaign for returning customers
-                            <span class="badge bg-secondary">Pending</span>
-                        </li>
-                    </ul>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-</div>
-
-<!-- Chart.js Scripts -->
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // Initialize all charts
-        initProfitLossChart();
-        initCustomerChart();
-        initProductsChart();
-        initFunnelChart();
-
-        // Toggle logic for stats
-        const productStatsRow = document.querySelector('.row.stats-row');
-        const serviceStatsRow = document.getElementById('service-stats-row');
-        const toggleProductBtn = document.getElementById('toggleProductStats');
-        const toggleServiceBtn = document.getElementById('toggleServiceStats');
-
-        if (toggleProductBtn && toggleServiceBtn && productStatsRow && serviceStatsRow) {
-            toggleProductBtn.addEventListener('click', function() {
-                productStatsRow.style.display = '';
-                serviceStatsRow.style.display = 'none';
-                toggleProductBtn.classList.add('active');
-                toggleServiceBtn.classList.remove('active');
-            });
-            toggleServiceBtn.addEventListener('click', function() {
-                productStatsRow.style.display = 'none';
-                serviceStatsRow.style.display = '';
-                toggleServiceBtn.classList.add('active');
-                toggleProductBtn.classList.remove('active');
-            });
-        }
-        // Default: show product stats
-        if (productStatsRow && serviceStatsRow) {
-            productStatsRow.style.display = '';
-            serviceStatsRow.style.display = 'none';
-        }
-    });
-
-    function initProfitLossChart() {
-        const ctx = document.getElementById('profitLossChart').getContext('2d');
-        new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul'],
-                datasets: [{
-                    label: 'Profit',
-                    data: [5000, 8000, 7000, 9000, 12000, 10000, 15000],
-                    backgroundColor: 'rgba(28, 200, 138, 0.1)',
-                    borderColor: 'rgba(28, 200, 138, 1)',
-                    tension: 0.3
-                }, {
-                    label: 'Loss',
-                    data: [2000, 3000, 2500, 4000, 3500, 4500, 3000],
-                    backgroundColor: 'rgba(231, 74, 59, 0.1)',
-                    borderColor: 'rgba(231, 74, 59, 1)',
-                    tension: 0.3
-                }]
-            },
-            options: {
-                responsive: true,
-                plugins: {
-                    legend: {
-                        position: 'top',
-                    }
-                },
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        ticks: {
-                            callback: function(value) {
-                                return 'KSh ' + value.toLocaleString();
-                            }
-                        }
-                    }
-                }
-            }
-        });
-    }
-
-    function initCustomerChart() {
-        const ctx = document.getElementById('customerChart').getContext('2d');
-        new Chart(ctx, {
-            type: 'doughnut',
-            data: {
-                labels: ['New Customers', 'Returning Customers'],
-                datasets: [{
-                    data: [35, 65],
-                    backgroundColor: [
-                        'rgba(78, 115, 223, 0.8)',
-                        'rgba(28, 200, 138, 0.8)'
-                    ],
-                    hoverBorderColor: "rgba(234, 236, 244, 1)",
-                }],
-            },
-            options: {
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        display: false
-                    }
-                },
-                cutout: '70%',
-            }
-        });
-    }
-
-    function initProductsChart() {
-        const ctx = document.getElementById('productsChart').getContext('2d');
-        new Chart(ctx, {
-            type: 'bar',
-            data: {
-                labels: ['Handmade Soap', 'African Print', 'Wooden Crafts', 'Beaded Jewelry', 'Leather Bags'],
-                datasets: [{
-                    label: 'Units Sold',
-                    data: [120, 90, 75, 60, 45],
-                    backgroundColor: 'rgba(78, 115, 223, 0.8)',
-                }]
-            },
-            options: {
-                responsive: true,
-                plugins: {
-                    legend: {
-                        display: false
-                    }
-                },
-                scales: {
-                    y: {
-                        beginAtZero: true
-                    }
-                }
-            }
-        });
-    }
-
-    function initFunnelChart() {
-        const ctx = document.getElementById('funnelChart').getContext('2d');
-        new Chart(ctx, {
-            type: 'bar',
-            data: {
-                labels: ['Visitors', 'Add to Cart', 'Checkout', 'Purchases'],
-                datasets: [{
-                    label: 'Conversion Funnel',
-                    data: [1000, 500, 200, 120],
-                    backgroundColor: [
-                        'rgba(78, 115, 223, 0.8)',
-                        'rgba(0, 123, 255, 0.8)',
-                        'rgba(246, 194, 62, 0.8)',
-                        'rgba(28, 200, 138, 0.8)'
-                    ],
-                }]
-            },
-            options: {
-                indexAxis: 'y',
-                responsive: true,
-                plugins: {
-                    legend: {
-                        display: false
-                    }
-                },
-                scales: {
-                    x: {
-                        beginAtZero: true
-                    }
-                }
-            }
-        });
-    }
-
-    // Toggle between Product and Service stats
-    document.getElementById('toggleServiceStats').addEventListener('click', function() {
-        document.getElementById('service-stats-row').style.display = 'flex';
-        this.classList.add('active');
-        document.getElementById('toggleProductStats').classList.remove('active');
-    });
-
-    document.getElementById('toggleProductStats').addEventListener('click', function() {
-        document.getElementById('service-stats-row').style.display = 'none';
-        this.classList.add('active');
-        document.getElementById('toggleServiceStats').classList.remove('active');
-    });
-</script>
 @endsection

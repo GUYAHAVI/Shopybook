@@ -62,7 +62,7 @@
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="form-group">
-                                    <label for="budget">Budget (₦) *</label>
+                                    <label for="budget">Budget (KSh) *</label>
                                     <input type="number" class="form-control @error('budget') is-invalid @enderror" 
                                            id="budget" name="budget" value="{{ old('budget') }}" 
                                            step="0.01" min="0" required>
@@ -146,7 +146,7 @@
                             <span class="badge badge-secondary" id="preview-status">Status</span>
                         </div>
                         <div class="text-sm">
-                            <div><strong>Budget:</strong> <span id="preview-budget">₦0</span></div>
+                            <div><strong>Budget:</strong> <span id="preview-budget">KSh 0</span></div>
                             <div><strong>Duration:</strong> <span id="preview-duration">Start - End</span></div>
                         </div>
                     </div>
@@ -192,7 +192,7 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('preview-description').textContent = description.value || 'Description will appear here';
         document.getElementById('preview-platform').textContent = platform.value ? platform.value.charAt(0).toUpperCase() + platform.value.slice(1) : 'Platform';
         document.getElementById('preview-status').textContent = status.value ? status.value.charAt(0).toUpperCase() + status.value.slice(1) : 'Status';
-        document.getElementById('preview-budget').textContent = budget.value ? `₦${parseFloat(budget.value).toLocaleString()}` : '₦0';
+        document.getElementById('preview-budget').textContent = budget.value ? `KSh ${parseFloat(budget.value).toLocaleString()}` : 'KSh 0';
         
         if (startDate.value && endDate.value) {
             const start = new Date(startDate.value).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });

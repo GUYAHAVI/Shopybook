@@ -27,7 +27,7 @@ h1, h2, h3, h4, h5, h6, .display-4, .text-primary {
     color: #13e8e9 !important;
 }
 
-.lead, p, .card-text, .card-title, .list-unstyled, .contact-info, .social-bubbles, .uscontent, .uscard {
+.lead, p:not(.pricing-card p):not(.testimonial-card p), .card-text:not(.testimonial-card .card-text), .card-title:not(.pricing-card .card-title):not(.testimonial-card .card-title), .list-unstyled:not(.pricing-list), .contact-info, .social-bubbles, .uscontent, .uscard, .glass-card {
     color: #fff !important;
 }
 
@@ -57,6 +57,14 @@ input.form-control, textarea.form-control, select.form-select {
     color: #020258 !important;
     border: 2px solid #13e8e9 !important;
 }
+
+.glass-card input.form-control, 
+.glass-card textarea.form-control, 
+.glass-card select.form-select {
+    background: #fff !important;
+    color: #020258 !important;
+    border: 2px solid #13e8e9 !important;
+}
 input.form-control:focus, textarea.form-control:focus, select.form-select:focus {
     border-color: #13e8e9 !important;
     box-shadow: 0 0 0 2px #13e8e9 !important;
@@ -67,8 +75,14 @@ input.form-control::placeholder, textarea.form-control::placeholder {
     opacity: 1;
 }
 
-.card, .pricing-card, .glass-card, .uscard {
-    background: #03104e !important;
+.card, .pricing-card {
+    background: #fff !important;
+    color: #333 !important;
+    border: 2px solid #13e8e9 !important;
+}
+
+.glass-card, .uscard {
+    background: #020258 !important;
     color: #fff !important;
     border: 2px solid #13e8e9 !important;
 }
@@ -110,6 +124,8 @@ input.form-control::placeholder, textarea.form-control::placeholder {
     transition: all 0.3s ease;
     border-radius: 12px;
     overflow: hidden;
+    background: #020258 !important;
+    color: #fff !important;
 }
 
 .uscard:hover {
@@ -128,13 +144,16 @@ input.form-control::placeholder, textarea.form-control::placeholder {
     color: #13e8e9;
 }
 
-/* Pricing enhancements */
-.pricing-card {
-    background: #03104e !important;
-    border: 2px solid #13e8e9 !important;
-    border-radius: 12px;
-    transition: all 0.3s ease;
+.uscontent h3 {
+    color: #13e8e9 !important;
 }
+
+.uscontent p {
+    color: #fff !important;
+}
+
+/* Pricing enhancements */
+
 
 .pricing-card:hover {
     transform: translateY(-5px);
@@ -165,13 +184,17 @@ input.form-control::placeholder, textarea.form-control::placeholder {
 }
 
 .pricing-card .price .period {
-    color: #fff !important;
+    color: #666 !important;
     opacity: 0.8;
     font-size: 1rem;
 }
 
-.pricing-card .list-unstyled li {
-    color: #fff !important;
+/* More specific selectors to override global styles */
+.pricing-card .pricing-list,
+.pricing-card .pricing-list li,
+.pricing-card .list-unstyled.pricing-list,
+.pricing-card .list-unstyled.pricing-list li {
+    color: #333 !important;
     margin-bottom: 0.75rem;
     padding-left: 0.5rem;
 }
@@ -203,14 +226,43 @@ input.form-control::placeholder, textarea.form-control::placeholder {
 }
 
 .pricing-card .period {
+    color: #666 !important;
     font-size: 1rem;
     opacity: 0.7;
+}
+
+/* Additional overrides for text content */
+.pricing-card p,
+.pricing-card span:not(.currency):not(.amount),
+.pricing-card div {
+    color: #333 !important;
+}
+
+/* Comprehensive pricing card text override */
+.pricing-card,
+.pricing-card * {
+    color: #333 !important;
+}
+
+/* Specific overrides for accent colors */
+.pricing-card .card-title,
+.pricing-card .price .currency,
+.pricing-card .price .amount,
+.pricing-card .text-primary,
+.pricing-card .fas.fa-check {
+    color: #13e8e9 !important;
+}
+
+/* Period text - slightly lighter */
+.pricing-card .period,
+.pricing-card .price .period {
+    color: #666 !important;
 }
 
 /* Contact form enhancements */
 .glass-card {
     backdrop-filter: blur(10px);
-    background: rgba(255, 255, 255, 0.1);
+    background: #020258 !important;
     border: 1px solid rgba(19, 232, 233, 0.3);
     border-radius: 12px;
 }
@@ -234,6 +286,122 @@ input.form-control::placeholder, textarea.form-control::placeholder {
     transform: scale(1.1);
 }
 
+/* Testimonial Carousel Styles */
+.testimonial-card {
+    background: #fff !important;
+    color: #333 !important;
+    border: 2px solid #13e8e9 !important;
+    border-radius: 15px;
+    box-shadow: 0 10px 30px rgba(19, 232, 233, 0.2);
+    transition: all 0.3s ease;
+    margin: 0 auto;
+    max-width: 600px;
+}
+
+.testimonial-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 40px rgba(19, 232, 233, 0.3);
+}
+
+.testimonial-text,
+.testimonial-text-dark,
+.testimonial-card .card-text {
+    color: #333 !important;
+    font-size: 1.1rem;
+    line-height: 1.6;
+    font-style: italic;
+    margin-bottom: 1.5rem;
+}
+
+.testimonial-name {
+    color: #13e8e9 !important;
+    font-weight: 600;
+}
+
+/* Comprehensive testimonial card text override */
+.testimonial-card,
+.testimonial-card *,
+.testimonial-card .card-body,
+.testimonial-card .card-body * {
+    color: #333 !important;
+}
+
+/* Specific overrides for accent colors */
+.testimonial-card .testimonial-name,
+.testimonial-card h6 {
+    color: #13e8e9 !important;
+}
+
+.testimonial-card .text-warning {
+    color: #020258 !important;
+}
+
+.testimonial-card .text-muted {
+    color: #666 !important;
+}
+
+/* Force dark text for testimonial paragraphs */
+.testimonial-card p,
+.testimonial-card .card-text,
+.testimonial-card .testimonial-text,
+.testimonial-card .testimonial-text-dark {
+    color: #333 !important;
+    font-weight: 400;
+}
+
+/* Carousel Controls Styling */
+.carousel-control-prev,
+.carousel-control-next {
+    width: 50px;
+    height: 50px;
+    background: rgba(19, 232, 233, 0.8);
+    border-radius: 50%;
+    top: 50%;
+    transform: translateY(-50%);
+    border: none;
+}
+
+.carousel-control-prev {
+    left: -25px;
+}
+
+.carousel-control-next {
+    right: -25px;
+}
+
+.carousel-control-prev-icon,
+.carousel-control-next-icon {
+    filter: brightness(0) invert(1);
+}
+
+/* Carousel Indicators */
+.carousel-indicators {
+    bottom: -50px;
+}
+
+.carousel-indicators button {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background-color: rgba(19, 232, 233, 0.5);
+    border: none;
+    margin: 0 5px;
+}
+
+.carousel-indicators button.active {
+    background-color: #13e8e9;
+}
+
+/* Carousel Container */
+#testimonialsCarousel {
+    padding: 2rem 0;
+    position: relative;
+}
+
+.carousel-inner {
+    padding: 0 50px;
+}
+
 /* Mobile responsiveness */
 @media (max-width: 768px) {
     .stat-card h3 {
@@ -248,44 +416,121 @@ input.form-control::placeholder, textarea.form-control::placeholder {
     .display-4 {
         font-size: 2rem;
     }
+    
+    .testimonial-card {
+        margin: 0 10px;
+    }
+    
+    .carousel-control-prev,
+    .carousel-control-next {
+        width: 40px;
+        height: 40px;
+    }
+    
+    .carousel-control-prev {
+        left: -20px;
+    }
+    
+    .carousel-control-next {
+        right: -20px;
+    }
+    
+    .carousel-inner {
+        padding: 0 30px;
+    }
 }
 </style>
 
     <div id="home" class="container-fluid px-0 hero-section">
-        <div>
-            <div class="morphing-bubbles-hero">
-                <div class="morphing-bubble main-bubble"></div>
-                <div class="morphing-bubble secondary-bubble"></div>
-                <div class="morphing-bubble accent-bubble"></div>
-            </div>
-            <div class="brandtext ">
-                <div class="row">
-                    <div class="col-md-7">
-                        <h1>Transform Your Business with Shopybook</h1>
-                        <p class="lead">Complete Business Management Platform for Small Businesses in Kenya</p>
-                        <p class="mb-4">
-                            Manage products, services, customers, inventory, staff, and sales with M-Pesa integration. 
-                            All-in-one solution designed specifically for emerging markets.
-                        </p>
-                        <div class="mt-4">
-                            <a href="{{ route('register') }}" class="btn btn-primary btn-lg me-2">Start Free Account</a>
-                            <a href="#features" class="btn btn-outline-light btn-lg">Explore Features</a>
+        <div class="morphing-bubbles-hero">
+            <div class="morphing-bubble main-bubble"></div>
+            <div class="morphing-bubble secondary-bubble"></div>
+            <div class="morphing-bubble accent-bubble"></div>
+        </div>
+        
+        <!-- Mobile-specific floating elements -->
+        <div class="mobile-floating-elements d-block d-lg-none">
+            <div class="mobile-bubble-1"></div>
+            <div class="mobile-bubble-2"></div>
+            <div class="mobile-bubble-3"></div>
+        </div>
+        
+        <div class="brandtext">
+            <div class="row align-items-center justify-content-center">
+                <div class="col-lg-7 col-md-8 col-sm-12">
+                    <!-- Mobile badge -->
+                    <div class="mobile-badge d-block d-lg-none mb-3">
+                        <span class="badge bg-primary px-3 py-2">
+                            <i class="fas fa-mobile-alt me-2"></i>Mobile Optimized
+                        </span>
+                    </div>
+                    
+                    <h1 class="text-center text-md-start">Transform Your Business with Shopybook</h1>
+                    <p class="lead text-center text-md-start">Complete Business Management Platform for Small Businesses in Kenya</p>
+                    <p class="mb-4 text-center text-md-start">
+                        Manage products, services, customers, inventory, staff, and sales with M-Pesa integration. 
+                        All-in-one solution designed specifically for emerging markets.
+                    </p>
+                    
+                    <!-- Mobile feature highlights -->
+                    <div class="mobile-features d-block d-lg-none mb-4">
+                        <div class="row g-2">
+                            <div class="col-6">
+                                <div class="feature-highlight">
+                                    <i class="fas fa-mobile-alt text-primary"></i>
+                                    <small>Mobile First</small>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="feature-highlight">
+                                    <i class="fas fa-shield-alt text-primary"></i>
+                                    <small>Secure</small>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="feature-highlight">
+                                    <i class="fas fa-bolt text-primary"></i>
+                                    <small>Fast Setup</small>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="feature-highlight">
+                                    <i class="fas fa-headset text-primary"></i>
+                                    <small>24/7 Support</small>
+                                </div>
+                            </div>
                         </div>
                     </div>
-                    <div class="col-md-5 position-relative">
-                        <div class="brandimgs-container">
-                            <div class="image-bubble brand-bubble-1">
-                                <img src="{{ asset('img/img-1.jpeg') }}" alt="Product 1">
-                            </div>
-                            <div class="image-bubble brand-bubble-2">
-                                <img src="{{ asset('img/img-2.jpeg') }}" alt="Product 2">
-                            </div>
-                           
-
-                        </div>
-
+                    
+                    <div class="mt-4 d-flex flex-column flex-sm-row gap-2 justify-content-center justify-content-md-start">
+                        <a href="{{ route('register') }}" class="btn btn-primary btn-lg">
+                            <i class="fas fa-rocket me-2"></i>Start Free Account
+                        </a>
+                        <a href="#features" class="btn btn-outline-light btn-lg">
+                            <i class="fas fa-arrow-down me-2"></i>Explore Features
+                        </a>
                     </div>
-
+                    
+                    <!-- Mobile trust indicators -->
+                    <div class="mobile-trust-indicators d-block d-lg-none mt-4">
+                        <div class="text-center">
+                            <small class="text-muted">
+                                <i class="fas fa-users me-1"></i>Trusted by 500+ businesses
+                                <span class="mx-2">•</span>
+                                <i class="fas fa-clock me-1"></i>5-minute setup
+                            </small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-5 col-md-4 d-none d-lg-block position-relative">
+                    <div class="brandimgs-container">
+                        <div class="image-bubble brand-bubble-1">
+                            <img src="{{ asset('img/img-1.jpeg') }}" alt="Product 1">
+                        </div>
+                        <div class="image-bubble brand-bubble-2">
+                            <img src="{{ asset('img/img-2.jpeg') }}" alt="Product 2">
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -295,7 +540,7 @@ input.form-control::placeholder, textarea.form-control::placeholder {
     <section id="features" class="py-5 text-light position-relative">
         <div class="container">
             <div class="row align-items-center">
-                <div class="col-lg-6 position-relative">
+                <div class="col-lg-6 position-relative d-none d-lg-block">
                     <div class="feature-bubbles-container">
                         <div class="image-bubble feature-bubble-1">
                             <img src="{{ asset('img/img-3.jpeg') }}" alt="Product 3">
@@ -303,24 +548,65 @@ input.form-control::placeholder, textarea.form-control::placeholder {
                         <div class="image-bubble feature-bubble-2">
                             <img src="{{ asset('img/img-4.jpeg') }}" alt="Product 4">
                         </div>
-                        
                     </div>
                     <div class="morphing-bubbles">
                         <div class="morphing-bubble main-bubble"></div>
                         <div class="morphing-bubble secondary-bubble"></div>
                     </div>
                 </div>
-                <div class="col-lg-6">
-                    <h2 class="display-4 mb-4">
+                <div class="col-lg-6 col-12">
+                    <!-- Mobile feature cards -->
+                    <div class="mobile-feature-cards d-block d-lg-none mb-4">
+                        <div class="row g-3">
+                            <div class="col-6">
+                                <div class="mobile-feature-card">
+                                    <div class="feature-icon">
+                                        <i class="fas fa-users"></i>
+                                    </div>
+                                    <h6>Multi-tenant</h6>
+                                    <small>Unlimited growth</small>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="mobile-feature-card">
+                                    <div class="feature-icon">
+                                        <i class="fas fa-credit-card"></i>
+                                    </div>
+                                    <h6>M-Pesa Ready</h6>
+                                    <small>Local payments</small>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="mobile-feature-card">
+                                    <div class="feature-icon">
+                                        <i class="fas fa-globe"></i>
+                                    </div>
+                                    <h6>Multi-language</h6>
+                                    <small>English, Swahili</small>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="mobile-feature-card">
+                                    <div class="feature-icon">
+                                        <i class="fas fa-mobile-alt"></i>
+                                    </div>
+                                    <h6>Mobile First</h6>
+                                    <small>Responsive design</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <h2 class="display-4 mb-4 text-center text-lg-start">
                         Why Choose <span class="text-primary">Shopybook?</span>
                     </h2>
-                    <p class="lead">The complete business management solution built for small businesses.</p>
-                    <p>
+                    <p class="lead text-center text-lg-start">The complete business management solution built for small businesses.</p>
+                    <p class="text-center text-lg-start">
                         Shopybook is a comprehensive multi-tenant platform designed specifically for small businesses 
                         in emerging markets. From product management and service bookings to customer relationships 
                         and M-Pesa payments, we provide everything you need to grow your business efficiently.
                     </p>
-                    <ul class="list-unstyled mt-4">
+                    <ul class="list-unstyled mt-4 d-none d-lg-block">
                         <li class="mb-2"><i class="fas fa-check text-primary me-2"></i> Multi-tenant architecture for unlimited growth</li>
                         <li class="mb-2"><i class="fas fa-check text-primary me-2"></i> M-Pesa & PayPal payment integration</li>
                         <li class="mb-2"><i class="fas fa-check text-primary me-2"></i> Multi-language support (English, Swahili, Sheng)</li>
@@ -343,7 +629,67 @@ input.form-control::placeholder, textarea.form-control::placeholder {
                 </p>
             </div>
 
-            <div class="row g-4">
+            <!-- Mobile feature grid -->
+            <div class="mobile-features-grid d-block d-lg-none mb-4">
+                <div class="row g-3">
+                    <div class="col-6">
+                        <div class="mobile-feature-item">
+                            <div class="feature-icon-mobile">
+                                <i class="fa-solid fa-boxes-stacked"></i>
+                            </div>
+                            <h6>Products</h6>
+                            <small>Inventory control</small>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="mobile-feature-item">
+                            <div class="feature-icon-mobile">
+                                <i class="fa-solid fa-calendar-check"></i>
+                            </div>
+                            <h6>Services</h6>
+                            <small>Booking system</small>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="mobile-feature-item">
+                            <div class="feature-icon-mobile">
+                                <i class="fa-solid fa-users"></i>
+                            </div>
+                            <h6>Customers</h6>
+                            <small>CRM management</small>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="mobile-feature-item">
+                            <div class="feature-icon-mobile">
+                                <i class="fa-solid fa-cash-register"></i>
+                            </div>
+                            <h6>POS</h6>
+                            <small>Point of sale</small>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="mobile-feature-item">
+                            <div class="feature-icon-mobile">
+                                <i class="fa-solid fa-mobile-alt"></i>
+                            </div>
+                            <h6>M-Pesa</h6>
+                            <small>Payment integration</small>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="mobile-feature-item">
+                            <div class="feature-icon-mobile">
+                                <i class="fa-solid fa-user-tie"></i>
+                            </div>
+                            <h6>Staff</h6>
+                            <small>Team management</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row g-4 d-none d-lg-flex">
                 <!-- Product Management -->
                 <div class="col-md-4">
                     <div class="uscard h-100">
@@ -551,83 +897,119 @@ input.form-control::placeholder, textarea.form-control::placeholder {
             </div>
 
             <div class="row g-4">
-                <div class="col-md-4">
-                    <div class="card h-100 bg-green text-light">
-                        <div class="card-body">
-                            <div class="mb-3 text-warning">
-                                <i class="fas fa-star"></i>
-                                <i class="fas fa-star"></i>
-                                <i class="fas fa-star"></i>
-                                <i class="fas fa-star"></i>
-                                <i class="fas fa-star"></i>
+            <div id="testimonialsCarousel" class="carousel slide" data-bs-ride="carousel" data-bs-interval="5000">
+                <div class="carousel-inner">
+                    <!-- Testimonial 1 -->
+                    <div class="carousel-item active">
+                        <div class="row justify-content-center">
+                            <div class="col-md-8">
+                                <div class="card testimonial-card h-100">
+                                    <div class="card-body text-center">
+                                        <div class="mb-3 text-warning">
+                                            <i class="fas fa-star"></i>
+                                            <i class="fas fa-star"></i>
+                                            <i class="fas fa-star"></i>
+                                            <i class="fas fa-star"></i>
+                                            <i class="fas fa-star"></i>
+                                        </div>
+                                        <p class="card-text testimonial-text">
+                                            "Shopybook transformed my retail business. The M-Pesa integration and inventory management 
+                                            have increased my efficiency by 300%. I can now focus on growing instead of tracking stock manually."
+                                        </p>
+                                        <div class="d-flex align-items-center justify-content-center mt-3">
+                                            <img src="https://randomuser.me/api/portraits/men/32.jpg" class="rounded-circle me-3"
+                                                width="50" alt="James Mwangi" />
+                                            <div>
+                                                <h6 class="mb-0 testimonial-name">James Mwangi</h6>
+                                                <small class="text-muted">Electronics Store, Nairobi</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
-                            <p class="card-text">
-                                "Shopybook transformed my retail business. The M-Pesa integration and inventory management 
-                                have increased my efficiency by 300%. I can now focus on growing instead of tracking stock manually."
-                            </p>
-                            <div class="d-flex align-items-center mt-3">
-                                <img src="https://randomuser.me/api/portraits/men/32.jpg" class="rounded-circle me-3"
-                                    width="50" alt="Business Owner" />
-                                <div>
-                                    <h6 class="mb-0">James Mwangi</h6>
-                                    <small class="text-muted">Electronics Store, Nairobi</small>
+                        </div>
+                    </div>
+
+                    <!-- Testimonial 2 -->
+                    <div class="carousel-item">
+                        <div class="row justify-content-center">
+                            <div class="col-md-8">
+                                <div class="card testimonial-card h-100">
+                                    <div class="card-body text-center">
+                                        <div class="mb-3 text-warning">
+                                            <i class="fas fa-star"></i>
+                                            <i class="fas fa-star"></i>
+                                            <i class="fas fa-star"></i>
+                                            <i class="fas fa-star"></i>
+                                            <i class="fas fa-star"></i>
+                                        </div>
+                                        <p class="card-text testimonial-text">
+                                            "Managing my salon services and staff commissions was a nightmare before Shopybook. 
+                                            Now everything is automated and my staff love the transparent commission tracking."
+                                        </p>
+                                        <div class="d-flex align-items-center justify-content-center mt-3">
+                                            <img src="https://randomuser.me/api/portraits/women/45.jpg" class="rounded-circle me-3"
+                                                width="50" alt="Wanjiku Kamau" />
+                                            <div>
+                                                <h6 class="mb-0 testimonial-name">Wanjiku Kamau</h6>
+                                                <small class="text-muted">Beauty Salon, Mombasa</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Testimonial 3 -->
+                    <div class="carousel-item">
+                        <div class="row justify-content-center">
+                            <div class="col-md-8">
+                                <div class="card testimonial-card h-100">
+                                    <div class="card-body text-center">
+                                        <div class="mb-3 text-warning">
+                                            <i class="fas fa-star"></i>
+                                            <i class="fas fa-star"></i>
+                                            <i class="fas fa-star"></i>
+                                            <i class="fas fa-star"></i>
+                                            <i class="fas fa-star"></i>
+                                        </div>
+                                        <p class="card-text testimonial-text">
+                                            "The multi-language support and local payment methods make Shopybook perfect for our market. 
+                                            Our customers love paying with M-Pesa, and we get instant confirmations."
+                                        </p>
+                                        <div class="d-flex align-items-center justify-content-center mt-3">
+                                            <img src="https://randomuser.me/api/portraits/men/28.jpg" class="rounded-circle me-3"
+                                                width="50" alt="Peter Ochieng" />
+                                            <div>
+                                                <h6 class="mb-0 testimonial-name">Peter Ochieng</h6>
+                                                <small class="text-muted">Hardware Store, Kisumu</small>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <div class="col-md-4">
-                    <div class="card h-100 bg-green text-light">
-                        <div class="card-body">
-                            <div class="mb-3 text-warning">
-                                <i class="fas fa-star"></i>
-                                <i class="fas fa-star"></i>
-                                <i class="fas fa-star"></i>
-                                <i class="fas fa-star"></i>
-                                <i class="fas fa-star"></i>
-                            </div>
-                            <p class="card-text">
-                                "Managing my salon services and staff commissions was a nightmare before Shopybook. 
-                                Now everything is automated and my staff love the transparent commission tracking."
-                            </p>
-                            <div class="d-flex align-items-center mt-3">
-                                <img src="https://randomuser.me/api/portraits/women/45.jpg" class="rounded-circle me-3"
-                                    width="50" alt="Business Owner" />
-                                <div>
-                                    <h6 class="mb-0">Wanjiku Kamau</h6>
-                                    <small class="text-muted">Beauty Salon, Mombasa</small>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                <!-- Carousel Controls -->
+                <button class="carousel-control-prev" type="button" data-bs-target="#testimonialsCarousel" data-bs-slide="prev">
+                    <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                    <span class="visually-hidden">Previous</span>
+                </button>
+                <button class="carousel-control-next" type="button" data-bs-target="#testimonialsCarousel" data-bs-slide="next">
+                    <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                    <span class="visually-hidden">Next</span>
+                </button>
 
-                <div class="col-md-4">
-                    <div class="card h-100 bg-green text-light">
-                        <div class="card-body">
-                            <div class="mb-3 text-warning">
-                                <i class="fas fa-star"></i>
-                                <i class="fas fa-star"></i>
-                                <i class="fas fa-star"></i>
-                                <i class="fas fa-star"></i>
-                                <i class="fas fa-star"></i>
-                            </div>
-                            <p class="card-text">
-                                "The multi-language support and local payment methods make Shopybook perfect for our market. 
-                                Our customers love paying with M-Pesa, and we get instant confirmations."
-                            </p>
-                            <div class="d-flex align-items-center mt-3">
-                                <img src="https://randomuser.me/api/portraits/men/28.jpg" class="rounded-circle me-3"
-                                    width="50" alt="Business Owner" />
-                                <div>
-                                    <h6 class="mb-0">Peter Ochieng</h6>
-                                    <small class="text-muted">Hardware Store, Kisumu</small>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                <!-- Carousel Indicators -->
+                <div class="carousel-indicators">
+                    <button type="button" data-bs-target="#testimonialsCarousel" data-bs-slide-to="0" class="active" aria-current="true" aria-label="Slide 1"></button>
+                    <button type="button" data-bs-target="#testimonialsCarousel" data-bs-slide-to="1" aria-label="Slide 2"></button>
+                    <button type="button" data-bs-target="#testimonialsCarousel" data-bs-slide-to="2" aria-label="Slide 3"></button>
                 </div>
+            </div>
             </div>
         </div>
     </section>
@@ -651,18 +1033,18 @@ input.form-control::placeholder, textarea.form-control::placeholder {
                 <div class="col-md-4 mb-4">
                     <div class="card pricing-card h-100">
                         <div class="card-body text-center">
-                            <h3 class="card-title text-primary">Free Starter</h3>
+                            <h3 class="card-title">Free Starter</h3>
                             <div class="price mb-4">
-                                <span class="currency text-primary">KSh</span>
-                                <span class="amount text-primary">0</span>
-                                <span class="period text-light">/month</span>
+                                <span class="currency">KSh</span>
+                                <span class="amount">0</span>
+                                <span class="period">/month</span>
                             </div>
-                            <ul class="list-unstyled mb-4 text-start">
-                                <li class="text-light"><i class="fas fa-check text-primary me-2"></i>Up to 50 products</li>
-                                <li class="text-light"><i class="fas fa-check text-primary me-2"></i>Basic inventory tracking</li>
-                                <li class="text-light"><i class="fas fa-check text-primary me-2"></i>Customer management</li>
-                                <li class="text-light"><i class="fas fa-check text-primary me-2"></i>Basic reporting</li>
-                                <li class="text-light"><i class="fas fa-check text-primary me-2"></i>M-Pesa integration</li>
+                            <ul class="list-unstyled pricing-list mb-4 text-start">
+                                <li><i class="fas fa-check text-primary me-2"></i>Up to 50 products</li>
+                                <li><i class="fas fa-check text-primary me-2"></i>Basic inventory tracking</li>
+                                <li><i class="fas fa-check text-primary me-2"></i>Customer management</li>
+                                <li><i class="fas fa-check text-primary me-2"></i>Basic reporting</li>
+                                <li><i class="fas fa-check text-primary me-2"></i>M-Pesa integration</li>
                             </ul>
                             <a href="{{ route('register') }}" class="btn btn-outline-light">Get Started Free</a>
                         </div>
@@ -674,20 +1056,20 @@ input.form-control::placeholder, textarea.form-control::placeholder {
                     <div class="card pricing-card featured h-100">
                         <div class="card-body text-center">
                             <div class="popular-badge">MOST POPULAR</div>
-                            <h3 class="card-title text-primary">Business Pro</h3>
+                            <h3 class="card-title">Business Pro</h3>
                             <div class="price mb-4">
-                                <span class="currency text-primary">KSh</span>
-                                <span class="amount text-primary">2,500</span>
-                                <span class="period text-light">/month</span>
+                                <span class="currency">KSh</span>
+                                <span class="amount">2,500</span>
+                                <span class="period">/month</span>
                             </div>
-                            <ul class="list-unstyled mb-4 text-start">
-                                <li class="text-light"><i class="fas fa-check text-primary me-2"></i>Unlimited products & services</li>
-                                <li class="text-light"><i class="fas fa-check text-primary me-2"></i>Advanced inventory management</li>
-                                <li class="text-light"><i class="fas fa-check text-primary me-2"></i>Staff & commission management</li>
-                                <li class="text-light"><i class="fas fa-check text-primary me-2"></i>Service booking system</li>
-                                <li class="text-light"><i class="fas fa-check text-primary me-2"></i>Advanced analytics</li>
-                                <li class="text-light"><i class="fas fa-check text-primary me-2"></i>Marketing tools</li>
-                                <li class="text-light"><i class="fas fa-check text-primary me-2"></i>Priority support</li>
+                            <ul class="list-unstyled pricing-list mb-4 text-start">
+                                <li><i class="fas fa-check text-primary me-2"></i>Unlimited products & services</li>
+                                <li><i class="fas fa-check text-primary me-2"></i>Advanced inventory management</li>
+                                <li><i class="fas fa-check text-primary me-2"></i>Staff & commission management</li>
+                                <li><i class="fas fa-check text-primary me-2"></i>Service booking system</li>
+                                <li><i class="fas fa-check text-primary me-2"></i>Advanced analytics</li>
+                                <li><i class="fas fa-check text-primary me-2"></i>Marketing tools</li>
+                                <li><i class="fas fa-check text-primary me-2"></i>Priority support</li>
                             </ul>
                             <a href="{{ route('register') }}" class="btn btn-primary">Start 30-Day Trial</a>
                         </div>
@@ -698,19 +1080,19 @@ input.form-control::placeholder, textarea.form-control::placeholder {
                 <div class="col-md-4 mb-4">
                     <div class="card pricing-card h-100">
                         <div class="card-body text-center">
-                            <h3 class="card-title text-primary">Enterprise</h3>
+                            <h3 class="card-title">Enterprise</h3>
                             <div class="price mb-4">
-                                <span class="currency text-primary">KSh</span>
-                                <span class="amount text-primary">5,000</span>
-                                <span class="period text-light">/month</span>
+                                <span class="currency">KSh</span>
+                                <span class="amount">5,000</span>
+                                <span class="period">/month</span>
                             </div>
-                            <ul class="list-unstyled mb-4 text-start">
-                                <li class="text-light"><i class="fas fa-check text-primary me-2"></i>Everything in Pro</li>
-                                <li class="text-light"><i class="fas fa-check text-primary me-2"></i>Multi-location support</li>
-                                <li class="text-light"><i class="fas fa-check text-primary me-2"></i>Advanced user permissions</li>
-                                <li class="text-light"><i class="fas fa-check text-primary me-2"></i>Custom integrations</li>
-                                <li class="text-light"><i class="fas fa-check text-primary me-2"></i>Dedicated account manager</li>
-                                <li class="text-light"><i class="fas fa-check text-primary me-2"></i>Custom training</li>
+                            <ul class="list-unstyled pricing-list mb-4 text-start">
+                                <li><i class="fas fa-check text-primary me-2"></i>Everything in Pro</li>
+                                <li><i class="fas fa-check text-primary me-2"></i>Multi-location support</li>
+                                <li><i class="fas fa-check text-primary me-2"></i>Advanced user permissions</li>
+                                <li><i class="fas fa-check text-primary me-2"></i>Custom integrations</li>
+                                <li><i class="fas fa-check text-primary me-2"></i>Dedicated account manager</li>
+                                <li><i class="fas fa-check text-primary me-2"></i>Custom training</li>
                             </ul>
                             <a href="#contact" class="btn btn-outline-light">Contact Sales</a>
                         </div>
@@ -790,7 +1172,7 @@ input.form-control::placeholder, textarea.form-control::placeholder {
                                 <i class="fas fa-envelope text-primary me-3"></i>
                                 <div>
                                     <strong>Email Support</strong><br>
-                                    <span>harveyelvis24@gmail.com</span>
+                                    <span>info@shopybook.com</span>
                                 </div>
                             </li>
                             <li class="mb-3">
@@ -842,7 +1224,7 @@ input.form-control::placeholder, textarea.form-control::placeholder {
                                 <i class="fas fa-headset me-2"></i>Need Immediate Help?
                             </h6>
                             <p class="mb-2 small">Our support team is ready to help you get started</p>
-                            <a href="tel:+254717745891" class="btn btn-outline-primary btn-sm">
+                            <a href="tel:+254f717745891" class="btn btn-outline-primary btn-sm">
                                 <i class="fas fa-phone me-1"></i>Call Now
                             </a>
                         </div>
@@ -860,6 +1242,17 @@ input.form-control::placeholder, textarea.form-control::placeholder {
                 document.querySelector('.feature-bubbles-container').classList.add('loaded');
             }, 500);
 
+            // Mobile-specific animations
+            setTimeout(function () {
+                const mobileElements = document.querySelectorAll('.mobile-floating-elements > div, .mobile-feature-card, .feature-highlight');
+                mobileElements.forEach((el, index) => {
+                    setTimeout(() => {
+                        el.style.opacity = '1';
+                        el.style.transform = 'translateY(0)';
+                    }, index * 200);
+                });
+            }, 1000);
+
             // Hover effects
             const images = document.querySelectorAll('.image-bubble');
             images.forEach(img => {
@@ -872,6 +1265,72 @@ input.form-control::placeholder, textarea.form-control::placeholder {
                     this.style.transform = 'scale(1)';
                     this.style.zIndex = '10';
                     this.style.boxShadow = '0 10px 30px rgba(0,0,0,0.2)';
+                });
+            });
+
+            // Mobile touch effects
+            const mobileCards = document.querySelectorAll('.mobile-feature-card, .feature-highlight');
+            mobileCards.forEach(card => {
+                card.addEventListener('touchstart', function() {
+                    this.style.transform = 'scale(0.95)';
+                });
+                card.addEventListener('touchend', function() {
+                    this.style.transform = 'scale(1)';
+                });
+            });
+
+            // Mobile feature items touch effects
+            const mobileFeatureItems = document.querySelectorAll('.mobile-feature-item');
+            mobileFeatureItems.forEach(item => {
+                item.addEventListener('touchstart', function() {
+                    this.style.transform = 'scale(0.95)';
+                });
+                item.addEventListener('touchend', function() {
+                    this.style.transform = 'scale(1)';
+                });
+            });
+
+            // Stat cards touch effects
+            const statCards = document.querySelectorAll('.stat-card');
+            statCards.forEach(card => {
+                card.addEventListener('touchstart', function() {
+                    this.style.transform = 'scale(0.98)';
+                });
+                card.addEventListener('touchend', function() {
+                    this.style.transform = 'scale(1)';
+                });
+            });
+
+            // Testimonial cards touch effects
+            const testimonialCards = document.querySelectorAll('.testimonial-card');
+            testimonialCards.forEach(card => {
+                card.addEventListener('touchstart', function() {
+                    this.style.transform = 'scale(0.98)';
+                });
+                card.addEventListener('touchend', function() {
+                    this.style.transform = 'scale(1)';
+                });
+            });
+
+            // Pricing cards touch effects
+            const pricingCards = document.querySelectorAll('.pricing-card');
+            pricingCards.forEach(card => {
+                card.addEventListener('touchstart', function() {
+                    this.style.transform = 'scale(0.98)';
+                });
+                card.addEventListener('touchend', function() {
+                    this.style.transform = 'scale(1)';
+                });
+            });
+
+            // Contact form elements touch effects
+            const contactElements = document.querySelectorAll('.glass-card, .contact-info li, .social-bubble');
+            contactElements.forEach(element => {
+                element.addEventListener('touchstart', function() {
+                    this.style.transform = 'scale(0.98)';
+                });
+                element.addEventListener('touchend', function() {
+                    this.style.transform = 'scale(1)';
                 });
             });
         });

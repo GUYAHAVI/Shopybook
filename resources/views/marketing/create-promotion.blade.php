@@ -73,7 +73,7 @@
                                                id="discount_value" name="discount_value" value="{{ old('discount_value') }}" 
                                                step="0.01" min="0" required>
                                         <div class="input-group-append">
-                                            <span class="input-group-text" id="discount_suffix">₦</span>
+                                            <span class="input-group-text" id="discount_suffix">KSh</span>
                                         </div>
                                     </div>
                                     @error('discount_value')
@@ -86,7 +86,7 @@
                                     <label for="minimum_amount">Minimum Order Amount</label>
                                     <div class="input-group">
                                         <div class="input-group-prepend">
-                                            <span class="input-group-text">₦</span>
+                                            <span class="input-group-text">KSh</span>
                                         </div>
                                         <input type="number" class="form-control @error('minimum_amount') is-invalid @enderror" 
                                                id="minimum_amount" name="minimum_amount" value="{{ old('minimum_amount') }}" 
@@ -157,7 +157,7 @@
                                                id="product_{{ $product->id }}" name="product_ids[]" 
                                                value="{{ $product->id }}" {{ in_array($product->id, old('product_ids', [])) ? 'checked' : '' }}>
                                         <label class="custom-control-label" for="product_{{ $product->id }}">
-                                            {{ $product->name }} - ₦{{ number_format($product->price) }}
+                                            {{ $product->name }} - KSh {{ number_format($product->price) }}
                                         </label>
                                     </div>
                                 </div>
@@ -236,7 +236,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (discountType.value === 'percentage') {
             discountSuffix.textContent = '%';
         } else {
-            discountSuffix.textContent = '₦';
+            discountSuffix.textContent = 'KSh';
         }
 
         // Update preview card
@@ -245,7 +245,7 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('preview-code').textContent = document.getElementById('code').value;
         
         if (discountType.value && discountValue.value) {
-            const suffix = discountType.value === 'percentage' ? '%' : '₦';
+            const suffix = discountType.value === 'percentage' ? '%' : 'KSh';
             document.getElementById('preview-discount').textContent = `${discountValue.value}${suffix} OFF`;
         }
 

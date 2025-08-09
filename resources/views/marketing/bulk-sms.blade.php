@@ -1,28 +1,46 @@
 @extends('layouts.dash')
 
+@section('title', 'Bulk SMS')
+
 @section('content')
-<div class="container-fluid">
-    <!-- Page Heading -->
-    <div class="d-sm-flex align-items-center justify-content-between mb-4">
-        <h1 class="h3 mb-0 text-gray-800">Bulk SMS</h1>
-        <div>
-            <span class="badge badge-info">API Integration Pending</span>
-        </div>
+<!-- Sub-navigation for Marketing -->
+<div class="sub-navigation mb-4">
+    <div class="nav-tabs">
+        <a href="{{ route('marketing.social-media') }}" class="nav-tab">
+            <i class="fas fa-share-alt me-1"></i> Social Media
+        </a>
+        <a href="{{ route('marketing.promotions') }}" class="nav-tab">
+            <i class="fas fa-bullhorn me-1"></i> Promotions
+        </a>
+        <a href="{{ route('marketing.advertising') }}" class="nav-tab">
+            <i class="fas fa-ad me-1"></i> Advertising
+        </a>
+        <a href="{{ route('marketing.bulk-sms') }}" class="nav-tab active">
+            <i class="fas fa-sms me-1"></i> Bulk SMS
+        </a>
     </div>
+</div>
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h3 mb-0" style="color: var(--text-primary);">Bulk SMS</h1>
+    <div>
+        <span class="badge" style="background: var(--info-color); color: var(--white);">API Integration Pending</span>
+    </div>
+</div>
 
     <div class="row">
         <div class="col-lg-8">
-            <div class="card shadow">
-                <div class="card-header py-3">
-                    <h6 class="m-0 font-weight-bold text-primary">Send Bulk SMS</h6>
+            <div class="card shadow" style="background: var(--card-bg); border: 1px solid var(--border-color);">
+                <div class="card-header py-3" style="background: var(--bg-tertiary); border-bottom: 1px solid var(--border-color);">
+                    <h6 class="m-0 font-weight-bold" style="color: var(--text-primary);">Send Bulk SMS</h6>
                 </div>
                 <div class="card-body">
                     <form id="smsForm">
                         @csrf
                         
                         <div class="form-group">
-                            <label for="template">Message Template</label>
-                            <select class="form-control" id="template" name="template">
+                            <label for="template" style="color: var(--text-primary);">Message Template</label>
+                            <select class="form-control" id="template" name="template" style="background: var(--bg-secondary); border: 1px solid var(--border-color); color: var(--text-primary);">
                                 <option value="">Select a template or write custom message</option>
                                 @foreach($templates as $key => $template)
                                 <option value="{{ $key }}">{{ ucfirst($key) }} Template</option>
@@ -30,26 +48,26 @@
                             </select>
                         </div>
 
-                        <div class="form-group">
-                            <label for="message">Message *</label>
-                            <textarea class="form-control" id="message" name="message" rows="4" 
-                                      maxlength="160" placeholder="Enter your message here..." required></textarea>
-                            <div class="d-flex justify-content-between mt-1">
-                                <small class="text-muted">Maximum 160 characters</small>
-                                <small class="text-muted"><span id="charCount">0</span>/160</small>
-                            </div>
+                        <div class="mb-3">
+                            <label for="message" class="form-label">Message</label>
+                            <x-ai-enhanced-textarea name="message" 
+                                                   content-type="sms" 
+                                                   tone="friendly" 
+                                                   rows="4" 
+                                                   placeholder="Enter your message...">
+                            </x-ai-enhanced-textarea>
                         </div>
 
                         <div class="form-group">
-                            <label for="scheduled_at">Schedule (Optional)</label>
-                            <input type="datetime-local" class="form-control" id="scheduled_at" name="scheduled_at">
-                            <small class="form-text text-muted">Leave empty to send immediately</small>
+                            <label for="scheduled_at" style="color: var(--text-primary);">Schedule (Optional)</label>
+                            <input type="datetime-local" class="form-control" id="scheduled_at" name="scheduled_at" style="background: var(--bg-secondary); border: 1px solid var(--border-color); color: var(--text-primary);">
+                            <small class="form-text" style="color: var(--text-muted);">Leave empty to send immediately</small>
                         </div>
 
                         <hr>
 
                         <div class="form-group">
-                            <label>Select Recipients</label>
+                            <label style="color: var(--text-primary);">Select Recipients</label>
                             <div class="row mb-2">
                                 <div class="col-md-6">
                                     <button type="button" class="btn btn-outline-primary btn-sm" onclick="selectAll()">
@@ -60,7 +78,7 @@
                                     </button>
                                 </div>
                                 <div class="col-md-6 text-right">
-                                    <span class="badge badge-info" id="selectedCount">0 selected</span>
+                                    <span class="badge" id="selectedCount" style="background: var(--info-color); color: var(--white);">0 selected</span>
                                 </div>
                             </div>
                             
@@ -71,10 +89,10 @@
                                         <input type="checkbox" class="custom-control-input customer-checkbox" 
                                                id="customer_{{ $customer->id }}" name="customer_ids[]" 
                                                value="{{ $customer->id }}" data-phone="{{ $customer->phone }}">
-                                        <label class="custom-control-label" for="customer_{{ $customer->id }}">
+                                        <label class="custom-control-label" for="customer_{{ $customer->id }}" style="color: var(--text-primary);">
                                             <div class="d-flex justify-content-between">
                                                 <span>{{ $customer->name }}</span>
-                                                <small class="text-muted">{{ $customer->phone }}</small>
+                                                <small style="color: var(--text-muted);">{{ $customer->phone }}</small>
                                             </div>
                                         </label>
                                     </div>
@@ -97,37 +115,37 @@
         </div>
 
         <div class="col-lg-4">
-            <div class="card shadow">
-                <div class="card-header py-3">
-                    <h6 class="m-0 font-weight-bold text-primary">SMS Statistics</h6>
+            <div class="card shadow" style="background: var(--card-bg); border: 1px solid var(--border-color);">
+                <div class="card-header py-3" style="background: var(--bg-tertiary); border-bottom: 1px solid var(--border-color);">
+                    <h6 class="m-0 font-weight-bold" style="color: var(--text-primary);">SMS Statistics</h6>
                 </div>
                 <div class="card-body">
                     <div class="row text-center">
                         <div class="col-6">
-                            <div class="border-right">
-                                <div class="h4 text-primary" id="totalRecipients">0</div>
-                                <small class="text-muted">Recipients</small>
+                            <div class="border-right" style="border-right: 1px solid var(--border-color);">
+                                <div class="h4" id="totalRecipients" style="color: var(--primary-color);">0</div>
+                                <small style="color: var(--text-muted);">Recipients</small>
                             </div>
                         </div>
                         <div class="col-6">
-                            <div class="h4 text-success" id="estimatedCost">₦0</div>
-                            <small class="text-muted">Estimated Cost</small>
+                            <div class="h4" id="estimatedCost" style="color: var(--success-color);">KSh 0</div>
+                            <small style="color: var(--text-muted);">Estimated Cost</small>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <div class="card shadow mt-4">
-                <div class="card-header py-3">
-                    <h6 class="m-0 font-weight-bold text-primary">Message Preview</h6>
+            <div class="card shadow mt-4" style="background: var(--card-bg); border: 1px solid var(--border-color);">
+                <div class="card-header py-3" style="background: var(--bg-tertiary); border-bottom: 1px solid var(--border-color);">
+                    <h6 class="m-0 font-weight-bold" style="color: var(--text-primary);">Message Preview</h6>
                 </div>
                 <div class="card-body">
-                    <div id="messagePreview" class="border rounded p-3 bg-light">
-                        <p class="mb-2"><strong>To:</strong> <span id="previewRecipients">No recipients selected</span></p>
-                        <p class="mb-2"><strong>Message:</strong></p>
-                        <div id="previewMessage" class="text-muted">Your message will appear here...</div>
-                        <hr>
-                        <small class="text-muted">
+                    <div id="messagePreview" class="border rounded p-3" style="border: 1px solid var(--border-color) !important; background: var(--bg-tertiary);">
+                        <p class="mb-2" style="color: var(--text-primary);"><strong>To:</strong> <span id="previewRecipients" style="color: var(--text-secondary);">No recipients selected</span></p>
+                        <p class="mb-2" style="color: var(--text-primary);"><strong>Message:</strong></p>
+                        <div id="previewMessage" style="color: var(--text-muted);">Your message will appear here...</div>
+                        <hr style="border-color: var(--border-color);">
+                        <small style="color: var(--text-muted);">
                             <i class="fas fa-info-circle"></i> 
                             SMS API integration is pending. Messages will be logged for later processing.
                         </small>
@@ -221,7 +239,7 @@ document.addEventListener('DOMContentLoaded', function() {
         
         selectedCount.textContent = `${count} selected`;
         totalRecipients.textContent = count;
-        estimatedCost.textContent = `₦${(count * 5).toFixed(2)}`; // Assuming ₦5 per SMS
+        estimatedCost.textContent = `KSh ${(count * 5).toFixed(2)}`; // Assuming KSh 5 per SMS
         
         updatePreview();
     }
@@ -305,4 +323,57 @@ document.addEventListener('DOMContentLoaded', function() {
     updateStats();
 });
 </script>
+
+<style>
+.sub-navigation {
+    background: var(--card-bg);
+    border-radius: 0.75rem;
+    padding: 1rem;
+    border: 1px solid var(--border-color);
+    margin-bottom: 2rem;
+}
+
+.sub-navigation .nav-tabs {
+    display: flex;
+    gap: 1rem;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    flex-wrap: wrap;
+}
+
+.sub-navigation .nav-tab {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--text-muted);
+    text-decoration: none;
+    padding: 0.5rem 1rem;
+    border-radius: 0.5rem;
+    transition: all 0.2s ease;
+    border: 1px solid transparent;
+}
+
+.sub-navigation .nav-tab:hover {
+    color: var(--text-primary);
+    background: var(--bg-tertiary);
+}
+
+.sub-navigation .nav-tab.active {
+    color: var(--primary-color);
+    background: var(--primary-color);
+    color: var(--white);
+}
+
+@media (max-width: 768px) {
+    .sub-navigation .nav-tabs {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    
+    .sub-navigation .nav-tab {
+        text-align: center;
+        padding: 0.75rem 1rem;
+    }
+}
+</style>
 @endpush 
