@@ -108,8 +108,8 @@ return [
         'api_key' => env('FAL_KEY'),
     ],
     
-    'huggingface' => [
-        'api_key' => env('HUGGINGFACE_API_TOKEN', 'REMOVED_SECRET_TOKEN'),
+            'huggingface' => [
+            'api_key' => env('HUGGINGFACE_API_TOKEN'),
     ],
 
     'mpesa' => [
