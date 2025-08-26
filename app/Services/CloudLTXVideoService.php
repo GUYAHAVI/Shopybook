@@ -216,7 +216,7 @@ class CloudLTXVideoService
 
             $response = Http::timeout(300) // 5 minutes timeout for video generation
                 ->withHeaders([
-                    'Authorization' => 'Bearer REMOVED_SECRET_TOKEN',
+                    'Authorization' => 'Bearer ' . config('services.huggingface.api_key'),
                     'Content-Type' => 'application/json',
                 ])->post('https://api-inference.huggingface.co/models/Lightricks/LTX-Video', $hfPayload);
 
