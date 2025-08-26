@@ -40,7 +40,6 @@ use Illuminate\Support\Facades\Route;
 
 Route::get('/',[IndexController::class,'index'])->name('index');
 Route::get('/business', [BusinessController::class, 'index'])->name('businesses');
-Route::get('/business/{slug}', [BusinessController::class, 'show'])->name('business.show');
 Route::post('/orders', [OrderController::class, 'store'])->name('orders.store');
 Route::post('/service-bookings/public', [ServiceBookingController::class, 'storePublic'])->name('service-bookings.store-public');
 
@@ -60,22 +59,25 @@ Route::get('/test-flash', function () {
     return redirect()->route('dashboard')->with('success', 'Flash message test successful! This message should appear immediately.');
 })->middleware('auth');
 
+
 Route::get('/dashboard', [DashboardController::class, 'dashboard'])->name('dashboard')->middleware('auth');
 
+Route::get('/business/choose-type', [BusinessController::class, 'chooseType'])->name('business.choose-type')->middleware('auth');
+Route::get('/business/create', [BusinessController::class, 'create'])->name('business.create')->middleware('auth');
+Route::post('/business/store', [BusinessController::class, 'store'])->name('business.store')->middleware('auth');
+
+// This route must come AFTER the specific /business/* routes to avoid conflicts
+Route::get('/business/{slug}', [BusinessController::class, 'show'])->name('business.show');
+
 Route::middleware(['auth', 'verified'])->group(function () {
-    // Business Profile Routes
-    Route::prefix('business')->group(function () {
-        Route::get('/choose-type', [BusinessController::class, 'chooseType'])->name('business.choose-type');
-        Route::get('/create', [BusinessController::class, 'create'])->name('business.create');
-        Route::post('/store', [BusinessController::class, 'store'])->name('business.store');
-        Route::get('/edit', [BusinessController::class, 'edit'])->name('business.edit')
-            ->middleware('has.business');
-        Route::put('/update', [BusinessController::class, 'update'])->name('business.update')
-            ->middleware('has.business');
+    
+    // Business Profile Routes (for users with businesses)
+    Route::prefix('business')->middleware('has.business')->group(function () {
+        Route::get('/edit', [BusinessController::class, 'edit'])->name('business.edit');
+        Route::put('/update', [BusinessController::class, 'update'])->name('business.update');
 
         Route::delete('/{business}', [BusinessController::class, 'destroy'])
             ->name('business.destroy')
-            ->middleware(['has.business'])
             ->can('delete', 'business');
             
         Route::post('/password/verify', function (Request $request) {
@@ -183,6 +185,17 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/', [BusinessAnalysisController::class, 'index'])->name('business.analysis.index')->middleware('has.business');
         Route::post('/generate', [BusinessAnalysisController::class, 'generateAnalysis'])->name('business.analysis.generate')->middleware('has.business');
         Route::get('/financial', [BusinessAnalysisController::class, 'financialReport'])->name('business.analysis.financial')->middleware('has.business');
+    });
+
+    // Enhanced AI Business Analysis Routes (Canadian Model)
+    Route::prefix('ai-analysis')->group(function () {
+        Route::get('/', [\App\Http\Controllers\EnhancedBusinessAnalysisController::class, 'index'])->name('business.ai-analysis.index')->middleware('has.business');
+        Route::post('/generate', [\App\Http\Controllers\EnhancedBusinessAnalysisController::class, 'generateEnhancedAnalysis'])->name('business.ai-analysis.generate')->middleware('has.business');
+        Route::get('/financial', [\App\Http\Controllers\EnhancedBusinessAnalysisController::class, 'getFinancialAnalysis'])->name('business.ai-analysis.financial')->middleware('has.business');
+        Route::get('/operational', [\App\Http\Controllers\EnhancedBusinessAnalysisController::class, 'getOperationalAnalysis'])->name('business.ai-analysis.operational')->middleware('has.business');
+        Route::get('/growth', [\App\Http\Controllers\EnhancedBusinessAnalysisController::class, 'getGrowthPredictions'])->name('business.ai-analysis.growth')->middleware('has.business');
+        Route::get('/benchmarks', [\App\Http\Controllers\EnhancedBusinessAnalysisController::class, 'getBenchmarkComparison'])->name('business.ai-analysis.benchmarks')->middleware('has.business');
+        Route::post('/export', [\App\Http\Controllers\EnhancedBusinessAnalysisController::class, 'exportAnalysisReport'])->name('business.ai-analysis.export')->middleware('has.business');
     });
 
     // Services Management Routes
@@ -350,6 +363,7 @@ Route::post('/assign-staff', [ServiceBookingController::class, 'assignStaff'])->
         
         // Marketing Posts
         Route::prefix('posts')->group(function () {
+            Route::get('/', [MarketingPostController::class, 'postsIndex'])->name('marketing.posts.index');
             Route::post('/', [MarketingPostController::class, 'store'])->name('marketing.posts.store');
             Route::get('/{post}', [MarketingPostController::class, 'show'])->name('marketing.posts.show');
             Route::get('/{post}/edit', [MarketingPostController::class, 'edit'])->name('marketing.posts.edit');

@@ -4,16 +4,19 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use App\Services\EnhancedAIService;
+use App\Services\ShopybookAIBusinessAnalyst;
+use App\Services\OpenAIService;
 use App\Models\Business;
 
 class AICommunicationController extends Controller
 {
-    protected $aiService;
+    protected $kenyanAI;
+    protected $openAI;
 
     public function __construct()
     {
-        $this->aiService = new EnhancedAIService();
+        $this->kenyanAI = new ShopybookAIBusinessAnalyst();
+        $this->openAI = new OpenAIService();
     }
 
     /**
@@ -42,15 +45,40 @@ class AICommunicationController extends Controller
             $message = $request->input('message');
             $businessId = $request->input('business_id');
 
-            // Process message through enhanced AI service
-            $response = $this->aiService->processEnhancedMessage($message, $businessId);
+            // Get business data if business ID is provided
+            $business = null;
+            if ($businessId) {
+                $business = Business::where('id', $businessId)
+                    ->where('user_id', $userId)
+                    ->first();
+            }
+
+            // Try Kenyan AI first, fallback to OpenAI
+            try {
+                if ($business) {
+                    $analysis = $this->kenyanAI->generateComprehensiveAnalysis($business);
+                    $response = $this->formatAnalysisForChat($analysis, $message);
+                } else {
+                    // Use OpenAI for general queries without business context
+                    $response = $this->openAI->generateBusinessAnalysis([
+                        'query' => $message,
+                        'context' => 'kenyan_business_chat'
+                    ]);
+                }
+            } catch (\Exception $e) {
+                // Fallback to OpenAI if Kenyan model fails
+                $response = $this->openAI->generateBusinessAnalysis([
+                    'query' => $message,
+                    'context' => 'business_chat_fallback',
+                    'business_id' => $businessId
+                ]);
+            }
 
             return response()->json([
                 'success' => true,
-                'response' => $response['response'],
-                'intent' => $response['intent'],
-                'confidence' => $response['confidence'],
-                'suggestions' => $response['suggestions']
+                'response' => $response['content'] ?? $response,
+                'source' => 'kenada_ai',
+                'business_id' => $businessId
             ]);
 
         } catch (\Exception $e) {
@@ -67,12 +95,11 @@ class AICommunicationController extends Controller
     public function getHistory(Request $request)
     {
         try {
-            $userId = Auth::id();
-            $history = $this->aiService->getConversationHistory($userId);
-
+            // For now, return empty history as we're focusing on real-time analysis
+            // TODO: Implement conversation history storage if needed
             return response()->json([
                 'success' => true,
-                'history' => $history
+                'history' => []
             ]);
 
         } catch (\Exception $e) {
@@ -89,9 +116,8 @@ class AICommunicationController extends Controller
     public function clearHistory(Request $request)
     {
         try {
-            $userId = Auth::id();
-            $this->aiService->clearConversationHistory($userId);
-
+            // For now, just return success
+            // TODO: Implement if conversation history storage is added
             return response()->json([
                 'success' => true,
                 'message' => 'Conversation history cleared successfully'
@@ -103,6 +129,35 @@ class AICommunicationController extends Controller
                 'message' => 'Error clearing history: ' . $e->getMessage()
             ], 500);
         }
+    }
+
+    /**
+     * Format analysis results for chat response
+     */
+    private function formatAnalysisForChat($analysis, $userMessage)
+    {
+        $response = "Based on KENADA analysis of your business:\n\n";
+        
+        if (isset($analysis['financial_health_score'])) {
+            $response .= "📊 **Financial Health Score:** {$analysis['financial_health_score']}/100\n";
+        }
+        
+        if (isset($analysis['growth_potential'])) {
+            $response .= "📈 **Growth Potential:** {$analysis['growth_potential']}\n\n";
+        }
+        
+        if (isset($analysis['recommendations']) && is_array($analysis['recommendations'])) {
+            $response .= "💡 **Key Recommendations:**\n";
+            foreach (array_slice($analysis['recommendations'], 0, 3) as $recommendation) {
+                $response .= "• " . $recommendation . "\n";
+            }
+        }
+        
+        if (isset($analysis['market_comparison'])) {
+            $response .= "\n🏆 **Market Position:** {$analysis['market_comparison']}\n";
+        }
+        
+        return $response;
     }
 
     /**

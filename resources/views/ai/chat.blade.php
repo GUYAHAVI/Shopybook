@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'AI Business Assistant')
+@section('title', 'KENADA Business Assistant')
 
 @section('content')
 <div class="container-fluid">
@@ -11,8 +11,9 @@
                 <div class="card-header bg-primary text-white">
                     <h5 class="mb-0">
                         <i class="fas fa-robot me-2"></i>
-                        AI Business Assistant
+                        KENADA Business Assistant
                     </h5>
+                    <small class="text-light">Powered by Kenya National Data MSME Intelligence</small>
                 </div>
                 <div class="card-body p-0">
                     <!-- Chat Messages -->
@@ -25,7 +26,7 @@
                         <div class="row">
                             <div class="col-md-8">
                                 <div class="input-group">
-                                    <input type="text" id="message-input" class="form-control" placeholder="Ask me anything about your business..." maxlength="1000">
+                                    <input type="text" id="message-input" class="form-control" placeholder="Ask KENADA about your business insights..." maxlength="1000">
                                     <button class="btn btn-primary" type="button" id="send-button">
                                         <i class="fas fa-paper-plane"></i>
                                     </button>

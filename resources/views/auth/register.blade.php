@@ -38,6 +38,15 @@
             align-items: center;
             justify-content: center;
             padding: 20px;
+            overflow-x: hidden;
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+                align-items: flex-start;
+                padding-top: 20px;
+            }
         }
 
         .register-container {
@@ -46,11 +55,11 @@
             border: 2px solid #13e8e9;
             border-radius: 20px;
             box-shadow: 0 20px 40px rgba(19, 232, 233, 0.2);
-            overflow: hidden;
+            overflow: visible;
             width: 100%;
-            max-width: 1000px;
+            max-width: 1200px;
             display: flex;
-            min-height: 700px;
+            min-height: 80vh;
         }
 
         .register-image {
@@ -112,18 +121,36 @@
 
         .register-form {
             flex: 1.2;
-            padding: 3rem;
+            padding: 2rem;
             display: flex;
             flex-direction: column;
-            justify-content: center;
-            overflow-y: auto;
-            max-height: 700px;
-            background: #020258;
+            justify-content: flex-start;
+            background: rgba(2, 2, 88, 0.9);
+            backdrop-filter: blur(15px);
+            position: relative;
+            overflow: visible;
+        }
+
+        .register-form::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, rgba(19, 232, 233, 0.05) 0%, rgba(255, 107, 157, 0.05) 50%, rgba(78, 205, 196, 0.05) 100%);
+            z-index: 1;
+        }
+
+        .register-form > * {
+            position: relative;
+            z-index: 2;
         }
 
         .form-header {
             text-align: center;
             margin-bottom: 2rem;
+            animation: slideInDown 0.8s ease;
         }
 
         .form-header h1 {
@@ -132,52 +159,80 @@
             font-size: 2rem;
             font-weight: 700;
             margin-bottom: 0.5rem;
+            text-shadow: 0 0 20px rgba(19, 232, 233, 0.5);
+            animation: glow 2s ease-in-out infinite alternate;
         }
 
         .form-header p {
             color: rgba(19, 232, 233, 0.8);
             font-size: 1rem;
+            opacity: 0;
+            animation: fadeIn 1s ease 0.5s forwards;
         }
 
         .form-row {
             display: flex;
             gap: 1rem;
             margin-bottom: 1.5rem;
+            opacity: 0;
+            transform: translateY(30px);
+            animation: slideInUp 0.6s ease forwards;
         }
 
         .form-group {
             flex: 1;
             position: relative;
+            margin-bottom: 1.5rem;
+            opacity: 0;
+            transform: translateY(30px);
+            animation: slideInUp 0.6s ease forwards;
         }
+
+        .form-group:nth-child(1) { animation-delay: 0.1s; }
+        .form-group:nth-child(2) { animation-delay: 0.2s; }
+        .form-group:nth-child(3) { animation-delay: 0.3s; }
+        .form-group:nth-child(4) { animation-delay: 0.4s; }
+        .form-group:nth-child(5) { animation-delay: 0.5s; }
+        .form-group:nth-child(6) { animation-delay: 0.6s; }
+
+        .form-row:nth-child(1) { animation-delay: 0.1s; }
+        .form-row:nth-child(2) { animation-delay: 0.2s; }
+        .form-row:nth-child(3) { animation-delay: 0.3s; }
 
         .form-label {
             display: block;
-            margin-bottom: 0.5rem;
+            margin-bottom: 0.8rem;
             color: #13e8e9;
             font-weight: 600;
-            font-size: 0.9rem;
+            font-size: 0.95rem;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
         }
 
         .form-control {
             width: 100%;
-            padding: 0.75rem 1rem 0.75rem 3rem;
+            padding: 0.875rem 1rem 0.875rem 3rem;
             border: 2px solid rgba(19, 232, 233, 0.3);
-            border-radius: 12px;
+            border-radius: 15px;
             font-size: 1rem;
-            transition: all 0.3s ease;
-            background: #020258;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            background: rgba(19, 232, 233, 0.05);
+            backdrop-filter: blur(10px);
             color: #13e8e9;
+            box-shadow: 0 8px 32px rgba(19, 232, 233, 0.1);
         }
 
         .form-control:focus {
             outline: none;
             border-color: #13e8e9;
-            background: rgba(2, 2, 88, 0.8);
-            box-shadow: 0 0 0 3px rgba(19, 232, 233, 0.1);
+            background: rgba(19, 232, 233, 0.1);
+            box-shadow: 0 0 0 4px rgba(19, 232, 233, 0.2), 0 15px 35px rgba(19, 232, 233, 0.2);
+            transform: translateY(-2px);
         }
 
         .form-control::placeholder {
-            color: rgba(19, 232, 233, 0.6);
+            color: rgba(19, 232, 233, 0.5);
+            font-style: italic;
         }
 
         .form-control.is-invalid {
@@ -191,7 +246,14 @@
             top: 50%;
             transform: translateY(-50%);
             color: #13e8e9;
-            z-index: 2;
+            z-index: 3;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .form-control:focus + .input-icon {
+            color: #fff;
+            transform: translateY(-50%) scale(1.1);
         }
 
         .password-toggle {
@@ -248,23 +310,50 @@
 
         .btn-register {
             width: 100%;
-            padding: 0.75rem;
-            background: #020258;
-            border: 2px solid #13e8e9;
-            border-radius: 12px;
-            color: #13e8e9;
+            padding: 0.875rem;
+            background: linear-gradient(135deg, #13e8e9 0%, #ff6b9d 50%, #4ecdc4 100%);
+            background-size: 200% 200%;
+            border: none;
+            border-radius: 15px;
+            color: #020258;
             font-size: 1rem;
-            font-weight: 600;
+            font-weight: 700;
             cursor: pointer;
-            transition: all 0.3s ease;
-            margin-bottom: 1rem;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            margin-bottom: 1.5rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            box-shadow: 0 10px 30px rgba(19, 232, 233, 0.3);
+            position: relative;
+            overflow: hidden;
+            opacity: 0;
+            transform: translateY(30px);
+            animation: slideInUp 0.6s ease 0.8s forwards;
+        }
+
+        .btn-register::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s;
         }
 
         .btn-register:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 20px rgba(19, 232, 233, 0.3);
-            background: linear-gradient(135deg, #020258 0%, #13e8e9 100%);
-            color: #13e8e9;
+            transform: translateY(-3px);
+            box-shadow: 0 20px 40px rgba(19, 232, 233, 0.4);
+            background-position: 100% 0;
+        }
+
+        .btn-register:hover::before {
+            left: 100%;
+        }
+
+        .btn-register:active {
+            transform: translateY(-1px);
         }
 
         .divider {
@@ -293,17 +382,37 @@
         .login-link {
             text-align: center;
             margin-top: 1rem;
+            opacity: 0;
+            transform: translateY(20px);
+            animation: slideInUp 0.6s ease 0.9s forwards;
         }
 
         .login-link a {
             color: #13e8e9;
             text-decoration: none;
             font-weight: 600;
-            transition: color 0.3s ease;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+        }
+
+        .login-link a::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: linear-gradient(135deg, #13e8e9, #ff6b9d);
+            transition: width 0.3s ease;
         }
 
         .login-link a:hover {
-            color: rgba(19, 232, 233, 0.7);
+            color: #ff6b9d;
+            text-shadow: 0 0 10px rgba(255, 107, 157, 0.5);
+        }
+
+        .login-link a:hover::after {
+            width: 100%;
         }
 
         .invalid-feedback {
@@ -357,6 +466,73 @@
             50% { transform: translateY(-20px) rotate(180deg); }
         }
 
+        @keyframes slideInUp {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeInScale {
+            0% {
+                opacity: 0;
+                transform: scale(0.95);
+            }
+            100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        @keyframes glow {
+            0%, 100% { 
+                box-shadow: 0 0 20px rgba(19, 232, 233, 0.3);
+            }
+            50% { 
+                box-shadow: 0 0 30px rgba(19, 232, 233, 0.6);
+            }
+        }
+
+        @keyframes quantumOrbit {
+            0% { transform: rotate(0deg) translateX(15px) rotate(0deg); }
+            100% { transform: rotate(360deg) translateX(15px) rotate(-360deg); }
+        }
+
+        @keyframes quantumSpin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @keyframes quantumPulse {
+            0%, 100% { 
+                transform: scale(1);
+                opacity: 1;
+            }
+            50% { 
+                transform: scale(1.3);
+                opacity: 0.7;
+            }
+        }
+
+        @keyframes progressBar {
+            0% { width: 0%; }
+            25% { width: 25%; }
+            50% { width: 50%; }
+            75% { width: 75%; }
+            100% { width: 100%; }
+        }
+
+        @keyframes loadingDots {
+            0%, 80%, 100% { transform: scale(0.8); opacity: 0.5; }
+            40% { transform: scale(1.2); opacity: 1; }
+        }
+
+        @keyframes waveEffect {
+            0% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-20px) rotate(180deg); }
+            100% { transform: translateY(0px) rotate(360deg); }
+        }
+
         .password-strength {
             margin-top: 0.5rem;
             font-size: 0.8rem;
@@ -384,7 +560,10 @@
         @media (max-width: 768px) {
             .register-container {
                 flex-direction: column;
-                max-width: 400px;
+                max-width: 100%;
+                min-height: auto;
+                border-radius: 15px;
+                margin: 10px;
             }
 
             .register-image {
@@ -392,12 +571,62 @@
             }
 
             .register-form {
-                padding: 2rem;
+                padding: 2rem 1.5rem;
+                min-height: auto;
+                justify-content: flex-start;
+            }
+
+            .form-header h1 {
+                font-size: 1.8rem;
+                margin-bottom: 0.5rem;
+            }
+
+            .form-header {
+                margin-bottom: 1.5rem;
             }
 
             .form-row {
                 flex-direction: column;
                 gap: 0;
+                margin-bottom: 1rem;
+            }
+
+            .form-group {
+                margin-bottom: 1rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            body {
+                padding: 5px;
+            }
+
+            .register-container {
+                margin: 5px;
+                border-radius: 10px;
+            }
+
+            .register-form {
+                padding: 1.5rem 1rem;
+            }
+
+            .form-header h1 {
+                font-size: 1.5rem;
+            }
+
+            .form-control {
+                padding: 0.875rem 1rem 0.875rem 3rem;
+                font-size: 0.95rem;
+            }
+
+            .input-icon {
+                font-size: 1rem;
+                left: 0.875rem;
+            }
+
+            .btn-register {
+                padding: 0.875rem;
+                font-size: 1rem;
             }
         }
 
@@ -625,6 +854,462 @@
         </div>
     </div>
 
+    <!-- Futuristic Registration Loader Modal -->
+    <div id="futuristicLoader" class="loader-modal">
+        <div class="loader-container">
+            <div class="quantum-loader">
+                <div class="quantum-ring">
+                    <div class="quantum-particle"></div>
+                    <div class="quantum-particle"></div>
+                    <div class="quantum-particle"></div>
+                </div>
+                <div class="quantum-ring ring-2">
+                    <div class="quantum-particle"></div>
+                    <div class="quantum-particle"></div>
+                </div>
+                <div class="quantum-ring ring-3">
+                    <div class="quantum-particle"></div>
+                </div>
+                <div class="quantum-core">
+                    <div class="core-pulse"></div>
+                    <div class="core-inner">
+                        <i class="fas fa-user-plus"></i>
+                    </div>
+                </div>
+                <div class="orbital-elements">
+                    <div class="data-node" style="--angle: 0deg;"><i class="fas fa-envelope"></i></div>
+                    <div class="data-node" style="--angle: 72deg;"><i class="fas fa-lock"></i></div>
+                    <div class="data-node" style="--angle: 144deg;"><i class="fas fa-user"></i></div>
+                    <div class="data-node" style="--angle: 216deg;"><i class="fas fa-shield-alt"></i></div>
+                    <div class="data-node" style="--angle: 288deg;"><i class="fas fa-database"></i></div>
+                </div>
+            </div>
+            <div class="loader-text">
+                <h3 class="loading-title">Initializing Account Creation Matrix</h3>
+                <div class="loading-progress">
+                    <div class="progress-bar"></div>
+                    <div class="progress-percentage">0%</div>
+                </div>
+                <p class="loading-status">Preparing registration system...</p>
+                <div class="loading-steps">
+                    <div class="step" id="step1"><i class="fas fa-check"></i> Validating input data</div>
+                    <div class="step" id="step2"><i class="fas fa-hourglass-half"></i> Encrypting credentials</div>
+                    <div class="step" id="step3"><i class="fas fa-hourglass-half"></i> Creating user profile</div>
+                    <div class="step" id="step4"><i class="fas fa-hourglass-half"></i> Setting up workspace</div>
+                    <div class="step" id="step5"><i class="fas fa-hourglass-half"></i> Finalizing account</div>
+                </div>
+            </div>
+            <div class="particle-field">
+                <div class="particle"></div>
+                <div class="particle"></div>
+                <div class="particle"></div>
+                <div class="particle"></div>
+                <div class="particle"></div>
+                <div class="particle"></div>
+                <div class="particle"></div>
+                <div class="particle"></div>
+                <div class="particle"></div>
+                <div class="particle"></div>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        .loader-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(2, 2, 88, 0.95);
+            backdrop-filter: blur(10px);
+            z-index: 9999;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: all 0.5s ease;
+        }
+
+        .loader-modal.active {
+            display: flex;
+            opacity: 1;
+        }
+
+        .loader-container {
+            text-align: center;
+            position: relative;
+            z-index: 2;
+            max-width: 90%;
+        }
+
+        .quantum-loader {
+            position: relative;
+            width: 250px;
+            height: 250px;
+            margin: 0 auto 2rem;
+        }
+
+        .quantum-ring {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            border: 2px solid transparent;
+            border-top: 2px solid #13e8e9;
+            border-radius: 50%;
+            animation: quantumSpin 2s linear infinite;
+        }
+
+        .quantum-ring.ring-2 {
+            border-top: 2px solid #ff6b9d;
+            animation: quantumSpin 1.5s linear infinite reverse;
+        }
+
+        .quantum-ring.ring-3 {
+            border-top: 2px solid #4ecdc4;
+            animation: quantumSpin 1s linear infinite;
+        }
+
+        .quantum-ring:nth-child(1) {
+            width: 220px;
+            height: 220px;
+            margin: -110px 0 0 -110px;
+        }
+
+        .quantum-ring:nth-child(2) {
+            width: 170px;
+            height: 170px;
+            margin: -85px 0 0 -85px;
+        }
+
+        .quantum-ring:nth-child(3) {
+            width: 120px;
+            height: 120px;
+            margin: -60px 0 0 -60px;
+        }
+
+        .quantum-particle {
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            background: #13e8e9;
+            border-radius: 50%;
+            box-shadow: 0 0 10px #13e8e9, 0 0 20px #13e8e9, 0 0 30px #13e8e9;
+            animation: particleOrbit 3s linear infinite;
+        }
+
+        .ring-2 .quantum-particle {
+            background: #ff6b9d;
+            box-shadow: 0 0 10px #ff6b9d, 0 0 20px #ff6b9d, 0 0 30px #ff6b9d;
+            animation: particleOrbit 2s linear infinite reverse;
+        }
+
+        .ring-3 .quantum-particle {
+            background: #4ecdc4;
+            box-shadow: 0 0 10px #4ecdc4, 0 0 20px #4ecdc4, 0 0 30px #4ecdc4;
+            animation: particleOrbit 1.5s linear infinite;
+        }
+
+        .quantum-particle:nth-child(1) { animation-delay: 0s; }
+        .quantum-particle:nth-child(2) { animation-delay: -1s; }
+        .quantum-particle:nth-child(3) { animation-delay: -2s; }
+
+        .quantum-core {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 80px;
+            height: 80px;
+            margin: -40px 0 0 -40px;
+            background: radial-gradient(circle, #13e8e9, #020258);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .core-pulse {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle, transparent 40%, #13e8e9 41%, #13e8e9 43%, transparent 44%);
+            border-radius: 50%;
+            animation: corePulse 2s ease-in-out infinite;
+        }
+
+        .core-inner {
+            position: relative;
+            z-index: 2;
+            color: #fff;
+            font-size: 2rem;
+            animation: coreFloat 3s ease-in-out infinite;
+        }
+
+        .orbital-elements {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 280px;
+            height: 280px;
+            margin: -140px 0 0 -140px;
+        }
+
+        .data-node {
+            position: absolute;
+            width: 30px;
+            height: 30px;
+            background: rgba(19, 232, 233, 0.2);
+            border: 2px solid #13e8e9;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #13e8e9;
+            font-size: 0.8rem;
+            animation: nodeOrbit 8s linear infinite;
+            transform-origin: 140px 140px;
+            transform: rotate(var(--angle)) translateX(140px) rotate(calc(-1 * var(--angle)));
+        }
+
+        .data-node:nth-child(2) { animation-delay: -1.6s; }
+        .data-node:nth-child(3) { animation-delay: -3.2s; }
+        .data-node:nth-child(4) { animation-delay: -4.8s; }
+        .data-node:nth-child(5) { animation-delay: -6.4s; }
+
+        .loader-text {
+            color: #13e8e9;
+            margin-bottom: 1rem;
+        }
+
+        .loading-title {
+            font-family: "Cinzel Decorative", serif;
+            font-size: 1.5rem;
+            margin-bottom: 1.5rem;
+            background: linear-gradient(45deg, #13e8e9, #ff6b9d, #4ecdc4);
+            background-size: 300% 300%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: gradientShift 3s ease infinite;
+        }
+
+        .loading-progress {
+            width: 350px;
+            height: 6px;
+            background: rgba(19, 232, 233, 0.2);
+            border-radius: 3px;
+            margin: 0 auto 1rem;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #13e8e9, #ff6b9d, #4ecdc4, #13e8e9);
+            background-size: 300% 100%;
+            border-radius: 3px;
+            width: 0%;
+            animation: progressFill 6s ease-in-out, gradientMove 2s linear infinite;
+        }
+
+        .progress-percentage {
+            position: absolute;
+            top: -25px;
+            right: 0;
+            font-size: 0.8rem;
+            color: #13e8e9;
+            font-weight: 600;
+        }
+
+        .loading-status {
+            font-size: 1rem;
+            opacity: 0.9;
+            margin-bottom: 1.5rem;
+            animation: statusPulse 2s ease-in-out infinite;
+        }
+
+        .loading-steps {
+            text-align: left;
+            max-width: 300px;
+            margin: 0 auto;
+        }
+
+        .step {
+            display: flex;
+            align-items: center;
+            margin-bottom: 0.5rem;
+            font-size: 0.85rem;
+            opacity: 0.5;
+            transition: all 0.3s ease;
+        }
+
+        .step i {
+            margin-right: 0.5rem;
+            width: 16px;
+        }
+
+        .step.active {
+            opacity: 1;
+            color: #13e8e9;
+        }
+
+        .step.completed {
+            opacity: 1;
+            color: #4ecdc4;
+        }
+
+        .step.completed i {
+            color: #4ecdc4;
+        }
+
+        .particle-field {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            z-index: 1;
+        }
+
+        .particle {
+            position: absolute;
+            width: 2px;
+            height: 2px;
+            background: #13e8e9;
+            border-radius: 50%;
+            opacity: 0;
+            animation: particleFloat 8s linear infinite;
+        }
+
+        .particle:nth-child(odd) { background: #ff6b9d; }
+        .particle:nth-child(3n) { background: #4ecdc4; }
+        .particle:nth-child(1) { left: 10%; animation-delay: 0s; }
+        .particle:nth-child(2) { left: 15%; animation-delay: -1s; }
+        .particle:nth-child(3) { left: 25%; animation-delay: -2s; }
+        .particle:nth-child(4) { left: 35%; animation-delay: -3s; }
+        .particle:nth-child(5) { left: 45%; animation-delay: -4s; }
+        .particle:nth-child(6) { left: 55%; animation-delay: -5s; }
+        .particle:nth-child(7) { left: 65%; animation-delay: -1.5s; }
+        .particle:nth-child(8) { left: 75%; animation-delay: -2.5s; }
+        .particle:nth-child(9) { left: 85%; animation-delay: -3.5s; }
+        .particle:nth-child(10) { left: 90%; animation-delay: -4.5s; }
+
+        @keyframes quantumSpin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @keyframes particleOrbit {
+            0% { transform: rotate(0deg) translateX(110px) rotate(0deg); }
+            100% { transform: rotate(360deg) translateX(110px) rotate(-360deg); }
+        }
+
+        @keyframes nodeOrbit {
+            0% { transform: rotate(var(--angle)) translateX(140px) rotate(calc(-1 * var(--angle))); }
+            100% { transform: rotate(calc(var(--angle) + 360deg)) translateX(140px) rotate(calc(-1 * (var(--angle) + 360deg))); }
+        }
+
+        @keyframes corePulse {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.2); opacity: 0.7; }
+        }
+
+        @keyframes coreFloat {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-5px); }
+        }
+
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        @keyframes progressFill {
+            0% { width: 0%; }
+            100% { width: 100%; }
+        }
+
+        @keyframes gradientMove {
+            0% { background-position: 0% 50%; }
+            100% { background-position: 100% 50%; }
+        }
+
+        @keyframes statusPulse {
+            0%, 100% { opacity: 0.9; }
+            50% { opacity: 1; }
+        }
+
+        @keyframes particleFloat {
+            0% {
+                transform: translateY(100vh) scale(0);
+                opacity: 0;
+            }
+            10% {
+                opacity: 1;
+            }
+            90% {
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(-100px) scale(1);
+                opacity: 0;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .quantum-loader {
+                width: 200px;
+                height: 200px;
+            }
+
+            .quantum-ring:nth-child(1) {
+                width: 180px;
+                height: 180px;
+                margin: -90px 0 0 -90px;
+            }
+
+            .quantum-ring:nth-child(2) {
+                width: 140px;
+                height: 140px;
+                margin: -70px 0 0 -70px;
+            }
+
+            .quantum-ring:nth-child(3) {
+                width: 100px;
+                height: 100px;
+                margin: -50px 0 0 -50px;
+            }
+
+            .orbital-elements {
+                width: 220px;
+                height: 220px;
+                margin: -110px 0 0 -110px;
+            }
+
+            .data-node {
+                transform-origin: 110px 110px;
+                transform: rotate(var(--angle)) translateX(110px) rotate(calc(-1 * var(--angle)));
+            }
+
+            .loading-progress {
+                width: 280px;
+            }
+
+            .loading-title {
+                font-size: 1.2rem;
+            }
+
+            .loading-steps {
+                max-width: 250px;
+            }
+        }
+    </style>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         function togglePassword(inputId, toggleId) {
@@ -678,11 +1363,66 @@
             const btn = document.getElementById('registerBtn');
             const btnText = btn.querySelector('.btn-text');
             const loading = btn.querySelector('.loading');
+            const loader = document.getElementById('futuristicLoader');
+            const statusText = loader.querySelector('.loading-status');
+            const progressBar = loader.querySelector('.progress-bar');
+            const progressPercentage = loader.querySelector('.progress-percentage');
             
+            // Show futuristic loader
+            loader.classList.add('active');
+            
+            // Disable button
             btn.classList.add('loading');
             btnText.style.display = 'none';
             loading.style.display = 'inline';
             btn.disabled = true;
+            
+            // Registration steps with timing
+            const steps = [
+                { id: 'step1', message: 'Validating registration data...', duration: 800 },
+                { id: 'step2', message: 'Encrypting user credentials...', duration: 1000 },
+                { id: 'step3', message: 'Creating user profile...', duration: 1200 },
+                { id: 'step4', message: 'Setting up user workspace...', duration: 900 },
+                { id: 'step5', message: 'Finalizing account creation...', duration: 700 }
+            ];
+            
+            let currentStep = 0;
+            let progress = 0;
+            
+            function executeStep() {
+                if (currentStep < steps.length) {
+                    const step = steps[currentStep];
+                    
+                    // Update status message
+                    statusText.textContent = step.message;
+                    
+                    // Mark current step as active
+                    const stepElement = document.getElementById(step.id);
+                    stepElement.classList.add('active');
+                    stepElement.querySelector('i').className = 'fas fa-cog fa-spin';
+                    
+                    // Update progress
+                    progress = ((currentStep + 1) / steps.length) * 100;
+                    progressBar.style.width = progress + '%';
+                    progressPercentage.textContent = Math.round(progress) + '%';
+                    
+                    setTimeout(() => {
+                        // Mark step as completed
+                        stepElement.classList.remove('active');
+                        stepElement.classList.add('completed');
+                        stepElement.querySelector('i').className = 'fas fa-check';
+                        
+                        currentStep++;
+                        executeStep();
+                    }, step.duration);
+                } else {
+                    // All steps completed, update final message
+                    statusText.textContent = 'Registration complete! Redirecting...';
+                }
+            }
+            
+            // Start the step execution after a short delay
+            setTimeout(executeStep, 500);
         });
 
         // Add floating animation to form elements

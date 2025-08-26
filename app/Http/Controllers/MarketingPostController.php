@@ -35,6 +35,21 @@ class MarketingPostController extends Controller
         return view('marketing.social-media', compact('connectedAccounts', 'recentPosts'));
     }
 
+    /**
+     * Show the posts index page with all marketing posts
+     */
+    public function postsIndex()
+    {
+        $business = Auth::user()->business;
+        
+        $posts = MarketingPost::where('business_id', $business->getKey())
+            ->with(['publications.socialMediaAccount'])
+            ->orderBy('created_at', 'desc')
+            ->paginate(15);
+
+        return view('marketing.posts.index', compact('posts'));
+    }
+
      public function store(Request $request)
     {
         try {

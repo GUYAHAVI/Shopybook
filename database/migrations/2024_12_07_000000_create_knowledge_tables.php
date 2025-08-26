@@ -54,7 +54,7 @@ return new class extends Migration
         // Create knowledge_insights table for business-specific insights
         Schema::create('knowledge_insights', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('business_id');
+            $table->String('business_id');
             $table->string('insight_type'); // market_trend, competitor_analysis, opportunity, etc.
             $table->string('title');
             $table->text('description');

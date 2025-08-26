@@ -6,7 +6,8 @@
         <div class="header-content">
             <div>
                 <h1 class="analysis-title">Business Analysis</h1>
-                <p class="analysis-subtitle">AI-powered insights and recommendations for your business</p>
+                <p class="analysis-subtitle">KENADA-powered insights and recommendations for your business</p>
+                <small class="text-muted">Powered by Kenya National Data MSME Intelligence</small>
             </div>
             <div class="header-actions">
                 <button class="btn btn-outline-primary" onclick="generateAnalysis('general')">
