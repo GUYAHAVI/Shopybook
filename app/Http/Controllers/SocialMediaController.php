@@ -25,7 +25,33 @@ class SocialMediaController extends Controller
      */
     public function connect(Request $request, $platform)
     {
+        \Log::info("Social media connect request", [
+            'platform' => $platform,
+            'user_id' => Auth::id(),
+            'expects_json' => $request->expectsJson(),
+            'headers' => $request->headers->all()
+        ]);
+
         $business = Auth::user()->business;
+        
+        \Log::info("Business info", [
+            'business_id' => $business ? $business->id : null,
+            'business_name' => $business ? $business->name : null,
+            'is_premium' => $business ? $business->isPremium() : null,
+            'social_accounts_count' => $business ? $business->socialMediaAccounts()->count() : null
+        ]);
+
+        if (!$business) {
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'error' => 'no_business',
+                    'message' => 'No business found for this user.'
+                ], 404);
+            }
+            
+            return redirect()->route('marketing.social-media')
+                ->with('error', 'No business found for this user.');
+        }
 
         if (!$business->isPremium() && $business->socialMediaAccounts()->count() >= 1) {
             if ($request->expectsJson()) {
@@ -43,7 +69,19 @@ class SocialMediaController extends Controller
 
         $redirectUrl = $this->getOAuthUrl($platform);
 
+        \Log::info("OAuth URL generated", [
+            'platform' => $platform,
+            'redirect_url' => $redirectUrl
+        ]);
+
         if (!$redirectUrl) {
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'error' => 'platform_not_supported',
+                    'message' => "Social media platform '{$platform}' is not supported yet."
+                ], 400);
+            }
+            
             return redirect()->route('marketing.social-media')
                 ->with('error', "Social media platform '{$platform}' is not supported yet.");
         }
@@ -66,6 +104,13 @@ class SocialMediaController extends Controller
             'state' => $state,
             'redirect_url' => $redirectUrl
         ]);
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'redirect_url' => $redirectUrl,
+                'platform' => $platform
+            ]);
+        }
 
         return redirect($redirectUrl);
     }
@@ -307,6 +352,13 @@ class SocialMediaController extends Controller
     {
         $state = session('oauth_state');
         $redirectUri = route('social.callback', $platform);
+        
+        // Debug logging
+        \Log::info("OAuth URL generation for {$platform}", [
+            'redirect_uri' => $redirectUri,
+            'client_id' => config("services.{$platform}.client_id"),
+            'state' => $state
+        ]);
 
         return match ($platform) {
             'facebook' => 'https://www.facebook.com/v18.0/dialog/oauth?' . http_build_query([

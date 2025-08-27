@@ -180,15 +180,16 @@ class MarketingPostController extends Controller
         // Create the marketing post
         try {
             $post = MarketingPost::create([
+                'user_id' => $user->id,
                 'business_id' => $business->getKey(),
                 'title' => $validatedData['title'],
                 'content' => $validatedData['content'],
-                'hashtags' => $validatedData['hashtags'],
+                'hashtags' => $validatedData['hashtags'] ? json_decode($validatedData['hashtags'], true) : null,
                 'media_files' => $mediaFiles,
                 'target_platforms' => $targetPlatforms,
                 'status' => 'draft',
-                'post_type' => $validatedData['scheduled_at'] ? 'scheduled' : 'immediate',
-                'scheduled_at' => $validatedData['scheduled_at'],
+                'post_type' => isset($validatedData['scheduled_at']) && $validatedData['scheduled_at'] ? 'scheduled' : 'immediate',
+                'scheduled_at' => $validatedData['scheduled_at'] ?? null,
                 'metadata' => [
                     'media_type' => $validatedData['media_type'],
                     'generated_video_id' => $validatedData['generated_video_id'] ?? null,
@@ -204,7 +205,7 @@ class MarketingPostController extends Controller
             ]);
             
             // Publish immediately if not scheduled
-            if (!$validatedData['scheduled_at']) {
+            if (!isset($validatedData['scheduled_at']) || !$validatedData['scheduled_at']) {
                 $publishResult = $this->publishPost($post);
                 
                 if ($publishResult['success']) {
@@ -226,7 +227,7 @@ class MarketingPostController extends Controller
                     'success' => true,
                     'message' => 'Post scheduled successfully!',
                     'post_id' => $post->getKey(),
-                    'scheduled_at' => $validatedData['scheduled_at']
+                    'scheduled_at' => $validatedData['scheduled_at'] ?? null
                 ]);
             }
             

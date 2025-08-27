@@ -38,9 +38,14 @@
 
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h1 class="h3 mb-0" style="color: var(--text-primary);">Social Media Marketing</h1>
-    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createPostModal">
-        <i class="fas fa-plus me-2"></i>Create Post
-    </button>
+    <div>
+        <button class="btn btn-secondary me-2" onclick="testFunction()">
+            <i class="fas fa-bug me-2"></i>Test JS
+        </button>
+        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createPostModal">
+            <i class="fas fa-plus me-2"></i>Create Post
+        </button>
+    </div>
 </div>
 
 <div class="row">
@@ -175,6 +180,64 @@
                                     <p style="color: var(--text-secondary);">Connect your LinkedIn page</p>
                                     <button type="button" class="btn btn-outline-primary btn-sm" onclick="connectSocialMedia('linkedin')">
                                         <i class="fab fa-linkedin me-1"></i>Connect
+                                    </button>
+                                @endif
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <div class="platform-card card h-100" style="background: var(--card-bg); border: 1px solid var(--border-color);">
+                            <div class="card-body text-center">
+                                <i class="fab fa-telegram fa-3x mb-3" style="color: #0088cc;"></i>
+                                <h5 style="color: var(--text-primary);">Telegram</h5>
+                                @if(in_array('telegram', $connectedPlatforms))
+                                    @php $account = $connectedAccounts->where('platform', 'telegram')->first(); @endphp
+                                    <p style="color: var(--text-secondary);">Connected as: {{ $account->username }}</p>
+                                    <div class="btn-group" role="group">
+                                        <button class="btn btn-success btn-sm" disabled>
+                                            <i class="fas fa-check me-1"></i>Connected
+                                        </button>
+                                        <form action="{{ route('social.disconnect', $account) }}" method="POST" class="d-inline">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="btn btn-outline-danger btn-sm" onclick="return confirm('Are you sure you want to disconnect this account?')">
+                                                <i class="fas fa-unlink me-1"></i>Disconnect
+                                            </button>
+                                        </form>
+                                    </div>
+                                @else
+                                    <p style="color: var(--text-secondary);">Connect your Telegram channel</p>
+                                    <button type="button" class="btn btn-outline-primary btn-sm" onclick="connectSocialMedia('telegram')">
+                                        <i class="fab fa-telegram me-1"></i>Connect
+                                    </button>
+                                @endif
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <div class="platform-card card h-100" style="background: var(--card-bg); border: 1px solid var(--border-color);">
+                            <div class="card-body text-center">
+                                <i class="fab fa-discord fa-3x mb-3" style="color: #7289da;"></i>
+                                <h5 style="color: var(--text-primary);">Discord</h5>
+                                @if(in_array('discord', $connectedPlatforms))
+                                    @php $account = $connectedAccounts->where('platform', 'discord')->first(); @endphp
+                                    <p style="color: var(--text-secondary);">Connected as: {{ $account->username }}</p>
+                                    <div class="btn-group" role="group">
+                                        <button class="btn btn-success btn-sm" disabled>
+                                            <i class="fas fa-check me-1"></i>Connected
+                                        </button>
+                                        <form action="{{ route('social.disconnect', $account) }}" method="POST" class="d-inline">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="btn btn-outline-danger btn-sm" onclick="return confirm('Are you sure you want to disconnect this account?')">
+                                                <i class="fas fa-unlink me-1"></i>Disconnect
+                                            </button>
+                                        </form>
+                                    </div>
+                                @else
+                                    <p style="color: var(--text-secondary);">Connect your Discord server</p>
+                                    <button type="button" class="btn btn-outline-primary btn-sm" onclick="connectSocialMedia('discord')">
+                                        <i class="fab fa-discord me-1"></i>Connect
                                     </button>
                                 @endif
                             </div>
@@ -351,13 +414,9 @@
                     </div>
                     
                     <div class="mb-3">
-                        <label for="postContent" class="form-label">Post Content</label>
-                        <x-ai-enhanced-textarea name="postContent" 
-                                                   content-type="business_description" 
-                                                   tone="professional" 
-                                                   rows="4" 
-                                                   placeholder="What's on your mind?">
-                        </x-ai-enhanced-textarea>
+                        <label for="postContent" class="form-label" style="color: var(--text-primary);">Post Content</label>
+                        <textarea class="form-control" id="postContent" name="content" rows="4" placeholder="What's on your mind?" style="background: var(--bg-secondary); border: 1px solid var(--border-color); color: var(--text-primary);" required></textarea>
+                        <small class="form-text text-muted">Write your post content here</small>
                     </div>
                     
                     <div class="mb-3">
@@ -477,67 +536,111 @@
                     </div>
                     <div class="mb-3">
                         <label class="form-label" style="color: var(--text-primary);">Select Platforms</label>
-                        @if(in_array('facebook', $connectedPlatforms))
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" value="facebook" id="facebookCheck">
-                                <label class="form-check-label" for="facebookCheck" style="color: var(--text-primary);">
-                                    <i class="fab fa-facebook me-1"></i>Facebook
-                                </label>
+                        <div class="row">
+                            <div class="col-md-6">
+                                @if(in_array('facebook', $connectedPlatforms))
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" value="facebook" id="facebookCheck">
+                                        <label class="form-check-label" for="facebookCheck" style="color: var(--text-primary);">
+                                            <i class="fab fa-facebook me-1" style="color: #1877f2;"></i>Facebook
+                                        </label>
+                                    </div>
+                                @else
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" value="facebook" id="facebookCheck" disabled>
+                                        <label class="form-check-label" for="facebookCheck" style="color: var(--text-muted);">
+                                            <i class="fab fa-facebook me-1"></i>Facebook <small class="text-muted">(Not connected)</small>
+                                        </label>
+                                    </div>
+                                @endif
+                                
+                                @if(in_array('instagram', $connectedPlatforms))
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" value="instagram" id="instagramCheck">
+                                        <label class="form-check-label" for="instagramCheck" style="color: var(--text-primary);">
+                                            <i class="fab fa-instagram me-1" style="color: #e4405f;"></i>Instagram
+                                        </label>
+                                    </div>
+                                @else
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" value="instagram" id="instagramCheck" disabled>
+                                        <label class="form-check-label" for="instagramCheck" style="color: var(--text-muted);">
+                                            <i class="fab fa-instagram me-1"></i>Instagram <small class="text-muted">(Not connected)</small>
+                                        </label>
+                                    </div>
+                                @endif
+                                
+                                @if(in_array('twitter', $connectedPlatforms))
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" value="twitter" id="twitterCheck">
+                                        <label class="form-check-label" for="twitterCheck" style="color: var(--text-primary);">
+                                            <i class="fab fa-x-twitter me-1" style="color: #000000;"></i>X (Twitter)
+                                        </label>
+                                    </div>
+                                @else
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" value="twitter" id="twitterCheck" disabled>
+                                        <label class="form-check-label" for="twitterCheck" style="color: var(--text-muted);">
+                                            <i class="fab fa-x-twitter me-1"></i>X (Twitter) <small class="text-muted">(Not connected)</small>
+                                        </label>
+                                    </div>
+                                @endif
+                                
+                                @if(in_array('linkedin', $connectedPlatforms))
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" value="linkedin" id="linkedinCheck">
+                                        <label class="form-check-label" for="linkedinCheck" style="color: var(--text-primary);">
+                                            <i class="fab fa-linkedin me-1" style="color: #0077b5;"></i>LinkedIn
+                                        </label>
+                                    </div>
+                                @else
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" value="linkedin" id="linkedinCheck" disabled>
+                                        <label class="form-check-label" for="linkedinCheck" style="color: var(--text-muted);">
+                                            <i class="fab fa-linkedin me-1"></i>LinkedIn <small class="text-muted">(Not connected)</small>
+                                        </label>
+                                    </div>
+                                @endif
                             </div>
-                        @else
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" value="facebook" id="facebookCheck" disabled>
-                                <label class="form-check-label" for="facebookCheck" style="color: var(--text-muted);">
-                                    <i class="fab fa-facebook me-1"></i>Facebook <small class="text-muted">(Not connected)</small>
-                                </label>
+                            <div class="col-md-6">
+                                @if(in_array('telegram', $connectedPlatforms))
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" value="telegram" id="telegramCheck">
+                                        <label class="form-check-label" for="telegramCheck" style="color: var(--text-primary);">
+                                            <i class="fab fa-telegram me-1" style="color: #0088cc;"></i>Telegram
+                                        </label>
+                                    </div>
+                                @else
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" value="telegram" id="telegramCheck" disabled>
+                                        <label class="form-check-label" for="telegramCheck" style="color: var(--text-muted);">
+                                            <i class="fab fa-telegram me-1"></i>Telegram <small class="text-muted">(Not connected)</small>
+                                        </label>
+                                    </div>
+                                @endif
+                                
+                                @if(in_array('discord', $connectedPlatforms))
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" value="discord" id="discordCheck">
+                                        <label class="form-check-label" for="discordCheck" style="color: var(--text-primary);">
+                                            <i class="fab fa-discord me-1" style="color: #7289da;"></i>Discord
+                                        </label>
+                                    </div>
+                                @else
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" value="discord" id="discordCheck" disabled>
+                                        <label class="form-check-label" for="discordCheck" style="color: var(--text-muted);">
+                                            <i class="fab fa-discord me-1"></i>Discord <small class="text-muted">(Not connected)</small>
+                                        </label>
+                                    </div>
+                                @endif
                             </div>
-                        @endif
+                        </div>
                         
-                        @if(in_array('instagram', $connectedPlatforms))
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" value="instagram" id="instagramCheck">
-                                <label class="form-check-label" for="instagramCheck" style="color: var(--text-primary);">
-                                    <i class="fab fa-instagram me-1"></i>Instagram
-                                </label>
-                            </div>
-                        @else
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" value="instagram" id="instagramCheck" disabled>
-                                <label class="form-check-label" for="instagramCheck" style="color: var(--text-muted);">
-                                    <i class="fab fa-instagram me-1"></i>Instagram <small class="text-muted">(Not connected)</small>
-                                </label>
-                            </div>
-                        @endif
-                        
-                        @if(in_array('twitter', $connectedPlatforms))
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" value="twitter" id="twitterCheck">
-                                <label class="form-check-label" for="twitterCheck" style="color: var(--text-primary);">
-                                    <i class="fab fa-x-twitter me-1"></i>X (Twitter)
-                                </label>
-                            </div>
-                        @else
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" value="twitter" id="twitterCheck" disabled>
-                                <label class="form-check-label" for="twitterCheck" style="color: var(--text-muted);">
-                                    <i class="fab fa-x-twitter me-1"></i>X (Twitter) <small class="text-muted">(Not connected)</small>
-                                </label>
-                            </div>
-                        @endif
-                        
-                        @if(in_array('linkedin', $connectedPlatforms))
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" value="linkedin" id="linkedinCheck">
-                                <label class="form-check-label" for="linkedinCheck" style="color: var(--text-primary);">
-                                    <i class="fab fa-linkedin me-1"></i>LinkedIn
-                                </label>
-                            </div>
-                        @else
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" value="linkedin" id="linkedinCheck" disabled>
-                                <label class="form-check-label" for="linkedinCheck" style="color: var(--text-muted);">
-                                    <i class="fab fa-linkedin me-1"></i>LinkedIn <small class="text-muted">(Not connected)</small>
-                                </label>
+                        @if(empty($connectedPlatforms))
+                            <div class="alert alert-warning mt-2" role="alert">
+                                <i class="fas fa-exclamation-triangle me-2"></i>
+                                No social media accounts connected. <a href="#" onclick="$('.sub-navigation').scrollTop()">Connect accounts above</a> to start posting.
                             </div>
                         @endif
                     </div>
@@ -549,7 +652,7 @@
             </div>
             <div class="modal-footer" style="background: var(--bg-tertiary); border-top: 1px solid var(--border-color);">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-primary">Create Post</button>
+                <button type="button" class="btn btn-primary" onclick="submitPost()">Create Post</button>
             </div>
         </div>
     </div>
@@ -604,6 +707,27 @@
     box-shadow: 0 4px 6px -1px var(--shadow-color);
 }
 
+.platform-hint {
+    display: block;
+    margin-top: 0.25rem;
+    font-style: italic;
+}
+
+.alert-warning {
+    background-color: var(--warning-bg, #fff3cd);
+    border-color: var(--warning-border, #ffeeba);
+    color: var(--warning-text, #856404);
+}
+
+#createPostModal .alert {
+    margin-bottom: 1rem;
+    border-radius: 0.375rem;
+}
+
+#createPostModal .alert:last-child {
+    margin-bottom: 0;
+}
+
 @media (max-width: 768px) {
     .sub-navigation .nav-tabs {
         flex-direction: column;
@@ -619,8 +743,19 @@
 </style>
 
 <script>
+// Test function to check if JavaScript is working - GLOBAL SCOPE
+window.testFunction = function() {
+    console.log('=== TEST FUNCTION CALLED ===');
+    alert('JavaScript is working!');
+}
+
 // Social Media Connection Functions - Global scope
 window.connectSocialMedia = function(platform) {
+    console.log('=== CONNECT SOCIAL MEDIA FUNCTION CALLED ===');
+    console.log('Connecting to platform:', platform);
+    console.log('Event target:', event.target);
+    console.log('Current URL:', window.location.href);
+    
     // Show loading state
     const button = event.target;
     const originalText = button.innerHTML;
@@ -635,14 +770,34 @@ window.connectSocialMedia = function(platform) {
             'Accept': 'application/json',
         },
     })
-    .then(response => response.json())
+    .then(response => {
+        console.log('Response status:', response.status);
+        console.log('Response headers:', response.headers);
+        
+        if (response.redirected) {
+            console.log('Redirecting to:', response.url);
+            window.location.href = response.url;
+            return;
+        }
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        return response.json();
+    })
     .then(data => {
-        if (data.error === 'upgrade_required') {
+        console.log('Response data:', data);
+        
+        if (data && data.error === 'upgrade_required') {
             // Show upgrade modal
             showUpgradeModal(platform);
-        } else {
+        } else if (data && data.redirect_url) {
             // Redirect to OAuth
-            window.location.href = data.redirect_url || `{{ route('social.connect', ':platform') }}`.replace(':platform', platform);
+            window.location.href = data.redirect_url;
+        } else {
+            // Fallback to direct redirect
+            window.location.href = `{{ route('social.connect', ':platform') }}`.replace(':platform', platform);
         }
     })
     .catch(error => {
@@ -739,6 +894,52 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         });
     }
+    
+    // Platform-specific requirement hints
+    const platformCheckboxes = document.querySelectorAll('input[type="checkbox"][id$="Check"]');
+    platformCheckboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', function() {
+            if (this.checked) {
+                showPlatformRequirements(this.value);
+            }
+        });
+    });
+    
+    function showPlatformRequirements(platform) {
+        const requirements = {
+            'instagram': 'Instagram requires at least one image or video',
+            'linkedin': 'LinkedIn works best with professional content and may take longer to process videos',
+            'twitter': 'Twitter has a 280 character limit - longer content will be truncated',
+            'facebook': 'Facebook supports all content types including links',
+            'telegram': 'Telegram supports rich text formatting and media',
+            'discord': 'Discord posts will be sent to your configured webhook channel'
+        };
+        
+        if (requirements[platform]) {
+            // Show a small hint near the platform checkbox
+            const hint = document.createElement('small');
+            hint.className = 'text-muted platform-hint';
+            hint.innerHTML = `<br><i class="fas fa-info-circle me-1"></i>${requirements[platform]}`;
+            
+            const label = document.querySelector(`label[for="${platform}Check"]`);
+            if (label && !label.querySelector('.platform-hint')) {
+                label.appendChild(hint);
+            }
+        }
+    }
+    
+    // Remove platform hints when unchecked
+    platformCheckboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', function() {
+            if (!this.checked) {
+                const label = document.querySelector(`label[for="${this.value}Check"]`);
+                if (label) {
+                    const hint = label.querySelector('.platform-hint');
+                    if (hint) hint.remove();
+                }
+            }
+        });
+    });
     
     // Video generation functionality
     const generateVideoBtn = document.getElementById('generateVideoBtn');
@@ -911,14 +1112,26 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    function submitPost() {
+    window.submitPost = function() {
+        console.log('=== SUBMIT POST FUNCTION CALLED ===');
         const form = document.getElementById('createPostForm');
         if (!form) {
+            console.error('Form not found!');
             showAlert('Form not found!', 'error');
             return;
         }
         
-        const formData = new FormData(form);
+        // Get form values
+        const title = document.getElementById('postTitle').value;
+        const content = document.getElementById('postContent').value;
+        const hashtags = document.getElementById('postHashtags').value;
+        const scheduleTime = document.getElementById('scheduleTime').value;
+        
+        // Validate required fields
+        if (!content.trim()) {
+            showAlert('Please enter post content.', 'error');
+            return;
+        }
         
         // Get selected platforms
         const selectedPlatforms = [];
@@ -931,31 +1144,66 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
         
-        // Add platforms to form data
-        formData.append('platforms', JSON.stringify(selectedPlatforms));
-        
-        // Add media type
+        // Validate post for selected platforms
         const mediaTypeElement = document.querySelector('input[name="mediaType"]:checked');
         const mediaType = mediaTypeElement ? mediaTypeElement.value : 'none';
+        const warnings = validatePostForPlatforms(content, selectedPlatforms, mediaType);
+        
+        // Show warnings if any (but don't prevent submission)
+        if (warnings.length > 0) {
+            const warningMessage = '<strong>Platform Recommendations:</strong><br>' + warnings.join('<br>');
+            showAlert(warningMessage, 'warning');
+        }
+        
+        // Prepare form data
+        const formData = new FormData();
+        formData.append('title', title);
+        formData.append('content', content);
+        formData.append('platforms', JSON.stringify(selectedPlatforms));
         formData.append('media_type', mediaType);
         
-        // Add generated video if exists
-        if (generatedVideoUrl) {
+        // Add hashtags - convert space-separated to array
+        if (hashtags.trim()) {
+            const hashtagArray = hashtags.trim().split(/\s+/).map(tag => {
+                // Ensure hashtag starts with #
+                return tag.startsWith('#') ? tag : '#' + tag;
+            });
+            formData.append('hashtags', JSON.stringify(hashtagArray));
+        }
+        
+        // Add schedule time if provided
+        if (scheduleTime) {
+            formData.append('scheduled_at', scheduleTime);
+        } else {
+            formData.append('status', 'published'); // Immediate posting
+        }
+        
+        // Add media type (reuse the variable already declared above)
+        
+        if (mediaType === 'upload') {
+            const mediaFile = document.getElementById('postMedia').files[0];
+            if (mediaFile) {
+                formData.append('media', mediaFile);
+            }
+        } else if (mediaType === 'generate' && generatedVideoUrl) {
             formData.append('generated_video_url', generatedVideoUrl);
             formData.append('generated_video_id', generatedVideoId);
         }
         
         // Show loading
-        if (!createPostBtn) {
-            showAlert('Submit button not found!', 'error');
-            return;
-        }
-        
+        const createPostBtn = document.querySelector('#createPostModal .btn-primary');
         const originalText = createPostBtn.innerHTML;
         createPostBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Creating Post...';
         createPostBtn.disabled = true;
         
         // Submit to backend
+        console.log('Submitting to:', '{{ route("marketing.posts.store") }}');
+        console.log('Form data:', formData);
+        
+        // Log form data contents
+        for (let [key, value] of formData.entries()) {
+            console.log(`${key}:`, value);
+        }
         fetch('{{ route("marketing.posts.store") }}', {
             method: 'POST',
             headers: {
@@ -964,19 +1212,55 @@ document.addEventListener('DOMContentLoaded', function() {
             },
             body: formData
         })
-        .then(response => response.json())
+        .then(response => {
+            console.log('Response status:', response.status);
+            console.log('Response headers:', response.headers);
+            return response.json();
+        })
         .then(data => {
+            console.log('Response data:', data);
             if (data.success) {
-                showAlert('Post created successfully!', 'success');
+                showAlert('Post created and published successfully!', 'success');
+                
+                // Show publishing results if available
+                if (data.publishing_results) {
+                    let resultsMessage = '<br><strong>Publishing Results:</strong><br>';
+                    for (const [platform, result] of Object.entries(data.publishing_results)) {
+                        const status = result.success ? '✓' : '✗';
+                        const statusClass = result.success ? 'text-success' : 'text-danger';
+                        resultsMessage += `<span class="${statusClass}">${status} ${platform.charAt(0).toUpperCase() + platform.slice(1)}</span><br>`;
+                        if (!result.success) {
+                            resultsMessage += `<small class="text-muted">Error: ${result.message}</small><br>`;
+                        }
+                    }
+                    
+                    // Update the alert with results
+                    setTimeout(() => {
+                        showAlert('Post created! ' + resultsMessage, 'info');
+                    }, 1000);
+                }
+                
                 // Close modal and refresh page
                 const modal = bootstrap.Modal.getInstance(document.getElementById('createPostModal'));
-                modal.hide();
-                setTimeout(() => window.location.reload(), 1000);
+                if (modal) {
+                    modal.hide();
+                }
+                setTimeout(() => window.location.reload(), 2000);
             } else {
-                throw new Error(data.message || 'Failed to create post');
+                // Handle validation errors
+                if (data.errors) {
+                    let errorMessage = 'Validation errors:\n';
+                    for (const [field, messages] of Object.entries(data.errors)) {
+                        errorMessage += `${field}: ${messages.join(', ')}\n`;
+                    }
+                    showAlert(errorMessage, 'error');
+                } else {
+                    throw new Error(data.message || 'Failed to create post');
+                }
             }
         })
         .catch(error => {
+            console.error('Error creating post:', error);
             showAlert('Failed to create post: ' + error.message, 'error');
         })
         .finally(() => {
@@ -987,25 +1271,63 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     // Helper function to show alerts
-    function showAlert(message, type) {
+    window.showAlert = function(message, type) {
+        // Remove any existing alerts first
+        const existingAlerts = document.querySelectorAll('#createPostModal .alert');
+        existingAlerts.forEach(alert => alert.remove());
+        
         const alertDiv = document.createElement('div');
         alertDiv.className = `alert alert-${type === 'error' ? 'danger' : type} alert-dismissible fade show`;
         alertDiv.innerHTML = `
-            <i class="fas fa-${type === 'error' ? 'exclamation-triangle' : 'check-circle'} me-2"></i>
+            <i class="fas fa-${type === 'error' ? 'exclamation-triangle' : type === 'success' ? 'check-circle' : 'info-circle'} me-2"></i>
             ${message}
             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         `;
         
         // Insert at the top of the modal body
         const modalBody = document.querySelector('#createPostModal .modal-body');
-        modalBody.insertBefore(alertDiv, modalBody.firstChild);
+        if (modalBody) {
+            modalBody.insertBefore(alertDiv, modalBody.firstChild);
+            
+            // Scroll to top of modal to show the alert
+            modalBody.scrollTop = 0;
+        }
         
-        // Auto-remove after 5 seconds
+        // Auto-remove after appropriate time based on type
+        const timeout = type === 'info' ? 8000 : type === 'success' ? 5000 : 7000;
         setTimeout(() => {
             if (alertDiv.parentNode) {
-                alertDiv.remove();
+                alertDiv.classList.remove('show');
+                setTimeout(() => alertDiv.remove(), 150);
             }
-        }, 5000);
+        }, timeout);
+    }
+    
+    // Helper function to validate post content based on selected platforms
+    window.validatePostForPlatforms = function(content, selectedPlatforms, mediaType) {
+        const warnings = [];
+        
+        selectedPlatforms.forEach(platform => {
+            switch (platform) {
+                case 'twitter':
+                    if (content.length > 280) {
+                        warnings.push(`Twitter: Content will be truncated to 280 characters (currently ${content.length})`);
+                    }
+                    break;
+                case 'instagram':
+                    if (mediaType === 'none') {
+                        warnings.push('Instagram: Consider adding an image or video for better engagement');
+                    }
+                    break;
+                case 'linkedin':
+                    if (content.length < 50) {
+                        warnings.push('LinkedIn: Consider adding more detailed content for better professional engagement');
+                    }
+                    break;
+            }
+        });
+        
+        return warnings;
     }
 });
 </script>

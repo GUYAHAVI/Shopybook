@@ -74,6 +74,7 @@ Route::get('/test-flash', function () {
     return redirect()->route('dashboard')->with('success', 'Flash message test successful! This message should appear immediately.');
 })->middleware('auth');
 
+
 Route::get('/dashboard', [DashboardController::class, 'dashboard'])->name('dashboard')->middleware('auth');
 
 Route::get('/business/choose-type', [BusinessController::class, 'chooseType'])->name('business.choose-type')->middleware('auth');
@@ -295,7 +296,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('/{serviceBooking}/add-service', [ServiceBookingController::class, 'addService'])->name('service-bookings.add-service');
         Route::delete('/service-item/{serviceItem}', [ServiceBookingController::class, 'removeService'])->name('service-bookings.remove-service');
         Route::put('/{serviceBooking}/complete', [ServiceBookingController::class, 'complete'])->name('service-bookings.complete');
-        Route::post('/assign-staff', [ServiceBookingController::class, 'assignStaff'])->name('service-bookings.assign-staff');
+Route::post('/assign-staff', [ServiceBookingController::class, 'assignStaff'])->name('service-bookings.assign-staff');
     });
 
     // Commission Reports Route
@@ -397,12 +398,17 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/paypal/cancel', [PaymentController::class, 'paypalCancel'])->name('payment.paypal.cancel');
     });
 
-    // Billing Routes
-    Route::prefix('billing')->group(function () {
-        Route::get('/upgrade', [BillingController::class, 'upgrade'])->name('billing.upgrade');
-        Route::post('/upgrade', [BillingController::class, 'processUpgrade'])->name('billing.process-upgrade');
-        Route::get('/dashboard', [BillingController::class, 'dashboard'])->name('billing.dashboard');
-        Route::post('/cancel', [BillingController::class, 'cancel'])->name('billing.cancel');
+
+        
+
+
+        // Billing Routes
+        Route::prefix('billing')->group(function () {
+            Route::get('/upgrade', [BillingController::class, 'upgrade'])->name('billing.upgrade');
+            Route::post('/upgrade', [BillingController::class, 'processUpgrade'])->name('billing.process-upgrade');
+            Route::get('/dashboard', [BillingController::class, 'dashboard'])->name('billing.dashboard');
+            Route::post('/cancel', [BillingController::class, 'cancel'])->name('billing.cancel');
+        });
     });
 
     // API Routes for payment callbacks
@@ -471,7 +477,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     });
 
     // AI Communication System Routes
-    Route::prefix('ai-communication')->name('ai.')->middleware('auth')->group(function () {
+    Route::prefix('ai-chat')->name('ai-chat.')->middleware('auth')->group(function () {
         Route::get('/chat', [AICommunicationController::class, 'chat'])->name('chat');
         Route::post('/process-message', [AICommunicationController::class, 'processMessage'])->name('process-message');
         Route::get('/history', [AICommunicationController::class, 'getHistory'])->name('history');
@@ -515,21 +521,6 @@ Route::post('/auth/facebook/deauthorize', [SocialMediaController::class, 'facebo
 Route::get('/auth/facebook/data-deletion', function () {
     return redirect()->route('data-deletion');
 })->name('facebook.data-deletion');
-
-Route::get('/manual-symlink', function () {
-    $target = storage_path('app/public');   // source folder
-    $link = public_path('storage');        // destination symlink
-
-    try {
-        if (!file_exists($link)) {
-            symlink($target, $link);
-            return "Symlink created manually!";
-        }
-        return "Symlink already exists.";
-    } catch (\Exception $e) {
-        return "Error: " . $e->getMessage();
-    }
-});
 
 
 
