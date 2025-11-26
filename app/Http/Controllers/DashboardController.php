@@ -37,8 +37,13 @@ class DashboardController extends Controller
             ->count();
         $conversionRate = $totalOrders > 0 ? round(($completedOrders / $totalOrders) * 100) : 0;
 
-        // Product profit
-        $netProfit = $todaySales;
+        // Product profit (Revenue - Inventory Costs - Other Costs - Returns/Refunds)
+        $todayInventoryCosts = $business->getTodayInventoryCosts();
+        $todayOtherCosts = $business->costs()
+            ->whereDate('date', today())
+            ->sum('amount') ?? 0;
+        $todayReturns = $business->getTodayReturns();
+        $netProfit = $todaySales - $todayInventoryCosts - $todayOtherCosts - $todayReturns;
 
         // Service-based metrics
         $todayServiceBookings = ServiceBooking::where('business_id', $business->id)
@@ -64,8 +69,11 @@ class DashboardController extends Controller
             ->count();
         $serviceConversionRate = $totalServiceBookings > 0 ? round(($completedServiceBookings / $totalServiceBookings) * 100) : 0;
 
-        // Service profit calculation
+        // Service profit calculation (Service revenue is already net as services don't have inventory costs)
         $serviceProfit = $todayServiceRevenue;
+        
+        // Calculate actual net profit (combining product and service profit)
+        $totalNetProfit = $netProfit + $serviceProfit;
 
         // Combined metrics
         $totalTodayRevenue = $todaySales + $todayServiceRevenue;
@@ -119,6 +127,40 @@ class DashboardController extends Controller
         ->limit(5)
         ->get();
 
+        // Top Products (Product Sales Data)
+        $topProducts = $business->orders()
+            ->where('orders.status', 'completed')
+            ->whereDate('orders.created_at', '>=', now()->subDays(30))
+            ->join('order_items', 'orders.id', '=', 'order_items.order_id')
+            ->join('products', 'order_items.product_id', '=', 'products.id')
+            ->selectRaw('products.id, products.name, SUM(order_items.quantity) as total_sold, SUM(order_items.total) as total_revenue')
+            ->groupBy('products.id', 'products.name')
+            ->orderByDesc('total_revenue')
+            ->limit(10)
+            ->get();
+
+        // Top Customers by Total Spend
+        $topCustomers = $business->customers()
+            ->withSum(['orders' => function($query) {
+                $query->where('status', 'completed');
+            }], 'total_amount')
+            ->withSum(['serviceBookings' => function($query) {
+                $query->where('payment_status', 'paid');
+            }], 'final_amount')
+            ->get()
+            ->map(function($customer) {
+                $productTotal = $customer->orders_sum_total_amount ?? 0;
+                $serviceTotal = $customer->service_bookings_sum_final_amount ?? 0;
+                $customer->total_spent = $productTotal + $serviceTotal;
+                $customer->orders_count = $customer->orders()->count();
+                $customer->bookings_count = $customer->serviceBookings()->count();
+                return $customer;
+            })
+            ->where('total_spent', '>', 0)
+            ->sortByDesc('total_spent')
+            ->take(10)
+            ->values();
+
         return view('dashboard', compact(
             'business',
             // Product metrics
@@ -127,6 +169,9 @@ class DashboardController extends Controller
             'pendingOrders',
             'conversionRate',
             'netProfit',
+            'todayInventoryCosts',
+            'todayOtherCosts',
+            'todayReturns',
             'avgOrderValue',
             // Service metrics
             'todayServiceBookings',
@@ -139,6 +184,7 @@ class DashboardController extends Controller
             'totalTodayRevenue',
             'totalTodayBookings',
             'totalPending',
+            'totalNetProfit',
             // Customer metrics
             'newCustomers',
             'returningRate',
@@ -146,7 +192,10 @@ class DashboardController extends Controller
             'services',
             'serviceBookings',
             'topServices',
-            'staffPerformance'
+            'staffPerformance',
+            // Product & Customer data
+            'topProducts',
+            'topCustomers'
         ));
     }
 }

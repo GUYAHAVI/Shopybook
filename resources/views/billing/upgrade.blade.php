@@ -21,8 +21,8 @@
             <div class="row g-4">
                 <!-- Free Plan -->
                 <div class="col-lg-4">
-                    <div class="card h-100 {{ $business->plan === 'free' ? 'border-primary' : '' }}">
-                        <div class="card-header text-center py-4 {{ $business->plan === 'free' ? 'bg-primary text-white' : 'bg-light' }}">
+                    <div class="card h-100 {{ $userBusiness->plan === 'free' ? 'border-primary' : '' }}">
+                        <div class="card-header text-center py-4 {{ $userBusiness->plan === 'free' ? 'bg-primary text-white' : 'bg-light' }}">
                             <h4 class="fw-bold">Free</h4>
                             <h2 class="display-6 fw-bold">$0<small class="fs-6">/month</small></h2>
                         </div>
@@ -34,7 +34,7 @@
                                 <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Community support</li>
                                 <li class="mb-2"><i class="fas fa-times text-muted me-2"></i>Advanced features</li>
                             </ul>
-                            @if($business->plan === 'free')
+                            @if($userBusiness->plan === 'free')
                                 <button class="btn btn-primary disabled">Current Plan</button>
                             @else
                                 <form method="POST" action="{{ route('billing.process-upgrade') }}">
@@ -49,8 +49,8 @@
 
                 <!-- Basic Plan -->
                 <div class="col-lg-4">
-                    <div class="card h-100 {{ $business->plan === 'basic' ? 'border-success' : '' }}">
-                        <div class="card-header text-center py-4 {{ $business->plan === 'basic' ? 'bg-success text-white' : 'bg-light' }}">
+                    <div class="card h-100 {{ $userBusiness->plan === 'basic' ? 'border-success' : '' }}">
+                        <div class="card-header text-center py-4 {{ $userBusiness->plan === 'basic' ? 'bg-success text-white' : 'bg-light' }}">
                             <h4 class="fw-bold">Basic</h4>
                             <h2 class="display-6 fw-bold">$19<small class="fs-6">/month</small></h2>
                         </div>
@@ -62,14 +62,14 @@
                                 <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Email support</li>
                                 <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Content calendar</li>
                             </ul>
-                            @if($business->plan === 'basic')
+                            @if($userBusiness->plan === 'basic')
                                 <button class="btn btn-success disabled">Current Plan</button>
                             @else
                                 <form method="POST" action="{{ route('billing.process-upgrade') }}">
                                     @csrf
                                     <input type="hidden" name="plan" value="basic">
                                     <button type="submit" class="btn btn-success">
-                                        {{ $business->plan === 'free' ? 'Upgrade' : 'Switch Plan' }}
+                                        {{ $userBusiness->plan === 'free' ? 'Upgrade' : 'Switch Plan' }}
                                     </button>
                                 </form>
                             @endif
@@ -79,13 +79,13 @@
 
                 <!-- Premium Plan -->
                 <div class="col-lg-4">
-                    <div class="card h-100 {{ $business->plan === 'premium' ? 'border-warning' : '' }} position-relative">
-                        @if($business->plan !== 'premium')
+                    <div class="card h-100 {{ $userBusiness->plan === 'premium' ? 'border-warning' : '' }} position-relative">
+                        @if($userBusiness->plan !== 'premium')
                             <div class="position-absolute top-0 start-50 translate-middle">
                                 <span class="badge bg-warning text-dark px-3 py-2">Most Popular</span>
                             </div>
                         @endif
-                        <div class="card-header text-center py-4 {{ $business->plan === 'premium' ? 'bg-warning text-dark' : 'bg-light' }}">
+                        <div class="card-header text-center py-4 {{ $userBusiness->plan === 'premium' ? 'bg-warning text-dark' : 'bg-light' }}">
                             <h4 class="fw-bold">Premium</h4>
                             <h2 class="display-6 fw-bold">$49<small class="fs-6">/month</small></h2>
                         </div>
@@ -98,14 +98,14 @@
                                 <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Team collaboration</li>
                                 <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Custom branding</li>
                             </ul>
-                            @if($business->plan === 'premium')
+                            @if($userBusiness->plan === 'premium')
                                 <button class="btn btn-warning disabled">Current Plan</button>
                             @else
                                 <form method="POST" action="{{ route('billing.process-upgrade') }}">
                                     @csrf
                                     <input type="hidden" name="plan" value="premium">
                                     <button type="submit" class="btn btn-warning text-dark">
-                                        {{ $business->plan === 'free' ? 'Upgrade' : 'Switch Plan' }}
+                                        {{ $userBusiness->plan === 'free' ? 'Upgrade' : 'Switch Plan' }}
                                     </button>
                                 </form>
                             @endif
@@ -119,18 +119,18 @@
                 <div class="col-12">
                     <div class="card bg-light">
                         <div class="card-body">
-                            <h5 class="card-title">Current Plan: {{ ucfirst($business->plan ?? 'free') }}</h5>
+                            <h5 class="card-title">Current Plan: {{ ucfirst($userBusiness->plan ?? 'free') }}</h5>
                             <p class="card-text text-muted">
-                                @if($business->plan === 'premium')
+                                @if($userBusiness->plan === 'premium')
                                     You have access to all premium features including unlimited social media accounts.
-                                @elseif($business->plan === 'basic')
+                                @elseif($userBusiness->plan === 'basic')
                                     You can connect up to 5 social media accounts with advanced features.
                                 @else
                                     You're on the free plan with 1 social media account connection.
                                 @endif
                             </p>
                             
-                            @if($business->plan !== 'free')
+                            @if($userBusiness->plan !== 'free')
                                 <div class="d-flex justify-content-between align-items-center">
                                     <span>Need to cancel your subscription?</span>
                                     <form method="POST" action="{{ route('billing.cancel') }}" class="d-inline">

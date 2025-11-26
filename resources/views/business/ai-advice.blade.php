@@ -145,7 +145,7 @@
                                     </h6>
                                 </div>
                                 <div class="card-body">
-                                    <form action="{{ route('business.ai-settings.update', $business) }}" method="POST">
+                                    <form action="{{ route('ai-advice.ai-settings.update') }}" method="POST">
                                         @csrf
                                         @method('PUT')
                                         
@@ -215,7 +215,7 @@
                                     <p class="text-muted">
                                         Trigger immediate learning for your business to get fresh insights.
                                     </p>
-                                    <form action="{{ route('business.ai-learning.trigger', $business) }}" method="POST">
+                                    <form action="{{ route('ai-advice.ai-learning.trigger') }}" method="POST">
                                         @csrf
                                         <button type="submit" class="btn btn-info">
                                             <i class="fas fa-sync-alt"></i>

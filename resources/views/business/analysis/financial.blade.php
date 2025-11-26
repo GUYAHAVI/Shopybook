@@ -73,6 +73,60 @@
         </div>
     </div>
 
+    <!-- Cost Breakdown -->
+    <div class="cost-breakdown-section mb-4">
+        <div class="row g-4">
+            <div class="col-md-4">
+                <div class="cost-card">
+                    <div class="card-body">
+                        <div class="cost-content">
+                            <div class="cost-info">
+                                <div class="cost-label">Product Costs</div>
+                                <div class="cost-value">KSh {{ $financialData['summary']['product_costs'] ?? '0.00' }}</div>
+                                <small class="cost-description">Inventory and product-related costs</small>
+                            </div>
+                            <div class="cost-icon">
+                                <i class="fas fa-box"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="cost-card">
+                    <div class="card-body">
+                        <div class="cost-content">
+                            <div class="cost-info">
+                                <div class="cost-label">Business Expenses</div>
+                                <div class="cost-value">KSh {{ $financialData['summary']['business_expenses'] ?? '0.00' }}</div>
+                                <small class="cost-description">Rent, utilities, and operational costs</small>
+                            </div>
+                            <div class="cost-icon">
+                                <i class="fas fa-receipt"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="cost-card">
+                    <div class="card-body">
+                        <div class="cost-content">
+                            <div class="cost-info">
+                                <div class="cost-label">Staff Salaries</div>
+                                <div class="cost-value">KSh {{ $financialData['summary']['salary_costs'] ?? '0.00' }}</div>
+                                <small class="cost-description">Staff salaries and compensation</small>
+                            </div>
+                            <div class="cost-icon">
+                                <i class="fas fa-users"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- AI Financial Analysis -->
     <div class="financial-section">
         <div class="row g-4">
@@ -155,6 +209,69 @@
 </div>
 
 <style>
+/* Cost Breakdown Styles */
+.cost-breakdown-section {
+    margin-top: 2rem;
+}
+
+.cost-card {
+    background: var(--card-bg);
+    border-radius: 0.75rem;
+    border: 1px solid var(--border-color);
+    transition: all 0.3s ease;
+}
+
+.cost-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+}
+
+.cost-content {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1.5rem;
+}
+
+.cost-info {
+    flex: 1;
+}
+
+.cost-label {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 0.5rem;
+}
+
+.cost-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 0.25rem;
+}
+
+.cost-description {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    margin: 0;
+}
+
+.cost-icon {
+    width: 48px;
+    height: 48px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 1.25rem;
+    margin-left: 1rem;
+}
+
 .financial-container {
     padding: 0;
 }

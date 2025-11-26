@@ -10,7 +10,9 @@ class HasBusiness
 {
     public function handle(Request $request, Closure $next): Response
     {
-        if (!auth()->user()->business) {
+        $user = auth()->user();
+        
+        if (!$user || !$user->business) {
             return redirect()->route('business.create')
                 ->with('error', 'You need to create a business profile first');
         }

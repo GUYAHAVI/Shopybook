@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Supplier;
+use App\Models\StockReceipt;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -22,7 +23,17 @@ class SupplierController extends Controller
             ->orderBy('name')
             ->paginate(15);
 
-        return view('suppliers.index', compact('suppliers'));
+        // Calculate statistics
+        $stats = [
+            'month_orders' => StockReceipt::where('business_id', $business->id)
+                ->whereMonth('receipt_date', now()->month)
+                ->whereYear('receipt_date', now()->year)
+                ->count(),
+            'total_spent' => StockReceipt::where('business_id', $business->id)
+                ->sum('total_cost') ?? 0,
+        ];
+
+        return view('suppliers.index', compact('suppliers', 'stats'));
     }
 
     /**
@@ -49,28 +60,44 @@ class SupplierController extends Controller
         }
 
         $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'contact_person' => 'nullable|string|max:255',
-            'email' => 'nullable|email|max:255',
-            'phone' => 'nullable|string|max:20',
-            'address' => 'nullable|string',
-            'city' => 'nullable|string|max:255',
-            'country' => 'nullable|string|max:255',
-            'company_registration' => 'nullable|string|max:255',
-            'tax_number' => 'nullable|string|max:255',
-            'payment_terms' => 'nullable|string|max:255',
-            'credit_limit' => 'nullable|numeric|min:0',
-            'notes' => 'nullable|string',
-            'status' => 'required|in:active,inactive',
+            'name' => ['required', 'string', 'max:255'],
+            'contact_person' => ['nullable', 'string', 'max:255'],
+            'email' => ['nullable', 'email', 'max:255'],
+            'phone' => ['nullable', 'string', 'max:20'],
+            'address' => ['nullable', 'string'],
+            'city' => ['nullable', 'string', 'max:255'],
+            'country' => ['nullable', 'string', 'max:255'],
+            'company_registration' => ['nullable', 'string', 'max:255'],
+            'tax_number' => ['nullable', 'string', 'max:255'],
+            'payment_terms' => ['nullable', 'string', 'max:255'],
+            'credit_limit' => ['nullable', 'numeric', 'min:0'],
+            'notes' => ['nullable', 'string'],
+            'status' => ['required', 'in:active,inactive'],
+        ], [
+            'name.required' => 'Supplier name is required.',
+            'name.max' => 'Supplier name cannot exceed 255 characters.',
+            'email.email' => 'Please enter a valid email address.',
+            'phone.max' => 'Phone number cannot exceed 20 characters.',
+            'credit_limit.numeric' => 'Credit limit must be a number.',
+            'credit_limit.min' => 'Credit limit cannot be negative.',
+            'status.required' => 'Please select a status for the supplier.',
+            'status.in' => 'Status must be either active or inactive.',
         ]);
 
-        Supplier::create([
-            'business_id' => $business->id,
-            ...$validated
-        ]);
+        try {
+            Supplier::create([
+                'business_id' => $business->id,
+                ...$validated
+            ]);
 
-        return redirect()->route('suppliers.index')
-            ->with('success', 'Supplier created successfully!');
+            return redirect()->route('suppliers.index')
+                ->with('success', 'Supplier created successfully!');
+                
+        } catch (\Exception $e) {
+            return back()
+                ->withInput()
+                ->with('error', 'Failed to create supplier. Please check all fields and try again.');
+        }
     }
 
     /**
@@ -80,7 +107,41 @@ class SupplierController extends Controller
     {
         $this->authorize('view', $supplier);
         
-        return view('suppliers.show', compact('supplier'));
+        // Get purchase history from stock receipts
+        $purchaseHistory = StockReceipt::where('business_id', $supplier->business_id)
+            ->where('supplier', $supplier->name)
+            ->orderBy('receipt_date', 'desc')
+            ->paginate(10);
+
+        // Get products from this supplier
+        $products = $supplier->products()->get();
+
+        // Calculate statistics
+        $stats = [
+            'total_orders' => StockReceipt::where('business_id', $supplier->business_id)
+                ->where('supplier', $supplier->name)
+                ->count(),
+            'total_spent' => StockReceipt::where('business_id', $supplier->business_id)
+                ->where('supplier', $supplier->name)
+                ->sum('total_cost') ?? 0,
+            'month_spent' => StockReceipt::where('business_id', $supplier->business_id)
+                ->where('supplier', $supplier->name)
+                ->whereMonth('receipt_date', now()->month)
+                ->whereYear('receipt_date', now()->year)
+                ->sum('total_cost') ?? 0,
+            'last_order' => StockReceipt::where('business_id', $supplier->business_id)
+                ->where('supplier', $supplier->name)
+                ->latest('receipt_date')
+                ->value('receipt_date')
+                ? StockReceipt::where('business_id', $supplier->business_id)
+                    ->where('supplier', $supplier->name)
+                    ->latest('receipt_date')
+                    ->first()
+                    ->receipt_date->diffForHumans()
+                : 'Never',
+        ];
+        
+        return view('suppliers.show', compact('supplier', 'purchaseHistory', 'products', 'stats'));
     }
 
     /**
@@ -101,25 +162,41 @@ class SupplierController extends Controller
         $this->authorize('update', $supplier);
 
         $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'contact_person' => 'nullable|string|max:255',
-            'email' => 'nullable|email|max:255',
-            'phone' => 'nullable|string|max:20',
-            'address' => 'nullable|string',
-            'city' => 'nullable|string|max:255',
-            'country' => 'nullable|string|max:255',
-            'company_registration' => 'nullable|string|max:255',
-            'tax_number' => 'nullable|string|max:255',
-            'payment_terms' => 'nullable|string|max:255',
-            'credit_limit' => 'nullable|numeric|min:0',
-            'notes' => 'nullable|string',
-            'status' => 'required|in:active,inactive',
+            'name' => ['required', 'string', 'max:255'],
+            'contact_person' => ['nullable', 'string', 'max:255'],
+            'email' => ['nullable', 'email', 'max:255'],
+            'phone' => ['nullable', 'string', 'max:20'],
+            'address' => ['nullable', 'string'],
+            'city' => ['nullable', 'string', 'max:255'],
+            'country' => ['nullable', 'string', 'max:255'],
+            'company_registration' => ['nullable', 'string', 'max:255'],
+            'tax_number' => ['nullable', 'string', 'max:255'],
+            'payment_terms' => ['nullable', 'string', 'max:255'],
+            'credit_limit' => ['nullable', 'numeric', 'min:0'],
+            'notes' => ['nullable', 'string'],
+            'status' => ['required', 'in:active,inactive'],
+        ], [
+            'name.required' => 'Supplier name is required.',
+            'name.max' => 'Supplier name cannot exceed 255 characters.',
+            'email.email' => 'Please enter a valid email address.',
+            'phone.max' => 'Phone number cannot exceed 20 characters.',
+            'credit_limit.numeric' => 'Credit limit must be a number.',
+            'credit_limit.min' => 'Credit limit cannot be negative.',
+            'status.required' => 'Please select a status for the supplier.',
+            'status.in' => 'Status must be either active or inactive.',
         ]);
 
-        $supplier->update($validated);
+        try {
+            $supplier->update($validated);
 
-        return redirect()->route('suppliers.index')
-            ->with('success', 'Supplier updated successfully!');
+            return redirect()->route('suppliers.index')
+                ->with('success', 'Supplier updated successfully!');
+                
+        } catch (\Exception $e) {
+            return back()
+                ->withInput()
+                ->with('error', 'Failed to update supplier. Please check all fields and try again.');
+        }
     }
 
     /**

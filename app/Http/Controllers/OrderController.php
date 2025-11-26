@@ -7,6 +7,7 @@ use App\Models\Business;
 use App\Models\Product;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use App\Services\NotificationService;
 
 class OrderController extends Controller
 {
@@ -38,10 +39,20 @@ class OrderController extends Controller
                 'quantity' => $validated['quantity'],
                 'unit_price' => $product->price,
                 'total_price' => $totalPrice,
+                'total_amount' => $totalPrice,
                 'status' => 'pending',
                 'order_type' => 'public_order',
                 'payment_status' => 'pending',
             ]);
+
+            // Send notifications after successful order creation
+            try {
+                $notificationService = new NotificationService();
+                $notificationService->notifyNewOrder($order);
+            } catch (\Exception $e) {
+                // Log error but don't fail the order creation
+                Log::error('Failed to send order notifications: ' . $e->getMessage());
+            }
 
             return response()->json([
                 'success' => true,

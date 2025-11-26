@@ -1,0 +1,39 @@
+<svg width="400" height="300" xmlns="http://www.w3.org/2000/svg">
+    <!-- Background -->
+    <rect width="400" height="300" fill="#FFFFFF"/>
+    
+    <!-- Header -->
+    <rect width="400" height="80" fill="#1E40AF" opacity="0.1"/>
+    <rect x="40" y="25" width="120" height="30" rx="4" fill="#1E40AF"/>
+    <text x="100" y="47" font-family="Arial, sans-serif" font-size="16" fill="#FFFFFF" text-anchor="middle" font-weight="bold">LOGO</text>
+    
+    <!-- Navigation -->
+    <rect x="{(400-300)}" y="30" width="60" height="20" rx="3" fill="#374151" opacity="0.2"/>
+    <rect x="{(400-220)}" y="30" width="60" height="20" rx="3" fill="#374151" opacity="0.2"/>
+    <rect x="{(400-140)}" y="30" width="60" height="20" rx="3" fill="#059669"/>
+    
+    <!-- Hero Section -->
+    <rect x="40" y="120" width="{(400/2-60)}" height="40" rx="4" fill="#374151" opacity="0.8"/>
+    <rect x="40" y="175" width="{(400/2-100)}" height="20" rx="3" fill="#374151" opacity="0.4"/>
+    <rect x="40" y="205" width="{(400/2-120)}" height="20" rx="3" fill="#374151" opacity="0.4"/>
+    <rect x="40" y="250" width="140" height="45" rx="6" fill="#1E40AF"/>
+    <rect x="200" y="250" width="140" height="45" rx="6" fill="#059669" opacity="0.3"/>
+    
+    <!-- Hero Image -->
+    <rect x="{(400/2+20)}" y="120" width="{(400/2-60)}" height="{(300-220)}" rx="8" fill="#059669" opacity="0.2"/>
+    <circle cx="{(400/2+400/4)}" cy="{(300/2)}" r="60" fill="#1E40AF" opacity="0.3"/>
+    
+    <!-- Content Cards -->
+    <rect x="40" y="{(300-180)}" width="{(400/3-60)}" height="140" rx="8" fill="#374151" opacity="0.05"/>
+    <rect x="{(400/3+10)}" y="{(300-180)}" width="{(400/3-60)}" height="140" rx="8" fill="#374151" opacity="0.05"/>
+    <rect x="{(400*2/3-20)}" y="{(300-180)}" width="{(400/3-60)}" height="140" rx="8" fill="#374151" opacity="0.05"/>
+    
+    <!-- Card Icons -->
+    <circle cx="110" cy="{(300-150)}" r="20" fill="#1E40AF" opacity="0.2"/>
+    <circle cx="{(400/2)}" cy="{(300-150)}" r="20" fill="#059669" opacity="0.2"/>
+    <circle cx="{(400-110)}" cy="{(300-150)}" r="20" fill="#1E40AF" opacity="0.2"/>
+    
+    <!-- Theme Name Badge -->
+    <rect x="{(400/2-150)}" y="{(300-40)}" width="300" height="30" rx="15" fill="#1E40AF"/>
+    <text x="{(400/2)}" y="{(300-20)}" font-family="Arial, sans-serif" font-size="14" fill="#FFFFFF" text-anchor="middle" font-weight="bold">Classic Professional</text>
+</svg>

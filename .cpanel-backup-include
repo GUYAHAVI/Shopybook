@@ -1,0 +1,19 @@
+# Files/folders to INCLUDE in cPanel backups
+# (Prevents storage folder from being excluded)
+
+# Critical directories
+storage/app/public/
+storage/app/public/business/
+storage/app/public/business/logos/
+storage/app/public/products/
+storage/app/public/brands/
+
+# Database
+database/
+
+# Environment (encrypted backup only)
+.env
+
+# Uploads
+public/uploads/
+

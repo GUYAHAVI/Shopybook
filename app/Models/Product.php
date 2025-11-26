@@ -51,9 +51,49 @@ class Product extends Model
 
         static::creating(function ($product) {
             if (empty($product->slug)) {
-                $product->slug = Str::slug($product->name);
+                $product->slug = static::generateUniqueSlug($product->name, $product->business_id);
             }
         });
+        
+        static::updating(function ($product) {
+            // Regenerate slug if name changed
+            if ($product->isDirty('name')) {
+                $product->slug = static::generateUniqueSlug($product->name, $product->business_id, $product->id);
+            }
+        });
+    }
+    
+    /**
+     * Generate a unique slug for the product within the business
+     */
+    protected static function generateUniqueSlug($name, $businessId, $ignoreId = null)
+    {
+        $slug = Str::slug($name);
+        $originalSlug = $slug;
+        $count = 1;
+        
+        // Check if slug exists in the same business
+        while (static::slugExistsInBusiness($slug, $businessId, $ignoreId)) {
+            $slug = $originalSlug . '-' . $count;
+            $count++;
+        }
+        
+        return $slug;
+    }
+    
+    /**
+     * Check if slug exists in the business
+     */
+    protected static function slugExistsInBusiness($slug, $businessId, $ignoreId = null)
+    {
+        $query = static::where('business_id', $businessId)
+                      ->where('slug', $slug);
+        
+        if ($ignoreId) {
+            $query->where('id', '!=', $ignoreId);
+        }
+        
+        return $query->exists();
     }
 
     public function business()
@@ -86,6 +126,26 @@ class Product extends Model
     public function promotions()
     {
         return $this->belongsToMany(Promotion::class, 'promotion_product');
+    }
+
+    public function conversions()
+    {
+        return $this->hasMany(ProductConversion::class);
+    }
+
+    public function hasConversions()
+    {
+        return $this->conversions()->exists();
+    }
+
+    public function stockReceipts()
+    {
+        return $this->hasMany(StockReceipt::class);
+    }
+
+    public function latestStockReceipt()
+    {
+        return $this->hasOne(StockReceipt::class)->latestOfMany();
     }
 
     public function getMainImageAttribute()

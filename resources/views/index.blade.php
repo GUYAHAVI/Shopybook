@@ -1059,7 +1059,7 @@ input.form-control::placeholder, textarea.form-control::placeholder {
                             <h3 class="card-title">Business Pro</h3>
                             <div class="price mb-4">
                                 <span class="currency">KSh</span>
-                                <span class="amount">2,500</span>
+                                <span class="amount">500</span>
                                 <span class="period">/month</span>
                             </div>
                             <ul class="list-unstyled pricing-list mb-4 text-start">
@@ -1083,7 +1083,7 @@ input.form-control::placeholder, textarea.form-control::placeholder {
                             <h3 class="card-title">Enterprise</h3>
                             <div class="price mb-4">
                                 <span class="currency">KSh</span>
-                                <span class="amount">5,000</span>
+                                <span class="amount">1,000</span>
                                 <span class="period">/month</span>
                             </div>
                             <ul class="list-unstyled pricing-list mb-4 text-start">
@@ -1184,7 +1184,7 @@ input.form-control::placeholder, textarea.form-control::placeholder {
                                 </div>
                             </li>
                             <li class="mb-3">
-                                <i class="fas fa-whatsapp text-primary me-3"></i>
+                            <i class="fa-brands fa-whatsapp text-primary me-3"></i>	
                                 <div>
                                     <strong>WhatsApp Support</strong><br>
                                     <span>+254 717745891</span><br>
@@ -1203,18 +1203,21 @@ input.form-control::placeholder, textarea.form-control::placeholder {
 
                         <div class="mt-4">
                             <h5 class="mb-3 text-primary">Connect With Us</h5>
-                            <div class="social-bubbles d-flex gap-3">
-                                <a href="#" class="social-bubble text-primary">
-                                    <i class="fab fa-twitter fa-lg"></i>
+                            <div class="social-bubbles d-flex gap-3 flex-wrap">
+                                <a href="https://wa.me/254717745891" target="_blank" class="social-bubble text-primary" title="WhatsApp">
+                                <i class="fa-brands fa-whatsapp"></i>
+                                <!-- </a>
+                                <a href="#" target="_blank" class="social-bubble text-primary" title="Twitter">
+                                <i class="fa-brands fa-x-twitter"></i>
+                                </a> -->
+                                <a href="https://www.linkedin.com/company/108257756/admin/dashboard/" target="_blank" class="social-bubble text-primary" title="LinkedIn">
+                                <i class="fa-brands fa-linkedin"></i>
                                 </a>
-                                <a href="#" class="social-bubble text-primary">
-                                    <i class="fab fa-linkedin-in fa-lg"></i>
+                                <a href="https://www.facebook.com/profile.php?id=61578210136925" target="_blank" class="social-bubble text-primary" title="Facebook">
+                                <i class="fa-brands fa-facebook"></i>
                                 </a>
-                                <a href="#" class="social-bubble text-primary">
-                                    <i class="fab fa-facebook-f fa-lg"></i>
-                                </a>
-                                <a href="#" class="social-bubble text-primary">
-                                    <i class="fab fa-instagram fa-lg"></i>
+                                <a href="https://www.instagram.com/shopybook254?igsh=MWMzaXI5Z3I3eXR4ZQ==" target="_blank" class="social-bubble text-primary" title="Instagram">
+                                <i class="fa-brands fa-instagram"></i>
                                 </a>
                             </div>
                         </div>

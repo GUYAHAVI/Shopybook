@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Str;
 
 class Order extends Model
 {
@@ -25,12 +26,33 @@ class Order extends Model
         'order_type',
         'payment_status',
         'product_id',
+        // Tax fields
+        'subtotal',
+        'tax',
+        'tax_rate',
+        'tax_inclusive',
+        'tax_type',
+        // Invoice fields
+        'invoice_number',
+        'invoice_generated_at',
+        // Archive fields
+        'is_archived',
+        'archived_at',
     ];
 
     protected $casts = [
         'total_amount' => 'decimal:2',
         'unit_price' => 'decimal:2',
         'total_price' => 'decimal:2',
+        'subtotal' => 'decimal:2',
+        'tax' => 'decimal:2',
+        'tax_rate' => 'decimal:2',
+        'tax_inclusive' => 'boolean',
+        'is_archived' => 'boolean',
+        'invoice_generated_at' => 'datetime',
+        'archived_at' => 'datetime',
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime',
     ];
 
     public function business()
@@ -63,6 +85,11 @@ class Order extends Model
         return $this->belongsTo(Product::class);
     }
 
+    public function receipt()
+    {
+        return $this->hasOne(Receipt::class);
+    }
+
     public function getStatusColorAttribute()
     {
         switch ($this->status) {
@@ -86,7 +113,32 @@ class Order extends Model
 
     public function getFormattedTotalAttribute()
     {
-        return 'KSh ' . number_format($this->total_amount, 2);
+        return 'KSh ' . number_format((float) $this->total_amount, 2);
+    }
+
+    public function getFormattedSubtotalAttribute()
+    {
+        return 'KSh ' . number_format((float) $this->subtotal, 2);
+    }
+
+    public function getFormattedTaxAttribute()
+    {
+        return 'KSh ' . number_format((float) $this->tax, 2);
+    }
+
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::creating(function (Order $order) {
+            if (empty($order->order_number)) {
+                $order->order_number = 'ORD-' . strtoupper(Str::random(10));
+            }
+
+            if (empty($order->total_amount) && ($order->order_type === 'public_order') && !empty($order->total_price)) {
+                $order->total_amount = $order->total_price;
+            }
+        });
     }
 
     /**
@@ -95,5 +147,13 @@ class Order extends Model
     public function getRouteKeyName()
     {
         return 'id';
+    }
+
+    /**
+     * Get the credit notes for this order.
+     */
+    public function creditNotes()
+    {
+        return $this->hasMany(CreditNote::class);
     }
 }

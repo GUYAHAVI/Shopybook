@@ -49,16 +49,22 @@
                         </div>
 
                         <div class="mb-3">
-                            <label for="description" class="form-label">Description</label>
-
-                            <x-ai-enhanced-textarea name="description" 
-                                                   content-type="description" 
-                                                   tone="professional" 
-                                                   rows="3" 
-                                                   placeholder="Enter product description...">
-                                {{ old('description') }}
-                            </x-ai-enhanced-textarea>
-
+                            <label for="productDescription" class="form-label">
+                                Product Description
+                                <span style="color: #6b7280; font-size: 12px;">(Describe your product features and benefits)</span>
+                            </label>
+                            <textarea id="productDescription" name="description" class="form-control @error('description') is-invalid @enderror" rows="4" 
+                                      placeholder="Enter product description..." style="min-height: 100px;">{{ old('description') }}</textarea>
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 8px;">
+                                <button type="button" id="enhanceProductDescriptionBtn" class="btn btn-sm" style="background: #13e8e9; color: #020258; border: none; padding: 8px 16px; border-radius: 6px; font-size: 13px; font-weight: 500; display: flex; align-items: center; gap: 6px; transition: all 0.3s;">
+                                    <i class="fas fa-magic"></i>
+                                    <span>Enhance with AI</span>
+                                </button>
+                                <small id="productDescriptionCharCount" style="color: #6b7280; font-size: 12px;">0 characters</small>
+                            </div>
+                            <div id="productEnhancementLoading" style="display: none; margin-top: 10px; padding: 10px; background: #f0f9ff; border: 1px solid #bfdbfe; border-radius: 6px; font-size: 13px; color: #1e40af;">
+                                <i class="fas fa-spinner fa-spin"></i> Claude AI is enhancing your product description...
+                            </div>
                             @error('description')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
@@ -454,6 +460,141 @@ document.addEventListener('DOMContentLoaded', function() {
             return false;
         }
     });
+
+    // Product Description AI Enhancement
+    const productDescriptionTextarea = document.getElementById('productDescription');
+    const productCharCount = document.getElementById('productDescriptionCharCount');
+    const enhanceProductBtn = document.getElementById('enhanceProductDescriptionBtn');
+    const productEnhancementLoading = document.getElementById('productEnhancementLoading');
+    
+    // Character counter for product description
+    if (productDescriptionTextarea && productCharCount) {
+        productDescriptionTextarea.addEventListener('input', function() {
+            productCharCount.textContent = this.value.length + ' characters';
+        });
+        // Initialize count
+        productCharCount.textContent = productDescriptionTextarea.value.length + ' characters';
+    }
+
+    // AI Enhancement for product description
+    if (enhanceProductBtn) {
+        enhanceProductBtn.addEventListener('click', async function() {
+            const description = productDescriptionTextarea.value.trim();
+            const productName = nameInput.value.trim();
+            const category = document.getElementById('category').value;
+            
+            // Validation
+            if (!description || description.length < 10) {
+                alert('Please enter at least 10 characters in your product description before enhancing.');
+                productDescriptionTextarea.focus();
+                return;
+            }
+            
+            if (!productName) {
+                alert('Please enter your product name first.');
+                nameInput.focus();
+                return;
+            }
+            
+            // Show loading state
+            enhanceProductBtn.disabled = true;
+            enhanceProductBtn.style.opacity = '0.6';
+            enhanceProductBtn.style.cursor = 'not-allowed';
+            productEnhancementLoading.style.display = 'block';
+            
+            try {
+                const response = await fetch('{{ route('products.enhance-description') }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        description: description,
+                        product_name: productName,
+                        category: category || null
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success && data.enhanced_description) {
+                    // Update textarea with enhanced description
+                    productDescriptionTextarea.value = data.enhanced_description;
+                    
+                    // Update character count
+                    productCharCount.textContent = data.enhanced_description.length + ' characters';
+                    
+                    // Add visual feedback
+                    productDescriptionTextarea.style.borderColor = '#10b981';
+                    productDescriptionTextarea.style.boxShadow = '0 0 0 2px rgba(16, 185, 129, 0.1)';
+                    
+                    setTimeout(() => {
+                        productDescriptionTextarea.style.borderColor = '';
+                        productDescriptionTextarea.style.boxShadow = '';
+                    }, 2000);
+                    
+                    // Show success message
+                    productEnhancementLoading.innerHTML = '<i class=\"fas fa-check-circle\"></i> Product description enhanced successfully!';
+                    productEnhancementLoading.style.background = '#f0fdf4';
+                    productEnhancementLoading.style.borderColor = '#86efac';
+                    productEnhancementLoading.style.color = '#166534';
+                    
+                    // Hide success message after 3 seconds
+                    setTimeout(() => {
+                        productEnhancementLoading.style.display = 'none';
+                        productEnhancementLoading.innerHTML = '<i class=\"fas fa-spinner fa-spin\"></i> Claude AI is enhancing your product description...';
+                        productEnhancementLoading.style.background = '#f0f9ff';
+                        productEnhancementLoading.style.borderColor = '#bfdbfe';
+                        productEnhancementLoading.style.color = '#1e40af';
+                    }, 3000);
+                } else {
+                    throw new Error(data.message || 'Enhancement failed');
+                }
+            } catch (error) {
+                console.error('Enhancement error:', error);
+                
+                // Show error message
+                productEnhancementLoading.innerHTML = '<i class=\"fas fa-exclamation-circle\"></i> Enhancement failed. Please try again.';
+                productEnhancementLoading.style.background = '#fef2f2';
+                productEnhancementLoading.style.borderColor = '#fecaca';
+                productEnhancementLoading.style.color = '#991b1b';
+                
+                setTimeout(() => {
+                    productEnhancementLoading.style.display = 'none';
+                    productEnhancementLoading.innerHTML = '<i class=\"fas fa-spinner fa-spin\"></i> Claude AI is enhancing your product description...';
+                    productEnhancementLoading.style.background = '#f0f9ff';
+                    productEnhancementLoading.style.borderColor = '#bfdbfe';
+                    productEnhancementLoading.style.color = '#1e40af';
+                }, 3000);
+            } finally {
+                // Reset button state
+                enhanceProductBtn.disabled = false;
+                enhanceProductBtn.style.opacity = '1';
+                enhanceProductBtn.style.cursor = 'pointer';
+            }
+        });
+        
+        // Hover effect for enhance button
+        enhanceProductBtn.addEventListener('mouseenter', function() {
+            if (!this.disabled) {
+                this.style.background = '#020258';
+                this.style.color = '#13e8e9';
+                this.style.transform = 'translateY(-1px)';
+                this.style.boxShadow = '0 4px 6px rgba(0, 0, 0, 0.1)';
+            }
+        });
+        
+        enhanceProductBtn.addEventListener('mouseleave', function() {
+            if (!this.disabled) {
+                this.style.background = '#13e8e9';
+                this.style.color = '#020258';
+                this.style.transform = 'translateY(0)';
+                this.style.boxShadow = 'none';
+            }
+        });
+    }
 });
 </script>
 @endsection 

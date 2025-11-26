@@ -17,11 +17,36 @@
         </div>
     </div>
 
+        @if($isEligibleForDynamicConversions)
+        <div class="alert alert-info alert-dismissible fade show mb-4" role="alert">
+            <i class="fas fa-magic me-2"></i>
+            <strong>Dynamic Conversion System Active!</strong> 
+            Click products with <span class="badge bg-warning text-dark mx-1"><i class="fas fa-exchange-alt"></i> Convert</span> badges to sell in different units.
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+        
+        <div class="alert alert-success alert-dismissible fade show mb-4" role="alert">
+            <i class="fas fa-info-circle me-2"></i>
+            <strong>Special Tax Arrangement:</strong> 
+            This business operates under a flat yearly tax of KSh 5,000. No VAT is charged on individual sales.
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+        
+
+    @endif
+
     <div class="row">
         <div class="col-md-8">
             <div class="card" style="background: var(--card-bg); border: 1px solid var(--border-color);">
                 <div class="card-header" style="background: var(--bg-tertiary); border-bottom: 1px solid var(--border-color);">
-                    <h5 class="mb-0" style="color: var(--text-primary);">Point of Sale</h5>
+                    <h5 class="mb-0" style="color: var(--text-primary);">
+                        Point of Sale
+                        @if($isEligibleForDynamicConversions)
+                            <span class="badge bg-warning text-dark ms-2">
+                                <i class="fas fa-exchange-alt me-1"></i>Dynamic Conversions
+                            </span>
+                        @endif
+                    </h5>
                 </div>
                 <div class="card-body">
                     <div class="row">
@@ -42,9 +67,38 @@
                                 <select class="form-control" id="payment_method" style="border: 1px solid var(--border-color); background: var(--card-bg); color: var(--text-primary);">
                                     <option value="cash">Cash</option>
                                     <option value="mpesa">M-Pesa</option>
+                                    <option value="mobile_money">Mobile Money (Generic)</option>
+                                    <option value="airtel_money">Airtel Money</option>
+                                    <option value="equitel">Equitel</option>
                                     <option value="card">Card</option>
                                     <option value="bank_transfer">Bank Transfer</option>
                                 </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="mb-3">
+                                <label for="payment_status" class="form-label" style="color: var(--text-primary);">Payment Status</label>
+                                <select class="form-control" id="payment_status" onchange="togglePartialPayment()" style="border: 1px solid var(--border-color); background: var(--card-bg); color: var(--text-primary);">
+                                    <option value="paid">Paid in Full</option>
+                                    <option value="partial">Partial Payment</option>
+                                    <option value="unpaid">Unpaid (Generate Invoice)</option>
+                                </select>
+                                <small class="text-muted">Select payment status for this order</small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Partial Payment Amount Field -->
+                    <div class="row" id="partial_payment_row" style="display: none;">
+                        <div class="col-md-12">
+                            <div class="mb-3">
+                                <label for="partial_amount" class="form-label" style="color: var(--text-primary);">Amount Received</label>
+                                <input type="number" class="form-control" id="partial_amount" step="0.01" min="0" placeholder="Enter amount received"
+                                       style="border: 1px solid var(--border-color); background: var(--card-bg); color: var(--text-primary);">
+                                <small class="text-muted">Total: <span id="partial_total_display">0.00</span> | Balance: <span id="partial_balance_display">0.00</span></small>
                             </div>
                         </div>
                     </div>
@@ -64,8 +118,16 @@
                         @if($products->count() > 0)
                             @foreach($products as $product)
                                 <div class="col-md-3 mb-3">
-                                <div class="card product-card" data-product-id="{{ $product->id }}" 
-                                     style="background: var(--card-bg); border: 1px solid var(--border-color); cursor: pointer;">
+                                <div class="card product-card" 
+                                     data-id="{{ $product->id }}"
+                                     data-product-id="{{ $product->id }}" 
+                                     data-name="{{ $product->name }}"
+                                     data-price="{{ $product->price }}"
+                                     data-stock="{{ $product->stock_quantity }}"
+                                     style="background: var(--card-bg); border: 1px solid var(--border-color); cursor: pointer;"
+                                     @if($isEligibleForDynamicConversions && $product->conversions()->exists())
+                                     title="Click to open conversion options - Sell in different units!"
+                                     @endif>
                                     <div class="product-image-container">
                                         @if($product->image)
                                             <img src="{{ asset('storage/' . $product->image) }}" alt="{{ $product->name }}" class="product-image">
@@ -74,11 +136,23 @@
                                                 <i class="fas fa-image fa-2x" style="color: var(--text-muted);"></i>
                                             </div>
                                         @endif
+                                        @if($isEligibleForDynamicConversions && $product->conversions()->exists())
+                                            <div class="conversion-badge" style="position: absolute; top: 5px; right: 5px; background: linear-gradient(45deg, #ffc107, #ff9800); color: #000; padding: 4px 8px; border-radius: 15px; font-size: 11px; font-weight: bold; box-shadow: 0 2px 4px rgba(0,0,0,0.2); animation: pulse 2s infinite;">
+                                                <i class="fas fa-exchange-alt me-1"></i>Convert
+                                            </div>
+                                        @endif
                                     </div>
                                     <div class="card-body text-center">
                                         <h6 class="card-title" style="color: var(--text-primary);">{{ $product->name }}</h6>
                                         <p class="card-text" style="color: var(--text-secondary);">KSh {{ number_format($product->price, 2) }}</p>
                                         <small style="color: var(--text-muted);">Stock: {{ $product->stock_quantity }}</small>
+                                        @if($isEligibleForDynamicConversions && $product->conversions()->exists())
+                                            <div class="mt-2">
+                                                <div class="alert alert-warning alert-sm py-1 px-2 mb-0" style="font-size: 11px; border-radius: 8px;">
+                                                    <i class="fas fa-calculator me-1"></i><strong>Click to convert units!</strong>
+                                                </div>
+                                            </div>
+                                        @endif
                                     </div>
                                 </div>
                             </div>
@@ -117,7 +191,7 @@
                         <span id="subtotal" style="color: var(--text-primary);">KSh 0.00</span>
                     </div>
                     <div class="d-flex justify-content-between mb-2">
-                        <span style="color: var(--text-primary);">Tax (16%):</span>
+                        <span style="color: var(--text-primary);" id="taxLabel">Tax (16%):</span>
                         <span id="tax" style="color: var(--text-primary);">KSh 0.00</span>
                     </div>
                     <hr style="border-color: var(--border-color);">
@@ -130,8 +204,17 @@
                         <i class="fas fa-check me-2"></i>Complete Sale
                     </button>
                     
-                    <button class="btn btn-outline-secondary w-100" id="clear_cart_btn">
+                    <button class="btn btn-outline-secondary w-100 mb-2" id="clear_cart_btn">
                         <i class="fas fa-trash me-2"></i>Clear Cart
+                    </button>
+                    
+
+                    
+
+                    
+                    <!-- Reprint Last Receipt Button -->
+                    <button type="button" class="btn btn-outline-info w-100" id="reprint_btn" style="display: none;">
+                        <i class="fas fa-print me-2"></i>Reprint Last Receipt
                     </button>
                  </div>
              </div>
@@ -139,32 +222,73 @@
      </div>
  </div>
  
- <!-- Success Modal -->
+ <!-- Custom Success Modal -->
  <div class="modal fade" id="successModal" tabindex="-1" aria-labelledby="successModalLabel" aria-hidden="true">
-     <div class="modal-dialog modal-dialog-centered">
-         <div class="modal-content" style="background: var(--card-bg); border: 1px solid var(--border-color);">
-             <div class="modal-header" style="background: var(--bg-tertiary); border-bottom: 1px solid var(--border-color);">
-                 <h5 class="modal-title" id="successModalLabel" style="color: var(--text-primary);">
-                     <i class="fas fa-check-circle text-success me-2"></i>Sale Completed!
-                 </h5>
-                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-             </div>
-             <div class="modal-body" style="color: var(--text-primary);">
-                 <div class="text-center">
-                     <i class="fas fa-check-circle text-success fa-3x mb-3"></i>
-                     <h6>Sale completed successfully!</h6>
-                     <p class="mb-0">Order Number: <strong id="orderNumber"></strong></p>
-                     <small class="text-muted">Receipt has been generated and is ready for printing.</small>
+     <div class="modal-dialog modal-dialog-centered modal-lg">
+         <div class="modal-content" style="background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.3);">
+             <div class="modal-header text-center" style="background: linear-gradient(135deg, #28a745, #20c997); border-bottom: none; border-radius: 15px 15px 0 0; padding: 2rem 1.5rem 1rem;">
+                 <div class="w-100">
+                     <div class="success-icon-container mb-3">
+                         <div class="success-icon">
+                             <i class="fas fa-check-circle"></i>
+                         </div>
+                     </div>
+                     <h4 class="modal-title text-white mb-0" id="successModalLabel">
+                         <strong>Sale Completed Successfully!</strong>
+                     </h4>
                  </div>
+                 <button type="button" class="btn-close btn-close-white position-absolute top-0 end-0 m-3" data-bs-dismiss="modal" aria-label="Close"></button>
              </div>
-             <div class="modal-footer" style="border-top: 1px solid var(--border-color);">
-                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                 <button type="button" class="btn btn-primary" id="printReceiptBtn">
-                     <i class="fas fa-print me-2"></i>Print Receipt
-                 </button>
-                 <a href="{{ route('sales.orders') }}" class="btn btn-outline-primary">
-                     <i class="fas fa-list me-2"></i>View Orders
-                 </a>
+             
+             <div class="modal-body text-center p-4" style="color: var(--text-primary);">
+                 <div class="success-details mb-4">
+                     <div class="order-number-display mb-3">
+                         <span class="order-label">Order Number:</span>
+                         <span class="order-value" id="orderNumber"></span>
+                     </div>
+                     <div class="payment-status-display mb-3" id="paymentStatusDisplay" style="display: none;">
+                         <span class="badge bg-warning text-dark" style="font-size: 1rem; padding: 0.5rem 1rem;">
+                             <i class="fas fa-clock me-2"></i>Payment Pending
+                         </span>
+                     </div>
+                     <div class="success-message" id="receiptMessage">
+                         <p class="mb-0 text-success">
+                             <i class="fas fa-receipt me-2"></i>
+                             Receipt has been generated and is ready for printing
+                         </p>
+                     </div>
+                     <div class="invoice-message" id="invoiceMessage" style="display: none;">
+                         <p class="mb-0 text-info">
+                             <i class="fas fa-file-invoice me-2"></i>
+                             Invoice has been generated for this unpaid order
+                         </p>
+                     </div>
+                 </div>
+                 
+                 <div class="action-buttons">
+                     <div class="row g-3" id="actionButtonsRow">
+                         <div class="col-md-4">
+                             <button type="button" class="btn btn-outline-secondary w-100" data-bs-dismiss="modal">
+                                 <i class="fas fa-times me-2"></i>Close
+                             </button>
+                         </div>
+                         <div class="col-md-4" id="printReceiptBtnCol">
+                             <button type="button" class="btn btn-primary w-100" id="printReceiptBtn">
+                                 <i class="fas fa-print me-2"></i>Print Receipt
+                             </button>
+                         </div>
+                         <div class="col-md-4" id="generateInvoiceBtnCol" style="display: none;">
+                             <button type="button" class="btn btn-warning w-100" id="generateInvoiceBtn">
+                                 <i class="fas fa-file-invoice me-2"></i>Generate Invoice
+                             </button>
+                         </div>
+                         <div class="col-md-4">
+                             <a href="{{ route('sales.orders') }}" class="btn btn-outline-primary w-100">
+                                 <i class="fas fa-list me-2"></i>View Orders
+                             </a>
+                         </div>
+                     </div>
+                 </div>
              </div>
          </div>
      </div>
@@ -194,7 +318,265 @@
      </div>
  </div>
 
+ <!-- Custom Alert Modals -->
+ <!-- Success Modal -->
+ <div class="modal fade" id="successAlertModal" tabindex="-1" aria-labelledby="successAlertModalLabel" aria-hidden="true">
+     <div class="modal-dialog modal-dialog-centered">
+         <div class="modal-content" style="background: var(--card-bg); border: 1px solid var(--border-color);">
+             <div class="modal-header" style="background: var(--bg-tertiary); border-bottom: 1px solid var(--border-color);">
+                 <h5 class="modal-title" id="successAlertModalLabel" style="color: var(--text-primary);">
+                     <i class="fas fa-check-circle text-success me-2"></i>Success
+                 </h5>
+                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+             </div>
+             <div class="modal-body" style="color: var(--text-primary);">
+                 <div class="text-center">
+                     <i class="fas fa-check-circle text-success fa-3x mb-3"></i>
+                     <h6 id="successAlertTitle">Success!</h6>
+                     <p class="mb-0" id="successAlertMessage"></p>
+                 </div>
+             </div>
+             <div class="modal-footer" style="border-top: 1px solid var(--border-color);">
+                 <button type="button" class="btn btn-success" data-bs-dismiss="modal">OK</button>
+             </div>
+         </div>
+     </div>
+ </div>
+
+ <!-- Warning Modal -->
+ <div class="modal fade" id="warningAlertModal" tabindex="-1" aria-labelledby="warningAlertModalLabel" aria-hidden="true">
+     <div class="modal-dialog modal-dialog-centered">
+         <div class="modal-content" style="background: var(--card-bg); border: 1px solid var(--border-color);">
+             <div class="modal-header" style="background: var(--bg-tertiary); border-bottom: 1px solid var(--border-color);">
+                 <h5 class="modal-title" id="warningAlertModalLabel" style="color: var(--text-primary);">
+                     <i class="fas fa-exclamation-triangle text-warning me-2"></i>Warning
+                 </h5>
+                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+             </div>
+             <div class="modal-body" style="color: var(--text-primary);">
+                 <div class="text-center">
+                     <i class="fas fa-exclamation-triangle text-warning fa-3x mb-3"></i>
+                     <h6 id="warningAlertTitle">Warning!</h6>
+                     <p class="mb-0" id="warningAlertMessage"></p>
+                 </div>
+             </div>
+             <div class="modal-footer" style="border-top: 1px solid var(--border-color);">
+                 <button type="button" class="btn btn-warning" data-bs-dismiss="modal">OK</button>
+             </div>
+         </div>
+     </div>
+ </div>
+
+ <!-- Info Modal -->
+ <div class="modal fade" id="infoAlertModal" tabindex="-1" aria-labelledby="infoAlertModalLabel" aria-hidden="true">
+     <div class="modal-dialog modal-dialog-centered">
+         <div class="modal-content" style="background: var(--card-bg); border: 1px solid var(--border-color);">
+             <div class="modal-header" style="background: var(--bg-tertiary); border-bottom: 1px solid var(--border-color);">
+                 <h5 class="modal-title" id="infoAlertModalLabel" style="color: var(--text-primary);">
+                     <i class="fas fa-info-circle text-info me-2"></i>Information
+                 </h5>
+                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+             </div>
+             <div class="modal-body" style="color: var(--text-primary);">
+                 <div class="text-center">
+                     <i class="fas fa-info-circle text-info fa-3x mb-3"></i>
+                     <h6 id="infoAlertTitle">Information</h6>
+                     <p class="mb-0" id="infoAlertMessage"></p>
+                 </div>
+             </div>
+             <div class="modal-footer" style="border-top: 1px solid var(--border-color);">
+                 <button type="button" class="btn btn-info" data-bs-dismiss="modal">OK</button>
+             </div>
+         </div>
+     </div>
+ </div>
+
+ <!-- Danger Modal -->
+ <div class="modal fade" id="dangerAlertModal" tabindex="-1" aria-labelledby="dangerAlertModalLabel" aria-hidden="true">
+     <div class="modal-dialog modal-dialog-centered">
+         <div class="modal-content" style="background: var(--card-bg); border: 1px solid var(--border-color);">
+             <div class="modal-header" style="background: var(--bg-tertiary); border-bottom: 1px solid var(--border-color);">
+                 <h5 class="modal-title" id="dangerAlertModalLabel" style="color: var(--text-primary);">
+                     <i class="fas fa-times-circle text-danger me-2"></i>Error
+                 </h5>
+                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+             </div>
+             <div class="modal-body" style="color: var(--text-primary);">
+                 <div class="text-center">
+                     <i class="fas fa-times-circle text-danger fa-3x mb-3"></i>
+                     <h6 id="dangerAlertTitle">Error!</h6>
+                     <p class="mb-0" id="dangerAlertMessage"></p>
+                 </div>
+             </div>
+             <div class="modal-footer" style="border-top: 1px solid var(--border-color);">
+                 <button type="button" class="btn btn-danger" data-bs-dismiss="modal">OK</button>
+             </div>
+         </div>
+     </div>
+ </div>
+
+ <!-- Confirmation Modal -->
+ <div class="modal fade" id="confirmModal" tabindex="-1" aria-labelledby="confirmModalLabel" aria-hidden="true">
+     <div class="modal-dialog modal-dialog-centered">
+         <div class="modal-content" style="background: var(--card-bg); border: 1px solid var(--border-color);">
+             <div class="modal-header" style="background: var(--bg-tertiary); border-bottom: 1px solid var(--border-color);">
+                 <h5 class="modal-title" id="confirmModalLabel" style="color: var(--text-primary);">
+                     <i class="fas fa-question-circle text-primary me-2"></i>Confirm Action
+                 </h5>
+                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+             </div>
+             <div class="modal-body" style="color: var(--text-primary);">
+                 <div class="text-center">
+                     <i class="fas fa-question-circle text-primary fa-3x mb-3"></i>
+                     <h6 id="confirmModalTitle">Confirm Action</h6>
+                     <p class="mb-0" id="confirmModalMessage"></p>
+                 </div>
+             </div>
+             <div class="modal-footer" style="border-top: 1px solid var(--border-color);">
+                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" id="confirmModalCancelBtn">Cancel</button>
+                <button type="button" class="btn btn-primary" id="confirmModalYesBtn">Yes, Continue</button>
+             </div>
+         </div>
+     </div>
+ </div>
+
+<!-- Dynamic Conversion Modal -->
+@if($isEligibleForDynamicConversions)
+<div class="modal fade" id="dynamicConversionModal" tabindex="-1" aria-labelledby="dynamicConversionModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content" style="background: var(--card-bg); border: 1px solid var(--border-color);">
+            <div class="modal-header" style="background: var(--bg-tertiary); border-bottom: 1px solid var(--border-color);">
+                <h5 class="modal-title" id="dynamicConversionModalLabel" style="color: var(--text-primary);">
+                    <i class="fas fa-exchange-alt me-2"></i>Dynamic Unit Conversion
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <h6 id="conversionProductName" style="color: var(--text-primary);"></h6>
+                    <p class="text-muted" id="conversionProductInfo"></p>
+                </div>
+                
+                <form id="posConversionForm">
+                    @csrf
+                    <input type="hidden" id="conversionProductId" name="product_id">
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="posSellUnit" class="form-label" style="color: var(--text-primary);">Sell In *</label>
+                                <select id="posSellUnit" name="sell_unit" class="form-select" required 
+                                        style="background: var(--bg-secondary); border: 1px solid var(--border-color); color: #000;">
+                                    <option value="" style="color: #000;">Select unit to sell in</option>
+                                    <option value="kg" style="color: #000;">Kilograms (kg)</option>
+                                    <option value="sqm" style="color: #000;">Square Meters (sqm)</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="posMaterialType" class="form-label" style="color: var(--text-primary);">Material Type *</label>
+                                <select id="posMaterialType" name="material_type" class="form-select" required 
+                                        style="background: var(--bg-secondary); border: 1px solid var(--border-color); color: #000;">
+                                    <option value="" style="color: #000;">Select material type</option>
+                                    <option value="greenhouse_0.2" style="color: #000;">Greenhouse Film (0.2 microns)</option>
+                                    <option value="damliner_0.3" style="color: #000;">Dam Liner (0.3 microns)</option>
+                                    <option value="damliner_0.5" style="color: #000;">Dam Liner (0.5 microns)</option>
+                                    <option value="damliner_0.75" style="color: #000;">Dam Liner (0.75 microns)</option>
+                                    <option value="damliner_1.0" style="color: #000;">Dam Liner (1.0 microns)</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="posQuantity" class="form-label" style="color: var(--text-primary);">Quantity *</label>
+                                <input type="number" step="0.01" min="0.01" id="posQuantity" name="quantity" 
+                                       class="form-control" placeholder="Enter quantity" required 
+                                       style="background: var(--bg-secondary); border: 1px solid var(--border-color); color: var(--text-primary);">
+                                <small class="form-text text-muted" id="quantityHelp">Enter quantity in the selected unit</small>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="posPricePerUnit" class="form-label" style="color: var(--text-primary);">Price Per Unit (KSh) *</label>
+                                <input type="number" step="0.01" min="0.01" id="posPricePerUnit" name="price_per_unit" 
+                                       class="form-control" placeholder="Enter price per unit" required 
+                                       style="background: var(--bg-secondary); border: 1px solid var(--border-color); color: var(--text-primary);">
+                                <small class="form-text text-muted" id="priceHelp">Price per kg or per sqm</small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Auto-calculation results -->
+                    <div id="posAutoCalculation" class="mt-3" style="display: none;">
+                        <div class="alert alert-info" style="background: var(--bg-tertiary); border: 1px solid var(--border-color);">
+                            <h6 class="alert-heading">Conversion Results</h6>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <p class="mb-1"><strong>Original Quantity:</strong> <span id="posOriginalQuantity"></span></p>
+                                    <p class="mb-1"><strong>Converted Quantity:</strong> <span id="posConvertedQuantity"></span></p>
+                                    <p class="mb-1"><strong>Conversion Factor:</strong> <span id="posConversionFactor"></span></p>
+                                </div>
+                                <div class="col-md-6">
+                                    <p class="mb-1"><strong>Total Amount:</strong> <span id="posTotalAmount"></span></p>
+                                    <p class="mb-1"><strong>Material Type:</strong> <span id="posMaterialTypeDisplay"></span></p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+
+                <!-- Results Section -->
+                <div id="posConversionResults" class="mt-4" style="display: none;">
+                    <hr>
+                    <h5 class="text-primary mb-3">Conversion Results</h5>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="card border-primary" style="background: var(--card-bg); border: 1px solid var(--primary-color);">
+                                <div class="card-body">
+                                    <h6 class="text-primary">Conversion Details</h6>
+                                    <p class="mb-1"><strong>Formula:</strong> <span id="posFormula"></span></p>
+                                    <p class="mb-1"><strong>Converted Quantity:</strong> <span id="posConvertedQuantity"></span></p>
+                                    <p class="mb-1"><strong>Conversion Factor:</strong> <span id="posConversionFactor"></span></p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card border-success" style="background: var(--card-bg); border: 1px solid var(--success-color);">
+                                <div class="card-body">
+                                    <h6 class="text-success">Pricing Information</h6>
+                                    <p class="mb-1"><strong>Suggested Sale Price:</strong> <span id="posSuggestedPrice"></span></p>
+                                    <p class="mb-1"><strong>Total Amount:</strong> <span id="posTotalAmount"></span></p>
+                                    <p class="mb-1"><strong>Profit Margin:</strong> <span id="posProfitMarginResult"></span></p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer" style="background: var(--bg-tertiary); border-top: 1px solid var(--border-color);">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-success" id="addConvertedToCart">
+                    <i class="fas fa-cart-plus me-2"></i>Add to Cart
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+@endif
+
 <style>
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+}
+
 .sub-navigation {
     background: var(--card-bg);
     border: 1px solid var(--border-color);
@@ -236,7 +618,93 @@
 
 .form-control:focus {
     border-color: var(--primary-color);
-    box-shadow: 0 0 0 0.2rem rgba(19, 232, 233, 0.25);
+}
+
+/* Ensure dropdown options are visible */
+.form-select option {
+    color: #000 !important;
+    background-color: #fff !important;
+}
+
+.form-select {
+    color: #000 !important;
+}
+
+/* Modal specific styles for better visibility */
+#dynamicConversionModal .form-select option {
+    color: #000 !important;
+    background-color: #fff !important;
+}
+
+#dynamicConversionModal .form-select {
+    color: #000 !important;
+}
+
+/* Custom Success Modal Styles */
+.success-icon-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.success-icon {
+    width: 80px;
+    height: 80px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: successPulse 2s infinite;
+}
+
+.success-icon i {
+    font-size: 2.5rem;
+    color: white;
+}
+
+@keyframes successPulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+    100% { transform: scale(1); }
+}
+
+.order-number-display {
+    background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+    border-radius: 10px;
+    padding: 1rem;
+    border: 2px solid #dee2e6;
+}
+
+.order-label {
+    font-size: 0.9rem;
+    color: var(--text-muted);
+    font-weight: 500;
+}
+
+.order-value {
+    font-size: 1.2rem;
+    font-weight: bold;
+    color: var(--primary-color);
+    margin-left: 0.5rem;
+}
+
+.success-message {
+    background: rgba(40, 167, 69, 0.1);
+    border: 1px solid rgba(40, 167, 69, 0.2);
+    border-radius: 8px;
+    padding: 1rem;
+}
+
+.action-buttons .btn {
+    border-radius: 8px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.action-buttons .btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
 }
 
 .product-card {
@@ -322,342 +790,171 @@
         max-width: 50%;
     }
 }
+
+/* Custom Modal Styles */
+.modal-content {
+    border-radius: 0.5rem;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+}
+
+.modal-header {
+    border-radius: 0.5rem 0.5rem 0 0;
+}
+
+.modal-footer {
+    border-radius: 0 0 0.5rem 0.5rem;
+}
+
+.modal-body {
+    padding: 2rem 1.5rem;
+}
+
+.modal-body .fa-3x {
+    margin-bottom: 1.5rem;
+}
+
+.modal-body h6 {
+    margin-bottom: 1rem;
+    font-weight: 600;
+}
+
+.modal-body p {
+    font-size: 1rem;
+    line-height: 1.5;
+}
+
+/* Modal animation */
+.modal.fade .modal-dialog {
+    transition: transform 0.3s ease-out;
+    transform: translate(0, -50px);
+}
+
+.modal.show .modal-dialog {
+    transform: none;
+}
+
+/* Button styles in modals */
+.modal-footer .btn {
+    padding: 0.5rem 1.5rem;
+    font-weight: 500;
+    border-radius: 0.375rem;
+}
+
+.modal-footer .btn-success {
+    background-color: var(--success-color);
+    border-color: var(--success-color);
+}
+
+.modal-footer .btn-warning {
+    background-color: var(--warning-color);
+    border-color: var(--warning-color);
+    color: #000;
+}
+
+.modal-footer .btn-info {
+    background-color: var(--info-color);
+    border-color: var(--info-color);
+    color: #fff;
+}
+
+.modal-footer .btn-danger {
+    background-color: var(--danger-color);
+    border-color: var(--danger-color);
+}
+
+.modal-footer .btn-primary {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+/* Cart item styling for kg equivalents */
+.cart-item .text-info {
+    font-size: 0.8rem;
+    font-style: italic;
+}
+
+.cart-item .quantity-control .fw-bold {
+    font-size: 0.9rem;
+}
+
+/* Highlight converted items */
+.cart-item.has-conversion {
+    border-left: 3px solid var(--primary-color);
+    background-color: rgba(var(--primary-color-rgb), 0.05);
+}
 </style>
 
 <script>
-// Cart functionality
-let cart = [];
-let products = @json($products);
-
-// Debug logging
-console.log('Products loaded:', products);
-console.log('Number of products:', products.length);
-
-// Test if products are properly loaded
-if (products && products.length > 0) {
-    console.log('First product:', products[0]);
-} else {
-    console.error('No products loaded!');
-}
-
-document.addEventListener('DOMContentLoaded', function() {
-    console.log('DOM loaded, setting up event listeners');
-    
-    // Product search
-    const searchInput = document.getElementById('product_search');
-    if (searchInput) {
-        searchInput.addEventListener('input', function(e) {
-            const searchTerm = e.target.value.toLowerCase();
-            const productCards = document.querySelectorAll('.product-card');
-            
-            console.log('Searching for:', searchTerm);
-            console.log('Found product cards:', productCards.length);
-            
-            productCards.forEach(card => {
-                const productName = card.querySelector('.card-title').textContent.toLowerCase();
-                const productPrice = card.querySelector('.card-text').textContent.toLowerCase();
-                const productStock = card.querySelector('small').textContent.toLowerCase();
-                
-                // Search in name, price, and stock info
-                if (productName.includes(searchTerm) || 
-                    productPrice.includes(searchTerm) || 
-                    productStock.includes(searchTerm)) {
-                    card.style.display = 'block';
-                    card.parentElement.style.display = 'block';
-                } else {
-                    card.style.display = 'none';
-                    card.parentElement.style.display = 'none';
-                }
-            });
-        });
-    } else {
-        console.error('Search input not found!');
+// Dynamic Conversion Configuration - Set this early
+window.isEligibleForDynamicConversions = {{ $isEligibleForDynamicConversions ? 'true' : 'false' }};
+window.posConfig = {
+    csrfToken: document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+    currencySymbol: 'KSh ',
+    businessName: '{{ $business->name ?? "Shopybook Business" }}',
+    routes: {
+        createOrder: '{{ route("sales.create-order") }}',
+        storeCustomer: '{{ route("sales.store-customer") }}',
+        calculateDynamicConversion: '{{ route("sales.calculate-dynamic-conversion") }}'
     }
-    
-    // Add to cart - try multiple approaches
-    const productCards = document.querySelectorAll('.product-card');
-    console.log('Setting up click events for', productCards.length, 'product cards');
-    
-    if (productCards.length === 0) {
-        console.error('No product cards found!');
-        // Try alternative selector
-        const altCards = document.querySelectorAll('[data-product-id]');
-        console.log('Alternative cards found:', altCards.length);
-    }
-    
-    productCards.forEach((card, index) => {
-        const productId = card.dataset.productId;
-        console.log(`Setting up click for card ${index}:`, productId);
-        
-        // Remove any existing listeners
-        card.removeEventListener('click', card.clickHandler);
-        
-        // Create new click handler
-        card.clickHandler = function(e) {
-            e.preventDefault();
-            e.stopPropagation();
-            
-            console.log('Product clicked:', productId);
-            console.log('Card element:', this);
-            
-            // Add visual feedback
-            this.style.transform = 'scale(0.95)';
-            setTimeout(() => {
-                this.style.transform = '';
-            }, 150);
-            
-            addToCart(productId);
-        };
-        
-        // Add click listener
-        card.addEventListener('click', card.clickHandler);
-        
-        // Also add mousedown for better responsiveness
-        card.addEventListener('mousedown', function(e) {
-            e.preventDefault();
-            this.style.transform = 'scale(0.98)';
-        });
-        
-        card.addEventListener('mouseup', function(e) {
-            e.preventDefault();
-            this.style.transform = '';
-        });
-    });
-    
-    // Clear cart
-    document.getElementById('clear_cart_btn').addEventListener('click', function() {
-        cart = [];
-        updateCartDisplay();
-    });
-    
-    // Checkout
-    document.getElementById('checkout_btn').addEventListener('click', function() {
-        if (cart.length > 0) {
-            processCheckout();
-        }
-    });
-});
-
-function addToCart(productId) {
-    console.log('addToCart called with productId:', productId);
-    console.log('Available products:', products);
-    
-    if (!products || products.length === 0) {
-        console.error('No products available!');
-        document.getElementById('errorMessage').textContent = 'No products available to add to cart.';
-        const errorModal = new bootstrap.Modal(document.getElementById('errorModal'));
-        errorModal.show();
-        return;
-    }
-    
-    const product = products.find(p => p.id == productId);
-    console.log('Found product:', product);
-    
-    if (!product) {
-        console.log('Product not found!');
-        document.getElementById('errorMessage').textContent = 'Product not found. Please try again.';
-        const errorModal = new bootstrap.Modal(document.getElementById('errorModal'));
-        errorModal.show();
-        return;
-    }
-    
-    const existingItem = cart.find(item => item.id == productId);
-    if (existingItem) {
-        existingItem.quantity++;
-        console.log('Updated existing item quantity to:', existingItem.quantity);
-    } else {
-        cart.push({
-            id: product.id,
-            name: product.name,
-            price: parseFloat(product.price) || 0,
-            quantity: 1
-        });
-        console.log('Added new item to cart:', product.name);
-    }
-    
-    console.log('Current cart:', cart);
-    updateCartDisplay();
-}
-
-// Test function to manually add a product
-function testAddToCart() {
-    console.log('Testing addToCart function...');
-    if (products && products.length > 0) {
-        const firstProduct = products[0];
-        console.log('Adding first product to cart:', firstProduct);
-        addToCart(firstProduct.id);
-    } else {
-        console.error('No products available for testing');
-        document.getElementById('errorMessage').textContent = 'No products available for testing';
-        const errorModal = new bootstrap.Modal(document.getElementById('errorModal'));
-        errorModal.show();
-    }
-}
-
-function updateCartDisplay() {
-    const cartContainer = document.getElementById('cart_items');
-    const subtotalElement = document.getElementById('subtotal');
-    const taxElement = document.getElementById('tax');
-    const totalElement = document.getElementById('total');
-    const checkoutBtn = document.getElementById('checkout_btn');
-    
-    if (cart.length === 0) {
-        cartContainer.innerHTML = '<p style="color: var(--text-muted); text-align: center;">No items in cart</p>';
-        subtotalElement.textContent = 'KSh 0.00';
-        taxElement.textContent = 'KSh 0.00';
-        totalElement.textContent = 'KSh 0.00';
-        checkoutBtn.disabled = true;
-        return;
-    }
-    
-    let cartHTML = '';
-    let subtotal = 0;
-    
-    cart.forEach(item => {
-        // Convert price to number to ensure .toFixed() works
-        const price = parseFloat(item.price) || 0;
-        const itemTotal = price * item.quantity;
-        subtotal += itemTotal;
-        
-        cartHTML += `
-            <div class="cart-item">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <h6 style="color: var(--text-primary); margin-bottom: 0;">${item.name}</h6>
-                        <small style="color: var(--text-muted);">KSh ${price.toFixed(2)} x ${item.quantity}</small>
-                    </div>
-                    <div class="quantity-control">
-                        <button class="quantity-btn" onclick="updateQuantity(${item.id}, -1)">-</button>
-                        <input type="number" class="quantity-input" value="${item.quantity}" min="1" 
-                               onchange="updateQuantityDirect(${item.id}, this.value)" 
-                               style="width: 50px; text-align: center; border: 1px solid var(--border-color); border-radius: 3px; padding: 2px;">
-                        <button class="quantity-btn" onclick="updateQuantity(${item.id}, 1)">+</button>
-                    </div>
-                </div>
-            </div>
-        `;
-    });
-    
-    cartContainer.innerHTML = cartHTML;
-    
-    const tax = subtotal * 0.16;
-    const total = subtotal + tax;
-    
-    subtotalElement.textContent = `KSh ${subtotal.toFixed(2)}`;
-    taxElement.textContent = `KSh ${tax.toFixed(2)}`;
-    totalElement.textContent = `KSh ${total.toFixed(2)}`;
-    checkoutBtn.disabled = false;
-}
-
-function updateQuantity(productId, change) {
-    const item = cart.find(item => item.id == productId);
-    if (item) {
-        const newQuantity = item.quantity + change;
-        if (newQuantity <= 0) {
-            cart = cart.filter(item => item.id != productId);
-        } else {
-            item.quantity = newQuantity;
-        }
-        updateCartDisplay();
-    }
-}
-
-function updateQuantityDirect(productId, newQuantity) {
-    const item = cart.find(item => item.id == productId);
-    if (item) {
-        const quantity = parseInt(newQuantity);
-        if (quantity <= 0) {
-            cart = cart.filter(item => item.id != productId);
-        } else {
-            item.quantity = quantity;
-        }
-        updateCartDisplay();
-    }
-}
-
-function processCheckout() {
-    const customerId = document.getElementById('customer_search').value;
-    const paymentMethod = document.getElementById('payment_method').value;
-    
-    if (cart.length === 0) {
-        document.getElementById('errorMessage').textContent = 'Please add items to cart before checkout';
-        const errorModal = new bootstrap.Modal(document.getElementById('errorModal'));
-        errorModal.show();
-        return;
-    }
-    
-    // Show loading
-    const checkoutBtn = document.getElementById('checkout_btn');
-    const originalText = checkoutBtn.innerHTML;
-    checkoutBtn.innerHTML = '<span class="loading-spinner"></span> Processing...';
-    checkoutBtn.disabled = true;
-    
-    // Prepare order data
-    const orderData = {
-        customer_id: customerId || null,
-        payment_method: paymentMethod,
-        items: cart.map(item => ({
-            product_id: item.id,
-            quantity: item.quantity,
-            price: item.price
-        })),
-        subtotal: parseFloat(document.getElementById('subtotal').textContent.replace('KSh ', '')),
-        tax: parseFloat(document.getElementById('tax').textContent.replace('KSh ', '')),
-        total: parseFloat(document.getElementById('total').textContent.replace('KSh ', '')),
-        notes: ''
-    };
-    
-    // Send order to server
-    fetch('{{ route("sales.create-order") }}', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-        },
-        body: JSON.stringify(orderData)
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            // Store order data for receipt printing
-            window.lastOrderData = data;
-            // Show success modal
-            document.getElementById('orderNumber').textContent = data.order_number;
-            const successModal = new bootstrap.Modal(document.getElementById('successModal'));
-            successModal.show();
-            cart = [];
-            updateCartDisplay();
-        } else {
-            // Show error modal
-            document.getElementById('errorMessage').textContent = data.message || 'An error occurred while processing the order.';
-            const errorModal = new bootstrap.Modal(document.getElementById('errorModal'));
-            errorModal.show();
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        // Show error modal
-        document.getElementById('errorMessage').textContent = 'Error processing order. Please try again.';
-        const errorModal = new bootstrap.Modal(document.getElementById('errorModal'));
-        errorModal.show();
-    })
-    .finally(() => {
-        checkoutBtn.innerHTML = originalText;
-        checkoutBtn.disabled = true;
-    });
-}
+};
 
 // Handle receipt printing
 document.addEventListener('DOMContentLoaded', function() {
-    document.getElementById('printReceiptBtn').addEventListener('click', function() {
-        if (window.lastOrderData && window.lastOrderData.order_id) {
-            // Open receipt in new window for printing
-            const receiptUrl = `/sales/orders/${window.lastOrderData.order_id}/receipt`;
-            window.open(receiptUrl, '_blank', 'width=400,height=600');
-        } else {
-            console.error('No order data available for receipt printing');
-        }
-    });
+    const printReceiptBtn = document.getElementById('printReceiptBtn');
+    if (printReceiptBtn) {
+        printReceiptBtn.addEventListener('click', function() {
+            if (window.lastOrderData && window.lastOrderData.order_id) {
+                // Open receipt in new window for printing
+                const receiptUrl = `/sales/orders/${window.lastOrderData.order_id}/receipt`;
+                window.open(receiptUrl, '_blank', 'width=400,height=600');
+            } else {
+                console.error('No order data available for receipt printing');
+            }
+        });
+    }
+    
+    // Handle invoice generation
+    const generateInvoiceBtn = document.getElementById('generateInvoiceBtn');
+    if (generateInvoiceBtn) {
+        generateInvoiceBtn.addEventListener('click', function() {
+            if (window.lastOrderData && window.lastOrderData.order_id) {
+                // Open invoice in new window for printing/download
+                const invoiceUrl = `/sales/orders/${window.lastOrderData.order_id}/invoice`;
+                window.open(invoiceUrl, '_blank', 'width=800,height=800');
+            } else {
+                console.error('No order data available for invoice generation');
+            }
+        });
+    }
+    
+    // Update partial payment display when amount changes
+    const partialAmountInput = document.getElementById('partial_amount');
+    if (partialAmountInput) {
+        partialAmountInput.addEventListener('input', updatePartialPaymentDisplay);
+    }
 });
+
+function togglePartialPayment() {
+    const paymentStatus = document.getElementById('payment_status').value;
+    const partialRow = document.getElementById('partial_payment_row');
+    
+    if (paymentStatus === 'partial') {
+        partialRow.style.display = 'block';
+        updatePartialPaymentDisplay();
+    } else {
+        partialRow.style.display = 'none';
+    }
+}
+
+function updatePartialPaymentDisplay() {
+    // This function will be called from pos.js when cart total changes
+    // We'll set it up to update the display
+    if (window.updatePartialPaymentTotals) {
+        window.updatePartialPaymentTotals();
+    }
+}
 </script>
+
+<!-- Load our custom POS JavaScript -->
+<script src="{{ asset('js/pos.js') }}?v={{ time() }}"></script>
 @endsection

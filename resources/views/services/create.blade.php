@@ -58,9 +58,23 @@
                         @error('commission_rate')<div class="text-danger small">{{ $message }}</div>@enderror
                     </div>
                     <div class="mb-3">
-                        <label for="description" class="form-label" style="color: var(--text-primary);">Description</label>
-                        <textarea class="form-control" id="description" name="description" rows="3"
-                                  style="border: 1px solid var(--border-color); background: var(--card-bg); color: var(--text-primary);">{{ old('description') }}</textarea>
+                        <label for="serviceDescription" class="form-label" style="color: var(--text-primary);">
+                            Service Description
+                            <span style="color: #6b7280; font-size: 12px;">(Describe what this service includes)</span>
+                        </label>
+                        <textarea id="serviceDescription" name="description" class="form-control" rows="4" 
+                                  placeholder="Describe your service, what's included, duration, benefits..." 
+                                  style="border: 1px solid var(--border-color); background: var(--card-bg); color: var(--text-primary); min-height: 100px;">{{ old('description') }}</textarea>
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 8px;">
+                            <button type="button" id="enhanceServiceDescriptionBtn" class="btn btn-sm" style="background: #13e8e9; color: #020258; border: none; padding: 8px 16px; border-radius: 6px; font-size: 13px; font-weight: 500; display: flex; align-items: center; gap: 6px; transition: all 0.3s;">
+                                <i class="fas fa-magic"></i>
+                                <span>Enhance with AI</span>
+                            </button>
+                            <small id="serviceDescriptionCharCount" style="color: #6b7280; font-size: 12px;">0 characters</small>
+                        </div>
+                        <div id="serviceEnhancementLoading" style="display: none; margin-top: 10px; padding: 10px; background: #f0f9ff; border: 1px solid #bfdbfe; border-radius: 6px; font-size: 13px; color: #1e40af;">
+                            <i class="fas fa-spinner fa-spin"></i> Claude AI is enhancing your service description...
+                        </div>
                         @error('description')<div class="text-danger small">{{ $message }}</div>@enderror
                     </div>
 
@@ -256,6 +270,141 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     if (complimentaryCheckbox.checked) {
         parentServiceSection.style.display = 'block';
+    }
+
+    // Service Description AI Enhancement
+    const serviceDescriptionTextarea = document.getElementById('serviceDescription');
+    const serviceCharCount = document.getElementById('serviceDescriptionCharCount');
+    const enhanceServiceBtn = document.getElementById('enhanceServiceDescriptionBtn');
+    const serviceEnhancementLoading = document.getElementById('serviceEnhancementLoading');
+    
+    // Character counter for service description
+    if (serviceDescriptionTextarea && serviceCharCount) {
+        serviceDescriptionTextarea.addEventListener('input', function() {
+            serviceCharCount.textContent = this.value.length + ' characters';
+        });
+        // Initialize count
+        serviceCharCount.textContent = serviceDescriptionTextarea.value.length + ' characters';
+    }
+
+    // AI Enhancement for service description
+    if (enhanceServiceBtn) {
+        enhanceServiceBtn.addEventListener('click', async function() {
+            const description = serviceDescriptionTextarea.value.trim();
+            const serviceName = document.getElementById('name').value.trim();
+            const duration = document.getElementById('duration').value;
+            
+            // Validation
+            if (!description || description.length < 10) {
+                alert('Please enter at least 10 characters in your service description before enhancing.');
+                serviceDescriptionTextarea.focus();
+                return;
+            }
+            
+            if (!serviceName) {
+                alert('Please enter your service name first.');
+                document.getElementById('name').focus();
+                return;
+            }
+            
+            // Show loading state
+            enhanceServiceBtn.disabled = true;
+            enhanceServiceBtn.style.opacity = '0.6';
+            enhanceServiceBtn.style.cursor = 'not-allowed';
+            serviceEnhancementLoading.style.display = 'block';
+            
+            try {
+                const response = await fetch('{{ route('services.enhance-description') }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        description: description,
+                        service_name: serviceName,
+                        duration: duration || null
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success && data.enhanced_description) {
+                    // Update textarea with enhanced description
+                    serviceDescriptionTextarea.value = data.enhanced_description;
+                    
+                    // Update character count
+                    serviceCharCount.textContent = data.enhanced_description.length + ' characters';
+                    
+                    // Add visual feedback
+                    serviceDescriptionTextarea.style.borderColor = '#10b981';
+                    serviceDescriptionTextarea.style.boxShadow = '0 0 0 2px rgba(16, 185, 129, 0.1)';
+                    
+                    setTimeout(() => {
+                        serviceDescriptionTextarea.style.borderColor = '';
+                        serviceDescriptionTextarea.style.boxShadow = '';
+                    }, 2000);
+                    
+                    // Show success message
+                    serviceEnhancementLoading.innerHTML = '<i class=\"fas fa-check-circle\"></i> Service description enhanced successfully!';
+                    serviceEnhancementLoading.style.background = '#f0fdf4';
+                    serviceEnhancementLoading.style.borderColor = '#86efac';
+                    serviceEnhancementLoading.style.color = '#166534';
+                    
+                    // Hide success message after 3 seconds
+                    setTimeout(() => {
+                        serviceEnhancementLoading.style.display = 'none';
+                        serviceEnhancementLoading.innerHTML = '<i class=\"fas fa-spinner fa-spin\"></i> Claude AI is enhancing your service description...';
+                        serviceEnhancementLoading.style.background = '#f0f9ff';
+                        serviceEnhancementLoading.style.borderColor = '#bfdbfe';
+                        serviceEnhancementLoading.style.color = '#1e40af';
+                    }, 3000);
+                } else {
+                    throw new Error(data.message || 'Enhancement failed');
+                }
+            } catch (error) {
+                console.error('Enhancement error:', error);
+                
+                // Show error message
+                serviceEnhancementLoading.innerHTML = '<i class=\"fas fa-exclamation-circle\"></i> Enhancement failed. Please try again.';
+                serviceEnhancementLoading.style.background = '#fef2f2';
+                serviceEnhancementLoading.style.borderColor = '#fecaca';
+                serviceEnhancementLoading.style.color = '#991b1b';
+                
+                setTimeout(() => {
+                    serviceEnhancementLoading.style.display = 'none';
+                    serviceEnhancementLoading.innerHTML = '<i class=\"fas fa-spinner fa-spin\"></i> Claude AI is enhancing your service description...';
+                    serviceEnhancementLoading.style.background = '#f0f9ff';
+                    serviceEnhancementLoading.style.borderColor = '#bfdbfe';
+                    serviceEnhancementLoading.style.color = '#1e40af';
+                }, 3000);
+            } finally {
+                // Reset button state
+                enhanceServiceBtn.disabled = false;
+                enhanceServiceBtn.style.opacity = '1';
+                enhanceServiceBtn.style.cursor = 'pointer';
+            }
+        });
+        
+        // Hover effect for enhance button
+        enhanceServiceBtn.addEventListener('mouseenter', function() {
+            if (!this.disabled) {
+                this.style.background = '#020258';
+                this.style.color = '#13e8e9';
+                this.style.transform = 'translateY(-1px)';
+                this.style.boxShadow = '0 4px 6px rgba(0, 0, 0, 0.1)';
+            }
+        });
+        
+        enhanceServiceBtn.addEventListener('mouseleave', function() {
+            if (!this.disabled) {
+                this.style.background = '#13e8e9';
+                this.style.color = '#020258';
+                this.style.transform = 'translateY(0)';
+                this.style.boxShadow = 'none';
+            }
+        });
     }
 });
 </script>

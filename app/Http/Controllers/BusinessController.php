@@ -8,9 +8,18 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Log;
+use App\Services\TwoFactorAuthService;
+use App\Services\ClaudeAPIService;
+use Illuminate\Support\Facades\Storage;
 
 class BusinessController extends Controller
 {
+    protected $claudeService;
+
+    public function __construct(ClaudeAPIService $claudeService)
+    {
+        $this->claudeService = $claudeService;
+    }
     /**
      * Display a listing of businesses
      */
@@ -112,17 +121,29 @@ class BusinessController extends Controller
             'city' => 'required|string',
             'terms' => 'required|accepted',
             'logo' => 'nullable|image|max:2048',
+            'generated_logo_path' => 'nullable|string',
         ]);
 
         try {
             // Determine business category based on business type
             $businessCategory = $this->getBusinessCategory($validated['business_type']);
             
+            // Generate unique slug
+            $baseSlug = Str::slug($validated['name']);
+            $slug = $baseSlug;
+            $counter = 1;
+            
+            // Ensure slug is unique
+            while (Business::where('slug', $slug)->exists()) {
+                $slug = $baseSlug . '-' . $counter;
+                $counter++;
+            }
+
             // Create the business
             $business = Business::create([
                 'user_id' => Auth::id(),
                 'name' => $validated['name'],
-                'slug' => Str::slug($validated['name']),
+                'slug' => $slug,
                 'email' => $validated['email'] ?? null,
                 'phone' => $validated['phone'],
                 'business_type' => $validated['business_type'],
@@ -133,10 +154,24 @@ class BusinessController extends Controller
                 'country' => 'Kenya',
             ]);
 
-            // Handle logo upload
+            // Handle logo - prioritize uploaded logo over AI-generated
             if ($request->hasFile('logo')) {
+                // User uploaded a logo file
                 $path = $request->file('logo')->store('business/logos', 'public');
                 $business->update(['logo_path' => $path]);
+                
+                Log::info('Business logo uploaded', [
+                    'business_id' => $business->id,
+                    'logo_path' => $path
+                ]);
+            } elseif ($request->filled('generated_logo_path')) {
+                // User generated a logo with AI
+                $business->update(['logo_path' => $validated['generated_logo_path']]);
+                
+                Log::info('Business AI-generated logo saved', [
+                    'business_id' => $business->id,
+                    'logo_path' => $validated['generated_logo_path']
+                ]);
             }
 
             Log::info('Business created successfully', [
@@ -170,13 +205,53 @@ class BusinessController extends Controller
             return redirect()->route('business.create');
         }
 
-        return view('business.edit', compact('business'));
+        // Get business types for the dropdown
+        $businessTypeOptions = [
+            'product' => [
+                'retail' => 'Retail Store',
+                'wholesale' => 'Wholesale Business',
+                'manufacturing' => 'Manufacturing',
+                'agriculture' => 'Agriculture & Farming',
+                'construction' => 'Construction & Building',
+                'other_product' => 'Other Product Business',
+            ],
+            'service' => [
+                'consulting' => 'Consulting Services',
+                'healthcare' => 'Healthcare Services',
+                'education' => 'Education & Training',
+                'financial' => 'Financial Services',
+                'legal' => 'Legal Services',
+                'professional' => 'Professional Services',
+                'other_service' => 'Other Service Business',
+            ],
+            'hybrid' => [
+                'restaurant' => 'Restaurant',
+                'salon' => 'Salon & Spa',
+                'auto_service' => 'Auto Service Center',
+                'retail_service' => 'Retail with Services',
+                'tech_service' => 'Technology Sales & Support',
+                'other_hybrid' => 'Other Hybrid Business',
+            ]
+        ];
+
+        // Determine which category the current business type belongs to
+        $currentCategory = null;
+        foreach ($businessTypeOptions as $category => $types) {
+            if (array_key_exists($business->business_type, $types)) {
+                $currentCategory = $category;
+                break;
+            }
+        }
+
+        $businessTypes = $currentCategory ? $businessTypeOptions[$currentCategory] : $businessTypeOptions['product'];
+
+        return view('business.edit', compact('business', 'businessTypes'));
     }
 
     /**
      * Update the specified business
      */
-    public function update(Request $request)
+    public function update(Request $request, TwoFactorAuthService $twoFactorService)
     {
         $business = Auth::user()->business;
         
@@ -184,20 +259,61 @@ class BusinessController extends Controller
             return redirect()->route('business.create');
         }
 
+        // Check if 2FA verification is required and completed
+        if (!session('2fa_verified_business_edit')) {
+            // Send 2FA code and redirect to verification
+            $context = [
+                'business_id' => $business->id,
+                'business_name' => $business->name,
+                'request_data' => $request->all()
+            ];
+            
+            $twoFactorService->sendVerificationCode(Auth::user(), 'business_edit', $context);
+            
+            return redirect()->route('2fa.verify.form', [
+                'action' => 'business_edit',
+                'context' => $context
+            ])->with('info', 'Please verify your identity to edit your business profile.');
+        }
+
+        // Clear the 2FA session
+        session()->forget('2fa_verified_business_edit');
+
         $validated = $request->validate([
             'name' => 'required|string|max:255|unique:businesses,name,' . $business->id,
+            'business_type' => 'required|string',
             'description' => 'nullable|string',
             'email' => 'nullable|email|unique:businesses,email,' . $business->id,
             'phone' => 'required|string|max:20',
             'address' => 'nullable|string',
             'city' => 'required|string',
             'logo' => 'nullable|image|max:2048',
+            'generated_logo_path' => 'nullable|string',
         ]);
 
         try {
+            // Determine business category based on business type
+            $businessCategory = $this->getBusinessCategory($validated['business_type']);
+            
+            // Generate unique slug only if name has changed
+            $slug = $business->slug; // Keep existing slug by default
+            if ($business->name !== $validated['name']) {
+                $baseSlug = Str::slug($validated['name']);
+                $slug = $baseSlug;
+                $counter = 1;
+                
+                // Ensure slug is unique (exclude current business from check)
+                while (Business::where('slug', $slug)->where('id', '!=', $business->id)->exists()) {
+                    $slug = $baseSlug . '-' . $counter;
+                    $counter++;
+                }
+            }
+            
             $business->update([
                 'name' => $validated['name'],
-                'slug' => Str::slug($validated['name']),
+                'slug' => $slug,
+                'business_type' => $validated['business_type'],
+                'business_category' => $businessCategory,
                 'email' => $validated['email'] ?? null,
                 'phone' => $validated['phone'],
                 'description' => $validated['description'] ?? null,
@@ -207,9 +323,22 @@ class BusinessController extends Controller
 
             // Handle logo upload
             if ($request->hasFile('logo')) {
+                // Delete old logo if exists
+                if ($business->logo_path) {
+                    Storage::disk('public')->delete($business->logo_path);
+                }
                 $path = $request->file('logo')->store('business/logos', 'public');
                 $business->update(['logo_path' => $path]);
+            } elseif ($request->filled('generated_logo_path')) {
+                // Handle AI-generated logo
+                $business->update(['logo_path' => $validated['generated_logo_path']]);
             }
+
+            Log::info('Business updated successfully with 2FA', [
+                'business_id' => $business->id,
+                'user_id' => Auth::id(),
+                'changes' => $validated
+            ]);
 
             return redirect()->route('business.edit')
                 ->with('success', 'Business updated successfully!');
@@ -226,23 +355,65 @@ class BusinessController extends Controller
     }
 
     /**
-     * Remove the specified business
+     * Initiate business deletion with 2FA
      */
-    public function destroy(Business $business, Request $request)
+    public function initiateDeletion(Request $request, TwoFactorAuthService $twoFactorService)
+    {
+        $business = Auth::user()->business;
+        
+        if (!$business) {
+            return redirect()->route('business.create');
+        }
+
+        // Send 2FA code for business deletion
+        $context = [
+            'business_id' => $business->id,
+            'business_name' => $business->name,
+            'action' => 'delete'
+        ];
+        
+        $twoFactorService->sendVerificationCode(Auth::user(), 'business_delete', $context);
+        
+        return redirect()->route('2fa.verify.form', [
+            'action' => 'business_delete',
+            'context' => $context
+        ])->with('warning', 'Please verify your identity to delete your business. This action cannot be undone.');
+    }
+
+    /**
+     * Remove the specified business (after 2FA verification)
+     */
+    public function destroy(Business $business, Request $request, TwoFactorAuthService $twoFactorService)
     {
         // Verify the business belongs to the authenticated user
         if ($business->user_id !== Auth::id()) {
             abort(403, 'Unauthorized action.');
         }
 
+        // Check if 2FA verification is completed
+        if (!session('2fa_verified_business_delete')) {
+            return redirect()->route('business.edit')
+                ->with('error', 'Security verification required to delete business.');
+        }
+
+        // Clear the 2FA session
+        session()->forget('2fa_verified_business_delete');
+
         try {
             $businessName = $business->name;
+            
+            // Delete business logo if exists
+            if ($business->logo_path) {
+                Storage::disk('public')->delete($business->logo_path);
+            }
+            
             $business->delete();
 
-            Log::info('Business deleted successfully', [
+            Log::info('Business deleted successfully with 2FA', [
                 'business_id' => $business->id,
                 'user_id' => Auth::id(),
-                'business_name' => $businessName
+                'business_name' => $businessName,
+                'ip' => $request->ip()
             ]);
 
             return redirect()->route('business.create')
@@ -251,6 +422,7 @@ class BusinessController extends Controller
         } catch (\Exception $e) {
             Log::error('Failed to delete business', [
                 'business_id' => $business->id,
+                'user_id' => Auth::id(),
                 'error' => $e->getMessage()
             ]);
 
@@ -259,47 +431,38 @@ class BusinessController extends Controller
     }
 
     /**
-     * Display the specified business
+     * Display the specified business (Public - No authentication required)
      */
     public function show($slug)
     {
-        Log::info("=== Business Show Debug ===");
-        Log::info("Requested slug: " . $slug);
-        Log::info("Request URL: " . request()->fullUrl());
+        // Add debug logging to see what's happening
+        Log::info('BusinessController@show called', [
+            'slug' => $slug,
+            'authenticated' => auth()->check(),
+            'user_id' => auth()->check() ? auth()->id() : null,
+        ]);
+
+        // Find business by slug with active status
+        $business = Business::where('slug', $slug)
+                          ->where('active', true)
+                          ->first();
         
-        // Let's check all businesses and their slugs
-        $allBusinesses = Business::select('id', 'slug', 'name')->get();
-        Log::info("All businesses in database:", $allBusinesses->toArray());
-        
-        // Check if the slug exists in database
-        $slugExists = Business::where('slug', $slug)->exists();
-        Log::info("Does slug '$slug' exist in database: " . ($slugExists ? 'YES' : 'NO'));
-        
-        // Try different approaches to find the business
-        $business1 = Business::where('slug', $slug)->first();
-        $business2 = Business::where('slug', 'LIKE', $slug)->first();
-        $business3 = Business::find($slug); // In case slug is actually an ID
-        
-        Log::info("Query results:");
-        Log::info("Method 1 (exact match): " . ($business1 ? $business1->name . " (ID: " . $business1->id . ")" : 'NULL'));
-        Log::info("Method 2 (LIKE match): " . ($business2 ? $business2->name . " (ID: " . $business2->id . ")" : 'NULL'));
-        Log::info("Method 3 (by ID): " . ($business3 ? $business3->name . " (ID: " . $business3->id . ")" : 'NULL'));
-        
-        $business = $business1; // Use the first method as primary
+        // Add debug logging for business search
+        Log::info('Business search result', [
+            'slug' => $slug,
+            'business_found' => $business ? true : false,
+            'business_id' => $business ? $business->id : null,
+            'business_name' => $business ? $business->name : null,
+        ]);
         
         if (!$business) {
-            Log::error("Business not found with slug: " . $slug);
-            return redirect()->route('businesses')->with('error', 'Business not found.');
+            Log::warning('Business not found', ['slug' => $slug]);
+            return redirect()->route('businesses')->with('error', 'Business not found or is not currently active.');
         }
-        
-        Log::info("Final selected business: " . $business->name . " (ID: " . $business->id . ")");
         
         // Get services and products for this business
         $services = $business->services()->get() ?? collect();
         $products = $business->products()->get() ?? collect();
-        
-        Log::info("Services count: " . $services->count() . ", Products count: " . $products->count());
-        Log::info("=== End Business Show Debug ===");
         
         return view('business.show', compact('business', 'services', 'products'));
     }
@@ -323,4 +486,99 @@ class BusinessController extends Controller
 
         return 'other';
     }
+
+    /**
+     * Enhance business description using Claude AI
+     */
+    public function enhanceDescription(Request $request)
+    {
+        $request->validate([
+            'description' => 'required|string|min:10',
+            'business_name' => 'required|string',
+            'business_type' => 'required|string',
+        ]);
+
+        try {
+            $enhancedDescription = $this->claudeService->enhanceBusinessDescription(
+                $request->description,
+                $request->business_name,
+                $request->business_type
+            );
+
+            return response()->json([
+                'success' => true,
+                'enhanced_description' => $enhancedDescription,
+                'original_description' => $request->description
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Description Enhancement Error: ' . $e->getMessage());
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to enhance description. Please try again.',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Generate business logo using AI
+     */
+    public function generateLogo(Request $request)
+    {
+        $request->validate([
+            'business_name' => 'required|string|max:255',
+            'business_description' => 'nullable|string',
+            'business_type' => 'required|string',
+            'logo_style' => 'nullable|string|in:modern,classic,minimal,bold,playful,corporate',
+        ]);
+
+        try {
+            $style = $request->logo_style ?? 'modern';
+            
+            // Ensure description meets minimum requirements
+            $description = $request->business_description;
+            if (empty($description) || strlen($description) < 10) {
+                $description = 'A professional ' . $request->business_type . ' business providing quality services and products to our valued customers.';
+            }
+            
+            Log::info('Logo generation requested', [
+                'business_name' => $request->business_name,
+                'business_type' => $request->business_type,
+                'style' => $style
+            ]);
+
+            $logoResult = $this->claudeService->generateBusinessLogo(
+                $request->business_name,
+                $description,
+                $request->business_type,
+                $style
+            );
+
+            if ($logoResult && isset($logoResult['public_url'])) {
+                return response()->json([
+                    'success' => true,
+                    'logo_url' => $logoResult['public_url'],
+                    'logo_path' => $logoResult['local_path'],
+                    'message' => 'Logo generated successfully!'
+                ]);
+            }
+
+            throw new \Exception('Failed to generate logo');
+
+        } catch (\Exception $e) {
+            Log::error('Logo Generation Error: ' . $e->getMessage(), [
+                'business_name' => $request->business_name,
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to generate logo. Please try again or upload your own logo.',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
 }
+

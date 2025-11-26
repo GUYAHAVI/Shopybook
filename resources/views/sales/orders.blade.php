@@ -15,17 +15,44 @@
             <a href="{{ route('sales.pos') }}" class="nav-tab">
                 <i class="fas fa-cash-register me-1"></i> POS
             </a>
+            <a href="{{ route('sales.customer-debts') }}" class="nav-tab">
+                <i class="fas fa-money-bill-wave me-1"></i> Customer Debts
+            </a>
+            <a href="{{ route('sales.supplier-debts') }}" class="nav-tab">
+                <i class="fas fa-file-invoice-dollar me-1"></i> Supplier Debts
+            </a>
         </div>
     </div>
 
     <div class="d-sm-flex align-items-center justify-content-between mb-4">
-        <h1 class="h3 mb-0" style="color: var(--text-primary);">Orders</h1>
-        <div class="btn-group" role="group">
-            <button type="button" class="btn btn-outline-primary" onclick="filterOrders('all')">All Orders</button>
-            <button type="button" class="btn btn-outline-warning" onclick="filterOrders('pending')">Pending</button>
-            <button type="button" class="btn btn-outline-info" onclick="filterOrders('processing')">Processing</button>
-            <button type="button" class="btn btn-outline-success" onclick="filterOrders('completed')">Completed</button>
-            <button type="button" class="btn btn-outline-danger" onclick="filterOrders('cancelled')">Cancelled</button>
+        <h1 class="h3 mb-0 mb-3 mb-sm-0" style="color: var(--text-primary);">Orders</h1>
+        <div class="d-flex gap-2 flex-wrap">
+            <button type="button" class="btn btn-secondary" onclick="bulkArchivePaidOrders()">
+                <i class="fas fa-archive me-1"></i><span class="btn-text">Archive Paid Orders</span>
+            </button>
+            <a href="{{ route('sales.archived-orders') }}" class="btn btn-info">
+                <i class="fas fa-folder-open me-1"></i><span class="btn-text">View Archived</span>
+            </a>
+        </div>
+    </div>
+
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <div class="filter-buttons-container">
+            <button type="button" class="btn btn-outline-primary filter-btn active" onclick="filterOrders('all')">
+                <i class="fas fa-list me-1"></i><span class="btn-text">All Orders</span>
+            </button>
+            <button type="button" class="btn btn-outline-warning filter-btn" onclick="filterOrders('pending')">
+                <i class="fas fa-clock me-1"></i><span class="btn-text">Pending</span>
+            </button>
+            <button type="button" class="btn btn-outline-info filter-btn" onclick="filterOrders('processing')">
+                <i class="fas fa-spinner me-1"></i><span class="btn-text">Processing</span>
+            </button>
+            <button type="button" class="btn btn-outline-success filter-btn" onclick="filterOrders('completed')">
+                <i class="fas fa-check me-1"></i><span class="btn-text">Completed</span>
+            </button>
+            <button type="button" class="btn btn-outline-danger filter-btn" onclick="filterOrders('cancelled')">
+                <i class="fas fa-times me-1"></i><span class="btn-text">Cancelled</span>
+            </button>
         </div>
     </div>
 
@@ -35,7 +62,8 @@
         </div>
         <div class="card-body">
             @if($orders->count() > 0)
-                <div class="table-responsive">
+                <!-- Desktop Table View -->
+                <div class="table-responsive d-none d-lg-block">
                     <table class="table table-bordered" id="ordersTable" width="100%" cellspacing="0">
                         <thead style="background-color: var(--bg-tertiary);">
                             <tr>
@@ -44,15 +72,20 @@
                                 <th style="color: var(--text-secondary); border-bottom: 2px solid var(--border-color);">Customer</th>
                                 <th style="color: var(--text-secondary); border-bottom: 2px solid var(--border-color);">Products</th>
                                 <th style="color: var(--text-secondary); border-bottom: 2px solid var(--border-color);">Total</th>
-                                <th style="color: var(--text-secondary); border-bottom: 2px solid var(--border-color);">Status</th>
-                                <th style="color: var(--text-secondary); border-bottom: 2px solid var(--border-color);">Payment</th>
+                                
                                 <th style="color: var(--text-secondary); border-bottom: 2px solid var(--border-color);">Date</th>
                                 <th style="color: var(--text-secondary); border-bottom: 2px solid var(--border-color);">Actions</th>
                             </tr>
                         </thead>
                         <tbody>
                             @foreach($orders as $order)
-                                <tr data-status="{{ $order->status }}" data-type="{{ $order->order_type }}" style="color: var(--text-primary);">
+                                <tr data-status="{{ $order->status }}" 
+                                    data-type="{{ $order->order_type }}" 
+                                    data-order-id="{{ $order->id }}"
+                                    data-payment-status="{{ $order->payment_status ?? 'pending' }}"
+                                    data-has-invoice="{{ $order->invoice_number ? 'true' : 'false' }}"
+                                    data-is-archived="{{ $order->is_archived ? 'true' : 'false' }}"
+                                    style="color: var(--text-primary);">
                                     <td>
                                         <strong>{{ $order->order_number ?? 'ORD-' . $order->id }}</strong>
                                         @if($order->order_type === 'public_order')
@@ -99,12 +132,115 @@
                                             <strong>{{ $order->formatted_total }}</strong>
                                         @endif
                                     </td>
+                                    
                                     <td>
-                                        <span class="badge badge-{{ $order->status_color }}">
-                                            {{ $order->status_text }}
-                                        </span>
+                                        {{ $order->created_at->format('M d, Y H:i') }}
                                     </td>
                                     <td>
+                                        <div class="btn-group" role="group">
+                                            <button type="button" class="btn btn-sm btn-outline-info" onclick="viewOrderDetails({{ $order->id }})">
+                                                <i class="fas fa-eye"></i>
+                                            </button>
+                                            @if($order->payment_status === 'pending' || !$order->payment_status)
+                                            <a href="{{ route('sales.generate-invoice', $order->id) }}" target="_blank" class="btn btn-sm btn-outline-warning" title="Generate Invoice">
+                                                <i class="fas fa-file-invoice"></i>
+                                            </a>
+                                            <button type="button" class="btn btn-sm btn-outline-success" onclick="recordPayment({{ $order->id }}, {{ $order->total_amount }})" title="Record Payment">
+                                                <i class="fas fa-money-bill-wave"></i>
+                                            </button>
+                                            @endif
+                                            @if($order->invoice_number)
+                                            <a href="{{ route('sales.credit-note.create', $order->id) }}" class="btn btn-sm btn-outline-danger" title="Credit Note">
+                                                <i class="fas fa-file-invoice-dollar"></i>
+                                            </a>
+                                            @endif
+                                            @if($order->payment_status === 'paid' && $order->invoice_number && !$order->is_archived)
+                                            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="archiveOrder({{ $order->id }})" title="Archive Order">
+                                                <i class="fas fa-archive"></i>
+                                            </button>
+                                            @endif
+                                        </div>
+                                    </td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Mobile Card View -->
+                <div class="d-lg-none" id="ordersCardView">
+                    @foreach($orders as $order)
+                        <div class="order-card" data-status="{{ $order->status }}" data-type="{{ $order->order_type }}">
+                            <div class="order-card-header">
+                                <div class="d-flex justify-content-between align-items-start mb-2">
+                                    <div>
+                                        <h6 class="mb-1" style="color: var(--text-primary);">
+                                            <strong>{{ $order->order_number ?? 'ORD-' . $order->id }}</strong>
+                                            @if($order->order_type === 'public_order')
+                                                <span class="badge badge-info ms-1">Public</span>
+                                            @endif
+                                        </h6>
+                                        <small style="color: var(--text-muted);">
+                                            <i class="fas fa-calendar me-1"></i>
+                                            {{ $order->created_at->format('M d, Y H:i') }}
+                                        </small>
+                                    </div>
+                                    <span class="badge badge-{{ $order->status_color }}">
+                                        {{ $order->status_text }}
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="order-card-body">
+                                <div class="order-info-row">
+                                    <span class="order-label"><i class="fas fa-tag me-1"></i>Type</span>
+                                    <span class="order-value">
+                                        @if($order->order_type === 'public_order')
+                                            <span style="color: var(--info-color); font-weight: 500;">Public Order</span>
+                                        @else
+                                            <span style="color: var(--primary-color); font-weight: 500;">Internal</span>
+                                        @endif
+                                    </span>
+                                </div>
+                                <div class="order-info-row">
+                                    <span class="order-label"><i class="fas fa-user me-1"></i>Customer</span>
+                                    <span class="order-value">
+                                        @if($order->order_type === 'public_order')
+                                            <strong>{{ $order->customer_name }}</strong><br>
+                                            <small style="color: var(--text-muted);">{{ $order->customer_phone }}</small>
+                                        @else
+                                            <strong>{{ $order->customer ? $order->customer->name : 'Walk-in Customer' }}</strong>
+                                        @endif
+                                    </span>
+                                </div>
+                                <div class="order-info-row">
+                                    <span class="order-label"><i class="fas fa-box me-1"></i>Products</span>
+                                    <span class="order-value">
+                                        @if($order->order_type === 'public_order')
+                                            <strong>{{ $order->product ? $order->product->name : 'Product' }}</strong><br>
+                                            <small style="color: var(--text-muted);">Qty: {{ $order->quantity }}</small>
+                                        @else
+                                            @foreach($order->items as $item)
+                                                <div class="mb-1">
+                                                    <strong>{{ $item->product->name }}</strong><br>
+                                                    <small style="color: var(--text-muted);">Qty: {{ $item->quantity }}</small>
+                                                </div>
+                                            @endforeach
+                                        @endif
+                                    </span>
+                                </div>
+                                <div class="order-info-row">
+                                    <span class="order-label"><i class="fas fa-money-bill me-1"></i>Total</span>
+                                    <span class="order-value">
+                                        @if($order->order_type === 'public_order')
+                                            <strong style="color: var(--success-color); font-size: 1rem;">KSh {{ number_format($order->total_price, 2) }}</strong>
+                                        @else
+                                            <strong style="color: var(--success-color); font-size: 1rem;">{{ $order->formatted_total }}</strong>
+                                        @endif
+                                    </span>
+                                </div>
+                                <div class="order-info-row">
+                                    <span class="order-label"><i class="fas fa-credit-card me-1"></i>Payment</span>
+                                    <span class="order-value">
                                         @if($order->order_type === 'public_order')
                                             <span class="badge badge-{{ $order->payment_status === 'paid' ? 'success' : ($order->payment_status === 'pending' ? 'warning' : 'danger') }}">
                                                 {{ ucfirst($order->payment_status) }}
@@ -114,21 +250,16 @@
                                                 {{ $order->payment_method ? ucfirst($order->payment_method) : 'Not Set' }}
                                             </span>
                                         @endif
-                                    </td>
-                                    <td>
-                                        {{ $order->created_at->format('M d, Y H:i') }}
-                                    </td>
-                                    <td>
-                                        <div class="btn-group" role="group">
-                                            <button type="button" class="btn btn-sm btn-outline-info" onclick="viewOrderDetails({{ $order->id }})">
-                                                <i class="fas fa-eye"></i>
-                                            </button>
-                                        </div>
-                                    </td>
-                                </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="order-card-footer">
+                                <button type="button" class="btn btn-sm btn-outline-info w-100" onclick="viewOrderDetails({{ $order->id }})">
+                                    <i class="fas fa-eye me-1"></i> View Details
+                                </button>
+                            </div>
+                        </div>
+                    @endforeach
                 </div>
             @else
                 <div class="text-center py-5">
@@ -245,6 +376,70 @@
     </div>
 </div>
 
+<!-- Record Payment Modal -->
+<div class="modal fade" id="recordPaymentModal" tabindex="-1" aria-labelledby="recordPaymentModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="background: var(--card-bg); border: 1px solid var(--border-color);">
+            <div class="modal-header" style="background: var(--bg-tertiary); border-bottom: 1px solid var(--border-color);">
+                <h5 class="modal-title" id="recordPaymentModalLabel" style="color: var(--text-primary);">
+                    <i class="fas fa-money-bill-wave text-success me-2"></i>Record Payment
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" style="color: var(--text-primary);">
+                <form id="recordPaymentForm">
+                    <input type="hidden" id="paymentOrderId">
+                    
+                    <div class="alert alert-info">
+                        <strong>Invoice Amount:</strong> KSh <span id="invoiceAmount">0.00</span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="paymentMethod" class="form-label">Payment Method <span class="text-danger">*</span></label>
+                        <select class="form-select" id="paymentMethod" name="payment_method" required>
+                            <option value="">Select payment method</option>
+                            <option value="cash">Cash</option>
+                            <option value="mpesa">M-Pesa</option>
+                            <option value="bank_transfer">Bank Transfer</option>
+                            <option value="card">Card</option>
+                            <option value="cheque">Cheque</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="amountPaid" class="form-label">Amount Paid <span class="text-danger">*</span></label>
+                        <div class="input-group">
+                            <span class="input-group-text">KSh</span>
+                            <input type="number" class="form-control" id="amountPaid" name="amount_paid" step="0.01" min="0" required>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="transactionReference" class="form-label">Transaction Reference (Optional)</label>
+                        <input type="text" class="form-control" id="transactionReference" name="transaction_reference" placeholder="e.g., M-Pesa code, cheque number">
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="paymentNotes" class="form-label">Notes (Optional)</label>
+                        <textarea class="form-control" id="paymentNotes" name="notes" rows="2" placeholder="Any additional notes about this payment"></textarea>
+                    </div>
+
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        <small>Recording this payment will mark the invoice as PAID.</small>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer" style="border-top: 1px solid var(--border-color);">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-success" id="confirmPaymentBtn">
+                    <i class="fas fa-check me-2"></i>Record Payment
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <style>
 .sub-navigation {
     background: var(--card-bg);
@@ -300,8 +495,88 @@
     box-shadow: 0 10px 30px var(--shadow-color);
 }
 
-/* Mobile responsiveness */
-@media (max-width: 768px) {
+/* Filter Buttons */
+.filter-buttons-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.filter-btn {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    border-radius: 0.375rem;
+    transition: all 0.2s ease;
+}
+
+.filter-btn.active {
+    background-color: var(--primary-color) !important;
+    border-color: var(--primary-color) !important;
+    color: white !important;
+}
+
+/* Mobile Order Cards */
+.order-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 0.5rem;
+    overflow: hidden;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    transition: all 0.3s ease;
+    margin-bottom: 1rem;
+}
+
+.order-card:hover {
+    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+    transform: translateY(-2px);
+}
+
+.order-card-header {
+    padding: 1rem;
+    background: var(--bg-tertiary);
+    border-bottom: 1px solid var(--border-color);
+}
+
+.order-card-body {
+    padding: 1rem;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 0.75rem;
+}
+
+.order-card-footer {
+    padding: 0.75rem 1rem;
+    background: var(--bg-tertiary);
+    border-top: 1px solid var(--border-color);
+}
+
+.order-info-row {
+    display: flex;
+    flex-direction: column;
+    padding: 0.5rem;
+    background: var(--bg-tertiary);
+    border-radius: 0.375rem;
+}
+
+.order-label {
+    font-weight: 600;
+    color: var(--text-secondary);
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 0.25rem;
+}
+
+.order-value {
+    color: var(--text-primary);
+    font-size: 0.875rem;
+}
+
+/* Tablet and Mobile responsiveness */
+@media (max-width: 991px) {
     .nav-tabs {
         flex-direction: column;
         gap: 0.25rem;
@@ -311,20 +586,75 @@
         justify-content: center;
         padding: 0.75rem 1rem;
     }
+}
+
+@media (max-width: 768px) {
+    .filter-buttons-container {
+        width: 100%;
+        justify-content: center;
+    }
     
-    .btn-group {
-        flex-direction: column;
+    .filter-btn {
+        flex: 1 1 auto;
+        min-width: calc(50% - 0.25rem);
+        justify-content: center;
+    }
+    
+    .filter-btn .btn-text {
+        display: inline;
+    }
+}
+
+@media (max-width: 768px) {
+    .order-card-body {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 576px) {
+    .filter-btn {
+        padding: 0.5rem 0.75rem;
+        font-size: 0.8125rem;
+    }
+    
+    .filter-btn .btn-text {
+        display: none;
+    }
+    
+    .filter-btn i {
+        margin: 0 !important;
+    }
+    
+    .order-card {
+        margin-bottom: 0.75rem;
+    }
+    
+    .order-card-header {
+        padding: 0.75rem;
+    }
+    
+    .order-card-body {
+        padding: 0.75rem;
         gap: 0.5rem;
     }
     
-    .btn-group .btn {
-        width: 100%;
+    .order-info-row {
+        padding: 0.4rem;
+    }
+    
+    .order-label {
+        font-size: 0.7rem;
+    }
+    
+    .order-value {
+        font-size: 0.8125rem;
     }
 }
 </style>
 
 <script>
 function filterOrders(status) {
+    // Filter table rows (desktop view)
     const rows = document.querySelectorAll('#ordersTable tbody tr');
     rows.forEach(row => {
         const rowStatus = row.getAttribute('data-status');
@@ -334,6 +664,24 @@ function filterOrders(status) {
             row.style.display = 'none';
         }
     });
+    
+    // Filter cards (mobile view)
+    const cards = document.querySelectorAll('.order-card');
+    cards.forEach(card => {
+        const cardStatus = card.getAttribute('data-status');
+        if (status === 'all' || cardStatus === status) {
+            card.style.display = '';
+        } else {
+            card.style.display = 'none';
+        }
+    });
+    
+    // Update active button state
+    const filterBtns = document.querySelectorAll('.filter-btn');
+    filterBtns.forEach(btn => {
+        btn.classList.remove('active');
+    });
+    event.target.closest('.filter-btn').classList.add('active');
 }
 
 function viewOrderDetails(orderId) {
@@ -498,6 +846,142 @@ document.addEventListener('DOMContentLoaded', function() {
             document.getElementById('userPassword').value = '';
         });
     });
+});
+
+// Archive single order
+async function archiveOrder(orderId) {
+    if (!confirm('Are you sure you want to archive this paid invoice? It will be moved to the archived orders list.')) {
+        return;
+    }
+    
+    try {
+        const response = await fetch(`/sales/orders/${orderId}/archive`, {
+            method: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                'Content-Type': 'application/json'
+            }
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            alert(data.message);
+            location.reload();
+        } else {
+            alert('Error: ' + (data.message || 'Failed to archive order'));
+        }
+    } catch (error) {
+        alert('Error: ' + error.message);
+    }
+}
+
+// Bulk archive paid orders
+async function bulkArchivePaidOrders() {
+    if (!confirm('This will archive ALL paid orders with invoices. Are you sure you want to continue?')) {
+        return;
+    }
+    
+    // Get all paid order IDs
+    const paidOrderIds = [];
+    document.querySelectorAll('tr[data-order-id]').forEach(row => {
+        const paymentStatus = row.getAttribute('data-payment-status');
+        const hasInvoice = row.getAttribute('data-has-invoice');
+        const isArchived = row.getAttribute('data-is-archived');
+        
+        if (paymentStatus === 'paid' && hasInvoice === 'true' && isArchived !== 'true') {
+            paidOrderIds.push(row.getAttribute('data-order-id'));
+        }
+    });
+    
+    if (paidOrderIds.length === 0) {
+        alert('No paid orders found to archive.');
+        return;
+    }
+    
+    try {
+        const response = await fetch('/sales/orders/bulk-archive', {
+            method: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ order_ids: paidOrderIds })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            alert(data.message);
+            location.reload();
+        } else {
+            alert('Error: ' + (data.message || 'Failed to archive orders'));
+        }
+    } catch (error) {
+        alert('Error: ' + error.message);
+    }
+}
+
+// Record payment for invoice
+function recordPayment(orderId, amount) {
+    document.getElementById('paymentOrderId').value = orderId;
+    document.getElementById('invoiceAmount').textContent = parseFloat(amount).toFixed(2);
+    document.getElementById('amountPaid').value = parseFloat(amount).toFixed(2);
+    
+    // Reset form
+    document.getElementById('recordPaymentForm').reset();
+    document.getElementById('paymentOrderId').value = orderId;
+    document.getElementById('amountPaid').value = parseFloat(amount).toFixed(2);
+    
+    const modal = new bootstrap.Modal(document.getElementById('recordPaymentModal'));
+    modal.show();
+}
+
+// Confirm payment recording
+document.getElementById('confirmPaymentBtn').addEventListener('click', async function() {
+    const form = document.getElementById('recordPaymentForm');
+    
+    if (!form.checkValidity()) {
+        form.reportValidity();
+        return;
+    }
+    
+    const orderId = document.getElementById('paymentOrderId').value;
+    const formData = new FormData(form);
+    const data = Object.fromEntries(formData.entries());
+    
+    const btn = this;
+    const originalText = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Processing...';
+    
+    try {
+        const response = await fetch(`/sales/orders/${orderId}/record-payment`, {
+            method: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            const modal = bootstrap.Modal.getInstance(document.getElementById('recordPaymentModal'));
+            modal.hide();
+            
+            alert('Payment recorded successfully!');
+            location.reload();
+        } else {
+            alert('Error: ' + (result.message || 'Failed to record payment'));
+        }
+    } catch (error) {
+        alert('Error: ' + error.message);
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+    }
 });
 </script>
 @endsection

@@ -1,0 +1,654 @@
+/**
+ * Responsive Website Theme Framework
+ * Ensures all themes are mobile-first and responsive across all devices
+ */
+
+/* ============================================
+   BASE RESPONSIVE UTILITIES
+   ============================================ */
+
+/* Container Sizes */
+.theme-container {
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 15px;
+}
+
+@media (min-width: 576px) {
+    .theme-container {
+        padding: 0 20px;
+    }
+}
+
+@media (min-width: 992px) {
+    .theme-container {
+        padding: 0 30px;
+    }
+}
+
+/* ============================================
+   RESPONSIVE GRID SYSTEM
+   ============================================ */
+
+.theme-row {
+    display: flex;
+    flex-wrap: wrap;
+    margin: 0 -15px;
+}
+
+.theme-col {
+    padding: 0 15px;
+    width: 100%;
+}
+
+/* Column Sizes for Different Screens */
+@media (min-width: 768px) {
+    .theme-col-md-6 { width: 50%; }
+    .theme-col-md-4 { width: 33.333%; }
+    .theme-col-md-3 { width: 25%; }
+}
+
+@media (min-width: 992px) {
+    .theme-col-lg-6 { width: 50%; }
+    .theme-col-lg-4 { width: 33.333%; }
+    .theme-col-lg-3 { width: 25%; }
+    .theme-col-lg-8 { width: 66.666%; }
+}
+
+/* ============================================
+   RESPONSIVE HERO SECTIONS
+   ============================================ */
+
+.hero-section {
+    position: relative;
+    min-height: 400px;
+    display: flex;
+    align-items: center;
+    padding: 60px 0;
+    overflow: hidden;
+}
+
+@media (min-width: 768px) {
+    .hero-section {
+        min-height: 500px;
+        padding: 80px 0;
+    }
+}
+
+@media (min-width: 992px) {
+    .hero-section {
+        min-height: 600px;
+        padding: 100px 0;
+    }
+}
+
+.hero-content {
+    position: relative;
+    z-index: 2;
+    width: 100%;
+}
+
+.hero-heading {
+    font-size: 2rem;
+    line-height: 1.2;
+    margin-bottom: 1rem;
+}
+
+@media (min-width: 768px) {
+    .hero-heading {
+        font-size: 3rem;
+    }
+}
+
+@media (min-width: 992px) {
+    .hero-heading {
+        font-size: 4rem;
+    }
+}
+
+.hero-subheading {
+    font-size: 1.1rem;
+    margin-bottom: 1.5rem;
+}
+
+@media (min-width: 768px) {
+    .hero-subheading {
+        font-size: 1.3rem;
+    }
+}
+
+@media (min-width: 992px) {
+    .hero-subheading {
+        font-size: 1.5rem;
+    }
+}
+
+.hero-background {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    z-index: 1;
+}
+
+.hero-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 1;
+}
+
+/* ============================================
+   RESPONSIVE BUTTONS
+   ============================================ */
+
+.theme-btn {
+    display: inline-block;
+    padding: 12px 24px;
+    font-size: 14px;
+    font-weight: 600;
+    text-align: center;
+    text-decoration: none;
+    border-radius: 6px;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    border: none;
+}
+
+@media (min-width: 768px) {
+    .theme-btn {
+        padding: 14px 32px;
+        font-size: 16px;
+    }
+}
+
+.theme-btn-primary {
+    background: var(--primary-color, #4F46E5);
+    color: white;
+}
+
+.theme-btn-secondary {
+    background: transparent;
+    border: 2px solid var(--primary-color, #4F46E5);
+    color: var(--primary-color, #4F46E5);
+}
+
+.theme-btn-group {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+@media (min-width: 576px) {
+    .theme-btn-group {
+        flex-direction: row;
+        gap: 20px;
+    }
+}
+
+/* ============================================
+   RESPONSIVE CARDS
+   ============================================ */
+
+.theme-card {
+    background: white;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    height: 100%;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+@media (min-width: 768px) {
+    .theme-card {
+        padding: 30px;
+    }
+}
+
+.theme-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+}
+
+.theme-card-image {
+    width: 100%;
+    height: 200px;
+    object-fit: cover;
+    border-radius: 6px;
+    margin-bottom: 15px;
+}
+
+@media (min-width: 768px) {
+    .theme-card-image {
+        height: 250px;
+    }
+}
+
+/* ============================================
+   RESPONSIVE SECTIONS
+   ============================================ */
+
+.theme-section {
+    padding: 60px 0;
+}
+
+@media (min-width: 768px) {
+    .theme-section {
+        padding: 80px 0;
+    }
+}
+
+@media (min-width: 992px) {
+    .theme-section {
+        padding: 100px 0;
+    }
+}
+
+.section-heading {
+    font-size: 2rem;
+    margin-bottom: 1rem;
+    text-align: center;
+}
+
+@media (min-width: 768px) {
+    .section-heading {
+        font-size: 2.5rem;
+    }
+}
+
+@media (min-width: 992px) {
+    .section-heading {
+        font-size: 3rem;
+    }
+}
+
+.section-subheading {
+    font-size: 1.1rem;
+    text-align: center;
+    margin-bottom: 3rem;
+    color: #666;
+}
+
+@media (min-width: 768px) {
+    .section-subheading {
+        font-size: 1.2rem;
+    }
+}
+
+/* ============================================
+   RESPONSIVE FEATURES GRID
+   ============================================ */
+
+.features-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 30px;
+}
+
+@media (min-width: 576px) {
+    .features-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (min-width: 992px) {
+    .features-grid {
+        grid-template-columns: repeat(4, 1fr);
+        gap: 40px;
+    }
+}
+
+.feature-item {
+    text-align: center;
+}
+
+.feature-icon {
+    font-size: 2.5rem;
+    margin-bottom: 1rem;
+    color: var(--primary-color, #4F46E5);
+}
+
+@media (min-width: 768px) {
+    .feature-icon {
+        font-size: 3rem;
+    }
+}
+
+/* ============================================
+   RESPONSIVE SERVICES GRID
+   ============================================ */
+
+.services-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 30px;
+}
+
+@media (min-width: 768px) {
+    .services-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 40px;
+    }
+}
+
+@media (min-width: 992px) {
+    .services-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+/* ============================================
+   RESPONSIVE TESTIMONIALS
+   ============================================ */
+
+.testimonials-slider {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 30px;
+}
+
+@media (min-width: 768px) {
+    .testimonials-slider {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (min-width: 992px) {
+    .testimonials-slider {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+.testimonial-card {
+    background: white;
+    padding: 30px;
+    border-radius: 8px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+}
+
+.testimonial-avatar {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    object-fit: cover;
+    margin-bottom: 15px;
+}
+
+/* ============================================
+   RESPONSIVE TEAM GRID
+   ============================================ */
+
+.team-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 30px;
+}
+
+@media (min-width: 576px) {
+    .team-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (min-width: 992px) {
+    .team-grid {
+        grid-template-columns: repeat(4, 1fr);
+    }
+}
+
+.team-member {
+    text-align: center;
+}
+
+.team-member-image {
+    width: 100%;
+    aspect-ratio: 1/1;
+    object-fit: cover;
+    border-radius: 8px;
+    margin-bottom: 15px;
+}
+
+/* ============================================
+   RESPONSIVE STATS SECTION
+   ============================================ */
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 30px;
+}
+
+@media (min-width: 576px) {
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (min-width: 992px) {
+    .stats-grid {
+        grid-template-columns: repeat(4, 1fr);
+    }
+}
+
+.stat-item {
+    text-align: center;
+    padding: 20px;
+}
+
+.stat-number {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: var(--primary-color, #4F46E5);
+    margin-bottom: 0.5rem;
+}
+
+@media (min-width: 768px) {
+    .stat-number {
+        font-size: 3rem;
+    }
+}
+
+/* ============================================
+   RESPONSIVE IMAGES
+   ============================================ */
+
+.responsive-image {
+    width: 100%;
+    height: auto;
+    display: block;
+}
+
+.cover-image {
+    width: 100%;
+    height: 300px;
+    object-fit: cover;
+}
+
+@media (min-width: 768px) {
+    .cover-image {
+        height: 400px;
+    }
+}
+
+@media (min-width: 992px) {
+    .cover-image {
+        height: 500px;
+    }
+}
+
+/* ============================================
+   RESPONSIVE NAVIGATION
+   ============================================ */
+
+.theme-nav {
+    display: flex;
+    flex-direction: column;
+    padding: 15px 0;
+}
+
+@media (min-width: 768px) {
+    .theme-nav {
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
+    }
+}
+
+.theme-nav-menu {
+    display: none;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.theme-nav-menu.active {
+    display: flex;
+}
+
+@media (min-width: 768px) {
+    .theme-nav-menu {
+        display: flex !important;
+        flex-direction: row;
+        gap: 30px;
+    }
+}
+
+.theme-nav-toggle {
+    display: block;
+    padding: 10px;
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+}
+
+@media (min-width: 768px) {
+    .theme-nav-toggle {
+        display: none;
+    }
+}
+
+/* ============================================
+   RESPONSIVE UTILITIES
+   ============================================ */
+
+/* Text Alignment */
+.text-center-mobile {
+    text-align: center;
+}
+
+@media (min-width: 768px) {
+    .text-center-mobile {
+        text-align: left;
+    }
+}
+
+/* Spacing */
+.mb-mobile {
+    margin-bottom: 20px;
+}
+
+@media (min-width: 768px) {
+    .mb-mobile {
+        margin-bottom: 0;
+    }
+}
+
+/* Visibility */
+.hide-mobile {
+    display: none !important;
+}
+
+@media (min-width: 768px) {
+    .hide-mobile {
+        display: block !important;
+    }
+}
+
+.hide-desktop {
+    display: block !important;
+}
+
+@media (min-width: 768px) {
+    .hide-desktop {
+        display: none !important;
+    }
+}
+
+/* ============================================
+   RESPONSIVE FORMS
+   ============================================ */
+
+.theme-form {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 20px;
+}
+
+@media (min-width: 768px) {
+    .theme-form {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+.form-field-full {
+    grid-column: 1 / -1;
+}
+
+.theme-input {
+    width: 100%;
+    padding: 12px 16px;
+    font-size: 14px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+}
+
+@media (min-width: 768px) {
+    .theme-input {
+        padding: 14px 18px;
+        font-size: 16px;
+    }
+}
+
+/* ============================================
+   RESPONSIVE FOOTER
+   ============================================ */
+
+.theme-footer-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 30px;
+}
+
+@media (min-width: 576px) {
+    .theme-footer-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (min-width: 992px) {
+    .theme-footer-grid {
+        grid-template-columns: repeat(4, 1fr);
+    }
+}
+
+/* ============================================
+   PRINT STYLES
+   ============================================ */
+
+@media print {
+    .theme-nav,
+    .theme-btn,
+    .theme-footer {
+        display: none;
+    }
+    
+    .theme-section {
+        page-break-inside: avoid;
+    }
+}

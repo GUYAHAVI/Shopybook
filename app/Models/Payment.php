@@ -11,13 +11,17 @@ class Payment extends Model
 
     protected $fillable = [
         'order_id',
+        'business_id',
+        'payment_number',
         'payment_method',
         'amount',
         'currency',
         'transaction_id',
+        'transaction_reference',
         'status',
         'gateway_response',
         'notes',
+        'received_by',
     ];
 
     protected $casts = [
@@ -63,6 +67,22 @@ class Payment extends Model
         ];
 
         $symbol = $symbols[$this->currency] ?? $this->currency;
-        return $symbol . number_format($this->amount, 2);
+        return $symbol . number_format((float)$this->amount, 2);
+    }
+
+    public static function generatePaymentNumber()
+    {
+        $prefix = 'PAY';
+        $year = now()->format('Y');
+        $month = now()->format('m');
+        
+        $lastPayment = self::whereYear('created_at', $year)
+            ->whereMonth('created_at', $month)
+            ->orderBy('id', 'desc')
+            ->first();
+        
+        $number = $lastPayment ? (intval(substr($lastPayment->payment_number, -4)) + 1) : 1;
+        
+        return sprintf('%s-%s%s-%04d', $prefix, $year, $month, $number);
     }
 }

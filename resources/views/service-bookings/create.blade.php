@@ -16,6 +16,9 @@
             <a href="{{ route('service-bookings.create') }}" class="nav-tab active">
                 <i class="fas fa-plus-circle me-1"></i> New Booking
             </a>
+            <a href="{{ route('service-bookings.bulk-create') }}" class="nav-tab">
+                <i class="fas fa-layer-group me-1"></i> Bulk Entry
+            </a>
         </div>
     </div>
 
@@ -122,7 +125,7 @@
                                                        data-bundle-trigger="{{ $service->is_bundle_trigger ? 'true' : 'false' }}"
                                                        data-is-complimentary="false"
                                                        data-parent-service-id=""
-                                                       data-bundled-services="[]"
+                                                       data-bundled-services="{{ $service->bundled_services ? json_encode($service->bundled_services) : '[]' }}"
                                                        style="border-color: var(--border-color);">
                                                 <label class="form-check-label" for="service_{{ $service->id }}" style="color: var(--text-primary);">
                                                     <strong>{{ $service->name }}</strong>

@@ -16,6 +16,7 @@
                             <option value="product" @if(old('type', $cost->type)=='product') selected @endif>Product</option>
                             <option value="rent" @if(old('type', $cost->type)=='rent') selected @endif>Rent</option>
                             <option value="water" @if(old('type', $cost->type)=='water') selected @endif>Water</option>
+                            <option value="salary" @if(old('type', $cost->type)=='salary') selected @endif>Salary</option>
                             <option value="misc" @if(old('type', $cost->type)=='misc') selected @endif>Miscellaneous</option>
                             <option value="activity" @if(old('type', $cost->type)=='activity') selected @endif>Activity</option>
                             <option value="renovation" @if(old('type', $cost->type)=='renovation') selected @endif>Renovation</option>

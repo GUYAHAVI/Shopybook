@@ -415,14 +415,52 @@
                     
                     <div class="mb-3">
                         <label for="postContent" class="form-label" style="color: var(--text-primary);">Post Content</label>
-                        <textarea class="form-control" id="postContent" name="content" rows="4" placeholder="What's on your mind?" style="background: var(--bg-secondary); border: 1px solid var(--border-color); color: var(--text-primary);" required></textarea>
-                        <small class="form-text text-muted">Write your post content here</small>
+                        <div class="position-relative">
+                            <textarea class="form-control" id="postContent" name="content" rows="4" placeholder="What's on your mind?" style="background: var(--bg-secondary); border: 1px solid var(--border-color); color: var(--text-primary);" required></textarea>
+                            <div class="position-absolute top-0 end-0 mt-2 me-2" style="z-index: 10;">
+                                <div class="btn-group btn-group-sm" role="group">
+                                    <button type="button" class="btn btn-outline-primary" onclick="generateMarketingContent()" title="Generate content with AI">
+                                        <i class="fas fa-magic"></i> Generate
+                                    </button>
+                                    <button type="button" class="btn btn-outline-success" onclick="enhanceMarketingContent()" title="Enhance existing content">
+                                        <i class="fas fa-wand-magic-sparkles"></i> Enhance
+                                    </button>
+                                    <button type="button" class="btn btn-outline-info" onclick="generateImagePrompts()" title="Generate AI image prompts">
+                                        <i class="fas fa-image"></i> Image Ideas
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <small class="form-text text-muted">Write your post content here or use AI to generate/enhance it</small>
+                        <div id="aiContentStatus" class="mt-2" style="display: none;">
+                            <div class="spinner-border spinner-border-sm text-primary me-2" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                            <small class="text-muted">AI is processing...</small>
+                        </div>
                     </div>
                     
                     <div class="mb-3">
                         <label for="postHashtags" class="form-label" style="color: var(--text-primary);">Hashtags</label>
                         <input type="text" class="form-control" id="postHashtags" name="hashtags" placeholder="#marketing #business #socialmedia" style="background: var(--bg-secondary); border: 1px solid var(--border-color); color: var(--text-primary);">
                         <small class="form-text text-muted">Separate hashtags with spaces</small>
+                    </div>
+
+                    <!-- AI Image Prompts Section -->
+                    <div id="aiImagePromptsSection" class="mb-3" style="display: none;">
+                        <div class="card" style="background: var(--bg-tertiary); border: 1px solid #13e8e9;">
+                            <div class="card-header py-2" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                                <h6 class="mb-0 text-white">
+                                    <i class="fas fa-palette me-2"></i>AI Image Suggestions
+                                </h6>
+                            </div>
+                            <div class="card-body">
+                                <p class="small mb-2" style="color: var(--text-secondary);">Use these prompts with AI image generators like DALL-E, Midjourney, or Stable Diffusion:</p>
+                                <div id="aiImagePromptsList" class="list-group">
+                                    <!-- AI generated prompts will appear here -->
+                                </div>
+                            </div>
+                        </div>
                     </div>
                     
                     <!-- Media Section -->
@@ -441,6 +479,11 @@
                                 <i class="fas fa-upload me-1"></i>Upload Media
                             </label>
                             
+                            <input type="radio" class="btn-check" name="mediaType" id="generateImage" value="generate-image">
+                            <label class="btn btn-outline-secondary" for="generateImage">
+                                <i class="fas fa-image me-1"></i>Generate Image
+                            </label>
+                            
                             <input type="radio" class="btn-check" name="mediaType" id="generateVideo" value="generate">
                             <label class="btn btn-outline-secondary" for="generateVideo">
                                 <i class="fas fa-magic me-1"></i>Generate Video
@@ -456,6 +499,99 @@
                             </div>
                         </div>
                         
+                        <!-- Generate Image Section -->
+                        <div id="generateImageSection" class="media-section" style="display: none;">
+                            <div class="card" style="background: var(--bg-tertiary); border: 1px solid var(--border-color);">
+                                <div class="card-body">
+                                    <h6 class="card-title" style="color: var(--text-primary);">
+                                        <i class="fas fa-image me-2"></i>AI Image Generation
+                                    </h6>
+                                    
+                                    <div class="mb-3">
+                                        <label for="imagePrompt" class="form-label" style="color: var(--text-primary);">Image Description</label>
+                                        <textarea class="form-control" id="imagePrompt" name="image_prompt" rows="3" placeholder="Describe the image you want to generate... (or leave empty to auto-generate from post content)" style="background: var(--bg-secondary); border: 1px solid var(--border-color); color: var(--text-primary);"></textarea>
+                                        <div class="mt-2">
+                                            <button type="button" class="btn btn-sm btn-outline-info" onclick="useImagePromptForGeneration()" title="Use AI suggested prompts">
+                                                <i class="fas fa-lightbulb me-1"></i>Use AI Prompt Suggestion
+                                            </button>
+                                            <button type="button" class="btn btn-sm btn-outline-success" onclick="autoGenerateFromPost()" title="Auto-generate prompt from post content">
+                                                <i class="fas fa-wand-magic-sparkles me-1"></i>Auto from Post
+                                            </button>
+                                            <button type="button" class="btn btn-sm btn-outline-primary" onclick="enhanceImagePrompt()" title="Enhance your prompt with AI">
+                                                <i class="fas fa-sparkles me-1"></i>Enhance Prompt
+                                            </button>
+                                        </div>
+                                        <small class="form-text text-muted">Describe the image style, colors, mood, and composition - or use auto-generation</small>
+                                        <div id="promptEnhanceStatus" class="mt-2" style="display: none;">
+                                            <div class="alert alert-info mb-0">
+                                                <i class="fas fa-spinner fa-spin me-2"></i>Enhancing your prompt with AI...
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <label for="imageStyle" class="form-label" style="color: var(--text-primary);">Image Style</label>
+                                            <select class="form-select" id="imageStyle" name="image_style" style="background: var(--bg-secondary); border: 1px solid var(--border-color); color: var(--text-primary);">
+                                                <option value="realistic">Realistic Photo</option>
+                                                <option value="digital-art">Digital Art</option>
+                                                <option value="illustration">Illustration</option>
+                                                <option value="3d-render">3D Render</option>
+                                                <option value="minimalist">Minimalist</option>
+                                                <option value="vibrant">Vibrant & Colorful</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label for="imageSize" class="form-label" style="color: var(--text-primary);">Image Size</label>
+                                            <select class="form-select" id="imageSize" name="image_size" style="background: var(--bg-secondary); border: 1px solid var(--border-color); color: var(--text-primary);">
+                                                <option value="1024x1024">Square (1024x1024)</option>
+                                                <option value="1792x1024">Landscape (1792x1024)</option>
+                                                <option value="1024x1792">Portrait (1024x1792)</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="mt-3">
+                                        <button type="button" class="btn btn-primary" id="generateImageBtn">
+                                            <i class="fas fa-magic me-2"></i>Generate Image
+                                        </button>
+                                    </div>
+                                    
+                                    <!-- Image Generation Progress -->
+                                    <div id="imageGenerationProgress" class="mt-3" style="display: none;">
+                                        <div class="progress mb-2">
+                                            <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: 100%"></div>
+                                        </div>
+                                        <small class="text-muted">Generating your image... This may take 10-30 seconds.</small>
+                                    </div>
+                                    
+                                    <!-- Generated Image Preview -->
+                                    <div id="generatedImagePreview" class="mt-3" style="display: none;">
+                                        <div class="card" style="background: var(--card-bg); border: 1px solid var(--border-color);">
+                                            <div class="card-body">
+                                                <h6 class="card-title" style="color: var(--text-primary);">Generated Image</h6>
+                                                <img id="previewImage" src="" class="w-100" style="max-height: 400px; object-fit: contain;" alt="Generated image">
+                                                <input type="hidden" id="generatedImageUrl" name="generated_image_url">
+                                                <input type="hidden" id="generatedImageLocalPath" name="generated_image_local_path">
+                                                <input type="hidden" id="generatedImageRelativePath" name="generated_image_relative_path">
+                                                <div class="mt-2">
+                                                    <button type="button" class="btn btn-sm btn-outline-primary" id="regenerateImageBtn">
+                                                        <i class="fas fa-redo me-1"></i>Regenerate
+                                                    </button>
+                                                    <button type="button" class="btn btn-sm btn-outline-success" id="useImageBtn">
+                                                        <i class="fas fa-check me-1"></i>Use This Image
+                                                    </button>
+                                                    <button type="button" class="btn btn-sm btn-outline-info" id="downloadImageBtn">
+                                                        <i class="fas fa-download me-1"></i>Download
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
                         <!-- Generate Video Section -->
                         <div id="generateVideoSection" class="media-section" style="display: none;">
                             <div class="card" style="background: var(--bg-tertiary); border: 1px solid var(--border-color);">
@@ -466,8 +602,24 @@
                                     
                                     <div class="mb-3">
                                         <label for="videoPrompt" class="form-label" style="color: var(--text-primary);">Video Description</label>
-                                        <textarea class="form-control" id="videoPrompt" name="video_prompt" rows="3" placeholder="Describe the video you want to generate..." style="background: var(--bg-secondary); border: 1px solid var(--border-color); color: var(--text-primary);"></textarea>
-                                        <small class="form-text text-muted">Describe the scene, style, and mood you want</small>
+                                        <textarea class="form-control" id="videoPrompt" name="video_prompt" rows="3" placeholder="Describe the video you want to generate... (or leave empty to auto-generate from post content)" style="background: var(--bg-secondary); border: 1px solid var(--border-color); color: var(--text-primary);"></textarea>
+                                        <div class="mt-2">
+                                            <button type="button" class="btn btn-sm btn-outline-info" onclick="useVideoPromptForGeneration()" title="Use AI suggested video prompts">
+                                                <i class="fas fa-lightbulb me-1"></i>Use AI Prompt Suggestion
+                                            </button>
+                                            <button type="button" class="btn btn-sm btn-outline-success" onclick="autoGenerateVideoFromPost()" title="Auto-generate video prompt from post content">
+                                                <i class="fas fa-wand-magic-sparkles me-1"></i>Auto from Post
+                                            </button>
+                                            <button type="button" class="btn btn-sm btn-outline-primary" onclick="enhanceVideoPrompt()" title="Enhance your video prompt with AI">
+                                                <i class="fas fa-sparkles me-1"></i>Enhance Prompt
+                                            </button>
+                                        </div>
+                                        <small class="form-text text-muted">Describe the scene, camera movements, style, and mood - or use auto-generation</small>
+                                        <div id="videoPromptEnhanceStatus" class="mt-2" style="display: none;">
+                                            <div class="alert alert-info mb-0">
+                                                <i class="fas fa-spinner fa-spin me-2"></i>Enhancing your video prompt with AI...
+                                            </div>
+                                        </div>
                                     </div>
                                     
                                     <div class="row">
@@ -652,7 +804,7 @@
             </div>
             <div class="modal-footer" style="background: var(--bg-tertiary); border-top: 1px solid var(--border-color);">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-primary" onclick="submitPost()">Create Post</button>
+                <button type="button" class="btn btn-primary" id="submitPostBtn">Create Post</button>
             </div>
         </div>
     </div>
@@ -746,7 +898,7 @@
 // Test function to check if JavaScript is working - GLOBAL SCOPE
 window.testFunction = function() {
     console.log('=== TEST FUNCTION CALLED ===');
-    alert('JavaScript is working!');
+    showAlert('JavaScript is working! All systems operational.', 'success');
 }
 
 // Social Media Connection Functions - Global scope
@@ -826,7 +978,7 @@ window.initiateUpgrade = function() {
     const upgradeBtn = document.getElementById('upgradeBtn');
     
     if (!phoneNumber) {
-        alert('Please enter your M-Pesa phone number');
+        showAlert('Please enter your M-Pesa phone number', 'warning');
         return;
     }
 
@@ -869,6 +1021,628 @@ window.initiateUpgrade = function() {
     });
 }
 
+// ========================================
+// AI Content Generation Functions
+// These MUST be in global scope to work with onclick attributes
+// ========================================
+
+window.generateMarketingContent = function() {
+    const title = document.getElementById('postTitle').value;
+    const hashtags = document.getElementById('postHashtags').value;
+    
+    const keywords = prompt('Enter keywords or topic for your post (e.g., "new product launch", "summer sale"):');
+    if (!keywords || !keywords.trim()) {
+        return;
+    }
+    
+    const statusDiv = document.getElementById('aiContentStatus');
+    if (statusDiv) statusDiv.style.display = 'block';
+    
+    fetch('/marketing/posts/ai/generate-content', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+            'Accept': 'application/json'
+        },
+        body: JSON.stringify({
+            keywords: keywords,
+            title: title,
+            hashtags: hashtags
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (statusDiv) statusDiv.style.display = 'none';
+        if (data.success) {
+            document.getElementById('postContent').value = data.content;
+            if (data.suggested_hashtags) {
+                document.getElementById('postHashtags').value = data.suggested_hashtags;
+            }
+            showAlert('Content generated successfully!', 'success');
+        } else {
+            showAlert(data.message || 'Failed to generate content', 'error');
+        }
+    })
+    .catch(error => {
+        if (statusDiv) statusDiv.style.display = 'none';
+        console.error('AI Generation Error:', error);
+        showAlert('Error generating content. Please try again.', 'error');
+    });
+};
+
+window.enhanceMarketingContent = function() {
+    const content = document.getElementById('postContent').value;
+    
+    if (!content || !content.trim()) {
+        showAlert('Please enter some content first before enhancing.', 'warning');
+        return;
+    }
+    
+    const statusDiv = document.getElementById('aiContentStatus');
+    if (statusDiv) statusDiv.style.display = 'block';
+    
+    fetch('/marketing/posts/ai/enhance-content', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+            'Accept': 'application/json'
+        },
+        body: JSON.stringify({
+            content: content
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (statusDiv) statusDiv.style.display = 'none';
+        if (data.success) {
+            document.getElementById('postContent').value = data.enhanced_content;
+            showAlert('Content enhanced successfully!', 'success');
+        } else {
+            showAlert(data.message || 'Failed to enhance content', 'error');
+        }
+    })
+    .catch(error => {
+        if (statusDiv) statusDiv.style.display = 'none';
+        console.error('AI Enhancement Error:', error);
+        showAlert('Error enhancing content. Please try again.', 'error');
+    });
+};
+
+window.generateImagePrompts = function() {
+    const content = document.getElementById('postContent').value;
+    const title = document.getElementById('postTitle').value;
+    
+    if (!content || !content.trim()) {
+        showAlert('Please enter post content first to generate image suggestions.', 'warning');
+        return;
+    }
+    
+    const statusDiv = document.getElementById('aiContentStatus');
+    if (statusDiv) statusDiv.style.display = 'block';
+    
+    fetch('/marketing/posts/ai/generate-image-prompts', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+            'Accept': 'application/json'
+        },
+        body: JSON.stringify({
+            content: content,
+            title: title
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (statusDiv) statusDiv.style.display = 'none';
+        if (data.success && data.prompts && data.prompts.length > 0) {
+            displayImagePrompts(data.prompts);
+            showAlert(`Generated ${data.prompts.length} image prompt suggestions!`, 'success');
+        } else {
+            showAlert(data.message || 'Failed to generate image prompts', 'error');
+        }
+    })
+    .catch(error => {
+        if (statusDiv) statusDiv.style.display = 'none';
+        console.error('AI Image Prompts Error:', error);
+        showAlert('Error generating image prompts. Please try again.', 'error');
+    });
+};
+
+function displayImagePrompts(prompts) {
+    const section = document.getElementById('aiImagePromptsSection');
+    const list = document.getElementById('aiImagePromptsList');
+    
+    if (!list) return;
+    list.innerHTML = '';
+    
+    prompts.forEach((prompt, index) => {
+        const item = document.createElement('div');
+        item.className = 'list-group-item d-flex justify-content-between align-items-start';
+        item.style.background = 'var(--bg-secondary)';
+        item.style.border = '1px solid var(--border-color)';
+        item.style.marginBottom = '8px';
+        item.innerHTML = `
+            <div class="flex-grow-1">
+                <h6 class="mb-1" style="color: var(--text-primary);">
+                    <i class="fas fa-sparkles me-1" style="color: #667eea;"></i>
+                    Prompt ${index + 1}
+                </h6>
+                <p class="mb-1 small" style="color: var(--text-secondary);">${prompt}</p>
+            </div>
+            <button class="btn btn-sm btn-outline-primary" onclick="copyToClipboard('${prompt.replace(/'/g, "\\'")}')">
+                <i class="fas fa-copy"></i>
+            </button>
+        `;
+        list.appendChild(item);
+    });
+    
+    if (section) section.style.display = 'block';
+}
+
+window.copyToClipboard = function(text) {
+    navigator.clipboard.writeText(text).then(() => {
+        showAlert('Prompt copied to clipboard!', 'info');
+    }).catch(err => {
+        console.error('Failed to copy:', err);
+        alert('Failed to copy to clipboard');
+    });
+};
+
+window.useImagePromptForGeneration = function() {
+    const imagePromptsList = document.getElementById('aiImagePromptsList');
+    if (!imagePromptsList || imagePromptsList.children.length === 0) {
+        showAlert('Please generate image prompts first using the "Image Ideas" button.', 'info');
+        return;
+    }
+    
+    const firstPromptText = imagePromptsList.querySelector('p')?.textContent;
+    if (firstPromptText) {
+        document.getElementById('imagePrompt').value = firstPromptText;
+        showAlert('Prompt added! You can edit it before generating.', 'info');
+    }
+};
+
+window.autoGenerateFromPost = function() {
+    const postContent = document.getElementById('postContent').value;
+    const postTitle = document.getElementById('postTitle').value;
+    
+    if (!postContent || !postContent.trim()) {
+        showAlert('Please write or generate post content first.', 'warning');
+        return;
+    }
+    
+    let prompt = '';
+    if (postTitle && postTitle.trim()) {
+        prompt = `Image for: ${postTitle}. `;
+    }
+    
+    const contentSummary = postContent.substring(0, 150).trim();
+    prompt += `Visual representation of: ${contentSummary}`;
+    
+    document.getElementById('imagePrompt').value = prompt;
+    showAlert('Image prompt auto-generated from your post!', 'success');
+};
+
+window.enhanceImagePrompt = function() {
+    const prompt = document.getElementById('imagePrompt').value;
+    
+    if (!prompt || !prompt.trim()) {
+        showAlert('Please enter a prompt first to enhance.', 'warning');
+        return;
+    }
+    
+    const statusDiv = document.getElementById('promptEnhanceStatus');
+    const textarea = document.getElementById('imagePrompt');
+    const originalPrompt = prompt;
+    
+    if (statusDiv) statusDiv.style.display = 'block';
+    textarea.disabled = true;
+    
+    const postContent = document.getElementById('postContent').value;
+    const style = document.getElementById('imageStyle').value;
+    
+    fetch('/marketing/posts/ai/enhance-image-prompt', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+            'Accept': 'application/json'
+        },
+        body: JSON.stringify({
+            prompt: originalPrompt,
+            post_content: postContent || '',
+            style: style || ''
+        })
+    })
+    .then(response => {
+        if (!response.ok) {
+            return response.text().then(text => {
+                throw new Error('Server error: ' + text);
+            });
+        }
+        return response.json();
+    })
+    .then(data => {
+        if (statusDiv) statusDiv.style.display = 'none';
+        textarea.disabled = false;
+        
+        if (data.success && data.enhanced_prompt) {
+            textarea.value = data.enhanced_prompt;
+            showAlert('Prompt enhanced! Review and generate image.', 'success');
+        } else {
+            textarea.value = originalPrompt;
+            showAlert(data.message || 'Failed to enhance prompt', 'error');
+        }
+    })
+    .catch(error => {
+        if (statusDiv) statusDiv.style.display = 'none';
+        textarea.disabled = false;
+        textarea.value = originalPrompt;
+        console.error('Prompt Enhancement Error:', error);
+        showAlert('Error enhancing prompt. Please try again.', 'error');
+    });
+};
+
+window.autoGenerateVideoFromPost = function() {
+    const postContent = document.getElementById('postContent').value;
+    const postTitle = document.getElementById('postTitle').value;
+    
+    if (!postContent || !postContent.trim()) {
+        showAlert('Please write or generate post content first.', 'warning');
+        return;
+    }
+    
+    let prompt = '';
+    if (postTitle && postTitle.trim()) {
+        prompt = `Video scene for: ${postTitle}. `;
+    }
+    
+    const contentSummary = postContent.substring(0, 150).trim();
+    prompt += `Cinematic video showcasing: ${contentSummary}`;
+    
+    document.getElementById('videoPrompt').value = prompt;
+    showAlert('Video prompt auto-generated from your post!', 'success');
+};
+
+window.enhanceVideoPrompt = function() {
+    const prompt = document.getElementById('videoPrompt').value;
+    
+    if (!prompt || !prompt.trim()) {
+        showAlert('Please enter a video prompt first to enhance.', 'warning');
+        return;
+    }
+    
+    const statusDiv = document.getElementById('videoPromptEnhanceStatus');
+    const textarea = document.getElementById('videoPrompt');
+    const originalPrompt = prompt;
+    
+    if (statusDiv) statusDiv.style.display = 'block';
+    textarea.disabled = true;
+    
+    const postContent = document.getElementById('postContent').value;
+    const style = document.getElementById('videoStyle').value;
+    const duration = document.getElementById('videoDuration').value;
+    
+    fetch('/marketing/posts/ai/enhance-video-prompt', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+            'Accept': 'application/json'
+        },
+        body: JSON.stringify({
+            prompt: originalPrompt,
+            post_content: postContent || '',
+            style: style || '',
+            duration: duration || ''
+        })
+    })
+    .then(response => {
+        if (!response.ok) {
+            return response.text().then(text => {
+                throw new Error('Server error: ' + text);
+            });
+        }
+        return response.json();
+    })
+    .then(data => {
+        if (statusDiv) statusDiv.style.display = 'none';
+        textarea.disabled = false;
+        
+        if (data.success && data.enhanced_prompt) {
+            textarea.value = data.enhanced_prompt;
+            showAlert('Video prompt enhanced! Review and generate video.', 'success');
+        } else {
+            textarea.value = originalPrompt;
+            showAlert(data.message || 'Failed to enhance video prompt', 'error');
+        }
+    })
+    .catch(error => {
+        if (statusDiv) statusDiv.style.display = 'none';
+        textarea.disabled = false;
+        textarea.value = originalPrompt;
+        console.error('Video Prompt Enhancement Error:', error);
+        showAlert('Error enhancing video prompt. Please try again.', 'error');
+    });
+};
+
+window.useVideoPromptForGeneration = function() {
+    showAlert('Generate video prompts first using the "Get Image Ideas" button in the AI Features section.', 'info');
+};
+
+window.generateAIImage = function() {
+    let prompt = document.getElementById('imagePrompt').value;
+    const style = document.getElementById('imageStyle').value;
+    const size = document.getElementById('imageSize').value;
+    const postContent = document.getElementById('postContent').value;
+    const postTitle = document.getElementById('postTitle').value;
+    
+    if ((!prompt || !prompt.trim()) && postContent && postContent.trim()) {
+        const contentSummary = postContent.substring(0, 200);
+        prompt = `Image for social media post: ${contentSummary}`;
+        document.getElementById('imagePrompt').value = prompt;
+    }
+    
+    if (!prompt || !prompt.trim()) {
+        showAlert('Please enter an image description or write post content first.', 'warning');
+        return;
+    }
+    
+    const progressDiv = document.getElementById('imageGenerationProgress');
+    const previewDiv = document.getElementById('generatedImagePreview');
+    const generateBtn = document.getElementById('generateImageBtn');
+    
+    if (progressDiv) progressDiv.style.display = 'block';
+    if (previewDiv) previewDiv.style.display = 'none';
+    if (generateBtn) generateBtn.disabled = true;
+    
+    fetch('/marketing/posts/ai/generate-image', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+            'Accept': 'application/json'
+        },
+        body: JSON.stringify({
+            prompt: prompt,
+            post_content: postContent,
+            post_title: postTitle,
+            style: style,
+            size: size
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (progressDiv) progressDiv.style.display = 'none';
+        if (generateBtn) generateBtn.disabled = false;
+        
+        if (data.success && data.image_url) {
+            const previewImg = document.getElementById('previewImage');
+            
+            // Add error handler for image loading
+            previewImg.onerror = function() {
+                if (previewDiv) previewDiv.style.display = 'none';
+                showAlert('Failed to load the generated image. The file may be corrupted.', 'error');
+            };
+            
+            // Add success handler for image loading
+            previewImg.onload = function() {
+                console.log('Image loaded successfully:', data.image_url);
+                if (previewDiv) previewDiv.style.display = 'block';
+                showAlert('Image generated successfully!', 'success');
+            };
+            
+            // Set image source and store paths
+            previewImg.src = data.image_url + '?t=' + Date.now(); // Add cache buster
+            document.getElementById('generatedImageUrl').value = data.image_url;
+            
+            // Store local paths for submission
+            if (data.local_path) {
+                document.getElementById('generatedImageLocalPath').value = data.local_path;
+            }
+            if (data.relative_path) {
+                document.getElementById('generatedImageRelativePath').value = data.relative_path;
+            }
+        } else {
+            showAlert(data.message || 'Failed to generate image. Please try again with a different prompt.', 'error');
+        }
+    })
+    .catch(error => {
+        if (progressDiv) progressDiv.style.display = 'none';
+        if (generateBtn) generateBtn.disabled = false;
+        console.error('Image Generation Error:', error);
+        showAlert('Error generating image. Please try again.', 'error');
+    });
+};
+
+window.downloadGeneratedImage = function() {
+    const imageUrl = document.getElementById('generatedImageUrl').value;
+    if (!imageUrl) {
+        showAlert('No image to download', 'warning');
+        return;
+    }
+    
+    // Show loading message
+    showAlert('Preparing image download...', 'info');
+    
+    // Fetch the image and download it
+    fetch(imageUrl)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Failed to fetch image');
+            }
+            return response.blob();
+        })
+        .then(blob => {
+            // Create download link
+            const url = window.URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = 'ai-generated-image-' + Date.now() + '.png';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            
+            // Clean up
+            window.URL.revokeObjectURL(url);
+            
+            showAlert('Image downloaded successfully!', 'success');
+        })
+        .catch(error => {
+            console.error('Download error:', error);
+            showAlert('Failed to download image. Please try right-clicking the image and selecting "Save Image As..."', 'error');
+        });
+};
+
+window.showAlert = function(message, type = 'info') {
+    // Remove any existing custom alerts
+    const existingAlert = document.getElementById('customAlertModal');
+    if (existingAlert) {
+        existingAlert.remove();
+    }
+    
+    // Determine icon and colors based on type
+    let icon, bgColor, textColor, iconColor;
+    switch(type) {
+        case 'success':
+            icon = 'fa-check-circle';
+            bgColor = 'var(--success-bg, #d4edda)';
+            textColor = 'var(--success-text, #155724)';
+            iconColor = '#28a745';
+            break;
+        case 'error':
+        case 'danger':
+            icon = 'fa-exclamation-circle';
+            bgColor = 'var(--danger-bg, #f8d7da)';
+            textColor = 'var(--danger-text, #721c24)';
+            iconColor = '#dc3545';
+            break;
+        case 'warning':
+            icon = 'fa-exclamation-triangle';
+            bgColor = 'var(--warning-bg, #fff3cd)';
+            textColor = 'var(--warning-text, #856404)';
+            iconColor = '#ffc107';
+            break;
+        default: // info
+            icon = 'fa-info-circle';
+            bgColor = 'var(--info-bg, #d1ecf1)';
+            textColor = 'var(--info-text, #0c5460)';
+            iconColor = '#17a2b8';
+    }
+    
+    // Create modal HTML
+    const modalHTML = `
+        <div id="customAlertModal" class="custom-alert-modal" style="
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+            animation: fadeIn 0.2s ease-in;
+        ">
+            <div class="custom-alert-content" style="
+                background: var(--card-bg, #fff);
+                border-radius: 12px;
+                padding: 0;
+                max-width: 450px;
+                width: 90%;
+                box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+                animation: slideDown 0.3s ease-out;
+                border: 1px solid var(--border-color, #dee2e6);
+            ">
+                <div style="
+                    background: ${bgColor};
+                    padding: 20px;
+                    border-radius: 12px 12px 0 0;
+                    text-align: center;
+                    border-bottom: 1px solid ${iconColor};
+                ">
+                    <i class="fas ${icon}" style="
+                        font-size: 48px;
+                        color: ${iconColor};
+                        margin-bottom: 10px;
+                    "></i>
+                </div>
+                <div style="
+                    padding: 24px;
+                    text-align: center;
+                ">
+                    <p style="
+                        color: var(--text-primary, #333);
+                        font-size: 16px;
+                        margin: 0 0 20px 0;
+                        line-height: 1.5;
+                    ">${message}</p>
+                    <button onclick="document.getElementById('customAlertModal').remove()" style="
+                        background: ${iconColor};
+                        color: white;
+                        border: none;
+                        padding: 10px 30px;
+                        border-radius: 6px;
+                        font-size: 14px;
+                        font-weight: 600;
+                        cursor: pointer;
+                        transition: all 0.2s ease;
+                        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+                    " onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 8px rgba(0, 0, 0, 0.15)';" 
+                       onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 4px rgba(0, 0, 0, 0.1)';">
+                        OK
+                    </button>
+                </div>
+            </div>
+        </div>
+        <style>
+            @keyframes fadeIn {
+                from { opacity: 0; }
+                to { opacity: 1; }
+            }
+            @keyframes slideDown {
+                from {
+                    transform: translateY(-50px);
+                    opacity: 0;
+                }
+                to {
+                    transform: translateY(0);
+                    opacity: 1;
+                }
+            }
+        </style>
+    `;
+    
+    // Add modal to body
+    document.body.insertAdjacentHTML('beforeend', modalHTML);
+    
+    // Auto close after delay based on type
+    const timeout = type === 'info' ? 8000 : type === 'success' ? 5000 : 7000;
+    setTimeout(() => {
+        const modal = document.getElementById('customAlertModal');
+        if (modal) {
+            modal.style.animation = 'fadeOut 0.2s ease-out';
+            setTimeout(() => modal.remove(), 200);
+        }
+    }, timeout);
+    
+    // Close on background click
+    const modal = document.getElementById('customAlertModal');
+    modal.addEventListener('click', function(e) {
+        if (e.target === modal) {
+            modal.remove();
+        }
+    });
+};
+
+// ========================================
+// DOM Content Loaded - Event Listeners
+// ========================================
+
 // Enhanced Social Media Modal Functionality
 document.addEventListener('DOMContentLoaded', function() {
     // Media type switching
@@ -887,6 +1661,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (this.value === 'upload') {
                     const uploadSection = document.getElementById('uploadMediaSection');
                     if (uploadSection) uploadSection.style.display = 'block';
+                } else if (this.value === 'generate-image') {
+                    const generateImageSection = document.getElementById('generateImageSection');
+                    if (generateImageSection) generateImageSection.style.display = 'block';
                 } else if (this.value === 'generate') {
                     const generateSection = document.getElementById('generateVideoSection');
                     if (generateSection) generateSection.style.display = 'block';
@@ -962,7 +1739,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const postContent = document.getElementById('postContent')?.value || '';
         
         if (!videoPrompt && !postContent) {
-            alert('Please provide either a video description or post content to generate a video.');
+            showAlert('Please provide either a video description or post content to generate a video.', 'warning');
             return;
         }
         
@@ -1058,6 +1835,67 @@ document.addEventListener('DOMContentLoaded', function() {
         regenerateVideoBtn.addEventListener('click', generateVideo);
     }
     
+    // Image generation event listeners
+    const generateImageBtn = document.getElementById('generateImageBtn');
+    const regenerateImageBtn = document.getElementById('regenerateImageBtn');
+    const useImageBtn = document.getElementById('useImageBtn');
+    const downloadImageBtn = document.getElementById('downloadImageBtn');
+    
+    if (generateImageBtn) {
+        generateImageBtn.addEventListener('click', generateAIImage);
+    }
+    
+    if (regenerateImageBtn) {
+        regenerateImageBtn.addEventListener('click', generateAIImage);
+    }
+    
+    if (downloadImageBtn) {
+        downloadImageBtn.addEventListener('click', downloadGeneratedImage);
+    }
+    
+    if (useImageBtn) {
+        useImageBtn.addEventListener('click', function() {
+            const imageUrl = document.getElementById('generatedImageUrl').value;
+            if (!imageUrl) {
+                showAlert('No image to use', 'warning');
+                return;
+            }
+            
+            // Set media type to generate-image so form knows to include it
+            const generateImageRadio = document.getElementById('generateImage');
+            if (generateImageRadio) {
+                generateImageRadio.checked = true;
+            }
+            
+            // Create a hidden input for the generated image
+            let imageInput = document.getElementById('generatedImageInput');
+            if (!imageInput) {
+                imageInput = document.createElement('input');
+                imageInput.type = 'hidden';
+                imageInput.id = 'generatedImageInput';
+                imageInput.name = 'generated_image_url';
+                document.getElementById('createPostForm').appendChild(imageInput);
+            }
+            imageInput.value = imageUrl;
+            
+            // Show visual confirmation with preview thumbnail
+            showAlert(`
+                <strong>Image selected!</strong><br>
+                <img src="${imageUrl}" style="max-width: 200px; max-height: 150px; margin-top: 10px; border-radius: 4px;" class="img-thumbnail">
+                <br><small class="text-muted">This image will be posted with your content.</small>
+            `, 'success');
+            
+            // Collapse the preview to save space
+            const previewDiv = document.getElementById('generatedImagePreview');
+            if (previewDiv) {
+                const collapseBtn = document.createElement('div');
+                collapseBtn.className = 'mt-2 text-center';
+                collapseBtn.innerHTML = '<small class="text-success"><i class="fas fa-check-circle"></i> Image ready to post</small>';
+                previewDiv.appendChild(collapseBtn);
+            }
+        });
+    }
+    
     if (useVideoBtn) {
         useVideoBtn.addEventListener('click', function() {
             if (generatedVideoUrl) {
@@ -1105,15 +1943,27 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     // Form submission
-    const createPostBtn = document.querySelector('#createPostModal .btn-primary');
-    if (createPostBtn) {
-        createPostBtn.addEventListener('click', function() {
+    const submitBtn = document.getElementById('submitPostBtn');
+    if (submitBtn) {
+        submitBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
             submitPost();
         });
     }
     
+    // Guard to prevent multiple submissions
+    let isSubmitting = false;
+    
     window.submitPost = function() {
         console.log('=== SUBMIT POST FUNCTION CALLED ===');
+        
+        // Prevent multiple simultaneous submissions
+        if (isSubmitting) {
+            console.log('Already submitting, ignoring duplicate call');
+            return;
+        }
+        
         const form = document.getElementById('createPostForm');
         if (!form) {
             console.error('Form not found!');
@@ -1185,13 +2035,41 @@ document.addEventListener('DOMContentLoaded', function() {
             if (mediaFile) {
                 formData.append('media', mediaFile);
             }
+        } else if (mediaType === 'generate-image') {
+            // Check for generated image
+            const generatedImageUrl = document.getElementById('generatedImageUrl')?.value;
+            const generatedImageLocalPath = document.getElementById('generatedImageLocalPath')?.value;
+            const generatedImageRelativePath = document.getElementById('generatedImageRelativePath')?.value;
+            
+            if (generatedImageUrl) {
+                formData.append('generated_image_url', generatedImageUrl);
+                
+                // Prefer local path for posting to social media
+                if (generatedImageLocalPath) {
+                    formData.append('generated_image_local_path', generatedImageLocalPath);
+                    console.log('Adding generated image with local path:', generatedImageLocalPath);
+                } else if (generatedImageRelativePath) {
+                    formData.append('generated_image_relative_path', generatedImageRelativePath);
+                    console.log('Adding generated image with relative path:', generatedImageRelativePath);
+                } else {
+                    console.log('Adding generated image with URL only:', generatedImageUrl);
+                }
+            }
         } else if (mediaType === 'generate' && generatedVideoUrl) {
             formData.append('generated_video_url', generatedVideoUrl);
             formData.append('generated_video_id', generatedVideoId);
         }
         
+        // Set submitting flag
+        isSubmitting = true;
+        
         // Show loading
-        const createPostBtn = document.querySelector('#createPostModal .btn-primary');
+        const createPostBtn = document.getElementById('submitPostBtn');
+        if (!createPostBtn) {
+            isSubmitting = false;
+            showAlert('Submit button not found!', 'error');
+            return;
+        }
         const originalText = createPostBtn.innerHTML;
         createPostBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Creating Post...';
         createPostBtn.disabled = true;
@@ -1215,7 +2093,20 @@ document.addEventListener('DOMContentLoaded', function() {
         .then(response => {
             console.log('Response status:', response.status);
             console.log('Response headers:', response.headers);
-            return response.json();
+            console.log('Response OK:', response.ok);
+            
+            if (!response.ok) {
+                // Log the response for debugging
+                return response.text().then(text => {
+                    console.error('Server error response:', text);
+                    throw new Error(`Server error: ${response.status} - ${text.substring(0, 200)}`);
+                });
+            }
+            
+            return response.json().catch(err => {
+                console.error('Failed to parse JSON response:', err);
+                throw new Error('Server returned invalid response. Check browser console for details.');
+            });
         })
         .then(data => {
             console.log('Response data:', data);
@@ -1264,43 +2155,13 @@ document.addEventListener('DOMContentLoaded', function() {
             showAlert('Failed to create post: ' + error.message, 'error');
         })
         .finally(() => {
-            // Reset button
-            createPostBtn.innerHTML = originalText;
-            createPostBtn.disabled = false;
-        });
-    }
-    
-    // Helper function to show alerts
-    window.showAlert = function(message, type) {
-        // Remove any existing alerts first
-        const existingAlerts = document.querySelectorAll('#createPostModal .alert');
-        existingAlerts.forEach(alert => alert.remove());
-        
-        const alertDiv = document.createElement('div');
-        alertDiv.className = `alert alert-${type === 'error' ? 'danger' : type} alert-dismissible fade show`;
-        alertDiv.innerHTML = `
-            <i class="fas fa-${type === 'error' ? 'exclamation-triangle' : type === 'success' ? 'check-circle' : 'info-circle'} me-2"></i>
-            ${message}
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        `;
-        
-        // Insert at the top of the modal body
-        const modalBody = document.querySelector('#createPostModal .modal-body');
-        if (modalBody) {
-            modalBody.insertBefore(alertDiv, modalBody.firstChild);
-            
-            // Scroll to top of modal to show the alert
-            modalBody.scrollTop = 0;
-        }
-        
-        // Auto-remove after appropriate time based on type
-        const timeout = type === 'info' ? 8000 : type === 'success' ? 5000 : 7000;
-        setTimeout(() => {
-            if (alertDiv.parentNode) {
-                alertDiv.classList.remove('show');
-                setTimeout(() => alertDiv.remove(), 150);
+            // Reset button and flag
+            isSubmitting = false;
+            if (createPostBtn) {
+                createPostBtn.innerHTML = originalText;
+                createPostBtn.disabled = false;
             }
-        }, timeout);
+        });
     }
     
     // Helper function to validate post content based on selected platforms

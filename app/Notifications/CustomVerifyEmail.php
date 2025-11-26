@@ -9,9 +9,13 @@ use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\URL;
+use Illuminate\Support\Facades\Log;
 
 class CustomVerifyEmail extends VerifyEmail
 {
+    // Temporarily removed ShouldQueue to test synchronously
+    // implements ShouldQueue
+    
     use Queueable;
 
     /**
@@ -45,6 +49,14 @@ class CustomVerifyEmail extends VerifyEmail
     {
         $verificationUrl = $this->verificationUrl($notifiable);
 
+        // Log email sending attempt
+        Log::info('Sending verification email', [
+            'to' => $notifiable->email,
+            'from' => config('mail.from.address'),
+            'mailer' => config('mail.default'),
+            'verification_url' => $verificationUrl,
+        ]);
+
         // Try Laravel Mail first, fallback to simple mail service
         try {
             return (new MailMessage)
@@ -56,6 +68,11 @@ class CustomVerifyEmail extends VerifyEmail
                 ->line('This verification link will expire in 60 minutes.')
                 ->salutation('Best regards, The Shopybook Team');
         } catch (\Exception $e) {
+            Log::error('Verification email failed', [
+                'to' => $notifiable->email,
+                'error' => $e->getMessage(),
+            ]);
+            
             // Fallback to simple mail service
             $simpleMailService = new \App\Services\SimpleMailService();
             $simpleMailService->sendVerificationEmail($notifiable, $verificationUrl);
@@ -97,7 +114,7 @@ class CustomVerifyEmail extends VerifyEmail
             return call_user_func(static::$createUrlCallback, $notifiable);
         }
 
-        return URL::temporarySignedRoute(
+        $url = URL::temporarySignedRoute(
             'verification.verify',
             Carbon::now()->addMinutes(Config::get('auth.verification.expire', 60)),
             [
@@ -105,5 +122,21 @@ class CustomVerifyEmail extends VerifyEmail
                 'hash' => sha1($notifiable->getEmailForVerification()),
             ]
         );
+
+        Log::info('Verification URL generated', [
+            'original_url' => $url,
+            'app_url' => config('app.url'),
+            'app_env' => config('app.env'),
+        ]);
+
+        // Always force the URL to use the production app URL from config
+        $appUrl = config('app.url');
+        $url = preg_replace('/^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?/', $appUrl, $url);
+
+        Log::info('Verification URL after replacement', [
+            'final_url' => $url,
+        ]);
+
+        return $url;
     }
 }

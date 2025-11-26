@@ -7,9 +7,16 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
+use App\Services\ClaudeAPIService;
 
 class ServiceController extends Controller
 {
+    protected $claudeService;
+
+    public function __construct(ClaudeAPIService $claudeService)
+    {
+        $this->claudeService = $claudeService;
+    }
     public function index()
     {
         $user = Auth::user();
@@ -223,6 +230,37 @@ class ServiceController extends Controller
 
             return redirect()->route('services.index')
                 ->with('error', 'An error occurred while deleting the service.');
+        }
+    }
+
+    /**
+     * Enhance service description using AI
+     */
+    public function enhanceDescription(Request $request)
+    {
+        $request->validate([
+            'description' => 'required|string|min:10',
+            'service_name' => 'required|string',
+            'duration' => 'nullable|integer',
+        ]);
+
+        try {
+            $enhancedDescription = $this->claudeService->enhanceServiceDescription(
+                $request->description,
+                $request->service_name,
+                $request->duration
+            );
+
+            return response()->json([
+                'success' => true,
+                'enhanced_description' => $enhancedDescription,
+                'original_description' => $request->description,
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to enhance description: ' . $e->getMessage(),
+            ], 500);
         }
     }
 } 

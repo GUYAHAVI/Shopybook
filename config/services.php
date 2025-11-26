@@ -14,6 +14,12 @@ return [
     |
     */
 
+    'google' => [
+        'client_id' => env('GOOGLE_CLIENT_ID'),
+        'client_secret' => env('GOOGLE_CLIENT_SECRET'),
+        'redirect' => env('GOOGLE_REDIRECT_URI', env('APP_URL') . '/contacts/google/callback'),
+    ],
+
     'facebook' => [
         'client_id' => env('FACEBOOK_CLIENT_ID'),
         'client_secret' => env('FACEBOOK_CLIENT_SECRET'),
@@ -88,10 +94,10 @@ return [
         'model_config' => env('LTX_VIDEO_MODEL', 'ltxv-13b-0.9.7-distilled'),
         
         // Cloud API configuration (production)
-        'provider' => env('LTX_VIDEO_PROVIDER', 'huggingface'), // replicate, fal, huggingface, mock
+        'provider' => env('LTX_VIDEO_PROVIDER', 'replicate'), // replicate, fal, huggingface, mock
         'api_endpoint' => env('LTX_VIDEO_API_ENDPOINT'),
         'api_key' => env('LTX_VIDEO_API_KEY'),
-        'replicate_version' => env('LTX_REPLICATE_VERSION', 'lightricks/ltx-video:13b-distilled'),
+        'replicate_version' => env('LTX_REPLICATE_VERSION', 'fb18726ba67c5a66b37d475784c81db21bd1017e2b9e031bc19e7e3fc8ab1742'),
         
         // General settings
         'default_style' => env('LTX_VIDEO_DEFAULT_STYLE', 'professional'),
@@ -140,6 +146,26 @@ return [
         // URLs
         'auth_url' => env('PAYPAL_AUTH_URL', 'https://api-m.sandbox.paypal.com/v1/oauth2/token'),
         'orders_url' => env('PAYPAL_ORDERS_URL', 'https://api-m.sandbox.paypal.com/v2/checkout/orders'),
+    ],
+
+    'hostpinnacle' => [
+        'api_url' => env('HOSTPINNACLE_API_URL', 'https://smsportal.hostpinnacle.co.ke/SMSApi/send'),
+        'user_id' => env('HOSTPINNACLE_USER_ID'), // Your Host Pinnacle username
+        'password' => env('HOSTPINNACLE_PASSWORD'), // Your Host Pinnacle password
+        'sender_id' => env('HOSTPINNACLE_SENDER_ID', 'SHOPYBOOK'), // Your approved sender name
+        'api_key' => env('HOSTPINNACLE_API_KEY'), // Optional: API key (not always required)
+        'response_format' => env('HOSTPINNACLE_RESPONSE_FORMAT', 'json'), // json, xml, or text
+    ],
+
+    'claude' => [
+        'api_key' => env('CLAUDE_API_KEY'),
+        'model' => env('CLAUDE_MODEL', 'claude-sonnet-4-20250514'),
+        'max_tokens' => env('CLAUDE_MAX_TOKENS', 4096),
+    ],
+
+    'openai' => [
+        'api_key' => env('OPENAI_API_KEY'),
+        'model' => env('OPENAI_MODEL', 'gpt-4'),
     ],
 
 ];

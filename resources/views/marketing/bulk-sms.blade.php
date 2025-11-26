@@ -66,8 +66,22 @@
 
                         <hr>
 
+                        <!-- Recipient Type Selection -->
                         <div class="form-group">
-                            <label style="color: var(--text-primary);">Select Recipients</label>
+                            <label style="color: var(--text-primary);">Recipient Type</label>
+                            <div class="btn-group btn-group-toggle w-100" data-toggle="buttons">
+                                <label class="btn btn-outline-primary active">
+                                    <input type="radio" name="recipient_type" id="type_customers" value="customers" checked> Individual Customers
+                                </label>
+                                <label class="btn btn-outline-primary">
+                                    <input type="radio" name="recipient_type" id="type_groups" value="contact_groups"> Contact Groups
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Individual Customers Selection -->
+                        <div class="form-group" id="customersSection">
+                            <label style="color: var(--text-primary);">Select Customers</label>
                             <div class="row mb-2">
                                 <div class="col-md-6">
                                     <button type="button" class="btn btn-outline-primary btn-sm" onclick="selectAll()">
@@ -99,6 +113,46 @@
                                 </div>
                                 @endforeach
                             </div>
+                        </div>
+
+                        <!-- Contact Groups Selection -->
+                        <div class="form-group" id="groupsSection" style="display: none;">
+                            <label style="color: var(--text-primary);">Select Contact Groups</label>
+                            <div class="row mb-2">
+                                <div class="col-md-12 text-right">
+                                    <span class="badge" id="selectedGroupCount" style="background: var(--info-color); color: var(--white);">0 groups selected</span>
+                                </div>
+                            </div>
+                            
+                            @if(isset($contactGroups) && $contactGroups->count() > 0)
+                            <div class="row">
+                                @foreach($contactGroups as $group)
+                                <div class="col-md-6 mb-2">
+                                    <div class="custom-control custom-checkbox">
+                                        <input type="checkbox" class="custom-control-input group-checkbox" 
+                                               id="group_{{ $group->id }}" name="contact_group_ids[]" 
+                                               value="{{ $group->id }}" data-count="{{ $group->contacts_count }}">
+                                        <label class="custom-control-label" for="group_{{ $group->id }}" style="color: var(--text-primary);">
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <div>
+                                                    <strong>{{ $group->name }}</strong>
+                                                    <br><small style="color: var(--text-muted);">{{ $group->contacts_count }} contacts</small>
+                                                </div>
+                                                <span class="badge badge-{{ $group->type === 'customers' ? 'primary' : ($group->type === 'staff' ? 'success' : 'secondary') }}">
+                                                    {{ ucfirst($group->type) }}
+                                                </span>
+                                            </div>
+                                        </label>
+                                    </div>
+                                </div>
+                                @endforeach
+                            </div>
+                            @else
+                            <div class="alert alert-info">
+                                <i class="fas fa-info-circle"></i> No contact groups found. 
+                                <a href="{{ route('contacts.index') }}" class="alert-link">Create one now</a>
+                            </div>
+                            @endif
                         </div>
 
                         <div class="form-group">
@@ -203,14 +257,37 @@ document.addEventListener('DOMContentLoaded', function() {
     const charCount = document.getElementById('charCount');
     const template = document.getElementById('template');
     const customerCheckboxes = document.querySelectorAll('.customer-checkbox');
+    const groupCheckboxes = document.querySelectorAll('.group-checkbox');
     const selectedCount = document.getElementById('selectedCount');
+    const selectedGroupCount = document.getElementById('selectedGroupCount');
     const totalRecipients = document.getElementById('totalRecipients');
     const estimatedCost = document.getElementById('estimatedCost');
     const previewRecipients = document.getElementById('previewRecipients');
     const previewMessage = document.getElementById('previewMessage');
     const modalMessage = document.getElementById('modalMessage');
+    const typeCustomers = document.getElementById('type_customers');
+    const typeGroups = document.getElementById('type_groups');
+    const customersSection = document.getElementById('customersSection');
+    const groupsSection = document.getElementById('groupsSection');
 
     const templates = @json($templates);
+
+    // Toggle between customers and groups
+    typeCustomers.addEventListener('change', function() {
+        if (this.checked) {
+            customersSection.style.display = 'block';
+            groupsSection.style.display = 'none';
+            updateStats();
+        }
+    });
+
+    typeGroups.addEventListener('change', function() {
+        if (this.checked) {
+            customersSection.style.display = 'none';
+            groupsSection.style.display = 'block';
+            updateGroupStats();
+        }
+    });
 
     // Character count
     message.addEventListener('input', function() {
@@ -233,6 +310,11 @@ document.addEventListener('DOMContentLoaded', function() {
         checkbox.addEventListener('change', updateStats);
     });
 
+    // Group selection
+    groupCheckboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', updateGroupStats);
+    });
+
     function updateStats() {
         const selected = document.querySelectorAll('.customer-checkbox:checked');
         const count = selected.length;
@@ -242,6 +324,22 @@ document.addEventListener('DOMContentLoaded', function() {
         estimatedCost.textContent = `KSh ${(count * 5).toFixed(2)}`; // Assuming KSh 5 per SMS
         
         updatePreview();
+    }
+
+    function updateGroupStats() {
+        const selected = document.querySelectorAll('.group-checkbox:checked');
+        const groupCount = selected.length;
+        let totalContacts = 0;
+        
+        selected.forEach(checkbox => {
+            totalContacts += parseInt(checkbox.getAttribute('data-count') || 0);
+        });
+        
+        selectedGroupCount.textContent = `${groupCount} groups selected`;
+        totalRecipients.textContent = totalContacts;
+        estimatedCost.textContent = `KSh ${(totalContacts * 5).toFixed(2)}`;
+        
+        updateGroupPreview();
     }
 
     function updatePreview() {
@@ -260,14 +358,43 @@ document.addEventListener('DOMContentLoaded', function() {
         modalMessage.textContent = message.value || 'Your message will appear here...';
     }
 
+    function updateGroupPreview() {
+        const selected = document.querySelectorAll('.group-checkbox:checked');
+        const groupCount = selected.length;
+        let totalContacts = 0;
+        
+        selected.forEach(checkbox => {
+            totalContacts += parseInt(checkbox.getAttribute('data-count') || 0);
+        });
+        
+        if (groupCount === 0) {
+            previewRecipients.textContent = 'No groups selected';
+        } else {
+            previewRecipients.textContent = `${groupCount} groups (${totalContacts} contacts)`;
+        }
+        
+        previewMessage.textContent = message.value || 'Your message will appear here...';
+        modalMessage.textContent = message.value || 'Your message will appear here...';
+    }
+
     // Form submission
     document.getElementById('smsForm').addEventListener('submit', function(e) {
         e.preventDefault();
         
-        const selected = document.querySelectorAll('.customer-checkbox:checked');
-        if (selected.length === 0) {
-            alert('Please select at least one recipient');
-            return;
+        const recipientType = document.querySelector('input[name="recipient_type"]:checked').value;
+        
+        if (recipientType === 'customers') {
+            const selected = document.querySelectorAll('.customer-checkbox:checked');
+            if (selected.length === 0) {
+                alert('Please select at least one customer');
+                return;
+            }
+        } else {
+            const selected = document.querySelectorAll('.group-checkbox:checked');
+            if (selected.length === 0) {
+                alert('Please select at least one contact group');
+                return;
+            }
         }
         
         if (!message.value.trim()) {
@@ -275,7 +402,20 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
         
-        if (confirm(`Send SMS to ${selected.length} recipients?`)) {
+        const recipientType = document.querySelector('input[name="recipient_type"]:checked').value;
+        let recipientCount = 0;
+        
+        if (recipientType === 'customers') {
+            recipientCount = document.querySelectorAll('.customer-checkbox:checked').length;
+        } else {
+            let totalContacts = 0;
+            document.querySelectorAll('.group-checkbox:checked').forEach(checkbox => {
+                totalContacts += parseInt(checkbox.getAttribute('data-count') || 0);
+            });
+            recipientCount = totalContacts;
+        }
+        
+        if (confirm(`Send SMS to ${recipientCount} recipients?`)) {
             const formData = new FormData(this);
             
             fetch('{{ route("marketing.sms.send") }}', {
@@ -288,11 +428,15 @@ document.addEventListener('DOMContentLoaded', function() {
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    alert(data.message + '\n\n' + data.note);
+                    alert(data.message + (data.note ? '\n\n' + data.note : ''));
                     this.reset();
-                    updateStats();
+                    if (recipientType === 'customers') {
+                        updateStats();
+                    } else {
+                        updateGroupStats();
+                    }
                 } else {
-                    alert('Error sending SMS');
+                    alert('Error sending SMS: ' + (data.message || 'Unknown error'));
                 }
             })
             .catch(error => {
