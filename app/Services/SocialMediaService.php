@@ -110,9 +110,7 @@ class SocialMediaService
             $accessToken = decrypt($account->getAttribute('access_token'));
             $content = $post->getAttribute('content');
             
-            if ($post->getAttribute('hashtags')) {
-                $content .= $account->formatHashtags($post->getAttribute('hashtags'));
-            }
+            $content .= $this->processHashtags($post, $account);
 
             $data = ['message' => $content];
             if ($post->getAttribute('media_files') && count($post->getAttribute('media_files')) > 0) {
@@ -139,9 +137,7 @@ class SocialMediaService
             $accessToken = decrypt($account->getAttribute('access_token'));
             $content = $post->getAttribute('content');
             
-            if ($post->getAttribute('hashtags')) {
-                $content .= $account->formatHashtags($post->getAttribute('hashtags'));
-            }
+            $content .= $this->processHashtags($post, $account);
 
             if (!$post->getAttribute('media_files') || count($post->getAttribute('media_files')) === 0) {
                 return ['success' => false, 'message' => 'Instagram requires at least one image or video'];
@@ -182,9 +178,7 @@ class SocialMediaService
             $accessToken = decrypt($account->getAttribute('access_token'));
             $content = $post->getAttribute('content');
             
-            if ($post->getAttribute('hashtags')) {
-                $content .= $account->formatHashtags($post->getAttribute('hashtags'));
-            }
+            $content .= $this->processHashtags($post, $account);
 
             if (strlen($content) > 280) {
                 $content = substr($content, 0, 277) . '...';
@@ -223,7 +217,21 @@ private function publishToLinkedIn(MarketingPost $post, SocialMediaAccount $acco
         
         // Process hashtags
         if ($post->getAttribute('hashtags')) {
-            $content .= $account->formatHashtags($post->getAttribute('hashtags'));
+            $hashtags = $post->getAttribute('hashtags');
+            Log::debug('Processing hashtags for LinkedIn', [
+                'hashtags' => $hashtags,
+                'type' => gettype($hashtags),
+                'is_array' => is_array($hashtags)
+            ]);
+            
+            // Ensure hashtags is an array
+            if (is_string($hashtags)) {
+                $hashtags = json_decode($hashtags, true);
+            }
+            
+            if (is_array($hashtags)) {
+                $content .= $account->formatHashtags($hashtags);
+            }
         }
 
         $mediaFiles = $post->getAttribute('media_files') ?? [];
@@ -557,9 +565,7 @@ private function publishToLinkedIn(MarketingPost $post, SocialMediaAccount $acco
             }
 
             $content = $post->getAttribute('content');
-            if ($post->getAttribute('hashtags')) {
-                $content .= $account->formatHashtags($post->getAttribute('hashtags'));
-            }
+            $content .= $this->processHashtags($post, $account);
 
             $response = Http::post("https://api.telegram.org/bot{$botToken}/sendMessage", [
                 'chat_id' => $channelId,
@@ -587,9 +593,7 @@ private function publishToLinkedIn(MarketingPost $post, SocialMediaAccount $acco
             }
 
             $content = $post->getAttribute('content');
-            if ($post->getAttribute('hashtags')) {
-                $content .= $account->formatHashtags($post->getAttribute('hashtags'));
-            }
+            $content .= $this->processHashtags($post, $account);
 
             $response = Http::post($webhookUrl, [
                 'content' => $content,
@@ -852,5 +856,28 @@ private function publishToLinkedIn(MarketingPost $post, SocialMediaAccount $acco
             ]);
             return null;
         }
+    }
+
+    /**
+     * Helper method to safely process hashtags
+     */
+    private function processHashtags($post, $account): string
+    {
+        $hashtags = $post->getAttribute('hashtags');
+        
+        if (!$hashtags) {
+            return '';
+        }
+        
+        // Ensure hashtags is an array
+        if (is_string($hashtags)) {
+            $hashtags = json_decode($hashtags, true);
+        }
+        
+        if (is_array($hashtags)) {
+            return $account->formatHashtags($hashtags);
+        }
+        
+        return '';
     }
 }

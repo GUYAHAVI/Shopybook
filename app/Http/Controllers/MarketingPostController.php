@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\MarketingPost;
 use App\Models\SocialMediaAccount;
 use App\Services\SocialMediaService;
+use App\Services\ClaudeAPIService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
@@ -14,10 +15,12 @@ use Illuminate\Support\Str;
 class MarketingPostController extends Controller
 {
     protected $socialMediaService;
+    protected $claudeService;
 
-    public function __construct(SocialMediaService $socialMediaService)
+    public function __construct(SocialMediaService $socialMediaService, ClaudeAPIService $claudeService)
     {
         $this->socialMediaService = $socialMediaService;
+        $this->claudeService = $claudeService;
     }
     public function index()
     {
@@ -72,10 +75,13 @@ class MarketingPostController extends Controller
                 'content' => 'required|string|max:2200',
                 'hashtags' => 'nullable|string',
                 'platforms' => 'required|string', // JSON string from frontend
-                'media_type' => 'required|in:none,upload,generate',
+                'media_type' => 'required|in:none,upload,generate,generate-image',
                 'media' => 'nullable|file|mimes:jpg,jpeg,png,gif,mp4,mov|max:10240',
                 'generated_video_url' => 'nullable|string|url',
                 'generated_video_id' => 'nullable|string',
+                'generated_image_url' => 'nullable|string',
+                'generated_image_local_path' => 'nullable|string',
+                'generated_image_relative_path' => 'nullable|string',
                 'scheduled_at' => 'nullable|date|after:now',
             ]);
             
@@ -175,23 +181,69 @@ class MarketingPostController extends Controller
                 'video_url' => $validatedData['generated_video_url'],
                 'video_id' => $validatedData['generated_video_id'] ?? 'unknown'
             ]);
+        } elseif ($validatedData['media_type'] === 'generate-image') {
+            // Use generated image - prioritize local path for social media posting
+            if (isset($validatedData['generated_image_local_path']) && file_exists($validatedData['generated_image_local_path'])) {
+                $mediaFiles[] = $validatedData['generated_image_local_path'];
+                Log::channel('social_media')->debug('Using generated AI image (local path)', [
+                    'local_path' => $validatedData['generated_image_local_path']
+                ]);
+            } elseif (isset($validatedData['generated_image_relative_path'])) {
+                $localPath = storage_path('app/public/' . $validatedData['generated_image_relative_path']);
+                if (file_exists($localPath)) {
+                    $mediaFiles[] = $localPath;
+                    Log::channel('social_media')->debug('Using generated AI image (relative path)', [
+                        'local_path' => $localPath
+                    ]);
+                } else {
+                    Log::channel('social_media')->warning('Generated image file not found at relative path', [
+                        'relative_path' => $validatedData['generated_image_relative_path'],
+                        'expected_path' => $localPath
+                    ]);
+                }
+            } elseif (isset($validatedData['generated_image_url'])) {
+                // Fallback: extract filename from URL and try to build local path
+                $imageUrl = $validatedData['generated_image_url'];
+                if (strpos($imageUrl, 'storage/marketing/generated-images/') !== false) {
+                    $filename = basename(parse_url($imageUrl, PHP_URL_PATH));
+                    $localPath = storage_path('app/public/marketing/generated-images/' . $filename);
+                    
+                    if (file_exists($localPath)) {
+                        $mediaFiles[] = $localPath;
+                        Log::channel('social_media')->debug('Using generated AI image (extracted from URL)', [
+                            'local_path' => $localPath
+                        ]);
+                    } else {
+                        Log::channel('social_media')->warning('Generated image file not found', [
+                            'expected_path' => $localPath,
+                            'public_url' => $imageUrl
+                        ]);
+                    }
+                } else {
+                    Log::channel('social_media')->warning('Cannot determine local path for generated image', [
+                        'url' => $imageUrl
+                    ]);
+                }
+            }
         }
         
         // Create the marketing post
         try {
             $post = MarketingPost::create([
+                'user_id' => $user->id,
                 'business_id' => $business->getKey(),
                 'title' => $validatedData['title'],
                 'content' => $validatedData['content'],
-                'hashtags' => $validatedData['hashtags'],
+                'hashtags' => $validatedData['hashtags'] ? json_decode($validatedData['hashtags'], true) : null,
                 'media_files' => $mediaFiles,
                 'target_platforms' => $targetPlatforms,
                 'status' => 'draft',
-                'post_type' => $validatedData['scheduled_at'] ? 'scheduled' : 'immediate',
-                'scheduled_at' => $validatedData['scheduled_at'],
+                'post_type' => isset($validatedData['scheduled_at']) && $validatedData['scheduled_at'] ? 'scheduled' : 'immediate',
+                'scheduled_at' => $validatedData['scheduled_at'] ?? null,
                 'metadata' => [
                     'media_type' => $validatedData['media_type'],
                     'generated_video_id' => $validatedData['generated_video_id'] ?? null,
+                    'generated_image_url' => $validatedData['generated_image_url'] ?? null,
                     'created_via' => 'enhanced_modal'
                 ]
             ]);
@@ -204,7 +256,7 @@ class MarketingPostController extends Controller
             ]);
             
             // Publish immediately if not scheduled
-            if (!$validatedData['scheduled_at']) {
+            if (!isset($validatedData['scheduled_at']) || !$validatedData['scheduled_at']) {
                 $publishResult = $this->publishPost($post);
                 
                 if ($publishResult['success']) {
@@ -226,7 +278,7 @@ class MarketingPostController extends Controller
                     'success' => true,
                     'message' => 'Post scheduled successfully!',
                     'post_id' => $post->getKey(),
-                    'scheduled_at' => $validatedData['scheduled_at']
+                    'scheduled_at' => $validatedData['scheduled_at'] ?? null
                 ]);
             }
             
@@ -503,5 +555,308 @@ class MarketingPostController extends Controller
 
         return redirect()->route('marketing.posts.edit', $newPost)
             ->with('success', 'Post duplicated successfully!');
+    }
+
+    /**
+     * Generate marketing content using AI
+     */
+    public function generateContent(Request $request)
+    {
+        $request->validate([
+            'keywords' => 'required|string|max:500',
+            'title' => 'nullable|string|max:255',
+            'hashtags' => 'nullable|string|max:500',
+        ]);
+
+        try {
+            $business = Auth::user()->business;
+            
+            $generated = $this->claudeService->generateMarketingContent(
+                $request->keywords,
+                $business->name,
+                $business->business_type,
+                $request->title,
+                $request->hashtags
+            );
+
+            return response()->json([
+                'success' => true,
+                'content' => $generated['content'],
+                'suggested_hashtags' => $generated['hashtags'] ?? null,
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Marketing Content Generation Error: ' . $e->getMessage());
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to generate content. Please try again.',
+            ], 500);
+        }
+    }
+
+    /**
+     * Enhance existing marketing content using AI
+     */
+    public function enhanceContent(Request $request)
+    {
+        $request->validate([
+            'content' => 'required|string|max:2200',
+        ]);
+
+        try {
+            $business = Auth::user()->business;
+            
+            $enhanced = $this->claudeService->enhanceMarketingContent(
+                $request->input('content'),
+                $business->name,
+                $business->business_type
+            );
+
+            return response()->json([
+                'success' => true,
+                'enhanced_content' => $enhanced,
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Marketing Content Enhancement Error: ' . $e->getMessage());
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to enhance content. Please try again.',
+            ], 500);
+        }
+    }
+
+    /**
+     * Generate AI image prompts based on post content
+     */
+    public function generateImagePrompts(Request $request)
+    {
+        $request->validate([
+            'content' => 'required|string|max:2200',
+            'title' => 'nullable|string|max:255',
+        ]);
+
+        try {
+            $business = Auth::user()->business;
+            
+            $prompts = $this->claudeService->generateMarketingImagePrompts(
+                $request->input('content'),
+                $request->input('title'),
+                $business->name,
+                $business->business_type
+            );
+
+            return response()->json([
+                'success' => true,
+                'prompts' => $prompts,
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Image Prompts Generation Error: ' . $e->getMessage());
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to generate image prompts. Please try again.',
+            ], 500);
+        }
+    }
+
+    /**
+     * Enhance user's image prompt with AI
+     */
+    public function enhanceImagePrompt(Request $request)
+    {
+        $request->validate([
+            'prompt' => 'required|string|max:500',
+            'post_content' => 'nullable|string|max:2200',
+            'style' => 'nullable|string|max:50',
+        ]);
+
+        try {
+            $business = Auth::user()->business;
+            
+            $enhanced = $this->claudeService->enhanceImagePromptForUser(
+                $request->prompt,
+                $business->name,
+                $business->business_type,
+                $request->post_content,
+                $request->style
+            );
+
+            return response()->json([
+                'success' => true,
+                'enhanced_prompt' => $enhanced,
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Image Prompt Enhancement Error: ' . $e->getMessage());
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to enhance prompt. Please try again.',
+            ], 500);
+        }
+    }
+
+    /**
+     * Generate video prompts for marketing post
+     */
+    public function generateVideoPrompts(Request $request)
+    {
+        $request->validate([
+            'content' => 'required|string|max:2200',
+            'title' => 'nullable|string|max:255',
+        ]);
+
+        try {
+            $business = Auth::user()->business;
+            
+            $prompts = $this->claudeService->generateMarketingVideoPrompts(
+                $request->input('content'),
+                $request->input('title'),
+                $business->name,
+                $business->business_type
+            );
+
+            return response()->json([
+                'success' => true,
+                'prompts' => $prompts,
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Video Prompts Generation Error: ' . $e->getMessage());
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to generate video prompts. Please try again.',
+            ], 500);
+        }
+    }
+
+    /**
+     * Enhance user's video prompt with AI
+     */
+    public function enhanceVideoPrompt(Request $request)
+    {
+        $request->validate([
+            'prompt' => 'required|string|max:500',
+            'post_content' => 'nullable|string|max:2200',
+            'style' => 'nullable|string|max:50',
+            'duration' => 'nullable|string|max:10',
+        ]);
+
+        try {
+            $business = Auth::user()->business;
+            
+            $enhanced = $this->claudeService->enhanceVideoPromptForUser(
+                $request->prompt,
+                $business->name,
+                $business->business_type,
+                $request->post_content,
+                $request->style,
+                $request->duration
+            );
+
+            return response()->json([
+                'success' => true,
+                'enhanced_prompt' => $enhanced,
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Video Prompt Enhancement Error: ' . $e->getMessage());
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to enhance video prompt. Please try again.',
+            ], 500);
+        }
+    }
+
+    /**
+     * Generate AI image for marketing post
+     */
+    public function generateImage(Request $request)
+    {
+        $request->validate([
+            'prompt' => 'required|string|max:1000',
+            'style' => 'nullable|string|max:50',
+            'size' => 'nullable|string|max:20',
+            'post_content' => 'nullable|string|max:5000',
+            'post_title' => 'nullable|string|max:255',
+        ]);
+
+        try {
+            $business = Auth::user()->business;
+            
+            Log::info('Image generation request', [
+                'prompt' => substr($request->prompt, 0, 100),
+                'style' => $request->style ?? 'realistic',
+                'size' => $request->size ?? '1024x1024',
+                'business' => $business->name
+            ]);
+            
+            $imageData = $this->claudeService->generateMarketingImage(
+                $request->prompt,
+                $request->style ?? 'realistic',
+                $request->size ?? '1024x1024',
+                $business->name,
+                $business->business_type,
+                $request->post_content,
+                $request->post_title
+            );
+
+            if ($imageData && isset($imageData['public_url'])) {
+                // Verify the file actually exists
+                $storagePath = storage_path('app/public/' . $imageData['relative_path']);
+                
+                if (file_exists($storagePath)) {
+                    $fileSize = filesize($storagePath);
+                    
+                    Log::info('Image generation successful', [
+                        'public_url' => $imageData['public_url'],
+                        'file_path' => $storagePath,
+                        'file_size' => $fileSize
+                    ]);
+                    
+                    return response()->json([
+                        'success' => true,
+                        'image_url' => $imageData['public_url'],
+                        'local_path' => $imageData['local_path'],
+                        'relative_path' => $imageData['relative_path'],
+                        'file_size' => $fileSize,
+                    ]);
+                } else {
+                    Log::error('Generated image file not found', [
+                        'expected_path' => $storagePath,
+                        'relative_path' => $imageData['relative_path']
+                    ]);
+                    
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Image was generated but could not be saved properly. Please try again.',
+                    ], 500);
+                }
+            } else {
+                Log::error('Image data incomplete', ['imageData' => $imageData]);
+                
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Failed to generate and download image. Please try again with a different prompt.',
+                ], 500);
+            }
+
+        } catch (\Exception $e) {
+            Log::error('Image Generation Error: ' . $e->getMessage(), [
+                'trace' => $e->getTraceAsString(),
+                'prompt' => substr($request->prompt ?? '', 0, 100)
+            ]);
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to generate image: ' . $e->getMessage(),
+            ], 500);
+        }
     }
 }

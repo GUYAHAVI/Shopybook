@@ -8,6 +8,37 @@
     <title>Shopybook Dashboard</title>
     <link rel="icon" href="{{ asset('img/logo.png') }}" type="image/x-icon">
     
+    <!-- PWA Meta Tags -->
+    <meta name="theme-color" content="#13e8e9">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="Shopybook">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="msapplication-TileColor" content="#020258">
+    <meta name="msapplication-tap-highlight" content="no">
+    
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="{{ asset('manifest.json') }}">
+    
+    <!-- Apple Touch Icons -->
+    <link rel="apple-touch-icon" href="{{ asset('icons/icon-152x152.png') }}">
+    <link rel="apple-touch-icon" sizes="152x152" href="{{ asset('icons/icon-152x152.png') }}">
+    <link rel="apple-touch-icon" sizes="180x180" href="{{ asset('icons/icon-180x180.png') }}">
+    <link rel="apple-touch-icon" sizes="167x167" href="{{ asset('icons/icon-167x167.png') }}">
+    
+    <!-- Microsoft Tiles -->
+    <meta name="msapplication-TileImage" content="{{ asset('icons/icon-144x144.png') }}">
+    <meta name="msapplication-TileImage" content="{{ asset('icons/icon-310x310.png') }}">
+    
+    <!-- Splash Screen Images -->
+    <link rel="apple-touch-startup-image" href="{{ asset('icons/splash-2048x2732.png') }}" media="(device-width: 1024px) and (device-height: 1366px) and (-webkit-device-pixel-ratio: 2)">
+    <link rel="apple-touch-startup-image" href="{{ asset('icons/splash-1668x2388.png') }}" media="(device-width: 834px) and (device-height: 1194px) and (-webkit-device-pixel-ratio: 2)">
+    <link rel="apple-touch-startup-image" href="{{ asset('icons/splash-1536x2048.png') }}" media="(device-width: 768px) and (device-height: 1024px) and (-webkit-device-pixel-ratio: 2)">
+    <link rel="apple-touch-startup-image" href="{{ asset('icons/splash-1125x2436.png') }}" media="(device-width: 375px) and (device-height: 812px) and (-webkit-device-pixel-ratio: 3)">
+    <link rel="apple-touch-startup-image" href="{{ asset('icons/splash-1242x2688.png') }}" media="(device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 3)">
+    <link rel="apple-touch-startup-image" href="{{ asset('icons/splash-750x1334.png') }}" media="(device-width: 375px) and (device-height: 667px) and (-webkit-device-pixel-ratio: 2)">
+    <link rel="apple-touch-startup-image" href="{{ asset('icons/splash-640x1136.png') }}" media="(device-width: 320px) and (device-height: 568px) and (-webkit-device-pixel-ratio: 2)">
+    
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     
@@ -74,12 +105,26 @@
             box-sizing: border-box;
         }
         
+        html {
+            margin: 0;
+            padding: 0;
+        }
+        
+        /* Ensure PWA banner doesn't cause spacing when hidden */
+        #pwa-install-banner.hidden {
+            display: none !important;
+            height: 0 !important;
+            overflow: hidden !important;
+        }
+        
         body {
             font-family: 'Inter', sans-serif;
             background-color: var(--bg-primary);
             color: var(--text-primary);
             line-height: 1.6;
             transition: background-color 0.3s ease, color 0.3s ease;
+            margin: 0;
+            padding: 0;
         }
         
         /* Modern Sidebar */
@@ -116,6 +161,41 @@
             height: 32px;
         }
         
+        .sidebar-search {
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .search-container {
+            position: relative;
+        }
+        
+        .search-container .search-icon {
+            position: absolute;
+            left: 0.75rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+            font-size: 0.875rem;
+        }
+        
+        .search-input {
+            width: 100%;
+            padding: 0.5rem 0.75rem 0.5rem 2.25rem;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+            font-size: 0.875rem;
+            transition: all 0.2s ease;
+        }
+        
+        .search-input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(19, 232, 233, 0.1);
+        }
+        
         .sidebar-nav {
             padding: 1.5rem 0;
         }
@@ -150,16 +230,35 @@
             border-radius: 0.5rem;
             margin: 0 0.75rem;
             transition: all 0.2s ease;
+            position: relative;
         }
         
         .nav-link:hover {
             background-color: var(--bg-tertiary);
             color: var(--text-primary);
+            transform: translateX(4px);
         }
         
         .nav-link.active {
-            background-color: var(--primary-color);
+            background: linear-gradient(135deg, var(--primary-color), var(--primary-light));
             color: var(--white);
+            box-shadow: 0 4px 12px rgba(2, 2, 88, 0.3);
+        }
+        
+        .nav-link .badge {
+            font-size: 0.6rem;
+            padding: 0.2rem 0.4rem;
+            border-radius: 4px;
+            margin-left: auto;
+        }
+        
+        .nav-link.text-danger {
+            color: var(--danger-color) !important;
+        }
+        
+        .nav-link.text-danger:hover {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--danger-color) !important;
         }
         
         .nav-link i {
@@ -269,6 +368,8 @@
             background: var(--bg-primary);
             display: flex;
             flex-direction: column;
+            margin-top: 0;
+            padding-top: 0;
         }
         
         .top-header {
@@ -898,10 +999,261 @@
                 min-height: 48px;
             }
         }
+        
+        /* Notification Bell Styles */
+        .notification-bell {
+            position: relative;
+            cursor: pointer;
+            padding: 8px 12px;
+            margin-left: 10px;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            color: #020258;
+            transition: all 0.3s ease;
+        }
+        
+        .notification-bell:hover {
+            background: rgba(19, 232, 233, 0.2);
+            transform: translateY(-1px);
+        }
+        
+        .notification-bell i {
+            font-size: 18px;
+        }
+        
+        .notification-badge {
+            position: absolute;
+            top: -2px;
+            right: -2px;
+            background: #ff4757;
+            color: white;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            font-size: 12px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+        
+        /* Notifications Panel */
+        .notifications-panel {
+            position: absolute;
+            top: 60px;
+            right: 20px;
+            width: 400px;
+            max-height: 500px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+            border: 1px solid #e1e8ed;
+            z-index: 1000;
+            overflow: hidden;
+        }
+        
+        .notifications-header {
+            padding: 15px 20px;
+            border-bottom: 1px solid #e1e8ed;
+            background: #f8f9fa;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .notifications-header h6 {
+            margin: 0;
+            color: #020258;
+            font-weight: 600;
+        }
+        
+        .btn-mark-all-read {
+            background: none;
+            border: none;
+            color: #13e8e9;
+            font-size: 12px;
+            cursor: pointer;
+            text-decoration: underline;
+        }
+        
+        .btn-mark-all-read:hover {
+            color: #020258;
+        }
+        
+        .notifications-list {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        
+        .notification-item {
+            padding: 15px 20px;
+            border-bottom: 1px solid #f1f3f4;
+            cursor: pointer;
+            transition: background 0.2s ease;
+            position: relative;
+        }
+        
+        .notification-item:hover {
+            background: #f8f9fa;
+        }
+        
+        .notification-item.unread {
+            background: #f0f9ff;
+            border-left: 3px solid #13e8e9;
+        }
+        
+        .notification-item.unread::before {
+            content: '';
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            width: 8px;
+            height: 8px;
+            background: #13e8e9;
+            border-radius: 50%;
+        }
+        
+        .notification-icon {
+            display: inline-block;
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 35px;
+            margin-right: 12px;
+            font-size: 14px;
+            color: white;
+        }
+        
+        .notification-icon.success {
+            background: #28a745;
+        }
+        
+        .notification-icon.info {
+            background: #17a2b8;
+        }
+        
+        .notification-icon.warning {
+            background: #ffc107;
+            color: #020258;
+        }
+        
+        .notification-content {
+            display: inline-block;
+            vertical-align: top;
+            width: calc(100% - 47px);
+        }
+        
+        .notification-title {
+            font-weight: 600;
+            color: #020258;
+            margin-bottom: 4px;
+            font-size: 14px;
+        }
+        
+        .notification-message {
+            color: #666;
+            font-size: 13px;
+            line-height: 1.4;
+            margin-bottom: 6px;
+        }
+        
+        .notification-time {
+            color: #999;
+            font-size: 11px;
+        }
+        
+        .loading-notifications {
+            padding: 30px;
+            text-align: center;
+            color: #666;
+        }
+        
+        .empty-notifications {
+            padding: 40px;
+            text-align: center;
+            color: #999;
+        }
+        
+        .empty-notifications i {
+            font-size: 48px;
+            margin-bottom: 15px;
+            opacity: 0.5;
+        }
+        
+        .notifications-footer {
+            padding: 10px 20px;
+            border-top: 1px solid #e1e8ed;
+            text-align: center;
+            background: #f8f9fa;
+        }
+        
+        .notifications-footer a {
+            color: #13e8e9;
+            text-decoration: none;
+            font-size: 13px;
+        }
+        
+        .notifications-footer a:hover {
+            color: #020258;
+        }
+        
+        @media (max-width: 768px) {
+            .notifications-panel {
+                width: 350px;
+                right: 10px;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .notifications-panel {
+                width: calc(100vw - 20px);
+                right: 10px;
+                max-height: 70vh;
+            }
+        }
     </style>
 </head>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-QEHQPSK885"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
 
+  gtag('config', 'G-QEHQPSK885');
+</script>
 <body>
+    <!-- PWA Installation Banner -->
+    <div id="pwa-install-banner" class="hidden fixed top-0 left-0 right-0 bg-gradient-to-r from-blue-600 to-blue-700 text-white p-4 z-[9999] shadow-lg" style="display: none;">
+        <div class="container mx-auto flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 bg-white rounded-lg flex items-center justify-center">
+                    <i class="fas fa-download text-blue-600 text-lg"></i>
+                </div>
+                <div>
+                    <h3 class="font-semibold text-lg">📱 Install Shopybook App</h3>
+                    <p class="text-sm opacity-90">Get quick access to your business dashboard</p>
+                </div>
+            </div>
+            <div class="flex items-center space-x-3">
+                <button id="pwa-install-btn" class="bg-white text-blue-600 px-4 py-2 rounded-lg font-medium hover:bg-gray-100 transition-colors">
+                    <i class="fas fa-download me-2"></i>Install Now
+                </button>
+                <button id="pwa-dismiss-btn" class="text-white opacity-70 hover:opacity-100 transition-opacity">
+                    <i class="fas fa-times text-lg"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- Mobile Overlay -->
     <div class="mobile-overlay" id="mobileOverlay"></div>
     
@@ -914,7 +1266,52 @@
             </a>
         </div>
         
+        <!-- Sidebar Search -->
+        <div class="sidebar-search">
+            <div class="search-container">
+                <i class="fas fa-search search-icon"></i>
+                <input type="text" class="search-input" placeholder="Search menu..." id="sidebarSearch">
+            </div>
+        </div>
+        
         <nav class="sidebar-nav">
+            <div class="nav-section">
+                <div class="nav-section-title">Quick Actions</div>
+                <div class="nav-item">
+                    <a href="{{ route('sales.pos') }}" class="nav-link {{ request()->routeIs('sales.pos') ? 'active' : '' }}">
+                        <i class="fas fa-cash-register"></i>
+                        <span>Point of Sale</span>
+                        <span class="badge bg-success ms-auto">Live</span>
+                    </a>
+                </div>
+                <div class="nav-item">
+                    <a href="{{ route('products.create') }}" class="nav-link {{ request()->routeIs('products.create') ? 'active' : '' }}">
+                        <i class="fas fa-plus-circle"></i>
+                        <span>Add Product</span>
+                    </a>
+                </div>
+                <div class="nav-item">
+                    <a href="{{ route('ocr.index') }}" class="nav-link {{ request()->routeIs('ocr.*') ? 'active' : '' }}">
+                        <i class="fas fa-camera"></i>
+                        <span>Scan Records (OCR)</span>
+                        <span class="badge bg-info ms-auto">AI</span>
+                    </a>
+                </div>
+                <div class="nav-item">
+                    <a href="{{ route('sales.customers') }}" class="nav-link {{ request()->routeIs('sales.customers*') ? 'active' : '' }}">
+                        <i class="fas fa-user-plus"></i>
+                        <span>Add Customer</span>
+                    </a>
+                </div>
+                <div class="nav-item" id="sidebar-install-app" style="display: none;">
+                    <button onclick="showPWAInstallGuide()" class="nav-link w-full text-left bg-gradient-to-r from-blue-500 to-blue-600 text-white border-0" id="pwa-install-sidebar-btn">
+                        <i class="fas fa-download"></i>
+                        <span>📱 Install App</span>
+                        <span class="badge bg-yellow-400 text-blue-600 ms-auto">New</span>
+                    </button>
+                </div>
+            </div>
+            
             <div class="nav-section">
                 <div class="nav-section-title">Main</div>
                 <div class="nav-item">
@@ -932,7 +1329,7 @@
             </div>
             
             <div class="nav-section">
-                <div class="nav-section-title">Business</div>
+                <div class="nav-section-title">Sales & Products</div>
                 <div class="nav-item">
                     <a href="{{ route('products.index') }}" class="nav-link {{ request()->routeIs('products.*') ? 'active' : '' }}">
                         <i class="fas fa-box"></i>
@@ -940,7 +1337,13 @@
                     </a>
                 </div>
                 <div class="nav-item">
-                    <a href="{{ route('sales.orders') }}" class="nav-link {{ request()->routeIs('sales.*') ? 'active' : '' }}">
+                    <a href="{{ route('products.inventory') }}" class="nav-link {{ request()->routeIs('products.inventory') ? 'active' : '' }}">
+                        <i class="fas fa-boxes"></i>
+                        <span>Inventory</span>
+                    </a>
+                </div>
+                <div class="nav-item">
+                    <a href="{{ route('sales.orders') }}" class="nav-link {{ request()->routeIs('sales.orders*') ? 'active' : '' }}">
                         <i class="fas fa-shopping-cart"></i>
                         <span>Orders</span>
                     </a>
@@ -949,6 +1352,55 @@
                     <a href="{{ route('sales.customers') }}" class="nav-link {{ request()->routeIs('sales.customers*') ? 'active' : '' }}">
                         <i class="fas fa-users"></i>
                         <span>Customers</span>
+                    </a>
+                </div>
+                <div class="nav-item">
+                    <a href="{{ route('returns.index') }}" class="nav-link {{ request()->routeIs('returns.*') ? 'active' : '' }}">
+                        <i class="fas fa-undo"></i>
+                        <span>Returns & Refunds</span>
+                        <span class="badge bg-danger ms-auto">New</span>
+                    </a>
+                </div>
+                <div class="nav-item">
+                    <a href="{{ route('product-conversions.index') }}" class="nav-link {{ request()->routeIs('product-conversions.*') ? 'active' : '' }}">
+                        <i class="fas fa-exchange-alt"></i>
+                        <span>Unit Conversions</span>
+                    </a>
+                </div>
+                <div class="nav-item">
+                    <a href="{{ route('suppliers.index') }}" class="nav-link {{ request()->routeIs('suppliers.*') ? 'active' : '' }}">
+                        <i class="fas fa-truck"></i>
+                        <span>Suppliers</span>
+                    </a>
+                </div>
+            </div>
+            
+            <div class="nav-section">
+                <div class="nav-section-title">Finance</div>
+                <div class="nav-item">
+                    <a href="{{ route('costs.index') }}" class="nav-link {{ request()->routeIs('costs.*') ? 'active' : '' }}">
+                        <i class="fas fa-receipt"></i>
+                        <span>Costs & Expenses</span>
+                    </a>
+                </div>
+                <div class="nav-item">
+                    <a href="{{ route('tax.settings') }}" class="nav-link {{ request()->routeIs('tax.*') ? 'active' : '' }}">
+                        <i class="fas fa-file-invoice-dollar"></i>
+                        <span>Tax Management</span>
+                        <span class="badge bg-warning ms-auto">VAT</span>
+                    </a>
+                </div>
+                <div class="nav-item">
+                    <a href="{{ route('business.analysis.financial') }}" class="nav-link {{ request()->routeIs('business.analysis.financial') ? 'active' : '' }}">
+                        <i class="fas fa-chart-pie"></i>
+                        <span>Financial Reports</span>
+                    </a>
+                </div>
+                <div class="nav-item">
+                    <a href="{{ route('reports.index') }}" class="nav-link {{ request()->routeIs('reports.*') ? 'active' : '' }}">
+                        <i class="fas fa-file-chart-line"></i>
+                        <span>Comprehensive Reports</span>
+                        <span class="badge bg-success ms-auto">New</span>
                     </a>
                 </div>
             </div>
@@ -978,6 +1430,13 @@
             <div class="nav-section">
                 <div class="nav-section-title">Marketing</div>
                 <div class="nav-item">
+                    <a href="{{ route('website.builder.index') }}" class="nav-link {{ request()->routeIs('website.builder.*') ? 'active' : '' }}">
+                        <i class="fas fa-globe"></i>
+                        <span>Website Builder</span>
+                        <span class="badge bg-gradient-to-r from-indigo-500 to-purple-500 ms-auto">✨ New</span>
+                    </a>
+                </div>
+                <div class="nav-item">
                     <a href="{{ route('marketing.social-media') }}" class="nav-link {{ request()->routeIs('marketing.*') ? 'active' : '' }}">
                         <i class="fas fa-bullhorn"></i>
                         <span>Marketing</span>
@@ -992,11 +1451,18 @@
             </div>
             
             <div class="nav-section">
-                <div class="nav-section-title">AI Assistant</div>
+                <div class="nav-section-title">AI & Tools</div>
                 <div class="nav-item">
-                    <a href="{{ route('ai.chat') }}" class="nav-link {{ request()->routeIs('ai.*') ? 'active' : '' }}">
+                    <a href="{{ route('ai-comm.chat') }}" class="nav-link {{ request()->routeIs('ai-comm.*') ? 'active' : '' }}">
                         <i class="fas fa-robot"></i>
-                        <span>AI Chat</span>
+                        <span>AI Assistant</span>
+                        <span class="badge bg-info ms-auto">AI</span>
+                    </a>
+                </div>
+                <div class="nav-item">
+                    <a href="{{ route('ai-content.index') }}" class="nav-link {{ request()->routeIs('ai-content.*') ? 'active' : '' }}">
+                        <i class="fas fa-magic"></i>
+                        <span>Content Enhancer</span>
                     </a>
                 </div>
                 <div class="nav-item">
@@ -1005,20 +1471,46 @@
                         <span>Knowledge Base</span>
                     </a>
                 </div>
-                <div class="nav-item">
-                    <a href="{{ route('learning.dashboard') }}" class="nav-link {{ request()->routeIs('learning.*') ? 'active' : '' }}">
-                        <i class="fas fa-cogs"></i>
-                        <span>Learning Dashboard</span>
-                    </a>
-                </div>
             </div>
             
             <div class="nav-section">
                 <div class="nav-section-title">Settings</div>
                 <div class="nav-item">
-                    <a href="{{ route('business.edit') }}" class="nav-link {{ request()->routeIs('business.edit') ? 'active' : '' }}">
+                    <a href="{{ route('settings.index') }}" class="nav-link {{ request()->routeIs('settings.*') ? 'active' : '' }}">
                         <i class="fas fa-cog"></i>
-                        <span>Settings</span>
+                        <span>All Settings</span>
+                        <span class="badge bg-success ms-auto">New</span>
+                    </a>
+                </div>
+                <div class="nav-item">
+                    <a href="{{ route('business.profile') }}" class="nav-link {{ request()->routeIs('business.profile', 'business.edit') ? 'active' : '' }}">
+                        <i class="fas fa-building"></i>
+                        <span>Business Profile</span>
+                    </a>
+                </div>
+                <div class="nav-item">
+                    <a href="{{ route('staff.index') }}" class="nav-link {{ request()->routeIs('staff.*') ? 'active' : '' }}">
+                        <i class="fas fa-user-tie"></i>
+                        <span>Staff Management</span>
+                    </a>
+                </div>
+                <div class="nav-item">
+                    <a href="{{ route('marketing.social-media') }}" class="nav-link {{ request()->routeIs('marketing.*') ? 'active' : '' }}">
+                        <i class="fas fa-bullhorn"></i>
+                        <span>Marketing</span>
+                    </a>
+                </div>
+                <div class="nav-item">
+                    <a href="{{ route('pwa.install-guide') }}" class="nav-link">
+                        <i class="fas fa-download"></i>
+                        <span>Install App</span>
+                        <span class="badge bg-info ms-auto">PWA</span>
+                    </a>
+                </div>
+                <div class="nav-item">
+                    <a href="#" onclick="initiateBusinessDeletion()" class="nav-link text-danger">
+                        <i class="fas fa-trash-alt"></i>
+                        <span>Delete Business</span>
                     </a>
                 </div>
             </div>
@@ -1065,6 +1557,18 @@
                     <i class="fas fa-search search-icon"></i>
                     <input type="text" class="search-input" placeholder="Search">
                 </div>
+                
+                <!-- Connection Status Indicator -->
+                <!-- <div id="connection-status" class="connection-status">
+                    <i class="fas fa-wifi"></i>
+                    <span>Online</span>
+                </div> -->
+                
+                <!-- Notification Bell -->
+                <div class="notification-bell" onclick="toggleNotifications()">
+                    <i class="fas fa-bell"></i>
+                    <span id="notificationBadge" class="notification-badge" style="display: none;">0</span>
+                </div>
             </div>
         </div>
         
@@ -1073,9 +1577,102 @@
         </div>
     </div>
     
+    <!-- Notifications Panel -->
+    <div id="notificationsPanel" class="notifications-panel" style="display: none;">
+        <div class="notifications-header">
+            <h6>Notifications</h6>
+            <button onclick="markAllNotificationsAsRead()" class="btn-mark-all-read">Mark all as read</button>
+        </div>
+        <div id="notificationsList" class="notifications-list">
+            <div class="loading-notifications">
+                <i class="fas fa-spinner fa-spin"></i>
+                Loading notifications...
+            </div>
+        </div>
+        <div class="notifications-footer">
+            <a href="#" onclick="loadMoreNotifications()">Load more</a>
+        </div>
+    </div>
+    
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     
+    <!-- PWA JavaScript -->
+    <script src="{{ asset('js/pwa.js') }}"></script>
+    
+    <!-- PWA Install Guide -->
+    @include('components.pwa-install-guide')
+    
+    <script>
+        // Check PWA installation status and hide elements if already installed
+        document.addEventListener('DOMContentLoaded', function() {
+            // Function to hide all PWA installation elements
+            function hidePWAInstallElements() {
+                // Hide PWA banner
+                const pwaBanner = document.getElementById('pwa-install-banner');
+                if (pwaBanner) {
+                    pwaBanner.classList.add('hidden');
+                }
+                
+                // Hide sidebar install button
+                const sidebarInstallBtn = document.getElementById('sidebar-install-app');
+                if (sidebarInstallBtn) {
+                    sidebarInstallBtn.style.display = 'none';
+                }
+                
+                // Hide PWA install guide modal trigger
+                const pwaInstallGuideTriggers = document.querySelectorAll('[onclick*="showPWAInstallGuide"]');
+                pwaInstallGuideTriggers.forEach(trigger => {
+                    trigger.style.display = 'none';
+                });
+            }
+            
+            // Check if PWA is already installed
+            if (window.matchMedia('(display-mode: standalone)').matches || 
+                window.navigator.standalone === true) {
+                hidePWAInstallElements();
+            }
+            
+            // Also check periodically in case the status changes
+            setInterval(() => {
+                if (window.matchMedia('(display-mode: standalone)').matches || 
+                    window.navigator.standalone === true) {
+                    hidePWAInstallElements();
+                }
+            }, 5000);
+        });
+    </script>
+    
+    <!-- Business Deletion Modal -->
+    <div id="businessDeletionModal" class="modal fade" tabindex="-1" role="dialog">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="fas fa-exclamation-triangle text-danger me-2"></i>
+                        Delete Business
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-danger">
+                        <strong>Warning:</strong> This action cannot be undone. All business data, products, sales records, and settings will be permanently deleted.
+                    </div>
+                    <p>To proceed with business deletion, you will need to verify your identity via email verification.</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <form id="businessDeletionForm" method="POST" action="{{ route('business.initiate-deletion') }}" style="display: inline;">
+                        @csrf
+                        <button type="submit" class="btn btn-danger">
+                            <i class="fas fa-trash-alt me-1"></i> Proceed with Deletion
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- AI Chat Widget -->
     <div id="ai-chat-widget" class="ai-chat-widget">
         <!-- Floating Chat Button -->
@@ -1448,6 +2045,35 @@
             overlay.classList.toggle('show');
             document.body.classList.toggle('sidebar-open');
         }
+
+        // Business deletion function
+        function initiateBusinessDeletion() {
+            const modal = new bootstrap.Modal(document.getElementById('businessDeletionModal'));
+            modal.show();
+        }
+
+        // Sidebar search functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const searchInput = document.getElementById('sidebarSearch');
+            const navItems = document.querySelectorAll('.nav-item');
+            
+            if (searchInput) {
+                searchInput.addEventListener('input', function() {
+                    const searchTerm = this.value.toLowerCase();
+                    
+                    navItems.forEach(item => {
+                        const link = item.querySelector('.nav-link');
+                        const text = link.textContent.toLowerCase();
+                        
+                        if (text.includes(searchTerm)) {
+                            item.style.display = 'block';
+                        } else {
+                            item.style.display = 'none';
+                        }
+                    });
+                });
+            }
+        });
         
         // Theme toggle
         function toggleTheme() {
@@ -1502,12 +2128,12 @@
         
         function checkForNewInsights() {
             // Check for new AI insights or recommendations
-            fetch('{{ route("ai.status") }}')
+            fetch('{{ route("ai-comm.status") }}')
             .then(response => response.json())
             .then(data => {
                 if (data.success && data.status.knowledge_available) {
                     // Check for unread advice
-                    fetch('{{ route("business.ai-advice.unread-count") }}')
+                    fetch('{{ route("ai-advice.unread-count") }}')
                     .then(response => response.json())
                     .then(adviceData => {
                         if (adviceData.success && adviceData.count > 0) {
@@ -1580,7 +2206,7 @@
             document.getElementById('ai-chat-messages').insertAdjacentHTML('beforeend', loadingHtml);
             
             // Send to AI
-            fetch('{{ route("ai.process-message") }}', {
+            fetch('{{ route("ai-comm.process-message") }}', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -1633,7 +2259,7 @@
         }
         
         function loadAIConversationHistory() {
-            fetch('{{ route("ai.history") }}')
+            fetch('{{ route("ai-comm.history") }}')
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
@@ -1726,6 +2352,324 @@
         // Close sidebar when clicking overlay
         document.getElementById('mobileOverlay').addEventListener('click', function() {
             toggleSidebar();
+        });
+
+        // PWA Installation Script
+        let deferredPrompt;
+        const pwaBanner = document.getElementById('pwa-install-banner');
+        const pwaInstallBtn = document.getElementById('pwa-install-btn');
+        const pwaDismissBtn = document.getElementById('pwa-dismiss-btn');
+
+        // Check if PWA is already installed
+        const isPWAInstalled = window.matchMedia('(display-mode: standalone)').matches;
+        
+        // Check if user has dismissed the banner before
+        const hasDismissedBanner = localStorage.getItem('pwa-banner-dismissed');
+
+        // Show banner if PWA is not installed and user hasn't dismissed it
+        if (!isPWAInstalled && !hasDismissedBanner) {
+            // Listen for beforeinstallprompt event
+            window.addEventListener('beforeinstallprompt', (e) => {
+                e.preventDefault();
+                deferredPrompt = e;
+                
+                // Show sidebar install button
+                const sidebarInstallBtn = document.getElementById('sidebar-install-app');
+                if (sidebarInstallBtn) {
+                    sidebarInstallBtn.style.display = 'block';
+                }
+                
+                // Show banner after a short delay
+                setTimeout(() => {
+                    pwaBanner.classList.remove('hidden');
+                    // Add padding to body to account for banner
+                    document.body.style.paddingTop = '80px';
+                }, 3000); // Show after 3 seconds
+            });
+        }
+
+        // Handle install button click
+        if (pwaInstallBtn) {
+            pwaInstallBtn.addEventListener('click', async () => {
+                if (deferredPrompt) {
+                    deferredPrompt.prompt();
+                    const { outcome } = await deferredPrompt.userChoice;
+                    
+                    if (outcome === 'accepted') {
+                        console.log('PWA installed successfully');
+                        pwaBanner.classList.add('hidden');
+                        document.body.style.paddingTop = '0';
+                    }
+                    
+                    deferredPrompt = null;
+                } else {
+                    // Fallback for manual installation
+                    showManualInstallGuide();
+                }
+            });
+        }
+
+        // Handle dismiss button click
+        if (pwaDismissBtn) {
+            pwaDismissBtn.addEventListener('click', () => {
+                pwaBanner.classList.add('hidden');
+                document.body.style.paddingTop = '0';
+                localStorage.setItem('pwa-banner-dismissed', 'true');
+            });
+        }
+
+        // Manual installation guide
+        function showManualInstallGuide() {
+            const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+            const isAndroid = /Android/.test(navigator.userAgent);
+            
+            let message = '';
+            if (isIOS) {
+                message = '📱 To install: Tap the share button (📤) then "Add to Home Screen"';
+            } else if (isAndroid) {
+                message = '📱 To install: Tap menu (⋮) then "Add to Home screen"';
+            } else {
+                message = '💻 To install: Look for the install icon in your browser\'s address bar';
+            }
+            
+            // Show a more user-friendly alert with emojis
+            alert('🚀 Install Shopybook App!\n\n' + message + '\n\n✨ Once installed, you\'ll have quick access to your business dashboard!');
+        }
+
+        // Show PWA install guide from sidebar
+        function showPWAInstallGuide() {
+            const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+            const isAndroid = /Android/.test(navigator.userAgent);
+            
+            let instructions = '';
+            if (isIOS) {
+                instructions = `
+                    <div class="text-center">
+                        <h4 class="mb-3">📱 Install on iPhone/iPad</h4>
+                        <ol class="text-left">
+                            <li>1. Tap the <strong>Share button</strong> (📤) at the bottom</li>
+                            <li>2. Scroll down and tap <strong>"Add to Home Screen"</strong></li>
+                            <li>3. Tap <strong>"Add"</strong> to confirm</li>
+                            <li>4. Find the app on your home screen!</li>
+                        </ol>
+                    </div>
+                `;
+            } else if (isAndroid) {
+                instructions = `
+                    <div class="text-center">
+                        <h4 class="mb-3">📱 Install on Android</h4>
+                        <ol class="text-left">
+                            <li>1. Tap the <strong>menu button</strong> (⋮) at the top</li>
+                            <li>2. Tap <strong>"Add to Home screen"</strong></li>
+                            <li>3. Tap <strong>"Add"</strong> to confirm</li>
+                            <li>4. Find the app on your home screen!</li>
+                        </ol>
+                    </div>
+                `;
+            } else {
+                instructions = `
+                    <div class="text-center">
+                        <h4 class="mb-3">💻 Install on Desktop</h4>
+                        <p>Look for the install icon (📥) in your browser's address bar and click it!</p>
+                    </div>
+                `;
+            }
+            
+            // Create a modal with instructions
+            const modal = document.createElement('div');
+            modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999]';
+            modal.innerHTML = `
+                <div class="bg-white rounded-lg p-6 max-w-md mx-4">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-lg font-semibold">🚀 Install Shopybook App</h3>
+                        <button onclick="this.closest('.fixed').remove()" class="text-gray-500 hover:text-gray-700">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    ${instructions}
+                    <div class="mt-4 text-center">
+                        <p class="text-sm text-gray-600">✨ Once installed, you'll have quick access to your business dashboard!</p>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(modal);
+            
+            // Close modal when clicking outside
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    modal.remove();
+                }
+            });
+        }
+
+        // Listen for successful installation
+        window.addEventListener('appinstalled', () => {
+            if (pwaBanner) {
+                pwaBanner.classList.add('hidden');
+                document.body.style.paddingTop = '0';
+            }
+            console.log('PWA was installed');
+        });
+        
+        // Notification Functions
+        let notificationsLoaded = false;
+        let currentNotificationOffset = 0;
+        
+        function toggleNotifications() {
+            const panel = document.getElementById('notificationsPanel');
+            const isVisible = panel.style.display !== 'none';
+            
+            if (isVisible) {
+                panel.style.display = 'none';
+            } else {
+                panel.style.display = 'block';
+                if (!notificationsLoaded) {
+                    loadNotifications();
+                }
+            }
+        }
+        
+        function loadNotifications() {
+            fetch('{{ route("notifications.index") }}')
+                .then(response => response.json())
+                .then(data => {
+                    displayNotifications(data.notifications);
+                    updateNotificationBadge(data.unread_count);
+                    notificationsLoaded = true;
+                })
+                .catch(error => {
+                    console.error('Error loading notifications:', error);
+                    document.getElementById('notificationsList').innerHTML = 
+                        '<div class="empty-notifications"><i class="fas fa-exclamation-triangle"></i><p>Error loading notifications</p></div>';
+                });
+        }
+        
+        function displayNotifications(notifications) {
+            const container = document.getElementById('notificationsList');
+            
+            if (notifications.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-notifications">
+                        <i class="fas fa-bell-slash"></i>
+                        <p>No notifications yet</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            container.innerHTML = notifications.map(notification => `
+                <div class="notification-item ${notification.read ? '' : 'unread'}" onclick="markNotificationAsRead(${notification.id})">
+                    <div class="notification-icon ${notification.color}">
+                        <i class="${notification.icon || 'fas fa-info'}"></i>
+                    </div>
+                    <div class="notification-content">
+                        <div class="notification-title">${notification.title}</div>
+                        <div class="notification-message">${notification.message}</div>
+                        <div class="notification-time">${formatTimeAgo(notification.created_at)}</div>
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        function updateNotificationBadge(count) {
+            const badge = document.getElementById('notificationBadge');
+            if (count > 0) {
+                badge.style.display = 'flex';
+                badge.textContent = count > 99 ? '99+' : count;
+            } else {
+                badge.style.display = 'none';
+            }
+        }
+        
+        function markNotificationAsRead(notificationId) {
+            fetch(`{{ url('notifications') }}/${notificationId}/read`, {
+                method: 'PATCH',
+                headers: {
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                    'Content-Type': 'application/json',
+                },
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Update UI to mark as read
+                    const item = document.querySelector(`[onclick="markNotificationAsRead(${notificationId})"]`);
+                    if (item) {
+                        item.classList.remove('unread');
+                    }
+                    // Update badge count
+                    loadNotificationCount();
+                }
+            })
+            .catch(error => {
+                console.error('Error marking notification as read:', error);
+            });
+        }
+        
+        function markAllNotificationsAsRead() {
+            fetch('{{ route("notifications.mark-all-read") }}', {
+                method: 'PATCH',
+                headers: {
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                    'Content-Type': 'application/json',
+                },
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Remove unread class from all notifications
+                    document.querySelectorAll('.notification-item.unread').forEach(item => {
+                        item.classList.remove('unread');
+                    });
+                    // Update badge
+                    updateNotificationBadge(0);
+                }
+            })
+            .catch(error => {
+                console.error('Error marking all notifications as read:', error);
+            });
+        }
+        
+        function loadNotificationCount() {
+            fetch('{{ route("notifications.unread-count") }}')
+                .then(response => response.json())
+                .then(data => {
+                    updateNotificationBadge(data.count);
+                })
+                .catch(error => {
+                    console.error('Error loading notification count:', error);
+                });
+        }
+        
+        function formatTimeAgo(dateString) {
+            const date = new Date(dateString);
+            const now = new Date();
+            const diffInSeconds = Math.floor((now - date) / 1000);
+            
+            if (diffInSeconds < 60) return 'Just now';
+            if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m ago`;
+            if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}h ago`;
+            if (diffInSeconds < 2592000) return `${Math.floor(diffInSeconds / 86400)}d ago`;
+            return date.toLocaleDateString();
+        }
+        
+        // Close notifications panel when clicking outside
+        document.addEventListener('click', function(event) {
+            const panel = document.getElementById('notificationsPanel');
+            const bell = document.querySelector('.notification-bell');
+            
+            if (panel && bell && !panel.contains(event.target) && !bell.contains(event.target)) {
+                panel.style.display = 'none';
+            }
+        });
+        
+        // Load notification count on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            loadNotificationCount();
+            
+            // Periodically check for new notifications (every 30 seconds)
+            setInterval(loadNotificationCount, 30000);
         });
     </script>
     

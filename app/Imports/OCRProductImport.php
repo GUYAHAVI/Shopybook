@@ -3,7 +3,6 @@
 namespace App\Imports;
 
 use App\Models\Product;
-use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Log;
 
 class OCRProductImport
@@ -127,7 +126,6 @@ class OCRProductImport
             'is_featured' => false,
         ]);
 
-        $product->slug = Str::slug($data['name']);
         $product->save();
 
         return $product;

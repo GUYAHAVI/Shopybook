@@ -104,7 +104,13 @@ class CloudLTXVideoService
     private function generateViaReplicate($payload, $startTime)
     {
         try {
-            $response = Http::withHeaders([
+            Log::info('Starting Replicate video generation', [
+                'prompt' => $payload['prompt'],
+                'dimensions' => $payload['width'] . 'x' . $payload['height'],
+                'frames' => $payload['num_frames']
+            ]);
+
+            $response = Http::timeout(10)->withHeaders([
                 'Authorization' => 'Token ' . config('services.replicate.api_key'),
                 'Content-Type' => 'application/json',
             ])->post('https://api.replicate.com/v1/predictions', [
@@ -113,36 +119,78 @@ class CloudLTXVideoService
             ]);
 
             if (!$response->successful()) {
-                throw new \Exception('Replicate API error: ' . $response->body());
+                $errorBody = $response->body();
+                Log::error('Replicate API request failed', [
+                    'status' => $response->status(),
+                    'body' => $errorBody
+                ]);
+                throw new \Exception('Replicate API error: ' . $errorBody);
             }
 
             $prediction = $response->json();
-            $predictionId = $prediction['id'];
+            $predictionId = $prediction['id'] ?? null;
+
+            if (!$predictionId) {
+                throw new \Exception('No prediction ID returned from Replicate');
+            }
+
+            Log::info('Replicate prediction started', ['id' => $predictionId]);
 
             // Poll for completion
-            $maxAttempts = 60; // 5 minutes max
+            $maxAttempts = 120; // 10 minutes max (video generation can take time)
             $attempts = 0;
             
             do {
                 sleep(5); // Wait 5 seconds between checks
-                $statusResponse = Http::withHeaders([
+                $statusResponse = Http::timeout(10)->withHeaders([
                     'Authorization' => 'Token ' . config('services.replicate.api_key'),
                 ])->get("https://api.replicate.com/v1/predictions/{$predictionId}");
+
+                if (!$statusResponse->successful()) {
+                    Log::error('Failed to check prediction status', [
+                        'id' => $predictionId,
+                        'status' => $statusResponse->status()
+                    ]);
+                    throw new \Exception('Failed to check video generation status');
+                }
 
                 $status = $statusResponse->json();
                 $attempts++;
 
-                if ($status['status'] === 'succeeded') {
-                    return $this->downloadAndSaveVideo($status['output'], $startTime);
-                } elseif ($status['status'] === 'failed') {
-                    throw new \Exception('Video generation failed: ' . ($status['error'] ?? 'Unknown error'));
-                }
-            } while ($status['status'] === 'starting' || $status['status'] === 'processing' && $attempts < $maxAttempts);
+                Log::info('Replicate status check', [
+                    'id' => $predictionId,
+                    'status' => $status['status'] ?? 'unknown',
+                    'attempt' => $attempts
+                ]);
 
-            throw new \Exception('Video generation timed out');
+                if ($status['status'] === 'succeeded') {
+                    $videoUrl = $status['output'] ?? null;
+                    
+                    if (!$videoUrl) {
+                        throw new \Exception('No video URL in successful response');
+                    }
+
+                    Log::info('Replicate video generated successfully', ['url' => $videoUrl]);
+                    return $this->downloadAndSaveVideo($videoUrl, $startTime);
+                    
+                } elseif ($status['status'] === 'failed') {
+                    $errorMsg = $status['error'] ?? 'Unknown error';
+                    Log::error('Replicate generation failed', ['error' => $errorMsg]);
+                    throw new \Exception('Video generation failed: ' . $errorMsg);
+                    
+                } elseif ($status['status'] === 'canceled') {
+                    throw new \Exception('Video generation was canceled');
+                }
+                
+            } while (($status['status'] === 'starting' || $status['status'] === 'processing') && $attempts < $maxAttempts);
+
+            throw new \Exception('Video generation timed out after ' . ($attempts * 5) . ' seconds');
 
         } catch (\Exception $e) {
-            Log::error('Replicate API error', ['error' => $e->getMessage()]);
+            Log::error('Replicate API error', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
             return [
                 'success' => false,
                 'error' => $e->getMessage()

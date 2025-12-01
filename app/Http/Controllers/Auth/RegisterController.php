@@ -73,6 +73,10 @@ class RegisterController extends Controller
 
     protected function registered(Request $request, $user)
     {
-        return redirect()->route('business.choose-type');
+        // Send email verification
+        $user->sendEmailVerificationNotification();
+        
+        // Redirect to verification notice page
+        return redirect()->route('verification.notice');
     }
 }

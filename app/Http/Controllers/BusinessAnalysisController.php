@@ -3,16 +3,16 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Services\OpenAIService;
+use App\Services\ClaudeAPIService;
 use Illuminate\Support\Facades\DB;
 
 class BusinessAnalysisController extends Controller
 {
-    protected $openAIService;
+    protected $claudeService;
 
-    public function __construct(OpenAIService $openAIService)
+    public function __construct(ClaudeAPIService $claudeService)
     {
-        $this->openAIService = $openAIService;
+        $this->claudeService = $claudeService;
     }
 
     /**
@@ -40,8 +40,8 @@ class BusinessAnalysisController extends Controller
             // Get business data based on analysis type
             $businessData = $this->getBusinessDataForAnalysis($business, $type);
             
-            // Generate analysis using OpenAI service
-            $analysis = $this->openAIService->analyzeBusinessData($businessData);
+            // Generate analysis using Claude AI service with industry comparison
+            $analysis = $this->claudeService->analyzeBusinessData($businessData);
             
             return response()->json([
                 'success' => true,
@@ -67,10 +67,40 @@ class BusinessAnalysisController extends Controller
         // Get financial data
         $financialData = $this->getFinancialData($business);
         
-        // Generate AI financial analysis report
-        $report = $this->generateFinancialReport($business, $financialData);
+        // Generate AI financial analysis report using Claude
+        $report = $this->generateFinancialReportWithClaude($business, $financialData);
         
         return view('business.analysis.financial', compact('financialData', 'report'));
+    }
+
+    /**
+     * Generate industry comparison analysis
+     */
+    public function compareWithIndustry(Request $request)
+    {
+        $business = auth()->user()->business;
+        
+        try {
+            // Get comprehensive business data
+            $businessData = $this->getBusinessDataForAnalysis($business, 'general');
+            
+            // Generate industry comparison using Claude
+            $comparison = $this->claudeService->compareWithIndustry(
+                $businessData, 
+                $business->business_type ?? 'retail'
+            );
+            
+            return response()->json([
+                'success' => true,
+                'comparison' => $comparison
+            ]);
+            
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to generate comparison: ' . $e->getMessage()
+            ], 500);
+        }
     }
 
     /**
@@ -120,8 +150,8 @@ class BusinessAnalysisController extends Controller
         // Products analytics
         $totalProducts = $business->products()->count();
         $lowStockItems = $business->products()
-            ->where('stock_quantity', '<=', 'low_stock_threshold')
-            ->orWhere('stock_quantity', '<=', 10)
+            ->whereColumn('stock_quantity', '<=', 'low_stock_threshold')
+            ->where('stock_quantity', '>', 0)
             ->count();
         
         // Services analytics
@@ -260,7 +290,8 @@ class BusinessAnalysisController extends Controller
         return [
             'total_products' => $business->products()->count(),
             'low_stock_items' => $business->products()
-                ->where('stock_quantity', '<=', 10)
+                ->whereColumn('stock_quantity', '<=', 'low_stock_threshold')
+                ->where('stock_quantity', '>', 0)
                 ->count(),
             'out_of_stock' => $business->products()
                 ->where('stock_quantity', '<=', 0)
@@ -371,9 +402,19 @@ class BusinessAnalysisController extends Controller
             ->where('status', 'completed')
             ->sum('total_amount');
             
-        $totalCosts = $business->products()
-            ->selectRaw('sum(stock_quantity * cost_price) as total_cost')
-            ->value('total_cost') ?? 0;
+        // Calculate inventory purchase costs (actual money spent on receiving stock)
+        $inventoryPurchaseCosts = $business->total_inventory_costs;
+            
+        // Calculate business expenses (rent, utilities, etc.)
+        $businessExpenses = $business->costs()
+            ->where('type', '!=', 'salary')
+            ->sum('amount') ?? 0;
+            
+        // Calculate total salary costs using the business model method
+        $totalSalaryCosts = $business->total_salary_costs;
+            
+        // Total costs = inventory purchases + business expenses + salary costs
+        $totalCosts = $inventoryPurchaseCosts + $businessExpenses + $totalSalaryCosts;
             
         $profit = $totalRevenue - $totalCosts;
         $profitMargin = $totalRevenue > 0 ? ($profit / $totalRevenue) * 100 : 0;
@@ -428,6 +469,9 @@ class BusinessAnalysisController extends Controller
             'summary' => [
                 'revenue' => number_format($totalRevenue, 2),
                 'costs' => number_format($totalCosts, 2),
+                'inventory_purchase_costs' => number_format($inventoryPurchaseCosts, 2),
+                'business_expenses' => number_format($businessExpenses, 2),
+                'salary_costs' => number_format($totalSalaryCosts, 2),
                 'profit' => number_format($profit, 2),
                 'profit_margin' => number_format($profitMargin, 1) . '%'
             ],
@@ -508,11 +552,19 @@ class BusinessAnalysisController extends Controller
             $recommendations[] = "Continue current business strategies as they are performing well.";
         }
 
+        // Get cost breakdown
+        $inventoryPurchaseCosts = (float) str_replace(',', '', $financialData['summary']['inventory_purchase_costs']);
+        $businessExpenses = (float) str_replace(',', '', $financialData['summary']['business_expenses']);
+        $salaryCosts = (float) str_replace(',', '', $financialData['summary']['salary_costs']);
+        
         // Build the report
         $report = "FINANCIAL ANALYSIS REPORT\n\n";
         $report .= "BUSINESS PERFORMANCE SUMMARY\n";
         $report .= "Total Revenue: KSh " . number_format($totalRevenue, 0) . "\n";
         $report .= "Total Costs: KSh " . number_format($totalCosts, 0) . "\n";
+        $report .= "  - Inventory Purchase Costs: KSh " . number_format($inventoryPurchaseCosts, 0) . "\n";
+        $report .= "  - Business Expenses: KSh " . number_format($businessExpenses, 0) . "\n";
+        $report .= "  - Staff Salaries: KSh " . number_format($salaryCosts, 0) . "\n";
         $report .= "Net Profit: KSh " . number_format($profit, 0) . "\n";
         $report .= "Profit Margin: {$profitMargin}%\n";
         $report .= "Monthly Growth: " . number_format($revenueGrowth, 1) . "%\n\n";
@@ -528,5 +580,32 @@ class BusinessAnalysisController extends Controller
         }
 
         return $report;
+    }
+
+    /**
+     * Generate AI financial analysis report using Claude
+     */
+    private function generateFinancialReportWithClaude($business, $financialData)
+    {
+        try {
+            // Prepare comprehensive financial data for Claude
+            $financialAnalysisData = [
+                'business_name' => $business->name,
+                'business_type' => $business->business_type ?? 'retail',
+                'financial_data' => $financialData,
+                'analysis_type' => 'financial'
+            ];
+
+            // Generate detailed financial analysis using Claude
+            $claudeReport = $this->claudeService->analyzeBusinessData($financialAnalysisData);
+            
+            return $claudeReport;
+            
+        } catch (\Exception $e) {
+            \Log::error('Claude Financial Report Error: ' . $e->getMessage());
+            
+            // Fallback to basic report if Claude fails
+            return $this->generateFinancialReport($business, $financialData);
+        }
     }
 }

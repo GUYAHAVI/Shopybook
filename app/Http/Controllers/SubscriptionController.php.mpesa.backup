@@ -1,0 +1,394 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\DB;
+
+class SubscriptionController extends Controller
+{
+    /**
+     * Process subscription upgrade with M-Pesa
+     */
+    public function upgrade(Request $request)
+    {
+        $request->validate([
+            'plan' => 'required|in:premium,enterprise',
+            'phone_number' => 'required|string|min:10|max:12',
+        ]);
+
+        $user = Auth::user();
+        $business = $user->business;
+        
+        if (!$business) {
+            return back()->with('error', 'Business not found.');
+        }
+
+        // Format phone number to 254 format
+        $phoneNumber = $this->formatPhoneNumber($request->input('phone_number'));
+        
+        if (!$phoneNumber) {
+            return back()->with('error', 'Invalid phone number format. Please use format: 07XXXXXXXX or 254XXXXXXXXX');
+        }
+
+        $plan = $request->input('plan');
+        $amount = $plan === 'enterprise' ? 10 : 5; // Test amounts: KSH 10 for Enterprise, KSH 5 for Premium
+
+        try {
+            // Step 1: Get access token from Daraja
+            $accessToken = $this->getDarajaAccessToken();
+            
+            if (!$accessToken) {
+                Log::error('Failed to get Daraja access token for subscription', [
+                    'business_id' => $business->id,
+                    'plan' => $plan
+                ]);
+                return back()->with('error', 'Failed to connect to M-Pesa. Please try again later.');
+            }
+
+            // Step 2: Initiate STK Push
+            $stkResponse = $this->initiateSTKPush($accessToken, $phoneNumber, $amount, $plan);
+            
+            if (!$stkResponse['success']) {
+                Log::error('STK Push failed for subscription', [
+                    'business_id' => $business->id,
+                    'plan' => $plan,
+                    'error' => $stkResponse['message']
+                ]);
+                return back()->with('error', $stkResponse['message']);
+            }
+
+            // Store pending payment in database
+            DB::table('subscription_payments')->insert([
+                'business_id' => $business->id,
+                'user_id' => $user->id,
+                'plan' => $plan,
+                'amount' => $amount,
+                'phone_number' => $phoneNumber,
+                'checkout_request_id' => $stkResponse['checkout_request_id'],
+                'merchant_request_id' => $stkResponse['merchant_request_id'] ?? null,
+                'status' => 'pending',
+                'created_at' => now(),
+                'updated_at' => now()
+            ]);
+
+            Log::info('Subscription STK Push initiated', [
+                'business_id' => $business->id,
+                'user_id' => $user->id,
+                'plan' => $plan,
+                'amount' => $amount,
+                'phone_number' => $phoneNumber,
+                'checkout_request_id' => $stkResponse['checkout_request_id']
+            ]);
+
+            return back()
+                ->with('success', 'Payment request sent! Please check your phone for the M-Pesa prompt and enter your PIN to complete the payment.')
+                ->with('checkout_request_id', $stkResponse['checkout_request_id']);
+
+        } catch (\Exception $e) {
+            Log::error('Subscription upgrade exception', [
+                'error' => $e->getMessage(),
+                'business_id' => $business->id,
+                'plan' => $plan,
+                'phone_number' => $phoneNumber,
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return back()->with('error', 'Payment failed. Please try again or contact support if the issue persists.');
+        }
+    }
+
+    /**
+     * M-Pesa callback handler
+     */
+    public function mpesaCallback(Request $request)
+    {
+        $callbackData = $request->all();
+        
+        Log::info('M-Pesa Subscription Callback Received', ['data' => $callbackData]);
+
+        try {
+            // Extract callback data
+            $stkCallback = $callbackData['Body']['stkCallback'] ?? null;
+            
+            if (!$stkCallback) {
+                Log::error('Invalid M-Pesa callback structure', ['data' => $callbackData]);
+                return response()->json(['ResultCode' => 1, 'ResultDesc' => 'Invalid callback structure']);
+            }
+
+            $checkoutRequestId = $stkCallback['CheckoutRequestID'] ?? null;
+            $resultCode = $stkCallback['ResultCode'] ?? null;
+            $resultDesc = $stkCallback['ResultDesc'] ?? 'Unknown result';
+
+            // Find the pending payment
+            $payment = DB::table('subscription_payments')
+                ->where('checkout_request_id', $checkoutRequestId)
+                ->where('status', 'pending')
+                ->first();
+
+            if (!$payment) {
+                Log::warning('Subscription payment not found for callback', [
+                    'checkout_request_id' => $checkoutRequestId
+                ]);
+                return response()->json(['ResultCode' => 0, 'ResultDesc' => 'Accepted']);
+            }
+
+            if ($resultCode == 0) {
+                // Payment successful
+                $callbackMetadata = $stkCallback['CallbackMetadata']['Item'] ?? [];
+                $mpesaReceiptNumber = null;
+                $transactionDate = null;
+                $phoneNumber = null;
+
+                foreach ($callbackMetadata as $item) {
+                    if ($item['Name'] === 'MpesaReceiptNumber') {
+                        $mpesaReceiptNumber = $item['Value'];
+                    } elseif ($item['Name'] === 'TransactionDate') {
+                        $transactionDate = $item['Value'];
+                    } elseif ($item['Name'] === 'PhoneNumber') {
+                        $phoneNumber = $item['Value'];
+                    }
+                }
+
+                // Update payment record
+                DB::table('subscription_payments')
+                    ->where('id', $payment->id)
+                    ->update([
+                        'status' => 'completed',
+                        'mpesa_receipt_number' => $mpesaReceiptNumber,
+                        'transaction_date' => $transactionDate,
+                        'result_desc' => $resultDesc,
+                        'updated_at' => now()
+                    ]);
+
+                // Upgrade business plan
+                $business = \App\Models\Business::find($payment->business_id);
+                if ($business) {
+                    $business->update([
+                        'plan' => $payment->plan,
+                        'upgraded_at' => now()
+                    ]);
+
+                    Log::info('Business subscription upgraded successfully', [
+                        'business_id' => $business->id,
+                        'plan' => $payment->plan,
+                        'amount' => $payment->amount,
+                        'mpesa_receipt' => $mpesaReceiptNumber
+                    ]);
+                }
+
+            } else {
+                // Payment failed or cancelled
+                DB::table('subscription_payments')
+                    ->where('id', $payment->id)
+                    ->update([
+                        'status' => 'failed',
+                        'result_desc' => $resultDesc,
+                        'updated_at' => now()
+                    ]);
+
+                Log::warning('Subscription payment failed', [
+                    'business_id' => $payment->business_id,
+                    'plan' => $payment->plan,
+                    'result_code' => $resultCode,
+                    'result_desc' => $resultDesc
+                ]);
+            }
+
+            return response()->json(['ResultCode' => 0, 'ResultDesc' => 'Accepted']);
+
+        } catch (\Exception $e) {
+            Log::error('M-Pesa subscription callback exception', [
+                'error' => $e->getMessage(),
+                'data' => $callbackData,
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return response()->json(['ResultCode' => 1, 'ResultDesc' => 'Internal error']);
+        }
+    }
+
+    /**
+     * Get Daraja access token
+     */
+    private function getDarajaAccessToken()
+    {
+        try {
+            $consumerKey = config('services.mpesa.consumer_key');
+            $consumerSecret = config('services.mpesa.consumer_secret');
+            $authUrl = config('services.mpesa.auth_url');
+
+            if (!$consumerKey || !$consumerSecret) {
+                Log::error('M-Pesa credentials not configured');
+                return null;
+            }
+
+            $response = Http::withHeaders([
+                'Authorization' => 'Basic ' . base64_encode($consumerKey . ':' . $consumerSecret)
+            ])->get($authUrl);
+
+            if ($response->successful()) {
+                $data = $response->json();
+                return $data['access_token'] ?? null;
+            }
+
+            Log::error('Failed to get Daraja access token', [
+                'response' => $response->body(),
+                'status' => $response->status()
+            ]);
+
+            return null;
+        } catch (\Exception $e) {
+            Log::error('Exception getting Daraja access token', [
+                'error' => $e->getMessage()
+            ]);
+            return null;
+        }
+    }
+
+    /**
+     * Initiate STK Push
+     */
+    private function initiateSTKPush($accessToken, $phoneNumber, $amount, $plan)
+    {
+        try {
+            $businessShortcode = config('services.mpesa.business_shortcode');
+            $passkey = config('services.mpesa.passkey');
+            $callbackUrl = config('services.mpesa.callback_url');
+            $stkPushUrl = config('services.mpesa.stk_push_url');
+
+            if (!$businessShortcode || !$passkey) {
+                return [
+                    'success' => false,
+                    'message' => 'M-Pesa configuration incomplete'
+                ];
+            }
+
+            $timestamp = date('YmdHis');
+            $password = base64_encode($businessShortcode . $passkey . $timestamp);
+
+            $planName = $plan === 'enterprise' ? 'Enterprise' : 'Premium';
+
+            $requestData = [
+                'BusinessShortCode' => $businessShortcode,
+                'Password' => $password,
+                'Timestamp' => $timestamp,
+                'TransactionType' => 'CustomerPayBillOnline',
+                'Amount' => $amount,
+                'PartyA' => $phoneNumber,
+                'PartyB' => $businessShortcode,
+                'PhoneNumber' => $phoneNumber,
+                'CallBackURL' => $callbackUrl,
+                'AccountReference' => 'SHOPYBOOK-' . strtoupper($plan),
+                'TransactionDesc' => "Shopybook {$planName} Plan - KSH {$amount}"
+            ];
+
+            Log::info('Initiating subscription STK Push', [
+                'phone_number' => $phoneNumber,
+                'amount' => $amount,
+                'plan' => $plan
+            ]);
+
+            $response = Http::withHeaders([
+                'Authorization' => 'Bearer ' . $accessToken,
+                'Content-Type' => 'application/json'
+            ])->post($stkPushUrl, $requestData);
+
+            if ($response->successful()) {
+                $data = $response->json();
+                
+                if (isset($data['CheckoutRequestID'])) {
+                    return [
+                        'success' => true,
+                        'checkout_request_id' => $data['CheckoutRequestID'],
+                        'merchant_request_id' => $data['MerchantRequestID'] ?? null,
+                        'message' => 'STK Push sent successfully'
+                    ];
+                } else {
+                    return [
+                        'success' => false,
+                        'message' => $data['errorMessage'] ?? $data['ResponseDescription'] ?? 'Failed to initiate payment'
+                    ];
+                }
+            }
+
+            Log::error('STK Push request failed', [
+                'response' => $response->body(),
+                'status' => $response->status()
+            ]);
+
+            return [
+                'success' => false,
+                'message' => 'Failed to initiate payment. Please try again.'
+            ];
+
+        } catch (\Exception $e) {
+            Log::error('STK Push exception', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return [
+                'success' => false,
+                'message' => 'Payment system error. Please try again.'
+            ];
+        }
+    }
+
+    /**
+     * Check payment status (for AJAX polling)
+     */
+    public function checkPaymentStatus(Request $request)
+    {
+        $request->validate([
+            'checkout_request_id' => 'required|string'
+        ]);
+
+        $checkoutRequestId = $request->input('checkout_request_id');
+        
+        $payment = DB::table('subscription_payments')
+            ->where('checkout_request_id', $checkoutRequestId)
+            ->first();
+
+        if (!$payment) {
+            return response()->json([
+                'status' => 'not_found',
+                'message' => 'Payment record not found'
+            ], 404);
+        }
+
+        return response()->json([
+            'status' => $payment->status,
+            'plan' => $payment->plan,
+            'amount' => $payment->amount,
+            'mpesa_receipt_number' => $payment->mpesa_receipt_number,
+            'result_desc' => $payment->result_desc,
+            'updated_at' => $payment->updated_at
+        ]);
+    }
+
+    /**
+     * Format phone number to 254 format
+     */
+    private function formatPhoneNumber($phone)
+    {
+        // Remove any spaces, dashes, or special characters
+        $phone = preg_replace('/[^0-9]/', '', $phone);
+        
+        // Convert 07XXXXXXXX to 254XXXXXXXXX
+        if (strlen($phone) === 10 && substr($phone, 0, 1) === '0') {
+            return '254' . substr($phone, 1);
+        }
+        
+        // Already in 254 format
+        if (strlen($phone) === 12 && substr($phone, 0, 3) === '254') {
+            return $phone;
+        }
+        
+        // Invalid format
+        return null;
+    }
+}

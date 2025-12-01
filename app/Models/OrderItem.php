@@ -12,11 +12,22 @@ class OrderItem extends Model
         'quantity',
         'price',
         'total',
+        'sell_unit',
+        'material_type',
+        'original_quantity',
+        'converted_quantity',
+        'converted_unit',
+        'price_per_unit',
+        'conversion_data',
     ];
 
     protected $casts = [
         'price' => 'decimal:2',
         'total' => 'decimal:2',
+        'original_quantity' => 'decimal:4',
+        'converted_quantity' => 'decimal:4',
+        'price_per_unit' => 'decimal:2',
+        'conversion_data' => 'array',
     ];
 
     public function order()

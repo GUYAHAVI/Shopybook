@@ -6,8 +6,11 @@
         <div class="header-content">
             <div>
                 <h1 class="analysis-title">Business Analysis</h1>
-                <p class="analysis-subtitle">KENADA-powered insights and recommendations for your business</p>
-                <small class="text-muted">Powered by Kenya National Data MSME Intelligence</small>
+                <p class="analysis-subtitle">Claude AI-powered insights with industry comparisons for your business</p>
+                <small class="text-muted">
+                    <i class="fas fa-robot me-1"></i>Powered by Claude Sonnet 4 - Advanced Business Intelligence
+                    <span class="badge bg-primary ms-2">Industry Benchmarking</span>
+                </small>
             </div>
             <div class="header-actions">
                 <button class="btn btn-outline-primary" onclick="generateAnalysis('general')">
@@ -106,9 +109,16 @@
                         
                         <div id="analysisContent">
                             <div class="empty-state">
-                                <i class="fas fa-chart-bar"></i>
-                                <h5>Ready for Analysis</h5>
-                                <p>Click "Generate Analysis" to get AI-powered insights about your business performance.</p>
+                                <i class="fas fa-robot mb-3" style="font-size: 3rem; color: #020258;"></i>
+                                <h5>Advanced AI Business Analysis Ready</h5>
+                                <p class="mb-3">Click "Generate Analysis" to get Claude AI-powered insights that include:</p>
+                                <ul class="text-start" style="max-width: 500px; margin: 0 auto;">
+                                    <li>Performance comparison with similar online businesses in Kenya</li>
+                                    <li>Industry benchmarking and competitive positioning</li>
+                                    <li>Data-driven growth strategies and recommendations</li>
+                                    <li>Sales trends and customer behavior analysis</li>
+                                    <li>Actionable steps to improve your business metrics</li>
+                                </ul>
                             </div>
                         </div>
                     </div>

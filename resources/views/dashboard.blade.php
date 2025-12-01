@@ -2,6 +2,82 @@
 @section('title', 'Dashboard')
 
 @section('content')
+
+{{-- Subscription Upgrade Banner for Non-Enterprise Users --}}
+@if(Auth::user()->business && !Auth::user()->business->isEnterprise())
+    <div class="alert alert-dismissible fade show mb-4" role="alert" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none; border-radius: 12px; box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);">
+        <div class="row align-items-center">
+            <div class="col-md-9">
+                <div class="d-flex align-items-center">
+                    <div style="font-size: 2.5rem; margin-right: 20px;">
+                        <i class="fas fa-crown text-warning"></i>
+                    </div>
+                    <div>
+                        @if(Auth::user()->business->isOnTrial())
+                            <h5 class="mb-1" style="color: white; font-weight: 700;">
+                                <i class="fas fa-gift"></i> You're on Enterprise Trial!
+                            </h5>
+                            <p class="mb-2" style="color: rgba(255,255,255,0.95); font-size: 0.95rem;">
+                                {{ Auth::user()->business->trialDaysRemaining() }} days left in your free trial. Upgrade now to continue enjoying all features!
+                            </p>
+                        @else
+                            <h5 class="mb-1" style="color: white; font-weight: 700;">
+                                <i class="fas fa-sparkles"></i> Unlock Premium Features with Enterprise Plan
+                            </h5>
+                            <p class="mb-2" style="color: rgba(255,255,255,0.95); font-size: 0.95rem;">
+                                Get AI-powered website builder, advanced analytics, priority support, and much more!
+                            </p>
+                        @endif
+                        <div class="d-flex gap-3 flex-wrap" style="color: rgba(255,255,255,0.9); font-size: 0.85rem;">
+                            <span><i class="fas fa-check-circle me-1" style="color: #10b981;"></i>AI Website Auto-Build</span>
+                            <span><i class="fas fa-check-circle me-1" style="color: #10b981;"></i>Advanced Reports</span>
+                            <span><i class="fas fa-check-circle me-1" style="color: #10b981;"></i>Priority Support</span>
+                            <span><i class="fas fa-check-circle me-1" style="color: #10b981;"></i>Unlimited Features</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 text-center mt-3 mt-md-0">
+                <button type="button" class="btn btn-light btn-lg d-block mb-2" data-bs-toggle="modal" data-bs-target="#subscriptionUpgradeModal" style="font-weight: 700; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
+                    <i class="fas fa-rocket me-2"></i>{{ Auth::user()->business->isOnTrial() ? 'Continue with Paid Plan' : 'Upgrade Now' }}
+                </button>
+                <small style="color: rgba(255,255,255,0.85); font-size: 0.75rem;">
+                    <i class="fas fa-tag me-1"></i>From KSH 5/month (Test Mode)
+                </small>
+            </div>
+        </div>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert" aria-label="Close" style="filter: brightness(0) invert(1);"></button>
+    </div>
+@endif
+
+{{-- Missing Logo Alert --}}
+@if(Auth::user()->business && (empty(Auth::user()->business->logo_path) || !Auth::user()->business->logo_path))
+    <div class="alert alert-warning alert-dismissible fade show mb-4" role="alert" style="border-left: 4px solid #ffc107; background: #fff3cd; border-radius: 8px;">
+        <div class="d-flex align-items-center">
+            <div style="font-size: 2rem; margin-right: 15px;">
+                <i class="fas fa-exclamation-triangle text-warning"></i>
+            </div>
+            <div class="flex-grow-1">
+                <h5 class="alert-heading mb-2" style="color: #856404; font-weight: bold;">
+                    <i class="fas fa-image"></i> Business Logo Missing
+                </h5>
+                <p class="mb-2" style="color: #856404;">
+                    Your business logo is not currently set. Upload your logo to improve your business profile visibility and professional appearance.
+                </p>
+                 <div class="d-flex gap-2">
+                    <a href="{{ route('business.edit') }}" class="btn btn-warning btn-sm">
+                        <i class="fas fa-upload"></i> Upload Logo
+                    </a>
+                    <button type="button" class="btn btn-info btn-sm" onclick="openLogoGenerator()">
+                        <i class="fas fa-magic"></i> Generate with AI
+                    </button>
+                </div>
+            </div>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    </div>
+@endif
+
 <!-- KPI Cards -->
 <div class="kpi-grid">
     <div class="kpi-card">
@@ -52,6 +128,66 @@
         </div>
     </div>
 </div>
+
+<!-- Website Builder Promo Banner -->
+@if(auth()->user()->business && !auth()->user()->business->website)
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="alert quick-start-banner" style="background: linear-gradient(135deg, #4F46E5, #7C3AED); border: none; border-radius: 15px; box-shadow: 0 10px 25px -5px rgba(79, 70, 229, 0.3);">
+            <div class="row align-items-center">
+                <div class="col-md-8">
+                    <h4 class="text-white mb-2">
+                        <i class="fas fa-globe me-2"></i>🌟 Create Your FREE Website in 5 Minutes!
+                    </h4>
+                    <p class="text-white mb-2">
+                        Build a stunning website for <strong>{{ auth()->user()->business->name }}</strong> with our drag-and-drop builder. No coding required!
+                    </p>
+                    <p class="text-white mb-0 small">
+                        ✨ Your website will be live at: <strong>{{ auth()->user()->business->slug }}.shopybook.com</strong>
+                    </p>
+                </div>
+                <div class="col-md-4 text-center mt-3 mt-md-0">
+                    <a href="{{ route('website.builder.index') }}" class="btn btn-light btn-lg pulse-animation">
+                        <i class="fas fa-rocket me-2"></i>Build My Website
+                    </a>
+                    <div class="text-white mt-2 small">
+                        <i class="fas fa-check me-1"></i>8 Beautiful Themes
+                        <i class="fas fa-check ms-2 me-1"></i>100% Free
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+@endif
+
+<!-- Quick Add Product Banner for New Users -->
+@if(auth()->user()->business && auth()->user()->business->products()->count() == 0)
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="alert alert-info quick-start-banner" style="background: linear-gradient(135deg, #17a2b8, #138496); border: none; border-radius: 15px;">
+            <div class="row align-items-center">
+                <div class="col-md-8">
+                    <h4 class="text-white mb-2">
+                        <i class="fas fa-rocket me-2"></i>Welcome to Shopybook! 🎉
+                    </h4>
+                    <p class="text-white mb-0">
+                        Let's get you started by adding your first product. It takes less than 30 seconds with our Quick Add feature.
+                    </p>
+                </div>
+                <div class="col-md-4 text-center mt-3 mt-md-0">
+                    <a href="{{ route('products.quick-create') }}" class="btn btn-light btn-lg me-2">
+                        <i class="fas fa-bolt me-2"></i>Quick Add Product
+                    </a>
+                    <a href="{{ route('products.create') }}" class="btn btn-outline-light">
+                        <i class="fas fa-cog me-1"></i>Advanced
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+@endif
 
 <!-- Business Overview Cards -->
 <div class="business-overview mb-4">
@@ -298,96 +434,99 @@
 <!-- Charts Section -->
 <div class="charts-section">
     <div class="row g-4">
+        <!-- Left Side: Product/Service Sales Charts -->
         <div class="col-xl-8 col-lg-7 col-md-12">
-            <div class="chart-container">
+            @if($topProducts && $topProducts->count() > 0)
+            <!-- Product Sales Bar Chart -->
+            <div class="chart-container mb-4">
                 <div class="chart-header">
-                    <h5 class="chart-title">Cash Flow</h5>
-                    <div class="chart-legend">
-                        <div class="legend-item">
-                            <div class="legend-dot investments"></div>
-                            <span>Investments</span>
-                        </div>
-                        <div class="legend-item">
-                            <div class="legend-dot reinvestment"></div>
-                            <span>Reinvestment</span>
-                        </div>
-                    </div>
+                    <h5 class="chart-title">
+                        <i class="fas fa-chart-bar me-2"></i>Top Product Sales (Last 30 Days)
+                    </h5>
                 </div>
                 <div class="chart-content">
-                    <canvas id="cashFlowChart"></canvas>
+                    <canvas id="productSalesChart"></canvas>
                 </div>
             </div>
+            @endif
+            
+            @if($topServices && $topServices->count() > 0)
+            <!-- Service Sales Chart -->
+            <div class="chart-container">
+                <div class="chart-header">
+                    <h5 class="chart-title">
+                        <i class="fas fa-chart-line me-2"></i>Top Service Bookings
+                    </h5>
+                </div>
+                <div class="chart-content">
+                    <canvas id="serviceSalesChart"></canvas>
+                </div>
+            </div>
+            @endif
+            
+            @if((!$topProducts || $topProducts->count() == 0) && (!$topServices || $topServices->count() == 0))
+            <!-- Empty State -->
+            <div class="chart-container">
+                <div class="chart-header">
+                    <h5 class="chart-title">Sales Analytics</h5>
+                </div>
+                <div class="text-center py-5">
+                    <i class="fas fa-chart-bar fa-3x text-muted mb-3"></i>
+                    <p class="text-muted">No sales data available yet. Start selling to see analytics here!</p>
+                </div>
+            </div>
+            @endif
         </div>
         
+        <!-- Right Side: Top Customers -->
         <div class="col-xl-4 col-lg-5 col-md-12">
-            <div class="row g-4">
-                <div class="col-12">
-                    <div class="chart-container">
-                        <div class="chart-header">
-                            <h5 class="chart-title">Investor Reports</h5>
-                        </div>
-                        <div class="investor-list">
-                            <div class="investor-item d-flex align-items-center mb-3">
-                                <div class="investor-avatar me-3">
-                                    <img src="https://via.placeholder.com/40x40" alt="Jakob Jones" class="rounded-circle">
-                                </div>
-                                <div class="investor-info">
-                                    <h6 class="mb-0">Jakob Jones</h6>
-                                    <small class="text-muted">CHIEF EXECUTIVE OFFICER</small>
-                                </div>
-                            </div>
-                            
-                            <div class="investor-item d-flex align-items-center mb-3">
-                                <div class="investor-avatar me-3">
-                                    <img src="https://via.placeholder.com/40x40" alt="Wode Warren" class="rounded-circle">
-                                </div>
-                                <div class="investor-info">
-                                    <h6 class="mb-0">Wode Warren</h6>
-                                    <small class="text-muted">MANAGING DIRECTOR</small>
-                                </div>
-                            </div>
-                            
-                            <div class="investor-item d-flex align-items-center mb-3">
-                                <div class="investor-avatar me-3">
-                                    <img src="https://via.placeholder.com/40x40" alt="Barbara John" class="rounded-circle">
-                                </div>
-                                <div class="investor-info">
-                                    <h6 class="mb-0">Barbara John</h6>
-                                    <small class="text-muted">TRADER</small>
-                                </div>
-                            </div>
-                            
-                            <button class="btn btn-primary w-100 mt-3">
-                                <i class="fas fa-search me-2"></i>Search
-                            </button>
-                        </div>
-                    </div>
+            <div class="chart-container">
+                <div class="chart-header">
+                    <h5 class="chart-title">
+                        <i class="fas fa-users me-2"></i>Top Customers
+                    </h5>
                 </div>
-                
-                <div class="col-12">
-                    <div class="chart-container">
-                        <div class="chart-header">
-                            <h5 class="chart-title">Total Balance</h5>
-                            <i class="fas fa-plus"></i>
-                        </div>
-                        <div class="balance-chart">
-                            <canvas id="balanceChart"></canvas>
-                            <div class="balance-info mt-3">
-                                <div class="d-flex justify-content-between align-items-center mb-2">
-                                    <div class="d-flex align-items-center">
-                                        <div class="legend-dot investments me-2"></div>
-                                        <span>$57.436 Investments</span>
+                <div class="customer-list">
+                    @if($topCustomers && $topCustomers->count() > 0)
+                        @foreach($topCustomers as $customer)
+                        <div class="customer-item d-flex align-items-center justify-content-between mb-3">
+                            <div class="d-flex align-items-center">
+                                <div class="customer-avatar me-3">
+                                    <div class="avatar-circle">
+                                        {{ strtoupper(substr($customer->name, 0, 2)) }}
                                     </div>
                                 </div>
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <div class="d-flex align-items-center">
-                                        <div class="legend-dot reinvestment me-2"></div>
-                                        <span>$40.564 Reinvestment</span>
-                                    </div>
+                                <div class="customer-info">
+                                    <h6 class="mb-0">{{ $customer->name }}</h6>
+                                    <small class="text-muted">
+                                        @if($customer->orders_count > 0 && $customer->bookings_count > 0)
+                                            {{ $customer->orders_count }} orders • {{ $customer->bookings_count }} bookings
+                                        @elseif($customer->orders_count > 0)
+                                            {{ $customer->orders_count }} {{ Str::plural('order', $customer->orders_count) }}
+                                        @else
+                                            {{ $customer->bookings_count }} {{ Str::plural('booking', $customer->bookings_count) }}
+                                        @endif
+                                    </small>
                                 </div>
                             </div>
+                            <div class="customer-spend">
+                                <span class="badge bg-success">KSh {{ number_format($customer->total_spent, 0) }}</span>
+                            </div>
                         </div>
-                    </div>
+                        @endforeach
+                        
+                        <a href="{{ route('sales.customers') }}" class="btn btn-primary w-100 mt-3">
+                            <i class="fas fa-users me-2"></i>View All Customers
+                        </a>
+                    @else
+                        <div class="text-center py-5">
+                            <i class="fas fa-users fa-3x text-muted mb-3"></i>
+                            <p class="text-muted mb-3">No customers yet</p>
+                            <a href="{{ route('sales.pos') }}" class="btn btn-primary btn-sm">
+                                <i class="fas fa-cash-register me-2"></i>Make First Sale
+                            </a>
+                        </div>
+                    @endif
                 </div>
             </div>
         </div>
@@ -399,35 +538,55 @@
     margin-top: 1rem;
 }
 
-.investor-list {
-    max-height: 300px;
+.customer-list {
+    max-height: 500px;
     overflow-y: auto;
 }
 
-.investor-item {
+.customer-item {
     padding: 0.75rem;
     border-radius: 0.5rem;
     transition: background-color 0.2s ease;
+    border-bottom: 1px solid var(--border-color);
 }
 
-.investor-item:hover {
+.customer-item:last-child {
+    border-bottom: none;
+}
+
+.customer-item:hover {
     background-color: var(--gray-50);
 }
 
-.investor-avatar img {
+.customer-avatar .avatar-circle {
     width: 40px;
     height: 40px;
-    object-fit: cover;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--primary-color), var(--primary-light));
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    font-size: 0.875rem;
 }
 
-.investor-info h6 {
+.customer-info h6 {
     font-size: 0.875rem;
     font-weight: 600;
     margin: 0;
+    color: var(--text-primary);
 }
 
-.investor-info small {
+.customer-info small {
     font-size: 0.75rem;
+    color: var(--text-muted);
+}
+
+.customer-spend .badge {
+    font-size: 0.75rem;
+    font-weight: 600;
+    padding: 0.375rem 0.75rem;
 }
 
 .chart-content {
@@ -672,25 +831,31 @@
         height: 200px;
     }
     
-    .investor-list {
-        max-height: 200px;
+    .customer-list {
+        max-height: 300px;
     }
     
-    .investor-item {
+    .customer-item {
         padding: 0.5rem;
     }
     
-    .investor-avatar img {
+    .customer-avatar .avatar-circle {
         width: 32px;
         height: 32px;
+        font-size: 0.75rem;
     }
     
-    .investor-info h6 {
+    .customer-info h6 {
         font-size: 0.8rem;
     }
     
-    .investor-info small {
+    .customer-info small {
         font-size: 0.7rem;
+    }
+    
+    .customer-spend .badge {
+        font-size: 0.7rem;
+        padding: 0.25rem 0.5rem;
     }
     
     .balance-info {
@@ -727,25 +892,31 @@
         height: 180px;
     }
     
-    .investor-list {
-        max-height: 150px;
+    .customer-list {
+        max-height: 250px;
     }
     
-    .investor-item {
+    .customer-item {
         padding: 0.375rem;
     }
     
-    .investor-avatar img {
+    .customer-avatar .avatar-circle {
         width: 28px;
         height: 28px;
+        font-size: 0.7rem;
     }
     
-    .investor-info h6 {
+    .customer-info h6 {
         font-size: 0.75rem;
     }
     
-    .investor-info small {
+    .customer-info small {
         font-size: 0.65rem;
+    }
+    
+    .customer-spend .badge {
+        font-size: 0.65rem;
+        padding: 0.2rem 0.4rem;
     }
     
     .balance-info {
@@ -764,7 +935,7 @@
         padding: 0.75rem 1rem;
     }
     
-    .investor-item {
+    .customer-item {
         cursor: pointer;
         min-height: 48px;
     }
@@ -801,24 +972,72 @@ document.addEventListener('DOMContentLoaded', function() {
     // Get current theme
     const isDarkMode = document.body.getAttribute('data-theme') === 'dark';
     
-    // Responsive chart options
-    const responsiveOptions = {
+    // Common chart colors
+    const chartColors = {
+        primary: '#020258',
+        secondary: '#13e8e9',
+        success: '#28a745',
+        info: '#17a2b8',
+        warning: '#ffc107',
+        purple: '#6f42c1',
+        orange: '#fd7e14',
+        pink: '#e83e8c',
+        red: '#dc3545',
+        indigo: '#6610f2',
+        teal: '#20c997',
+        cyan: '#17a2b8'
+    };
+    
+    // Array of vibrant colors for products
+    const productColors = [
+        '#28a745', // Green
+        '#17a2b8', // Cyan
+        '#ffc107', // Yellow
+        '#6f42c1', // Purple
+        '#fd7e14', // Orange
+        '#e83e8c', // Pink
+        '#dc3545', // Red
+        '#6610f2', // Indigo
+        '#20c997', // Teal
+        '#020258', // Primary Blue
+        '#13e8e9', // Secondary
+        '#198754'  // Success variant
+    ];
+    
+    // Base responsive chart options
+    const baseChartOptions = {
         responsive: true,
         maintainAspectRatio: false,
         plugins: {
             legend: {
-                display: false
+                display: true,
+                position: 'top',
+                labels: {
+                    color: isDarkMode ? '#cbd5e1' : '#475569',
+                    padding: 15,
+                    font: {
+                        size: window.innerWidth < 768 ? 10 : 12
+                    }
+                }
+            },
+            tooltip: {
+                backgroundColor: isDarkMode ? '#1e293b' : '#ffffff',
+                titleColor: isDarkMode ? '#f1f5f9' : '#1e293b',
+                bodyColor: isDarkMode ? '#cbd5e1' : '#475569',
+                borderColor: isDarkMode ? '#334155' : '#e2e8f0',
+                borderWidth: 1,
+                padding: 12,
+                displayColors: true
             }
         },
         scales: {
             y: {
                 beginAtZero: true,
-                max: 50,
                 ticks: {
-                    callback: function(value) {
-                        return value + 'K';
-                    },
-                    color: isDarkMode ? '#cbd5e1' : '#475569'
+                    color: isDarkMode ? '#cbd5e1' : '#475569',
+                    font: {
+                        size: window.innerWidth < 768 ? 9 : 11
+                    }
                 },
                 grid: {
                     color: isDarkMode ? '#334155' : '#e2e8f0'
@@ -826,136 +1045,172 @@ document.addEventListener('DOMContentLoaded', function() {
             },
             x: {
                 ticks: {
-                    color: isDarkMode ? '#cbd5e1' : '#475569'
+                    color: isDarkMode ? '#cbd5e1' : '#475569',
+                    font: {
+                        size: window.innerWidth < 768 ? 9 : 11
+                    },
+                    maxRotation: 45,
+                    minRotation: 0
                 },
                 grid: {
                     color: isDarkMode ? '#334155' : '#e2e8f0'
                 }
             }
-        },
-        elements: {
-            point: {
-                radius: window.innerWidth < 768 ? 3 : 4,
-                hoverRadius: window.innerWidth < 768 ? 5 : 6
-            }
         }
     };
     
-    // Cash Flow Chart
-    const cashFlowCtx = document.getElementById('cashFlowChart').getContext('2d');
-    const cashFlowChart = new Chart(cashFlowCtx, {
-        type: 'line',
-        data: {
-            labels: ['JUL', 'JUN', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC', 'JAN'],
-            datasets: [{
-                label: 'Investments',
-                data: [10, 15, 20, 35, 25, 30, 40, 35],
-                borderColor: '#020258',
-                backgroundColor: 'rgba(2, 2, 88, 0.1)',
-                tension: 0.4,
-                fill: false
-            }, {
-                label: 'Reinvestment',
-                data: [5, 10, 15, 25, 20, 25, 30, 28],
-                borderColor: '#13e8e9',
-                backgroundColor: 'rgba(19, 232, 233, 0.1)',
-                tension: 0.4,
-                fill: true
-            }]
-        },
-        options: responsiveOptions
-    });
-    
-    // Balance Chart (Donut)
-    const balanceCtx = document.getElementById('balanceChart').getContext('2d');
-    const balanceChart = new Chart(balanceCtx, {
-        type: 'doughnut',
-        data: {
-            labels: ['Investments', 'Reinvestment'],
-            datasets: [{
-                data: [57.436, 40.564],
-                backgroundColor: ['#020258', '#13e8e9'],
-                borderWidth: 0,
-                cutout: window.innerWidth < 768 ? '60%' : '70%'
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: {
-                    display: false
-                },
-                tooltip: {
-                    callbacks: {
-                        label: function(context) {
-                            return context.label + ': $' + context.parsed.toFixed(3) + 'k';
+    // Product Sales Bar Chart
+    @if($topProducts && $topProducts->count() > 0)
+    const productSalesCtx = document.getElementById('productSalesChart');
+    if (productSalesCtx) {
+        const productsCount = {{ $topProducts->count() }};
+        
+        // Generate color arrays for each product
+        const revenueColors = [];
+        const unitColors = [];
+        
+        for (let i = 0; i < productsCount; i++) {
+            // Use different shades for revenue vs units
+            revenueColors.push(productColors[i % productColors.length]);
+            // Create a lighter/transparent version for units
+            const color = productColors[i % productColors.length];
+            unitColors.push(color + '80'); // Add 50% transparency
+        }
+        
+        const productSalesChart = new Chart(productSalesCtx.getContext('2d'), {
+            type: 'bar',
+            data: {
+                labels: {!! json_encode($topProducts->pluck('name')->map(function($name) {
+                    return strlen($name) > 20 ? substr($name, 0, 20) . '...' : $name;
+                })) !!},
+                datasets: [{
+                    label: 'Revenue (KSh)',
+                    data: {!! json_encode($topProducts->pluck('total_revenue')) !!},
+                    backgroundColor: revenueColors,
+                    borderColor: revenueColors,
+                    borderWidth: 2
+                }, {
+                    label: 'Units Sold',
+                    data: {!! json_encode($topProducts->pluck('total_sold')) !!},
+                    backgroundColor: unitColors,
+                    borderColor: revenueColors,
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                ...baseChartOptions,
+                plugins: {
+                    ...baseChartOptions.plugins,
+                    legend: {
+                        ...baseChartOptions.plugins.legend,
+                        display: true,
+                        labels: {
+                            ...baseChartOptions.plugins.legend.labels,
+                            generateLabels: function(chart) {
+                                return [
+                                    {
+                                        text: 'Revenue (KSh)',
+                                        fillStyle: chartColors.success,
+                                        strokeStyle: chartColors.success,
+                                        lineWidth: 2
+                                    },
+                                    {
+                                        text: 'Units Sold',
+                                        fillStyle: chartColors.info + '80',
+                                        strokeStyle: chartColors.info,
+                                        lineWidth: 1
+                                    }
+                                ];
+                            }
+                        }
+                    },
+                    tooltip: {
+                        ...baseChartOptions.plugins.tooltip,
+                        callbacks: {
+                            label: function(context) {
+                                let label = context.dataset.label || '';
+                                if (label) {
+                                    label += ': ';
+                                }
+                                if (context.datasetIndex === 0) {
+                                    label += 'KSh ' + context.parsed.y.toLocaleString();
+                                } else {
+                                    label += context.parsed.y.toLocaleString() + ' units';
+                                }
+                                return label;
+                            }
                         }
                     }
                 }
+            }
+        });
+    }
+    @endif
+    
+    // Service Sales Chart
+    @if($topServices && $topServices->count() > 0)
+    const serviceSalesCtx = document.getElementById('serviceSalesChart');
+    if (serviceSalesCtx) {
+        const serviceSalesChart = new Chart(serviceSalesCtx.getContext('2d'), {
+            type: 'line',
+            data: {
+                labels: {!! json_encode($topServices->pluck('service.name')->map(function($name) {
+                    return strlen($name) > 20 ? substr($name, 0, 20) . '...' : $name;
+                })) !!},
+                datasets: [{
+                    label: 'Revenue (KSh)',
+                    data: {!! json_encode($topServices->pluck('total_revenue')) !!},
+                    borderColor: chartColors.purple,
+                    backgroundColor: 'rgba(111, 66, 193, 0.1)',
+                    tension: 0.4,
+                    fill: true,
+                    borderWidth: 2
+                }, {
+                    label: 'Bookings',
+                    data: {!! json_encode($topServices->pluck('booking_count')) !!},
+                    borderColor: chartColors.orange,
+                    backgroundColor: 'rgba(253, 126, 20, 0.1)',
+                    tension: 0.4,
+                    fill: true,
+                    borderWidth: 2
+                }]
             },
-            elements: {
-                arc: {
-                    borderWidth: 0
+            options: {
+                ...baseChartOptions,
+                plugins: {
+                    ...baseChartOptions.plugins,
+                    tooltip: {
+                        ...baseChartOptions.plugins.tooltip,
+                        callbacks: {
+                            label: function(context) {
+                                let label = context.dataset.label || '';
+                                if (label) {
+                                    label += ': ';
+                                }
+                                if (context.datasetIndex === 0) {
+                                    label += 'KSh ' + context.parsed.y.toLocaleString();
+                                } else {
+                                    label += context.parsed.y.toLocaleString() + ' bookings';
+                                }
+                                return label;
+                            }
+                        }
+                    }
                 }
             }
-        }
-    });
-    
-    // Add center text to donut chart
-    const centerText = {
-        id: 'centerText',
-        afterDatasetsDraw(chart, args, options) {
-            const { ctx, chartArea: { left, right, top, bottom } } = chart;
-            
-            ctx.save();
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'middle';
-            
-            const centerX = (left + right) / 2;
-            const centerY = (top + bottom) / 2;
-            
-            const fontSize = window.innerWidth < 768 ? '14px' : '16px';
-            const smallFontSize = window.innerWidth < 768 ? '10px' : '12px';
-            
-            ctx.font = `bold ${fontSize} Inter`;
-            ctx.fillStyle = isDarkMode ? '#f1f5f9' : '#1e293b';
-            ctx.fillText('98k', centerX, centerY - 8);
-            
-            ctx.font = `${smallFontSize} Inter`;
-            ctx.fillStyle = isDarkMode ? '#94a3b8' : '#64748b';
-            ctx.fillText('Amount', centerX, centerY + 8);
-            
-            ctx.restore();
-        }
-    };
-    
-    balanceChart.options.plugins.centerText = centerText;
-    balanceChart.update();
-    
-    // Handle window resize for responsive charts
-    window.addEventListener('resize', function() {
-        cashFlowChart.resize();
-        balanceChart.resize();
-        balanceChart.update();
-    });
+        });
+    }
+    @endif
     
     // Global function to update charts for theme changes
     window.updateChartsForTheme = function() {
         const isDarkMode = document.body.getAttribute('data-theme') === 'dark';
+        const textColor = isDarkMode ? '#cbd5e1' : '#475569';
+        const gridColor = isDarkMode ? '#334155' : '#e2e8f0';
         
-        // Update chart colors
-        if (cashFlowChart) {
-            cashFlowChart.options.scales.y.ticks.color = isDarkMode ? '#cbd5e1' : '#475569';
-            cashFlowChart.options.scales.y.grid.color = isDarkMode ? '#334155' : '#e2e8f0';
-            cashFlowChart.options.scales.x.ticks.color = isDarkMode ? '#cbd5e1' : '#475569';
-            cashFlowChart.options.scales.x.grid.color = isDarkMode ? '#334155' : '#e2e8f0';
-            cashFlowChart.update();
-        }
-        
-        if (balanceChart) {
-            balanceChart.update();
-        }
+        // This function can be called when theme changes
+        // You would need to recreate or update all charts here
+        console.log('Theme changed to:', isDarkMode ? 'dark' : 'light');
     };
 });
 </script>
@@ -1135,4 +1390,783 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 }
 </style>
+
+<!-- AI Logo Generation Modal -->
+<div id="logoGeneratorModal" class="modal fade" tabindex="-1" style="display: none;">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="border: 2px solid #13e8e9; border-radius: 15px;">
+            <div class="modal-header" style="background: linear-gradient(135deg, #020258, #13e8e9); color: white; border-radius: 13px 13px 0 0;">
+                <h5 class="modal-title"><i class="fas fa-magic"></i> Generate Business Logo with AI</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" style="padding: 2rem;">
+                <p class="text-muted mb-3">Choose a logo style and let AI create a unique logo for your business.</p>
+                
+                <div class="mb-3">
+                    <label for="logoStyle" class="form-label"><i class="fas fa-palette"></i> Logo Style</label>
+                    <select id="logoStyle" class="form-select">
+                        <option value="modern">Modern - Clean and contemporary</option>
+                        <option value="classic">Classic - Timeless and elegant</option>
+                        <option value="minimal">Minimal - Simple and essential</option>
+                        <option value="bold">Bold - Strong and vibrant</option>
+                        <option value="playful">Playful - Fun and creative</option>
+                        <option value="corporate">Corporate - Professional and formal</option>
+                    </select>
+                </div>
+                
+                <div id="generationStatus" class="alert alert-info" style="display: none;">
+                    <i class="fas fa-spinner fa-spin"></i> <span id="statusMessage">Generating your logo...</span>
+                </div>
+                
+                <div id="generatedLogoContainer" style="display: none; text-align: center; margin-top: 20px;">
+                    <img id="generatedLogoPreview" src="" alt="Generated Logo" style="max-width: 300px; max-height: 300px; border-radius: 8px; border: 2px solid #e5e7eb; background: #f9fafb; padding: 20px;" />
+                    <div class="mt-3">
+                        <button type="button" class="btn btn-sm btn-outline-primary" onclick="regenerateLogoFromModal()">
+                            <i class="fas fa-redo"></i> Regenerate
+                        </button>
+                        <button type="button" class="btn btn-sm btn-success" onclick="saveGeneratedLogo()">
+                            <i class="fas fa-check"></i> Use This Logo
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" id="generateLogoModalBtn" class="btn btn-primary" onclick="generateLogoFromModal()">
+                    <i class="fas fa-magic"></i> Generate Logo
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let generatedLogoPath = null;
+let logoGeneratorModal = null;
+
+document.addEventListener('DOMContentLoaded', function() {
+    logoGeneratorModal = new bootstrap.Modal(document.getElementById('logoGeneratorModal'));
+});
+
+function openLogoGenerator() {
+    logoGeneratorModal.show();
+    document.getElementById('generatedLogoContainer').style.display = 'none';
+    document.getElementById('generationStatus').style.display = 'none';
+}
+
+async function generateLogoFromModal() {
+    const style = document.getElementById('logoStyle').value;
+    const statusDiv = document.getElementById('generationStatus');
+    const statusMessage = document.getElementById('statusMessage');
+    const generateBtn = document.getElementById('generateLogoModalBtn');
+    const logoContainer = document.getElementById('generatedLogoContainer');
+    
+    statusDiv.style.display = 'block';
+    statusMessage.textContent = 'Generating your logo... This may take 30-60 seconds.';
+    generateBtn.disabled = true;
+    logoContainer.style.display = 'none';
+    
+    try {
+        const businessName = {!! json_encode(Auth::user()->business->name ?? '') !!};
+        const businessDescription = {!! json_encode(Auth::user()->business->description ?? '') !!};
+        const businessType = {!! json_encode(Auth::user()->business->business_type ?? '') !!};
+        
+        const response = await fetch('{{ route("business.generate-logo") }}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                'Accept': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: JSON.stringify({
+                business_name: businessName,
+                business_description: businessDescription || 'A professional ' + businessType + ' business providing quality services',
+                business_type: businessType,
+                logo_style: style
+            }),
+            credentials: 'same-origin'
+        });
+        
+        // Check for redirect (authentication failure)
+        if (response.redirected) {
+            console.error('❌ REQUEST REDIRECTED TO:', response.url);
+            throw new Error('Your session has expired. Please refresh the page and log in again.');
+        }
+        
+        // Check if response is ok before parsing
+        if (!response.ok) {
+            const errorText = await response.text();
+            console.error('❌ SERVER ERROR:', response.status, errorText.substring(0, 500));
+            throw new Error(`Server error (${response.status}). Please try again or contact support.`);
+        }
+        
+        // Get response text first to debug
+        const responseText = await response.text();
+        console.log('=== LOGO GENERATION RESPONSE DEBUG ===');
+        console.log('Response length:', responseText.length);
+        console.log('First 500 chars:', responseText.substring(0, 500));
+        console.log('Last 200 chars:', responseText.substring(Math.max(0, responseText.length - 200)));
+        console.log('Is HTML?', responseText.trim().startsWith('<!DOCTYPE') || responseText.trim().startsWith('<html'));
+        console.log('======================================');
+        
+        let data;
+        try {
+            data = JSON.parse(responseText);
+            console.log('✓ JSON parsed successfully:', data);
+        } catch (parseError) {
+            console.error('✗ JSON PARSE ERROR:', parseError.message);
+            console.error('Full response text:', responseText);
+            
+            // Try to identify the issue
+            if (responseText.trim().startsWith('<!DOCTYPE') || responseText.trim().startsWith('<html')) {
+                throw new Error('Server returned HTML instead of JSON. Check server logs for errors.');
+            } else if (responseText.trim() === '') {
+                throw new Error('Server returned empty response. Check server logs.');
+            } else if (!responseText.trim().startsWith('{')) {
+                throw new Error(`Server response doesn't start with JSON. Starts with: "${responseText.substring(0, 50)}"`);
+            } else {
+                throw new Error('Invalid JSON format from server. Check console for details.');
+            }
+        }
+        
+        if (data.success) {
+            statusDiv.style.display = 'none';
+            document.getElementById('generatedLogoPreview').src = data.logo_url;
+            generatedLogoPath = data.logo_path;
+            logoContainer.style.display = 'block';
+        } else {
+            statusDiv.className = 'alert alert-danger';
+            statusMessage.innerHTML = '<i class="fas fa-exclamation-triangle"></i> ' + (data.message || 'Failed to generate logo');
+        }
+    } catch (error) {
+        console.error('Logo generation error:', error);
+        statusDiv.className = 'alert alert-danger';
+        statusMessage.textContent = 'Error: ' + error.message;
+    } finally {
+        generateBtn.disabled = false;
+    }
+}
+
+function regenerateLogoFromModal() {
+    generateLogoFromModal();
+}
+
+async function saveGeneratedLogo() {
+    if (!generatedLogoPath) {
+        alert('No logo generated yet');
+        return;
+    }
+    
+    const statusDiv = document.getElementById('generationStatus');
+    const statusMessage = document.getElementById('statusMessage');
+    
+    statusDiv.style.display = 'block';
+    statusDiv.className = 'alert alert-info';
+    statusMessage.textContent = 'Saving logo to your business profile...';
+    
+    try {
+        const formData = new FormData();
+        formData.append('_token', document.querySelector('meta[name="csrf-token"]').content);
+        formData.append('_method', 'PUT');
+        formData.append('generated_logo_path', generatedLogoPath);
+        formData.append('name', {!! json_encode(Auth::user()->business->name ?? '') !!});
+        formData.append('business_type', {!! json_encode(Auth::user()->business->business_type ?? '') !!});
+        formData.append('phone', {!! json_encode(Auth::user()->business->phone ?? '') !!});
+        formData.append('address', {!! json_encode(Auth::user()->business->address ?? '') !!});
+        formData.append('city', {!! json_encode(Auth::user()->business->city ?? '') !!});
+        
+        const response = await fetch('{{ route("business.update") }}', {
+            method: 'POST',
+            body: formData
+        });
+        
+        if (response.ok) {
+            statusDiv.className = 'alert alert-success';
+            statusMessage.innerHTML = '<i class="fas fa-check"></i> Logo saved successfully! Refreshing page...';
+            setTimeout(() => {
+                window.location.reload();
+            }, 1500);
+        } else {
+            throw new Error('Failed to save logo');
+        }
+    } catch (error) {
+        statusDiv.className = 'alert alert-danger';
+        statusMessage.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Error saving logo: ' + error.message;
+    }
+}
+
+// Auto-show subscription modal for non-enterprise users
+@if(Auth::user()->business && !Auth::user()->business->isEnterprise())
+document.addEventListener('DOMContentLoaded', function() {
+    // Check if modal was dismissed in this session
+    const modalDismissed = sessionStorage.getItem('subscriptionModalDismissed');
+    
+    // Check last shown time in localStorage (persistent across sessions)
+    const lastShown = localStorage.getItem('subscriptionModalLastShown');
+    const now = new Date().getTime();
+    const threeDays = 3 * 24 * 60 * 60 * 1000; // 3 days in milliseconds
+    
+    // Show modal if:
+    // 1. Not dismissed in this session
+    // 2. Either never shown before OR last shown more than 3 days ago
+    if (!modalDismissed && (!lastShown || (now - parseInt(lastShown)) > threeDays)) {
+        // Wait 10 seconds after page load before showing modal
+        setTimeout(function() {
+            const modal = new bootstrap.Modal(document.getElementById('subscriptionUpgradeModal'));
+            modal.show();
+            
+            // Record when modal was shown
+            localStorage.setItem('subscriptionModalLastShown', now.toString());
+        }, 10000); // 10 seconds delay
+    }
+    
+    // Mark as dismissed when user closes the modal
+    document.getElementById('subscriptionUpgradeModal')?.addEventListener('hidden.bs.modal', function() {
+        sessionStorage.setItem('subscriptionModalDismissed', 'true');
+    });
+});
+@endif
+</script>
+
+<!-- Subscription Upgrade Modal (Auto-popup for non-enterprise users) -->
+@if(Auth::user()->business && !Auth::user()->business->isEnterprise())
+<div class="modal fade" id="subscriptionUpgradeModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="true" data-bs-keyboard="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content" style="border: none; border-radius: 16px; overflow: hidden; box-shadow: 0 20px 60px rgba(0,0,0,0.3);">
+            <!-- Header with gradient -->
+            <div class="modal-header" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none; padding: 2rem; position: relative; overflow: hidden;">
+                <!-- Decorative elements -->
+                <div style="position: absolute; top: -50px; right: -50px; width: 200px; height: 200px; background: rgba(255,255,255,0.1); border-radius: 50%;"></div>
+                <div style="position: absolute; bottom: -30px; left: -30px; width: 150px; height: 150px; background: rgba(255,255,255,0.08); border-radius: 50%;"></div>
+                
+                <div style="position: relative; z-index: 1; width: 100%;">
+                    <div class="text-center">
+                        <div style="font-size: 3rem; margin-bottom: 0.5rem;">
+                            <i class="fas fa-crown text-warning"></i>
+                        </div>
+                        <h4 class="mb-1" style="color: white; font-weight: 700;">Upgrade Your Plan</h4>
+                        <p class="mb-0" style="color: rgba(255,255,255,0.9);">Unlock powerful features - Pay with M-Pesa via Paystack</p>
+                    </div>
+                </div>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close" style="position: absolute; top: 1rem; right: 1rem; z-index: 2;"></button>
+            </div>
+            
+            <!-- Body -->
+            <div class="modal-body p-4">
+                @if(session('success'))
+                    <div class="alert alert-success alert-dismissible fade show" role="alert">
+                        <i class="fas fa-check-circle me-2"></i>{{ session('success') }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                @endif
+                
+                @if(session('error'))
+                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                        <i class="fas fa-exclamation-circle me-2"></i>{{ session('error') }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                @endif
+                
+                <form action="{{ route('subscription.upgrade') }}" method="POST" id="dashboardUpgradeForm">
+                    @csrf
+                    
+                    <!-- Plan Selection -->
+                    <h6 class="mb-3">Choose Your Plan:</h6>
+                    <div class="row g-3 mb-4">
+                        <!-- Premium Plan -->
+                        <div class="col-md-6">
+                            <div class="card plan-card-dashboard h-100" data-plan="premium" style="cursor: pointer; transition: all 0.3s; border: 2px solid #e5e7eb;">
+                                <div class="card-body text-center p-4">
+                                    <div class="mb-3">
+                                        <i class="fas fa-star fa-2x text-primary"></i>
+                                    </div>
+                                    <h5 class="mb-2">Premium Plan</h5>
+                                    <h3 class="mb-1">
+                                        <span style="font-size: 2rem; font-weight: 700; color: #667eea;">KSH 5</span>
+                                        <span class="text-muted">/month</span>
+                                    </h3>
+                                    <p class="text-muted small mb-3">Perfect for growing businesses</p>
+                                    <ul class="list-unstyled text-start small">
+                                        <li class="mb-2"><i class="fas fa-check text-success me-2"></i>AI Website Builder</li>
+                                        <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Advanced Analytics</li>
+                                        <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Email Support</li>
+                                        <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Up to 1,000 products</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Enterprise Plan -->
+                        <div class="col-md-6">
+                            <div class="card plan-card-dashboard h-100" data-plan="enterprise" style="cursor: pointer; transition: all 0.3s; border: 2px solid #10b981;">
+                                <div class="card-body text-center p-4 position-relative">
+                                    <span class="badge bg-success position-absolute top-0 end-0 m-2">Most Popular</span>
+                                    <div class="mb-3">
+                                        <i class="fas fa-crown fa-2x text-warning"></i>
+                                    </div>
+                                    <h5 class="mb-2">Enterprise Plan</h5>
+                                    <h3 class="mb-1">
+                                        <span style="font-size: 2rem; font-weight: 700; color: #10b981;">KSH 10</span>
+                                        <span class="text-muted">/month</span>
+                                    </h3>
+                                    <p class="text-muted small mb-3">Everything you need to scale</p>
+                                    <ul class="list-unstyled text-start small">
+                                        <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Everything in Premium</li>
+                                        <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Priority Support (2hrs)</li>
+                                        <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Unlimited Products</li>
+                                        <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Custom Branding</li>
+                                        <li class="mb-2"><i class="fas fa-check text-success me-2"></i>API Access</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <input type="hidden" name="plan" id="selectedPlanDashboard" value="enterprise" required>
+                    
+                    <!-- Payment Details -->
+                    <h6 class="mb-3">M-Pesa Payment Details:</h6>
+                    <div class="mb-3">
+                        <label for="phoneNumberDashboard" class="form-label">M-Pesa Phone Number <span class="text-danger">*</span></label>
+                        <input type="tel" class="form-control" id="phoneNumberDashboard" name="phone_number" 
+                               placeholder="07XXXXXXXX or 254XXXXXXXXX" 
+                               pattern="^(254|0)[17]\d{8}$"
+                               required>
+                        <div class="form-text">Enter your Safaricom M-Pesa number</div>
+                    </div>
+
+                    <div class="alert alert-info">
+                        <i class="fas fa-mobile-alt me-2"></i>
+                        <strong>How it works:</strong>
+                        <ol class="mb-0 mt-2 ps-3 small">
+                            <li>Select your preferred plan above</li>
+                            <li>Enter your M-Pesa phone number</li>
+                            <li>Click "Pay with M-Pesa" below</li>
+                            <li>You'll receive an STK Push prompt on your phone</li>
+                            <li>Enter your M-Pesa PIN to authorize payment</li>
+                            <li>Your plan will be upgraded instantly!</li>
+                        </ol>
+                    </div>
+
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" id="agreeTermsDashboard" required>
+                        <label class="form-check-label" for="agreeTermsDashboard">
+                            I agree to the subscription terms and M-Pesa payment will be processed via Paystack
+                        </label>
+                    </div>
+                </form>
+            </div>
+            
+            <!-- Footer -->
+            <div class="modal-footer" style="border: none; padding: 1.5rem 2rem;">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="submit" form="dashboardUpgradeForm" class="btn btn-success btn-lg" style="font-weight: 700; padding: 0.75rem 2rem;">
+                    <i class="fas fa-mobile-alt me-2"></i>Pay with M-Pesa
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Payment Status Modal (Small) -->
+<div class="modal fade" id="paymentStatusModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+    <div class="modal-dialog modal-dialog-centered modal-sm">
+        <div class="modal-content" style="border: none; border-radius: 12px; overflow: hidden;">
+            <div class="modal-body text-center p-4" id="paymentStatusContent">
+                <!-- Dynamic content will be inserted here -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Plan selection for dashboard upgrade modal
+document.addEventListener('DOMContentLoaded', function() {
+    const planCards = document.querySelectorAll('.plan-card-dashboard');
+    const selectedPlanInput = document.getElementById('selectedPlanDashboard');
+    
+    if (planCards.length > 0 && selectedPlanInput) {
+        // Set Enterprise as default selection
+        const enterpriseCard = document.querySelector('.plan-card-dashboard[data-plan="enterprise"]');
+        if (enterpriseCard) {
+            enterpriseCard.style.borderColor = '#10b981';
+            enterpriseCard.style.boxShadow = '0 4px 16px rgba(16, 185, 129, 0.3)';
+            enterpriseCard.style.transform = 'scale(1.02)';
+        }
+        
+        planCards.forEach(card => {
+            card.addEventListener('click', function() {
+                const plan = this.getAttribute('data-plan');
+                
+                // Remove selection from all cards
+                planCards.forEach(c => {
+                    c.style.borderColor = '#e5e7eb';
+                    c.style.boxShadow = 'none';
+                    c.style.transform = 'scale(1)';
+                });
+                
+                // Highlight selected card
+                if (plan === 'premium') {
+                    this.style.borderColor = '#667eea';
+                    this.style.boxShadow = '0 4px 16px rgba(102, 126, 234, 0.3)';
+                } else {
+                    this.style.borderColor = '#10b981';
+                    this.style.boxShadow = '0 4px 16px rgba(16, 185, 129, 0.3)';
+                }
+                this.style.transform = 'scale(1.02)';
+                
+                // Update hidden input
+                selectedPlanInput.value = plan;
+            });
+        });
+    }
+    
+    // Check if there's a payment_reference from M-Pesa payment initiation
+    @if(session('payment_reference'))
+        const paymentReference = '{{ session("payment_reference") }}';
+        startPaymentStatusPolling(paymentReference);
+    @endif
+    
+    // Handle form submission via AJAX to prevent page reload
+    const upgradeForm = document.getElementById('dashboardUpgradeForm');
+    if (upgradeForm) {
+        upgradeForm.addEventListener('submit', function(e) {
+            e.preventDefault(); // Prevent default form submission
+            
+            console.log('Form action URL:', this.action);
+            console.log('Form method:', this.method);
+            
+            const formData = new FormData(this);
+            console.log('Form data entries:');
+            for (let [key, value] of formData.entries()) {
+                console.log(key + ':', value);
+            }
+            
+            const submitButton = document.querySelector('button[form="dashboardUpgradeForm"]');
+            
+            // Disable submit button
+            if (submitButton) {
+                submitButton.disabled = true;
+                submitButton.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Sending STK Push...';
+            }
+            
+            // Submit via AJAX
+            fetch(this.action, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json'
+                }
+            })
+            .then(response => {
+                console.log('Response status:', response.status);
+                console.log('Response content-type:', response.headers.get('content-type'));
+                
+                // Check if response is JSON
+                const contentType = response.headers.get('content-type');
+                if (contentType && contentType.includes('application/json')) {
+                    return response.json().then(data => ({
+                        ok: response.ok,
+                        status: response.status,
+                        data: data
+                    }));
+                } else {
+                    // Response is HTML, likely an error page
+                    return response.text().then(html => {
+                        console.error('Received HTML instead of JSON:', html.substring(0, 500));
+                        throw new Error('Server returned HTML instead of JSON. Check if you are logged in and the route is correct.');
+                    });
+                }
+            })
+            .then(result => {
+                console.log('Parsed result:', result);
+                
+                if (result.ok && result.data.success) {
+                    console.log('Payment initiated successfully:', result.data);
+                    // Start polling with the reference from response
+                    startPaymentStatusPolling(result.data.reference);
+                } else {
+                    // Show error message
+                    const errorMsg = result.data.message || result.data.error || 'Failed to initiate payment';
+                    alert('Error: ' + errorMsg);
+                    console.error('Payment initiation failed:', result.data);
+                    
+                    // Re-enable submit button
+                    if (submitButton) {
+                        submitButton.disabled = false;
+                        submitButton.innerHTML = '<i class="fas fa-mobile-alt me-2"></i>Pay with M-Pesa';
+                    }
+                }
+            })
+            .catch(error => {
+                console.error('Error submitting payment:', error);
+                alert('An error occurred while initiating payment. Please check console for details.');
+                
+                // Re-enable submit button
+                if (submitButton) {
+                    submitButton.disabled = false;
+                    submitButton.innerHTML = '<i class="fas fa-mobile-alt me-2"></i>Pay with M-Pesa';
+                }
+            });
+        });
+    }
+});
+
+// Payment status polling for M-Pesa via Paystack
+let pollingInterval = null;
+let pollingAttempts = 0;
+const MAX_POLLING_ATTEMPTS = 90; // Poll for 3 minutes (90 attempts * 2 seconds)
+let modalInstance = null;
+
+function startPaymentStatusPolling(reference) {
+    if (!reference) return;
+    
+    console.log('Starting M-Pesa payment status polling for:', reference);
+    
+    pollingAttempts = 0;
+    
+    // Get or create modal instance and prevent closing
+    const modalElement = document.getElementById('subscriptionUpgradeModal');
+    if (modalElement) {
+        modalInstance = bootstrap.Modal.getInstance(modalElement) || new bootstrap.Modal(modalElement);
+        
+        // Prevent modal from closing during payment processing
+        modalElement.setAttribute('data-bs-backdrop', 'static');
+        modalElement.setAttribute('data-bs-keyboard', 'false');
+        
+        // Hide the close button
+        const closeButton = modalElement.querySelector('.btn-close');
+        if (closeButton) closeButton.style.display = 'none';
+        
+        // Disable the cancel button
+        const cancelButton = modalElement.querySelector('[data-bs-dismiss="modal"]');
+        if (cancelButton) {
+            cancelButton.disabled = true;
+            cancelButton.style.opacity = '0.5';
+        }
+    }
+    
+    // Show loading message in modal
+    let statusAlert = document.getElementById('paymentStatusAlert');
+    if (!statusAlert) {
+        statusAlert = document.createElement('div');
+        statusAlert.id = 'paymentStatusAlert';
+        statusAlert.className = 'alert alert-info';
+        statusAlert.style.marginBottom = '1rem';
+        
+        const formElement = document.getElementById('dashboardUpgradeForm');
+        if (formElement) {
+            formElement.insertAdjacentElement('beforebegin', statusAlert);
+        }
+    }
+    
+    // Update status with animated spinner
+    statusAlert.innerHTML = `
+        <div class="d-flex align-items-center">
+            <div class="spinner-border spinner-border-sm text-primary me-3" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <div>
+                <strong><i class="fas fa-mobile-alt me-2"></i>Waiting for M-Pesa payment...</strong>
+                <p class="mb-0 small mt-1">Please check your phone and enter your M-Pesa PIN to complete the payment. This may take a few moments.</p>
+            </div>
+        </div>
+    `;
+    
+    // Disable the payment form
+    const submitButton = document.querySelector('button[form="dashboardUpgradeForm"]');
+    if (submitButton) {
+        submitButton.disabled = true;
+        submitButton.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Processing...';
+    }
+    
+    const phoneInput = document.getElementById('phoneNumberDashboard');
+    if (phoneInput) phoneInput.disabled = true;
+    
+    const planCards = document.querySelectorAll('.plan-card-dashboard');
+    planCards.forEach(card => card.style.pointerEvents = 'none');
+    
+    // Clear any existing polling interval
+    if (pollingInterval) {
+        clearInterval(pollingInterval);
+    }
+    
+    // Start polling every 2 seconds
+    pollingInterval = setInterval(() => {
+        pollingAttempts++;
+        
+        // Update status message with attempt count
+        const timeElapsed = Math.floor(pollingAttempts * 2 / 60);
+        const secondsElapsed = pollingAttempts * 2 % 60;
+        statusAlert.innerHTML = `
+            <div class="d-flex align-items-center">
+                <div class="spinner-border spinner-border-sm text-primary me-3" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <div>
+                    <strong><i class="fas fa-mobile-alt me-2"></i>Waiting for M-Pesa payment...</strong>
+                    <p class="mb-0 small mt-1">Checking status... ${timeElapsed}m ${secondsElapsed}s elapsed. Please enter your M-Pesa PIN if you haven't already.</p>
+                </div>
+            </div>
+        `;
+        
+        if (pollingAttempts > MAX_POLLING_ATTEMPTS) {
+            stopPaymentStatusPolling();
+            updateStatusAlert('warning', `
+                <i class="fas fa-clock me-2"></i>
+                <strong>Payment verification timed out</strong>
+                <p class="mb-0 small mt-1">Your payment may still be processing. Please check your M-Pesa messages or contact support if money was deducted.</p>
+            `, true);
+            enableModalControls();
+            return;
+        }
+        
+        fetch('{{ route("subscription.check.status") }}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+            },
+            body: JSON.stringify({
+                reference: reference
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log('Payment status:', data);
+            
+            if (data.status === 'completed') {
+                stopPaymentStatusPolling();
+                
+                // Close main modal and show success modal
+                const mainModal = bootstrap.Modal.getInstance(document.getElementById('subscriptionUpgradeModal'));
+                if (mainModal) mainModal.hide();
+                
+                showPaymentStatusModal('success', 'Payment Successful!', 
+                    `Your plan has been upgraded to <strong>${data.plan.toUpperCase()}</strong>.<br>Redirecting...`);
+                
+                // Reload page after 3 seconds to show updated plan
+                setTimeout(() => {
+                    window.location.href = '{{ route("dashboard") }}';
+                }, 3000);
+                
+            } else if (data.status === 'failed') {
+                stopPaymentStatusPolling();
+                
+                // Close main modal and show failure modal
+                const mainModal = bootstrap.Modal.getInstance(document.getElementById('subscriptionUpgradeModal'));
+                if (mainModal) mainModal.hide();
+                
+                const failureReason = data.result_desc || 'The payment could not be completed';
+                showPaymentStatusModal('error', 'Payment Failed', failureReason, true);
+            }
+            // If status is still 'pending', continue polling
+        })
+        .catch(error => {
+            console.error('Error checking payment status:', error);
+        });
+    }, 2000); // Poll every 2 seconds
+}
+
+function stopPaymentStatusPolling() {
+    if (pollingInterval) {
+        clearInterval(pollingInterval);
+        pollingInterval = null;
+    }
+}
+
+function enableModalControls() {
+    // Re-enable modal closing
+    const modalElement = document.getElementById('subscriptionUpgradeModal');
+    if (modalElement) {
+        modalElement.setAttribute('data-bs-backdrop', 'true');
+        modalElement.setAttribute('data-bs-keyboard', 'true');
+        
+        // Show the close button
+        const closeButton = modalElement.querySelector('.btn-close');
+        if (closeButton) closeButton.style.display = 'block';
+        
+        // Enable the cancel button
+        const cancelButton = modalElement.querySelector('[data-bs-dismiss="modal"]');
+        if (cancelButton) {
+            cancelButton.disabled = false;
+            cancelButton.style.opacity = '1';
+        }
+    }
+    
+    // Re-enable form controls
+    const submitButton = document.querySelector('button[form="dashboardUpgradeForm"]');
+    if (submitButton) {
+        submitButton.disabled = false;
+        submitButton.innerHTML = '<i class="fas fa-mobile-alt me-2"></i>Pay with M-Pesa';
+    }
+    
+    const phoneInput = document.getElementById('phoneNumberDashboard');
+    if (phoneInput) phoneInput.disabled = false;
+    
+    const planCards = document.querySelectorAll('.plan-card-dashboard');
+    planCards.forEach(card => card.style.pointerEvents = 'auto');
+}
+
+function updateStatusAlert(type, message, allowDismiss) {
+    const statusAlert = document.getElementById('paymentStatusAlert');
+    if (statusAlert) {
+        statusAlert.className = 'alert alert-' + type + (allowDismiss ? ' alert-dismissible fade show' : '');
+        statusAlert.innerHTML = message + (allowDismiss ? '<button type="button" class="btn-close" data-bs-dismiss="alert"></button>' : '');
+    }
+}
+
+function showPaymentStatusModal(type, title, message, allowRetry = false) {
+    const statusContent = document.getElementById('paymentStatusContent');
+    const statusModal = new bootstrap.Modal(document.getElementById('paymentStatusModal'));
+    
+    let icon = '';
+    let iconColor = '';
+    let bgColor = '';
+    
+    if (type === 'success') {
+        icon = 'fa-check-circle';
+        iconColor = 'text-success';
+        bgColor = '#d4edda';
+    } else if (type === 'error') {
+        icon = 'fa-times-circle';
+        iconColor = 'text-danger';
+        bgColor = '#f8d7da';
+    } else {
+        icon = 'fa-exclamation-triangle';
+        iconColor = 'text-warning';
+        bgColor = '#fff3cd';
+    }
+    
+    let buttonHtml = '';
+    if (allowRetry) {
+        buttonHtml = '<button type="button" class="btn btn-primary btn-sm mt-3" onclick="location.reload()">Try Again</button>';
+    }
+    
+    statusContent.innerHTML = `
+        <div style="background: ${bgColor}; padding: 1.5rem; border-radius: 8px;">
+            <div style="font-size: 3rem; margin-bottom: 1rem;">
+                <i class="fas ${icon} ${iconColor}"></i>
+            </div>
+            <h5 class="mb-2">${title}</h5>
+            <p class="mb-0 small text-muted">${message}</p>
+            ${buttonHtml}
+        </div>
+    `;
+    
+    statusModal.show();
+    
+    // Auto-close on success after showing for a moment
+    if (type === 'success') {
+        setTimeout(() => {
+            statusModal.hide();
+        }, 2500);
+    }
+}
+
+</script>
+@endif
+
 @endsection

@@ -28,20 +28,94 @@ use App\Http\Controllers\OrderController;
 use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\BrandController;
+use App\Http\Controllers\ProductConversionController;
 use App\Http\Controllers\AIAnalysisController;
 use App\Http\Controllers\AIContentController;
 use App\Http\Controllers\AIAdviceController;
 use App\Http\Controllers\ContinuousKnowledgeController;
 use App\Http\Controllers\AICommunicationController;
 use App\Http\Controllers\LearningTriggerController;
+use App\Http\Controllers\TwoFactorAuthController;
+use App\Http\Controllers\PWAController;
+use App\Http\Controllers\TaxController;
+use App\Http\Controllers\ReportsController;
+use App\Http\Controllers\SettingsController;
+use App\Http\Controllers\ReturnsController;
+use App\Http\Controllers\OCRController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\NotificationController;
+
+// Temporary debugging route - REMOVE after debugging
+Route::get('/debug-notifications', function() {
+    try {
+        $checks = [
+            'storage_writable' => is_writable(storage_path('logs')),
+            'cache_working' => Cache::put('test_key', 'test_value', 60) && Cache::get('test_key') === 'test_value',
+            'database_connected' => DB::connection()->getPdo() !== null,
+            'notifications_table_exists' => Schema::hasTable('notifications'),
+            'cache_driver' => config('cache.default'),
+            'log_channel' => config('logging.default'),
+            'app_debug' => config('app.debug'),
+            'app_env' => config('app.env'),
+        ];
+        
+        // Check recent notifications
+        $recentNotifications = DB::table('notifications')->orderBy('created_at', 'desc')->limit(5)->get();
+        
+        // Get recent log errors
+        $logFile = storage_path('logs/laravel.log');
+        $logErrors = [];
+        if (file_exists($logFile)) {
+            $logContent = file_get_contents($logFile);
+            preg_match_all('/Failed to send.*?notifications.*?$/m', $logContent, $matches);
+            $logErrors = array_slice($matches[0], -10);
+        }
+        
+        return response()->json([
+            'system_checks' => $checks,
+            'recent_notifications' => $recentNotifications,
+            'recent_errors' => $logErrors,
+            'permissions' => [
+                'storage_path' => storage_path(),
+                'logs_path' => storage_path('logs'),
+                'logs_writable' => is_writable(storage_path('logs')),
+                'storage_writable' => is_writable(storage_path()),
+            ]
+        ], 200, [], JSON_PRETTY_PRINT);
+        
+    } catch (\Exception $e) {
+        return response()->json([
+            'error' => $e->getMessage(),
+            'trace' => $e->getTraceAsString()
+        ], 500);
+    }
+})->name('debug.notifications');
 
 Route::get('/',[IndexController::class,'index'])->name('index');
-Route::get('/business', [BusinessController::class, 'index'])->name('businesses');
+Route::get('/businesses', [BusinessController::class, 'index'])->name('businesses');
+Route::get('/docs', function () {
+    return view('docs.index');
+})->name('docs');
+
+// Public website viewer (no subdomain needed - quick access)
+use App\Http\Controllers\PublicWebsiteController;
+Route::get('/site/{subdomain}', [PublicWebsiteController::class, 'homepage'])
+    ->name('public.website.direct');
+Route::get('/site/{subdomain}/{slug}', [PublicWebsiteController::class, 'page'])
+    ->name('public.website.direct.page');
+
 Route::post('/orders', [OrderController::class, 'store'])->name('orders.store');
 Route::post('/service-bookings/public', [ServiceBookingController::class, 'storePublic'])->name('service-bookings.store-public');
+
+// Contact Form Route
+use App\Http\Controllers\ContactFormController;
+Route::post('/contact', [ContactFormController::class, 'submit'])->name('contact.submit');
+
+// Chatbot Route
+use App\Http\Controllers\ChatbotController;
+Route::post('/chatbot/message', [ChatbotController::class, 'message'])->name('chatbot.message');
 
 // Language Switch Route
 Route::get('/language/{language}', function ($language) {
@@ -52,30 +126,126 @@ Route::get('/language/{language}', function ($language) {
     return redirect()->back();
 })->name('language.switch');
 
-Auth::routes();
+Auth::routes(['verify' => true]);
+
+// Email Verification Routes
+Route::get('/email/verify', function () {
+    return view('auth.verify');
+})->middleware('auth')->name('verification.notice');
+
+Route::get('/email/verify/{id}/{hash}', function (Illuminate\Foundation\Auth\EmailVerificationRequest $request) {
+    \Illuminate\Support\Facades\Log::info('Email verification attempt', [
+        'user_id' => $request->route('id'),
+        'hash' => $request->route('hash'),
+        'signature' => $request->query('signature'),
+        'expires' => $request->query('expires'),
+        'request_url' => $request->fullUrl(),
+        'has_valid_signature' => $request->hasValidSignature(),
+    ]);
+    
+    $request->fulfill();
+    return redirect('/business/choose-type');
+})->middleware(['auth', 'signed'])->name('verification.verify');
+
+Route::post('/email/verification-notification', function (Illuminate\Http\Request $request) {
+    $request->user()->sendEmailVerificationNotification();
+    return back()->with('message', 'Verification link sent!');
+})->middleware(['auth', 'throttle:6,1'])->name('verification.send');
 
 // Test route for flash messages
 Route::get('/test-flash', function () {
     return redirect()->route('dashboard')->with('success', 'Flash message test successful! This message should appear immediately.');
 })->middleware('auth');
 
+// Debug route to test business access
+Route::get('/debug-business', function () {
+    $user = auth()->user();
+    $business = $user ? $user->business : null;
+    
+    return response()->json([
+        'authenticated' => auth()->check(),
+        'user_id' => $user ? $user->id : null,
+        'has_business' => $business ? true : false,
+        'business_id' => $business ? $business->id : null,
+        'business_name' => $business ? $business->name : null,
+        'business_slug' => $business ? $business->slug : null,
+    ]);
+})->middleware('auth');
+
+// PUBLIC BUSINESS SHOW ROUTE - Moved AFTER specific business routes to avoid conflicts
 
 Route::get('/dashboard', [DashboardController::class, 'dashboard'])->name('dashboard')->middleware('auth');
 
 Route::get('/business/choose-type', [BusinessController::class, 'chooseType'])->name('business.choose-type')->middleware('auth');
 Route::get('/business/create', [BusinessController::class, 'create'])->name('business.create')->middleware('auth');
 Route::post('/business/store', [BusinessController::class, 'store'])->name('business.store')->middleware('auth');
+Route::post('/business/enhance-description', [BusinessController::class, 'enhanceDescription'])->name('business.enhance-description')->middleware('auth');
+Route::post('/business/generate-logo', [BusinessController::class, 'generateLogo'])->name('business.generate-logo')->middleware('auth');
 
-// This route must come AFTER the specific /business/* routes to avoid conflicts
-Route::get('/business/{slug}', [BusinessController::class, 'show'])->name('business.show');
+// OCR Data Capture Routes
+Route::prefix('ocr')->middleware('auth')->group(function () {
+    Route::get('/', [OCRController::class, 'index'])->name('ocr.index');
+    Route::post('/extract', [OCRController::class, 'extract'])->name('ocr.extract');
+    Route::post('/save', [OCRController::class, 'save'])->name('ocr.save');
+});
+
+// PUBLIC BUSINESS SHOW ROUTE - Moved to after ALL business routes
+
+// REMOVED: This route will be moved after specific business routes to avoid conflicts
+
+// Social Media Connections (available to all authenticated users)
+Route::prefix('social')->middleware('auth')->group(function () {
+    Route::get('/connect/{platform}', [SocialMediaController::class, 'connect'])->name('social.connect');
+    Route::get('/callback/{platform}', [SocialMediaController::class, 'callback'])->name('social.callback');
+    Route::delete('/disconnect/{account}', [SocialMediaController::class, 'disconnect'])->name('social.disconnect');
+    Route::post('/refresh/{account}', [SocialMediaController::class, 'refreshToken'])->name('social.refresh');
+});
+
+// Marketing & Social Media Routes (available to all authenticated users with business)
+Route::prefix('marketing')->middleware(['auth', 'has.business'])->group(function () {
+    Route::get('/social-media', [MarketingPostController::class, 'index'])->name('marketing.social-media');
+    
+    // Marketing Posts
+    Route::prefix('posts')->group(function () {
+        Route::get('/', [MarketingPostController::class, 'postsIndex'])->name('marketing.posts.index');
+        Route::post('/', [MarketingPostController::class, 'store'])->name('marketing.posts.store');
+        Route::get('/{post}', [MarketingPostController::class, 'show'])->name('marketing.posts.show');
+        Route::get('/{post}/edit', [MarketingPostController::class, 'edit'])->name('marketing.posts.edit');
+        Route::put('/{post}', [MarketingPostController::class, 'update'])->name('marketing.posts.update');
+        Route::delete('/{post}', [MarketingPostController::class, 'destroy'])->name('marketing.posts.destroy');
+        Route::post('/{post}/publish', [MarketingPostController::class, 'publish'])->name('marketing.posts.publish');
+        Route::get('/{post}/analytics', [MarketingPostController::class, 'analytics'])->name('marketing.posts.analytics');
+        Route::post('/{post}/duplicate', [MarketingPostController::class, 'duplicate'])->name('marketing.posts.duplicate');
+        
+        // AI-powered features
+        Route::post('/ai/generate-content', [MarketingPostController::class, 'generateContent'])->name('marketing.posts.ai.generate');
+        Route::post('/ai/enhance-content', [MarketingPostController::class, 'enhanceContent'])->name('marketing.posts.ai.enhance');
+        Route::post('/ai/generate-image-prompts', [MarketingPostController::class, 'generateImagePrompts'])->name('marketing.posts.ai.image-prompts');
+        Route::post('/ai/enhance-image-prompt', [MarketingPostController::class, 'enhanceImagePrompt'])->name('marketing.posts.ai.enhance-prompt');
+        Route::post('/ai/generate-image', [MarketingPostController::class, 'generateImage'])->name('marketing.posts.ai.generate-image');
+        Route::post('/ai/generate-video-prompts', [MarketingPostController::class, 'generateVideoPrompts'])->name('marketing.posts.ai.video-prompts');
+        Route::post('/ai/enhance-video-prompt', [MarketingPostController::class, 'enhanceVideoPrompt'])->name('marketing.posts.ai.enhance-video-prompt');
+    });
+});
+
+// Business Show Route (Public) — defined AFTER the authenticated /business group to avoid conflicts
 
 Route::middleware(['auth', 'verified'])->group(function () {
     
+    // Routes are now properly ordered - debug routes removed
+
     // Business Profile Routes (for users with businesses)
     Route::prefix('business')->middleware('has.business')->group(function () {
+        Route::get('/profile', [BusinessController::class, 'edit'])->name('business.profile');
         Route::get('/edit', [BusinessController::class, 'edit'])->name('business.edit');
         Route::put('/update', [BusinessController::class, 'update'])->name('business.update');
-
+        
+        // Business deletion with email verification
+        Route::post('/deletion/send-code', [BusinessController::class, 'sendDeletionCode'])->name('business.deletion.send-code');
+        Route::post('/deletion/verify', [BusinessController::class, 'verifyAndDelete'])->name('business.deletion.verify');
+        
+        // Legacy deletion routes (kept for backward compatibility)
+        Route::post('/initiate-deletion', [BusinessController::class, 'initiateDeletion'])->name('business.initiate-deletion');
         Route::delete('/{business}', [BusinessController::class, 'destroy'])
             ->name('business.destroy')
             ->can('delete', 'business');
@@ -98,39 +268,122 @@ Route::middleware(['auth', 'verified'])->group(function () {
         })->name('password.verify');
     });
 
+  
+
+    // Two-Factor Authentication Routes
+    Route::prefix('2fa')->middleware('auth')->group(function () {
+        Route::get('/verify', [TwoFactorAuthController::class, 'showVerificationForm'])->name('2fa.verify.form');
+        Route::post('/send', [TwoFactorAuthController::class, 'sendCode'])->name('2fa.send');
+        Route::post('/verify', [TwoFactorAuthController::class, 'verifyCode'])->name('2fa.verify');
+        Route::post('/resend', [TwoFactorAuthController::class, 'resendCode'])->name('2fa.resend');
+            Route::post('/cancel', [TwoFactorAuthController::class, 'cancelVerification'])->name('2fa.cancel');
+});
+
+// PWA Routes
+Route::prefix('pwa')->middleware(['auth'])->group(function () {
+    Route::get('/status', [PWAController::class, 'getStatus'])->name('pwa.status');
+    Route::post('/sync', [PWAController::class, 'syncOfflineData'])->name('pwa.sync');
+    Route::get('/offline-data', [PWAController::class, 'getOfflineData'])->name('pwa.offline-data');
+    Route::post('/store-action', [PWAController::class, 'storeOfflineAction'])->name('pwa.store-action');
+    Route::get('/offline-actions', [PWAController::class, 'getOfflineActions'])->name('pwa.offline-actions');
+    Route::post('/clear-actions', [PWAController::class, 'clearOfflineActions'])->name('pwa.clear-actions');
+    Route::post('/update-cache', [PWAController::class, 'updateCache'])->name('pwa.update-cache');
+});
+
+// PWA Install Guide Route
+Route::get('/pwa/install-guide', function () {
+    return view('pwa.install-guide');
+})->name('pwa.install-guide')->middleware('auth');
+
+// PWA Debug Route
+Route::get('/pwa/debug', function () {
+    return view('pwa.debug');
+})->name('pwa.debug');
+
+// Notifications Routes
+Route::prefix('notifications')->name('notifications.')->middleware(['auth', 'has.business'])->group(function () {
+    Route::get('/', [\App\Http\Controllers\NotificationController::class, 'index'])->name('index');
+    Route::get('/unread-count', [\App\Http\Controllers\NotificationController::class, 'unreadCount'])->name('unread-count');
+    Route::patch('/{id}/read', [\App\Http\Controllers\NotificationController::class, 'markAsRead'])->name('mark-read');
+    Route::patch('/mark-all-read', [\App\Http\Controllers\NotificationController::class, 'markAllAsRead'])->name('mark-all-read');
+});
+
     // Products Routes
-    Route::prefix('products')->group(function () {
-        Route::get('/', [ProductsController::class, 'index'])->name('products.index')->middleware('has.business');
-        Route::get('/create', [ProductsController::class, 'create'])->name('products.create')->middleware('has.business');
-        Route::post('/', [ProductsController::class, 'store'])->name('products.store')->middleware('has.business');
-        Route::get('/{product}', [ProductsController::class, 'show'])->name('products.show')->middleware('has.business');
-        Route::get('/{product}/edit', [ProductsController::class, 'edit'])->name('products.edit')->middleware('has.business');
-        Route::put('/{product}', [ProductsController::class, 'update'])->name('products.update')->middleware('has.business');
-        Route::delete('/{product}', [ProductsController::class, 'destroy'])->name('products.destroy')->middleware('has.business');
+    Route::prefix('products')->middleware(['auth', 'has.business'])->group(function () {
+        Route::get('/', [ProductsController::class, 'index'])->name('products.index');
+        
+        // Specific routes MUST come before dynamic {product} routes
+        Route::get('/create', [ProductsController::class, 'create'])->name('products.create');
+        Route::get('/quick-create', [ProductsController::class, 'quickCreate'])->name('products.quick-create');
+        
+        // AI Enhancement Route
+        Route::post('/enhance-description', [ProductsController::class, 'enhanceDescription'])->name('products.enhance-description');
         
         // Bulk Import Routes
-        Route::get('/products/bulk-import', [ProductsController::class, 'bulkImport'])->name('products.bulk-import')->middleware('has.business');
-        Route::post('/products/bulk-import/process', [ProductsController::class, 'processBulkImport'])->name('products.bulk-import.process')->middleware('has.business');
-        Route::get('/products/bulk-import/template', [ProductsController::class, 'downloadTemplate'])->name('products.bulk-import.template')->middleware('has.business');
+        Route::get('/bulk-import', [ProductsController::class, 'bulkImport'])->name('products.bulk-import');
+        Route::post('/bulk-import/process', [ProductsController::class, 'processBulkImport'])->name('products.bulk-import.process');
+        Route::get('/bulk-import/template', [ProductsController::class, 'downloadTemplate'])->name('products.bulk-import.template');
         
         // OCR Routes
-        Route::post('/products/ocr/preview', [ProductsController::class, 'previewOCRResults'])->name('products.ocr.preview')->middleware('has.business');
-        Route::post('/products/ocr/process', [ProductsController::class, 'processOCRImages'])->name('products.ocr.process')->middleware('has.business');
+        Route::post('/ocr/preview', [ProductsController::class, 'previewOCRResults'])->name('products.ocr.preview');
+        Route::post('/ocr/process', [ProductsController::class, 'processOCRImages'])->name('products.ocr.process');
         
         // Inventory Routes
-        Route::get('/inventory', [ProductsController::class, 'inventory'])->name('products.inventory')->middleware('has.business');
-        Route::post('/{product}/stock', [ProductsController::class, 'updateStock'])->name('products.update-stock')->middleware('has.business');
-        Route::get('/inventory/export', [ProductsController::class, 'exportInventory'])->name('products.inventory.export')->middleware('has.business');
+        Route::get('/inventory', [ProductsController::class, 'inventory'])->name('products.inventory');
+        Route::get('/inventory/export', [ProductsController::class, 'exportInventory'])->name('products.inventory.export');
+        
+        // Product Receiving Routes (BEFORE {product} routes)
+        Route::get('/receive', [ProductsController::class, 'showReceiveForm'])->name('products.receive');
+        Route::post('/receive/process', [ProductsController::class, 'processReceive'])->name('products.receive.process');
+        Route::get('/receive/history', [ProductsController::class, 'receiptHistory'])->name('products.receive.history');
+        Route::get('/receive/{receipt}', [ProductsController::class, 'showReceipt'])->name('products.receive.show');
+        
+        // POST routes
+        Route::post('/', [ProductsController::class, 'store'])->name('products.store');
+        Route::post('/quick-store', [ProductsController::class, 'quickStore'])->name('products.quick-store');
+        Route::post('/{product}/stock', [ProductsController::class, 'updateStock'])->name('products.update-stock');
+        
+        // Dynamic {product} routes MUST come LAST
+        Route::get('/{product}', [ProductsController::class, 'show'])->name('products.show');
+        Route::get('/{product}/edit', [ProductsController::class, 'edit'])->name('products.edit');
+        Route::put('/{product}', [ProductsController::class, 'update'])->name('products.update');
+        Route::delete('/{product}', [ProductsController::class, 'destroy'])->name('products.destroy');
     });
 
     // Sales Routes
-    Route::prefix('sales')->middleware('has.business')->group(function () {
+    Route::prefix('sales')->middleware(['auth', 'has.business'])->group(function () {
         Route::get('/pos', [SalesController::class, 'pos'])->name('sales.pos');
         Route::get('/orders', [SalesController::class, 'orders'])->name('sales.orders');
         Route::get('/orders/{order}/details', [SalesController::class, 'orderDetails'])->name('sales.order-details');
         Route::put('/orders/{order}/status', [SalesController::class, 'updateOrderStatus'])->name('sales.update-order-status');
         Route::get('/orders/{order}/receipt', [SalesController::class, 'printReceipt'])->name('sales.print-receipt');
-        Route::post('/orders', [SalesController::class, 'createOrder'])->name('sales.create-order');
+        Route::get('/orders/{order}/invoice', [SalesController::class, 'generateInvoice'])->name('sales.generate-invoice');
+        Route::get('/orders/{order}/invoice/view', [SalesController::class, 'viewInvoice'])->name('sales.view-invoice');
+        Route::post('/orders/{order}/record-payment', [SalesController::class, 'recordPayment'])->name('sales.record-payment');
+        
+        // Credit Note Routes
+        Route::get('/orders/{order}/credit-note/create', [SalesController::class, 'createCreditNote'])->name('sales.credit-note.create');
+        Route::post('/orders/{order}/credit-note', [SalesController::class, 'storeCreditNote'])->name('sales.credit-note.store');
+        Route::post('/credit-notes/{creditNote}/send-otp', [SalesController::class, 'sendCreditNoteOtp'])->name('sales.credit-note.send-otp');
+        Route::post('/credit-notes/{creditNote}/verify-otp', [SalesController::class, 'verifyCreditNoteOtp'])->name('sales.credit-note.verify-otp');
+        Route::get('/credit-notes', [SalesController::class, 'listCreditNotes'])->name('sales.credit-notes.index');
+        Route::get('/credit-notes/{creditNote}', [SalesController::class, 'viewCreditNote'])->name('sales.credit-note.view');
+        
+        // Archive Orders
+        Route::post('/orders/{order}/archive', [SalesController::class, 'archiveOrder'])->name('sales.archive-order');
+        Route::post('/orders/bulk-archive', [SalesController::class, 'bulkArchiveOrders'])->name('sales.bulk-archive-orders');
+        Route::get('/orders/archived', [SalesController::class, 'archivedOrders'])->name('sales.archived-orders');
+        
+        // Debt Management
+        Route::get('/debts/customers', [SalesController::class, 'customerDebts'])->name('sales.customer-debts');
+        Route::get('/debts/suppliers', [SalesController::class, 'supplierDebts'])->name('sales.supplier-debts');
+        Route::post('/debts/suppliers', [SalesController::class, 'storeSupplierDebt'])->name('sales.supplier-debts.store');
+        Route::post('/debts/suppliers/{debt}/payment', [SalesController::class, 'recordSupplierPayment'])->name('sales.supplier-debts.payment');
+        
+Route::get('/receipts/{receiptNumber}/reprint', [SalesController::class, 'reprintReceipt'])->name('sales.reprint-receipt');
+Route::get('/receipts/search', [SalesController::class, 'searchReceipts'])->name('sales.search-receipts');
+Route::post('/orders', [SalesController::class, 'createOrder'])->name('sales.create-order');
+        Route::post('/calculate-dynamic-conversion', [SalesController::class, 'calculateDynamicConversion'])->name('sales.calculate-dynamic-conversion');
         Route::get('/customers', [SalesController::class, 'customers'])->name('sales.customers');
         Route::get('/customers/create', [SalesController::class, 'createCustomer'])->name('sales.customers.create');
         Route::get('/customers/{customer}', [SalesController::class, 'customerDetails'])->name('sales.customer-details');
@@ -142,6 +395,24 @@ Route::middleware(['auth', 'verified'])->group(function () {
         // Organization customers
         Route::get('/organization-customers/create', [SalesController::class, 'createOrganizationCustomer'])->name('sales.organization-customers.create');
         Route::post('/organization-customers', [SalesController::class, 'storeOrganizationCustomer'])->name('sales.store-organization-customer');
+    });
+
+    // Contact Import Routes
+    Route::prefix('contacts')->middleware(['auth', 'has.business'])->group(function () {
+        Route::get('/', [\App\Http\Controllers\ContactImportController::class, 'index'])->name('contacts.index');
+        Route::get('/create-group', [\App\Http\Controllers\ContactImportController::class, 'createGroup'])->name('contacts.create-group');
+        Route::post('/store-group', [\App\Http\Controllers\ContactImportController::class, 'storeGroup'])->name('contacts.store-group');
+        Route::get('/{id}', [\App\Http\Controllers\ContactImportController::class, 'show'])->name('contacts.show');
+        Route::get('/{id}/import', [\App\Http\Controllers\ContactImportController::class, 'showImport'])->name('contacts.import');
+        Route::post('/{id}/import-csv', [\App\Http\Controllers\ContactImportController::class, 'importCsv'])->name('contacts.import-csv');
+        Route::post('/{id}/import-vcf', [\App\Http\Controllers\ContactImportController::class, 'importVcf'])->name('contacts.import-vcf');
+        Route::get('/{id}/google-import', [\App\Http\Controllers\ContactImportController::class, 'initiateGoogleImport'])->name('contacts.google-import');
+        Route::get('/google/callback', [\App\Http\Controllers\ContactImportController::class, 'handleGoogleCallback'])->name('contacts.google-callback');
+        Route::post('/{id}/sync-customers', [\App\Http\Controllers\ContactImportController::class, 'syncCustomers'])->name('contacts.sync-customers');
+        Route::post('/{id}/sync-employees', [\App\Http\Controllers\ContactImportController::class, 'syncEmployees'])->name('contacts.sync-employees');
+        Route::delete('/{id}', [\App\Http\Controllers\ContactImportController::class, 'destroyGroup'])->name('contacts.destroy-group');
+        Route::delete('/{groupId}/contact/{contactId}', [\App\Http\Controllers\ContactImportController::class, 'destroyContact'])->name('contacts.destroy-contact');
+        Route::get('/template/download', [\App\Http\Controllers\ContactImportController::class, 'downloadTemplate'])->name('contacts.download-template');
     });
 
     // Marketing Routes
@@ -198,11 +469,69 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('/export', [\App\Http\Controllers\EnhancedBusinessAnalysisController::class, 'exportAnalysisReport'])->name('business.ai-analysis.export')->middleware('has.business');
     });
 
+    // Tax Management Routes
+    Route::prefix('tax')->middleware('has.business')->group(function () {
+        Route::get('/settings', [TaxController::class, 'settings'])->name('tax.settings');
+        Route::put('/settings', [TaxController::class, 'updateSettings'])->name('tax.settings.update');
+        Route::get('/reports', [TaxController::class, 'reports'])->name('tax.reports');
+        Route::get('/export', [TaxController::class, 'exportReport'])->name('tax.export');
+        Route::get('/dashboard', [TaxController::class, 'dashboard'])->name('tax.dashboard');
+    });
+
+    // Comprehensive Reports Routes
+    Route::prefix('reports')->middleware('has.business')->group(function () {
+        Route::get('/', [ReportsController::class, 'index'])->name('reports.index');
+        Route::get('/sales', [ReportsController::class, 'salesReport'])->name('reports.sales');
+        Route::get('/products', [ReportsController::class, 'productReport'])->name('reports.products');
+        Route::get('/customers', [ReportsController::class, 'customerReport'])->name('reports.customers');
+        Route::get('/inventory', [ReportsController::class, 'inventoryReport'])->name('reports.inventory');
+        Route::get('/profit-loss', [ReportsController::class, 'profitLossReport'])->name('reports.profit-loss');
+        Route::get('/export-pdf', [ReportsController::class, 'exportPdf'])->name('reports.export-pdf');
+    });
+
+    // Comprehensive Settings Routes
+    Route::prefix('settings')->middleware('has.business')->group(function () {
+        Route::get('/', [SettingsController::class, 'index'])->name('settings.index');
+        Route::put('/general', [SettingsController::class, 'updateGeneral'])->name('settings.update.general');
+        Route::put('/pos', [SettingsController::class, 'updatePOS'])->name('settings.update.pos');
+        Route::put('/inventory', [SettingsController::class, 'updateInventory'])->name('settings.update.inventory');
+        Route::put('/notifications', [SettingsController::class, 'updateNotifications'])->name('settings.update.notifications');
+        Route::put('/invoice', [SettingsController::class, 'updateInvoice'])->name('settings.update.invoice');
+        Route::put('/display', [SettingsController::class, 'updateDisplay'])->name('settings.update.display');
+        Route::put('/business-hours', [SettingsController::class, 'updateBusinessHours'])->name('settings.update.business-hours');
+        Route::put('/security', [SettingsController::class, 'updateSecurity'])->name('settings.update.security');
+        Route::post('/reset-defaults', [SettingsController::class, 'resetToDefaults'])->name('settings.reset-defaults');
+    });
+
+    // Subscription Routes
+    Route::prefix('subscription')->middleware(['auth', 'has.business'])->group(function () {
+        Route::post('/upgrade', [App\Http\Controllers\SubscriptionController::class, 'upgrade'])->name('subscription.upgrade');
+        Route::post('/check-payment-status', [App\Http\Controllers\SubscriptionController::class, 'checkPaymentStatus'])->name('subscription.check.status');
+    });
+    
+    // Paystack Webhook (no auth required - called by Paystack)
+    Route::post('/subscription/paystack/webhook', [App\Http\Controllers\SubscriptionController::class, 'paystackWebhook'])->name('subscription.paystack.webhook');
+
+    // Returns & Refunds Routes
+    Route::prefix('returns')->middleware(['auth', 'has.business'])->group(function () {
+        Route::get('/', [ReturnsController::class, 'index'])->name('returns.index');
+        Route::get('/create', [ReturnsController::class, 'create'])->name('returns.create');
+        Route::post('/', [ReturnsController::class, 'store'])->name('returns.store');
+        Route::get('/{return}', [ReturnsController::class, 'show'])->name('returns.show');
+        Route::post('/{return}/approve', [ReturnsController::class, 'approve'])->name('returns.approve');
+        Route::post('/{return}/reject', [ReturnsController::class, 'reject'])->name('returns.reject');
+        Route::post('/{return}/complete', [ReturnsController::class, 'complete'])->name('returns.complete');
+        Route::get('/stats/json', [ReturnsController::class, 'stats'])->name('returns.stats');
+    });
+
     // Services Management Routes
     Route::prefix('services')->middleware('has.business')->group(function () {
         Route::get('/', [ServiceController::class, 'index'])->name('services.index');
         Route::get('/create', [ServiceController::class, 'create'])->name('services.create');
         Route::post('/', [ServiceController::class, 'store'])->name('services.store');
+        
+        // AI Enhancement Route
+        Route::post('/enhance-description', [ServiceController::class, 'enhanceDescription'])->name('services.enhance-description');
         Route::get('/{service}', [ServiceController::class, 'show'])->name('services.show');
         Route::get('/{service}/edit', [ServiceController::class, 'edit'])->name('services.edit');
         Route::put('/{service}', [ServiceController::class, 'update'])->name('services.update');
@@ -246,6 +575,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/', [ServiceBookingController::class, 'index'])->name('service-bookings.index');
         Route::get('/create', [ServiceBookingController::class, 'create'])->name('service-bookings.create');
         Route::post('/', [ServiceBookingController::class, 'store'])->name('service-bookings.store');
+        
+        // Bulk entry routes
+        Route::get('/bulk-create', [ServiceBookingController::class, 'bulkCreate'])->name('service-bookings.bulk-create');
+        Route::post('/bulk-store', [ServiceBookingController::class, 'bulkStore'])->name('service-bookings.bulk-store');
+        
         Route::get('/{serviceBooking}', [ServiceBookingController::class, 'show'])->name('service-bookings.show');
         Route::get('/{serviceBooking}/edit', [ServiceBookingController::class, 'edit'])->name('service-bookings.edit');
         Route::put('/{serviceBooking}', [ServiceBookingController::class, 'update'])->name('service-bookings.update');
@@ -255,7 +589,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('/{serviceBooking}/add-service', [ServiceBookingController::class, 'addService'])->name('service-bookings.add-service');
         Route::delete('/service-item/{serviceItem}', [ServiceBookingController::class, 'removeService'])->name('service-bookings.remove-service');
         Route::put('/{serviceBooking}/complete', [ServiceBookingController::class, 'complete'])->name('service-bookings.complete');
-Route::post('/assign-staff', [ServiceBookingController::class, 'assignStaff'])->name('service-bookings.assign-staff');
+        Route::post('/assign-staff', [ServiceBookingController::class, 'assignStaff'])->name('service-bookings.assign-staff');
+        
+        // Reports routes
+        Route::get('/reports/daily', [ServiceBookingController::class, 'dailyReport'])->name('service-bookings.reports.daily');
+        Route::get('/reports/pdf', [ServiceBookingController::class, 'exportPDF'])->name('service-bookings.reports.pdf');
+        Route::get('/reports/excel', [ServiceBookingController::class, 'exportExcel'])->name('service-bookings.reports.excel');
     });
 
     // Commission Reports Route
@@ -302,7 +641,7 @@ Route::post('/assign-staff', [ServiceBookingController::class, 'assignStaff'])->
     });
 
     // Suppliers Routes
-    Route::prefix('suppliers')->middleware('has.business')->group(function () {
+    Route::prefix('suppliers')->middleware(['auth', 'has.business'])->group(function () {
         Route::get('/', [SupplierController::class, 'index'])->name('suppliers.index');
         Route::get('/create', [SupplierController::class, 'create'])->name('suppliers.create');
         Route::post('/', [SupplierController::class, 'store'])->name('suppliers.store');
@@ -357,38 +696,32 @@ Route::post('/assign-staff', [ServiceBookingController::class, 'assignStaff'])->
         Route::get('/paypal/cancel', [PaymentController::class, 'paypalCancel'])->name('payment.paypal.cancel');
     });
 
-    // Marketing & Social Media Routes
-    Route::prefix('marketing')->middleware('has.business')->group(function () {
-        Route::get('/social-media', [MarketingPostController::class, 'index'])->name('marketing.social-media');
-        
-        // Marketing Posts
-        Route::prefix('posts')->group(function () {
-            Route::get('/', [MarketingPostController::class, 'postsIndex'])->name('marketing.posts.index');
-            Route::post('/', [MarketingPostController::class, 'store'])->name('marketing.posts.store');
-            Route::get('/{post}', [MarketingPostController::class, 'show'])->name('marketing.posts.show');
-            Route::get('/{post}/edit', [MarketingPostController::class, 'edit'])->name('marketing.posts.edit');
-            Route::put('/{post}', [MarketingPostController::class, 'update'])->name('marketing.posts.update');
-            Route::delete('/{post}', [MarketingPostController::class, 'destroy'])->name('marketing.posts.destroy');
-            Route::post('/{post}/publish', [MarketingPostController::class, 'publish'])->name('marketing.posts.publish');
-            Route::get('/{post}/analytics', [MarketingPostController::class, 'analytics'])->name('marketing.posts.analytics');
-            Route::post('/{post}/duplicate', [MarketingPostController::class, 'duplicate'])->name('marketing.posts.duplicate');
-        });
-        
-        // Social Media Connections
-        Route::prefix('social')->group(function () {
-            Route::get('/connect/{platform}', [SocialMediaController::class, 'connect'])->name('social.connect');
-            Route::get('/callback/{platform}', [SocialMediaController::class, 'callback'])->name('social.callback');
-            Route::delete('/disconnect/{account}', [SocialMediaController::class, 'disconnect'])->name('social.disconnect');
-            Route::post('/refresh/{account}', [SocialMediaController::class, 'refreshToken'])->name('social.refresh');
-        });
+    // Billing Routes
+    Route::prefix('billing')->group(function () {
+        Route::get('/upgrade', [BillingController::class, 'upgrade'])->name('billing.upgrade');
+        Route::post('/upgrade', [BillingController::class, 'processUpgrade'])->name('billing.process-upgrade');
+        Route::get('/dashboard', [BillingController::class, 'dashboard'])->name('billing.dashboard');
+        Route::post('/cancel', [BillingController::class, 'cancel'])->name('billing.cancel');
+    });
 
-        // Billing Routes
-        Route::prefix('billing')->group(function () {
-            Route::get('/upgrade', [BillingController::class, 'upgrade'])->name('billing.upgrade');
-            Route::post('/upgrade', [BillingController::class, 'processUpgrade'])->name('billing.process-upgrade');
-            Route::get('/dashboard', [BillingController::class, 'dashboard'])->name('billing.dashboard');
-            Route::post('/cancel', [BillingController::class, 'cancel'])->name('billing.cancel');
-        });
+    // Product Conversions (for specialized businesses like greenhouse materials)
+    Route::prefix('product-conversions')->name('product-conversions.')->group(function () {
+        Route::get('/', [ProductConversionController::class, 'index'])->name('index');
+        Route::get('/create', [ProductConversionController::class, 'create'])->name('create');
+        Route::post('/', [ProductConversionController::class, 'store'])->name('store');
+        Route::get('/{conversion}', [ProductConversionController::class, 'show'])->name('show');
+        Route::get('/{conversion}/edit', [ProductConversionController::class, 'edit'])->name('edit');
+        Route::put('/{conversion}', [ProductConversionController::class, 'update'])->name('update');
+        Route::delete('/{conversion}', [ProductConversionController::class, 'destroy'])->name('destroy');
+        Route::post('/calculate', [ProductConversionController::class, 'calculate'])->name('calculate');
+        Route::get('/product/{product}/conversions', [ProductConversionController::class, 'productConversions'])->name('product');
+        
+        // Dynamic conversion routes
+        Route::get('/product/{product}/dynamic-calculator', [ProductConversionController::class, 'dynamicCalculator'])->name('dynamic-calculator');
+        Route::post('/product/{product}/calculate-dynamic', [ProductConversionController::class, 'calculateDynamic'])->name('calculate-dynamic');
+        Route::post('/product/{product}/suggested-price', [ProductConversionController::class, 'getSuggestedPrice'])->name('suggested-price');
+        Route::get('/product/{product}/conversion-options', [ProductConversionController::class, 'getConversionOptions'])->name('conversion-options');
+        Route::get('/product/{product}/conversions', [ProductConversionController::class, 'getProductConversions'])->name('product-conversions');
     });
 
     // API Routes for payment callbacks
@@ -429,15 +762,15 @@ Route::post('/assign-staff', [ServiceBookingController::class, 'assignStaff'])->
     });
 
     // AI Advice Routes
-    Route::prefix('business')->name('business.')->middleware('has.business')->group(function () {
-        Route::get('/ai-advice', [AIAdviceController::class, 'index'])->name('ai-advice');
+    Route::prefix('ai-advice')->name('ai-advice.')->middleware('has.business')->group(function () {
+        Route::get('/', [AIAdviceController::class, 'index'])->name('index');
         Route::post('/ai-learning/trigger', [AIAdviceController::class, 'triggerLearning'])->name('ai-learning.trigger');
         Route::put('/ai-settings/update', [AIAdviceController::class, 'updateSettings'])->name('ai-settings.update');
-        Route::post('/ai-advice/{adviceId}/mark-read', [AIAdviceController::class, 'markAsRead'])->name('ai-advice.mark-read');
-        Route::get('/ai-advice/competitor-insights', [AIAdviceController::class, 'getCompetitorInsights'])->name('ai-advice.competitor-insights');
-        Route::get('/ai-advice/trending-topics', [AIAdviceController::class, 'getTrendingTopics'])->name('ai-advice.trending-topics');
-        Route::get('/ai-advice/unread-count', [AIAdviceController::class, 'getUnreadCount'])->name('ai-advice.unread-count');
-        Route::post('/ai-advice/generate-performance', [AIAdviceController::class, 'generatePerformanceAdvice'])->name('ai-advice.generate-performance');
+        Route::post('/{adviceId}/mark-read', [AIAdviceController::class, 'markAsRead'])->name('mark-read');
+        Route::get('/competitor-insights', [AIAdviceController::class, 'getCompetitorInsights'])->name('competitor-insights');
+        Route::get('/trending-topics', [AIAdviceController::class, 'getTrendingTopics'])->name('trending-topics');
+        Route::get('/unread-count', [AIAdviceController::class, 'getUnreadCount'])->name('unread-count');
+        Route::post('/generate-performance', [AIAdviceController::class, 'generatePerformanceAdvice'])->name('generate-performance');
     });
 
     // Continuous Knowledge System Routes
@@ -457,7 +790,7 @@ Route::post('/assign-staff', [ServiceBookingController::class, 'assignStaff'])->
     });
 
     // AI Communication System Routes
-    Route::prefix('ai')->name('ai.')->middleware('auth')->group(function () {
+    Route::prefix('ai-communication')->name('ai-comm.')->middleware('auth')->group(function () {
         Route::get('/chat', [AICommunicationController::class, 'chat'])->name('chat');
         Route::post('/process-message', [AICommunicationController::class, 'processMessage'])->name('process-message');
         Route::get('/history', [AICommunicationController::class, 'getHistory'])->name('history');
@@ -502,5 +835,99 @@ Route::get('/auth/facebook/data-deletion', function () {
     return redirect()->route('data-deletion');
 })->name('facebook.data-deletion');
 
+Route::get('/manual-symlink', function () {
+    $target = storage_path('app/public');   // source folder
+    $link = public_path('storage');        // destination symlink
+
+    try {
+        if (!file_exists($link)) {
+            symlink($target, $link);
+            return "Symlink created manually!";
+        }
+        return "Symlink already exists.";
+    } catch (\Exception $e) {
+        return "Error: " . $e->getMessage();
+    }
+});
+
+/*
+|--------------------------------------------------------------------------
+| Website Builder Routes
+|--------------------------------------------------------------------------
+*/
+use App\Http\Controllers\WebsiteBuilderController;
+use App\Http\Controllers\WebsiteConfiguratorController;
+
+// Website Configurator Routes (Odoo-style step-by-step setup)
+Route::middleware(['auth'])->prefix('website-configurator')->name('website-configurator.')->group(function () {
+    Route::get('/step1', [WebsiteConfiguratorController::class, 'step1'])->name('step1');
+    Route::post('/step1', [WebsiteConfiguratorController::class, 'step1Submit'])->name('step1.submit');
+    Route::get('/step2', [WebsiteConfiguratorController::class, 'step2View'])->name('step2');
+    Route::post('/step2', [WebsiteConfiguratorController::class, 'step2'])->name('step2.submit');
+    Route::post('/generate-website-description', [WebsiteConfiguratorController::class, 'generateWebsiteDescription'])->name('generate-website-description');
+    Route::get('/step3', [WebsiteConfiguratorController::class, 'step3View'])->name('step3');
+    Route::post('/step3', [WebsiteConfiguratorController::class, 'step3'])->name('step3.submit');
+    Route::get('/step4', [WebsiteConfiguratorController::class, 'step4View'])->name('step4');
+    Route::post('/build', [WebsiteConfiguratorController::class, 'build'])->name('build');
+    Route::post('/process', [WebsiteConfiguratorController::class, 'process'])->name('process');
+    
+    // Debug route to check session (only for development)
+    Route::get('/debug-session', function () {
+        return response()->json([
+            'session_id' => session()->getId(),
+            'website_type' => session('website_type'),
+            'business_name' => session('business_name'),
+            'business_description' => session('business_description'),
+            'website_config' => session('website_config'),
+            'all_session' => session()->all(),
+        ]);
+    })->name('debug-session');
+});
+
+Route::middleware(['auth'])->prefix('website-builder')->name('website.builder.')->group(function () {
+    Route::get('/', [WebsiteBuilderController::class, 'index'])->name('index');
+    Route::get('/setup', [WebsiteBuilderController::class, 'showSetup'])->name('setup');
+    Route::post('/create', [WebsiteBuilderController::class, 'create'])->name('create');
+    
+    // Website settings
+    Route::post('/settings', [WebsiteBuilderController::class, 'updateSettings'])->name('settings.update');
+    Route::post('/publish', [WebsiteBuilderController::class, 'publish'])->name('publish');
+    Route::post('/unpublish', [WebsiteBuilderController::class, 'unpublish'])->name('unpublish');
+    Route::post('/change-theme', [WebsiteBuilderController::class, 'changeTheme'])->name('theme.change');
+    Route::delete('/delete', [WebsiteBuilderController::class, 'deleteWebsite'])->name('delete');
+    Route::get('/preview', [WebsiteBuilderController::class, 'preview'])->name('preview');
+    Route::post('/preview-theme', [WebsiteBuilderController::class, 'previewTheme'])->name('preview-theme');
+    Route::get('/preview-theme/{themeId}', [WebsiteBuilderController::class, 'previewThemeGet'])->name('preview-theme.get');
+    
+    // Page management
+    Route::get('/pages/{page}/edit', [WebsiteBuilderController::class, 'editPage'])->name('pages.edit');
+    Route::post('/pages', [WebsiteBuilderController::class, 'storePage'])->name('pages.store');
+    Route::put('/pages/{page}', [WebsiteBuilderController::class, 'updatePage'])->name('pages.update');
+    Route::delete('/pages/{page}', [WebsiteBuilderController::class, 'deletePage'])->name('pages.delete');
+    Route::post('/pages/{page}/duplicate', [WebsiteBuilderController::class, 'duplicatePage'])->name('pages.duplicate');
+    
+    // Section management
+    Route::post('/pages/{page}/sections', [WebsiteBuilderController::class, 'storeSection'])->name('sections.store');
+    Route::put('/sections/{section}', [WebsiteBuilderController::class, 'updateSection'])->name('sections.update');
+    Route::delete('/sections/{section}', [WebsiteBuilderController::class, 'deleteSection'])->name('sections.delete');
+    Route::post('/pages/{page}/sections/reorder', [WebsiteBuilderController::class, 'reorderSections'])->name('sections.reorder');
+    Route::post('/sections/{section}/move-up', [WebsiteBuilderController::class, 'moveSectionUp'])->name('sections.move-up');
+    Route::post('/sections/{section}/move-down', [WebsiteBuilderController::class, 'moveSectionDown'])->name('sections.move-down');
+    
+    // AI-powered features
+    Route::post('/ai/recommend-theme', [WebsiteBuilderController::class, 'recommendTheme'])->name('ai.recommend-theme');
+    Route::post('/ai/generate-content', [WebsiteBuilderController::class, 'generateSectionContent'])->name('ai.generate-content');
+    Route::post('/ai/generate-seo', [WebsiteBuilderController::class, 'generateSEO'])->name('ai.generate-seo');
+    Route::get('/ai/guidance', [WebsiteBuilderController::class, 'getGuidance'])->name('ai.guidance');
+    Route::post('/ai/suggest-images', [WebsiteBuilderController::class, 'suggestImages'])->name('ai.suggest-images');
+    
+    // Enterprise AI Feature: Auto-build complete website
+    Route::post('/ai/auto-build', [WebsiteBuilderController::class, 'autoBuildWebsite'])->name('ai.auto-build');
+});
+
+// PUBLIC BUSINESS SHOW ROUTE
+// IMPORTANT: This MUST be at the end of the file to avoid catching specific routes like /business/profile
+// It will match any /business/{slug} that wasn't matched by specific routes above
+Route::get('/business/{slug}', [BusinessController::class, 'show'])->name('business.show');
 
 

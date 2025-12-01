@@ -6,10 +6,14 @@ use Illuminate\Http\Request;
 use App\Models\Promotion;
 use App\Models\Customer;
 use App\Models\Product;
+use App\Models\ContactGroup;
+use App\Models\ImportedContact;
 use App\Services\LTXVideoService;
 use App\Services\CloudLTXVideoService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use App\Services\HostPinnacleSmsService;
+use Illuminate\Support\Facades\Log;
 
 class MarketingController extends Controller
 {
@@ -115,44 +119,258 @@ class MarketingController extends Controller
 
     public function bulkSms()
     {
-        $customers = auth()->user()->business->customers()->get();
-        $templates = [
-            'welcome' => 'Welcome to {{business_name}}! Thank you for choosing us.',
-            'promotion' => '🎉 Special offer at {{business_name}}! {{promotion_details}}. Valid until {{end_date}}.',
-            'reminder' => 'Hi {{customer_name}}, don\'t forget your appointment at {{business_name}} on {{date}}.',
-            'custom' => 'Custom message...'
-        ];
-        
-        return view('marketing.bulk-sms', compact('customers', 'templates'));
+        try {
+            Log::info('Bulk SMS page accessed', [
+                'user_id' => auth()->id(),
+                'timestamp' => now(),
+            ]);
+
+            $business = auth()->user()->business;
+            
+            if (!$business) {
+                Log::warning('Bulk SMS access without business', [
+                    'user_id' => auth()->id(),
+                ]);
+                return redirect()->route('dashboard')->with('error', 'Please create a business first.');
+            }
+            
+            $businessId = $business->id;
+            
+            Log::info('Loading bulk SMS data', [
+                'business_id' => $businessId,
+                'business_name' => $business->name,
+            ]);
+            
+            $customers = $business->customers()->get();
+            
+            // Get contact groups
+            $contactGroups = \App\Models\ContactGroup::where('business_id', $businessId)
+                ->withCount('contacts')
+                ->get();
+            
+            Log::info('Bulk SMS data loaded', [
+                'customers_count' => $customers->count(),
+                'contact_groups_count' => $contactGroups->count(),
+            ]);
+            
+            $templates = [
+                'welcome' => 'Welcome to {{business_name}}! Thank you for choosing us.',
+                'promotion' => '🎉 Special offer at {{business_name}}! {{promotion_details}}. Valid until {{end_date}}.',
+                'reminder' => 'Hi {{customer_name}}, don\'t forget your appointment at {{business_name}} on {{date}}.',
+                'custom' => 'Custom message...'
+            ];
+            
+            return view('marketing.bulk-sms', compact('customers', 'templates', 'contactGroups'));
+            
+        } catch (\Exception $e) {
+            Log::error('Error loading bulk SMS page', [
+                'error' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'trace' => $e->getTraceAsString(),
+                'user_id' => auth()->id(),
+            ]);
+            
+            return redirect()->route('dashboard')->with('error', 'Error loading bulk SMS page. Please try again or contact support.');
+        }
     }
 
     public function sendBulkSms(Request $request)
     {
-        $request->validate([
-            'message' => 'required|string|max:160',
-            'customer_ids' => 'required|array|min:1',
-            'customer_ids.*' => 'exists:customers,id',
-            'scheduled_at' => 'nullable|date|after:now',
-        ]);
-
-        // For now, just log the SMS (API integration will be added later)
-        $customers = Customer::whereIn('id', $request->customer_ids)->get();
-        
-        foreach ($customers as $customer) {
-            // Log SMS for later API integration
-            \Log::info('SMS to be sent', [
-                'customer' => $customer->name,
-                'phone' => $customer->phone,
-                'message' => $request->message,
-                'scheduled_at' => $request->scheduled_at
+        try {
+            Log::info('SMS send request initiated', [
+                'user_id' => auth()->id(),
+                'recipient_type' => $request->recipient_type,
+                'message_length' => strlen($request->message ?? ''),
+                'scheduled' => !empty($request->scheduled_at),
             ]);
-        }
 
-        return response()->json([
-            'success' => true,
-            'message' => 'SMS queued for sending to ' . count($customers) . ' customers',
-            'note' => 'SMS API integration pending. Messages logged for later processing.'
-        ]);
+            $request->validate([
+                'message' => 'required|string|max:160',
+                'recipient_type' => 'required|in:customers,contact_groups',
+                'customer_ids' => 'required_if:recipient_type,customers|array',
+                'customer_ids.*' => 'exists:customers,id',
+                'contact_group_ids' => 'required_if:recipient_type,contact_groups|array',
+                'contact_group_ids.*' => 'exists:contact_groups,id',
+                'scheduled_at' => 'nullable|date|after:now',
+            ]);
+
+            $business = auth()->user()->business;
+            
+            if (!$business) {
+                Log::error('SMS send failed - no business', [
+                    'user_id' => auth()->id(),
+                ]);
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Business not found. Please create a business first.',
+                ], 400);
+            }
+
+            Log::info('Processing SMS recipients', [
+                'business_id' => $business->id,
+                'business_name' => $business->name,
+            ]);
+
+            $phones = [];
+            $recipientCount = 0;
+            $businessId = $business->id;
+        
+            // Collect phone numbers based on recipient type
+            if ($request->recipient_type === 'customers') {
+                $customers = Customer::whereIn('id', $request->customer_ids)->get();
+                $phones = $customers->pluck('phone')->filter()->toArray();
+                $recipientCount = count($customers);
+                
+                Log::info('SMS recipients collected from customers', [
+                    'customer_count' => $recipientCount,
+                    'valid_phones' => count($phones),
+                    'customer_ids' => $request->customer_ids,
+                ]);
+            } elseif ($request->recipient_type === 'contact_groups') {
+                $contactGroups = \App\Models\ContactGroup::where('business_id', $businessId)
+                    ->whereIn('id', $request->contact_group_ids)
+                    ->with('contacts')
+                    ->get();
+                
+                Log::info('Contact groups loaded', [
+                    'group_count' => $contactGroups->count(),
+                    'group_ids' => $request->contact_group_ids,
+                ]);
+                
+                foreach ($contactGroups as $group) {
+                    $groupPhones = $group->getPhoneNumbers();
+                    $phones = array_merge($phones, $groupPhones);
+                    
+                    Log::debug('Group phones collected', [
+                        'group_id' => $group->id,
+                        'group_name' => $group->name,
+                        'phones_count' => count($groupPhones),
+                    ]);
+                }
+                
+                // Remove duplicates
+                $phones = array_unique($phones);
+                $recipientCount = count($phones);
+                
+                Log::info('SMS recipients collected from groups', [
+                    'total_phones' => $recipientCount,
+                    'unique_phones' => count($phones),
+                ]);
+            }
+            
+            $smsService = new HostPinnacleSmsService();
+            
+            // Check if SMS service is configured
+            if (!$smsService->isConfigured()) {
+                Log::error('SMS service not configured', [
+                    'user_id' => auth()->id(),
+                    'business_id' => $businessId,
+                ]);
+                return response()->json([
+                    'success' => false,
+                    'message' => 'SMS service is not configured. Please contact administrator.',
+                ], 500);
+            }
+            
+            if (empty($phones)) {
+                Log::warning('No valid phone numbers found', [
+                    'recipient_type' => $request->recipient_type,
+                    'recipient_count' => $recipientCount,
+                ]);
+                return response()->json([
+                    'success' => false,
+                    'message' => 'No valid phone numbers found in selected recipients',
+                ], 400);
+            }
+            
+            // Prepare SMS options
+            $options = [];
+            
+            // If scheduled, add schedule time to options
+            if ($request->scheduled_at) {
+                // Convert to Host Pinnacle format: YYYY-MM-DD HH:MM
+                $scheduleTime = \Carbon\Carbon::parse($request->scheduled_at)->format('Y-m-d H:i');
+                $options['scheduleTime'] = $scheduleTime;
+                
+                Log::info('SMS scheduled for future delivery', [
+                    'recipient_count' => $recipientCount,
+                    'phone_count' => count($phones),
+                    'message_length' => strlen($request->message),
+                    'scheduled_at' => $scheduleTime,
+                    'recipient_type' => $request->recipient_type,
+                    'business_id' => $businessId,
+                ]);
+            }
+            
+            Log::info('Sending SMS via Host Pinnacle API', [
+                'phone_count' => count($phones),
+                'message_length' => strlen($request->message),
+                'scheduled' => !empty($options['scheduleTime']),
+                'business_id' => $businessId,
+                'user_id' => auth()->id(),
+            ]);
+            
+            // Send SMS (immediately or scheduled)
+            $result = $smsService->sendBulkSms($phones, $request->message, $options);
+            
+            if ($result['success']) {
+                $message = $request->scheduled_at 
+                    ? 'SMS scheduled successfully for ' . $result['recipients'] . ' recipients at ' . $scheduleTime
+                    : 'SMS sent successfully to ' . $result['recipients'] . ' recipients';
+                
+                Log::info('SMS sent successfully', [
+                    'recipients' => $result['recipients'],
+                    'cost_estimate' => $result['cost_estimate'] ?? null,
+                    'scheduled' => !empty($request->scheduled_at),
+                    'business_id' => $businessId,
+                    'user_id' => auth()->id(),
+                    'api_response' => $result['data'] ?? null,
+                ]);
+                    
+                return response()->json([
+                    'success' => true,
+                    'message' => $message,
+                    'note' => 'Check your SMS provider dashboard for delivery status.',
+                    'data' => $result['data'] ?? null,
+                    'cost_estimate' => $result['cost_estimate'] ?? null
+                ]);
+            }
+            
+            Log::error('SMS sending failed', [
+                'error_message' => $result['message'],
+                'error_details' => $result['error'] ?? null,
+                'phone_count' => count($phones),
+                'business_id' => $businessId,
+                'user_id' => auth()->id(),
+                'api_response' => $result['data'] ?? null,
+            ]);
+            
+            return response()->json([
+                'success' => false,
+                'message' => $result['message'],
+                'error' => $result['error'] ?? null
+            ], 500);
+            
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            // Let validation exceptions pass through
+            throw $e;
+        } catch (\Exception $e) {
+            Log::error('SMS sending exception', [
+                'error' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'trace' => $e->getTraceAsString(),
+                'user_id' => auth()->id(),
+                'business_id' => $business->id ?? null,
+            ]);
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'An error occurred while sending SMS. Please try again or contact support.',
+                'error' => config('app.debug') ? $e->getMessage() : 'Internal server error'
+            ], 500);
+        }
     }
 
     public function advertising()

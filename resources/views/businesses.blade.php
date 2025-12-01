@@ -45,7 +45,31 @@
 
     <section id="businesses" class="businesses">
         <div class="container">
-            @if($type)
+            <!-- Filter Buttons -->
+            <div class="row mb-4">
+                <div class="col-12">
+                    <div class="d-flex justify-content-center gap-2 flex-wrap mb-3">
+                        <a href="{{ route('businesses') }}" 
+                           class="btn {{ $type === 'all' || !$type ? 'btn-primary' : 'btn-outline-primary' }}">
+                            <i class="fas fa-th"></i> All Businesses
+                        </a>
+                        <a href="{{ route('businesses', ['type' => 'product']) }}" 
+                           class="btn {{ $type === 'product' ? 'btn-primary' : 'btn-outline-primary' }}">
+                            <i class="fas fa-boxes"></i> Product Businesses
+                        </a>
+                        <a href="{{ route('businesses', ['type' => 'service']) }}" 
+                           class="btn {{ $type === 'service' ? 'btn-primary' : 'btn-outline-primary' }}">
+                            <i class="fas fa-hands-helping"></i> Service Businesses
+                        </a>
+                        <a href="{{ route('businesses', ['type' => 'hybrid']) }}" 
+                           class="btn {{ $type === 'hybrid' ? 'btn-primary' : 'btn-outline-primary' }}">
+                            <i class="fas fa-layer-group"></i> Hybrid Businesses
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            @if($type && $type !== 'all')
                 <div class="row mb-4">
                     <div class="col-12">
                         <div class="alert alert-info">

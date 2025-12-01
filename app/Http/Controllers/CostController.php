@@ -48,8 +48,8 @@ class CostController extends Controller
     {
         $this->authorize('update', $cost);
         $data = $request->validate([
-            'type' => 'required|in:utility,product,rent,water,misc,activity,renovation,other',
-            'amount' => 'required|numeric|min:0',
+            'type' => 'required|in:utility,product,rent,water,misc,activity,renovation,salary,other',
+            'amount' => 'required|numeric|min=0',
             'description' => 'nullable|string',
             'date' => 'required|date',
         ]);

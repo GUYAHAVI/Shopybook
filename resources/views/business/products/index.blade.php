@@ -9,12 +9,32 @@
             <p class="text-muted">Manage your product catalog and inventory</p>
         </div>
         <div class="d-flex gap-2">
-            <a href="{{ route('products.bulk-import') }}" class="btn btn-outline-primary">
+            <a href="{{ route('products.receive') }}" class="btn btn-info">
+                <i class="fas fa-truck-loading me-2"></i>Receive Stock
+            </a>
+            <a href="{{ route('products.bulk-import') }}" class="btn btn-outline-secondary">
                 <i class="fas fa-file-import me-2"></i>Bulk Import
             </a>
-            <a href="{{ route('products.create') }}" class="btn btn-primary">
-                <i class="fas fa-plus me-2"></i>Add Product
-            </a>
+            <div class="btn-group">
+                <a href="{{ route('products.quick-create') }}" class="btn btn-success">
+                    <i class="fas fa-bolt me-2"></i>Quick Add
+                </a>
+                <button type="button" class="btn btn-success dropdown-toggle dropdown-toggle-split" data-bs-toggle="dropdown">
+                    <span class="visually-hidden">Toggle Dropdown</span>
+                </button>
+                <ul class="dropdown-menu">
+                    <li><a class="dropdown-item" href="{{ route('products.quick-create') }}">
+                        <i class="fas fa-bolt me-2"></i>Quick Add Product
+                    </a></li>
+                    <li><a class="dropdown-item" href="{{ route('products.create') }}">
+                        <i class="fas fa-cog me-2"></i>Advanced Add Product
+                    </a></li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li><a class="dropdown-item" href="{{ route('products.receive.history') }}">
+                        <i class="fas fa-history me-2"></i>Receipt History
+                    </a></li>
+                </ul>
+            </div>
         </div>
     </div>
 
@@ -58,7 +78,7 @@
                     <div class="row no-gutters align-items-center">
                         <div class="col mr-2">
                             <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">Low Stock</div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ $products->where('stock_quantity', '<=', 'low_stock_threshold')->where('stock_quantity', '>', 0)->count() }}</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ $products->filter(function($product) { return $product->stock_quantity > 0 && $product->stock_quantity <= $product->low_stock_threshold; })->count() }}</div>
                         </div>
                         <div class="col-auto">
                             <i class="fas fa-exclamation-triangle fa-2x text-gray-300"></i>
@@ -205,9 +225,20 @@
                 <i class="fas fa-boxes fa-4x text-muted mb-3"></i>
                 <h4 class="text-muted">No products found</h4>
                 <p class="text-muted">Get started by adding your first product to your catalog.</p>
-                <a href="{{ route('products.create') }}" class="btn btn-primary">
-                    <i class="fas fa-plus me-2"></i>Add Your First Product
-                </a>
+                <div class="d-flex gap-2 justify-content-center">
+                    <a href="{{ route('products.quick-create') }}" class="btn btn-success btn-lg">
+                        <i class="fas fa-bolt me-2"></i>Quick Add Product
+                    </a>
+                    <a href="{{ route('products.create') }}" class="btn btn-outline-primary btn-lg">
+                        <i class="fas fa-cog me-2"></i>Advanced Add
+                    </a>
+                </div>
+                <div class="mt-3">
+                    <small class="text-muted">
+                        <i class="fas fa-lightbulb me-1"></i>
+                        Try Quick Add for a simple 30-second setup
+                    </small>
+                </div>
             </div>
         </div>
         @endforelse

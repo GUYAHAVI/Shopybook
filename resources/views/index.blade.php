@@ -466,10 +466,10 @@ input.form-control::placeholder, textarea.form-control::placeholder {
                     </div>
                     
                     <h1 class="text-center text-md-start">Transform Your Business with Shopybook</h1>
-                    <p class="lead text-center text-md-start">Complete Business Management Platform for Small Businesses in Kenya</p>
+                    <p class="lead text-center text-md-start">Complete Business Management Platform with AI-Powered Features</p>
                     <p class="mb-4 text-center text-md-start">
-                        Manage products, services, customers, inventory, staff, and sales with M-Pesa integration. 
-                        All-in-one solution designed specifically for emerging markets.
+                        All-in-one platform: POS, Inventory, Website Builder, AI Advisor, Marketing Automation, 
+                        Staff Management & M-Pesa Integration. Designed for Kenyan businesses.
                     </p>
                     
                     <!-- Mobile feature highlights -->
@@ -477,26 +477,26 @@ input.form-control::placeholder, textarea.form-control::placeholder {
                         <div class="row g-2">
                             <div class="col-6">
                                 <div class="feature-highlight">
+                                    <i class="fas fa-robot text-primary"></i>
+                                    <small>AI Powered</small>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="feature-highlight">
+                                    <i class="fas fa-globe text-primary"></i>
+                                    <small>Website Builder</small>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="feature-highlight">
                                     <i class="fas fa-mobile-alt text-primary"></i>
-                                    <small>Mobile First</small>
+                                    <small>M-Pesa Ready</small>
                                 </div>
                             </div>
                             <div class="col-6">
                                 <div class="feature-highlight">
-                                    <i class="fas fa-shield-alt text-primary"></i>
-                                    <small>Secure</small>
-                                </div>
-                            </div>
-                            <div class="col-6">
-                                <div class="feature-highlight">
-                                    <i class="fas fa-bolt text-primary"></i>
-                                    <small>Fast Setup</small>
-                                </div>
-                            </div>
-                            <div class="col-6">
-                                <div class="feature-highlight">
-                                    <i class="fas fa-headset text-primary"></i>
-                                    <small>24/7 Support</small>
+                                    <i class="fas fa-chart-line text-primary"></i>
+                                    <small>Real Analytics</small>
                                 </div>
                             </div>
                         </div>
@@ -600,17 +600,19 @@ input.form-control::placeholder, textarea.form-control::placeholder {
                     <h2 class="display-4 mb-4 text-center text-lg-start">
                         Why Choose <span class="text-primary">Shopybook?</span>
                     </h2>
-                    <p class="lead text-center text-lg-start">The complete business management solution built for small businesses.</p>
+                    <p class="lead text-center text-lg-start">The complete business management solution built for small businesses in Kenya.</p>
                     <p class="text-center text-lg-start">
-                        Shopybook is a comprehensive multi-tenant platform designed specifically for small businesses 
-                        in emerging markets. From product management and service bookings to customer relationships 
+                        Shopybook is a comprehensive multi-tenant platform designed specifically for small businesses. 
+                        From product management with OCR scanning and service bookings to customer CRM, AI-powered website builder, 
                         and M-Pesa payments, we provide everything you need to grow your business efficiently.
                     </p>
                     <ul class="list-unstyled mt-4 d-none d-lg-block">
-                        <li class="mb-2"><i class="fas fa-check text-primary me-2"></i> Multi-tenant architecture for unlimited growth</li>
-                        <li class="mb-2"><i class="fas fa-check text-primary me-2"></i> M-Pesa & PayPal payment integration</li>
+                        <li class="mb-2"><i class="fas fa-check text-primary me-2"></i> Complete product & inventory management with OCR</li>
+                        <li class="mb-2"><i class="fas fa-check text-primary me-2"></i> AI-powered website builder with 8 themes</li>
+                        <li class="mb-2"><i class="fas fa-check text-primary me-2"></i> KENADA AI Business Advisor for growth insights</li>
                         <li class="mb-2"><i class="fas fa-check text-primary me-2"></i> Multi-language support (English, Swahili, Sheng)</li>
-                        <li class="mb-2"><i class="fas fa-check text-primary me-2"></i> Mobile-first responsive design</li>
+                        <li class="mb-2"><i class="fas fa-check text-primary me-2"></i> Full-featured POS with M-Pesa integration</li>
+                        <li class="mb-2"><i class="fas fa-check text-primary me-2"></i> Marketing automation with social media & SMS</li>
                     </ul>
                 </div>
             </div>
@@ -638,7 +640,7 @@ input.form-control::placeholder, textarea.form-control::placeholder {
                                 <i class="fa-solid fa-boxes-stacked"></i>
                             </div>
                             <h6>Products</h6>
-                            <small>Inventory control</small>
+                            <small>Full inventory + OCR</small>
                         </div>
                     </div>
                     <div class="col-6">
@@ -647,7 +649,16 @@ input.form-control::placeholder, textarea.form-control::placeholder {
                                 <i class="fa-solid fa-calendar-check"></i>
                             </div>
                             <h6>Services</h6>
-                            <small>Booking system</small>
+                            <small>Complete bookings</small>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="mobile-feature-item">
+                            <div class="feature-icon-mobile">
+                                <i class="fa-solid fa-cash-register"></i>
+                            </div>
+                            <h6>POS System</h6>
+                            <small>Full featured</small>
                         </div>
                     </div>
                     <div class="col-6">
@@ -656,25 +667,25 @@ input.form-control::placeholder, textarea.form-control::placeholder {
                                 <i class="fa-solid fa-users"></i>
                             </div>
                             <h6>Customers</h6>
-                            <small>CRM management</small>
+                            <small>CRM + history</small>
                         </div>
                     </div>
                     <div class="col-6">
                         <div class="mobile-feature-item">
                             <div class="feature-icon-mobile">
-                                <i class="fa-solid fa-cash-register"></i>
+                                <i class="fa-solid fa-globe"></i>
                             </div>
-                            <h6>POS</h6>
-                            <small>Point of sale</small>
+                            <h6>AI Website</h6>
+                            <small>Auto-build sites</small>
                         </div>
                     </div>
                     <div class="col-6">
                         <div class="mobile-feature-item">
                             <div class="feature-icon-mobile">
-                                <i class="fa-solid fa-mobile-alt"></i>
+                                <i class="fa-solid fa-robot"></i>
                             </div>
-                            <h6>M-Pesa</h6>
-                            <small>Payment integration</small>
+                            <h6>AI Advisor</h6>
+                            <small>KENADA insights</small>
                         </div>
                     </div>
                     <div class="col-6">
@@ -683,7 +694,52 @@ input.form-control::placeholder, textarea.form-control::placeholder {
                                 <i class="fa-solid fa-user-tie"></i>
                             </div>
                             <h6>Staff</h6>
-                            <small>Team management</small>
+                            <small>HR + payroll</small>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="mobile-feature-item">
+                            <div class="feature-icon-mobile">
+                                <i class="fa-solid fa-bullhorn"></i>
+                            </div>
+                            <h6>Marketing</h6>
+                            <small>SMS + Social</small>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="mobile-feature-item">
+                            <div class="feature-icon-mobile">
+                                <i class="fa-solid fa-chart-line"></i>
+                            </div>
+                            <h6>Analytics</h6>
+                            <small>Live insights</small>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="mobile-feature-item">
+                            <div class="feature-icon-mobile">
+                                <i class="fa-solid fa-mobile-alt"></i>
+                            </div>
+                            <h6>Payments</h6>
+                            <small>M-Pesa + more</small>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="mobile-feature-item">
+                            <div class="feature-icon-mobile">
+                                <i class="fa-solid fa-warehouse"></i>
+                            </div>
+                            <h6>Inventory</h6>
+                            <small>Real-time stock</small>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="mobile-feature-item">
+                            <div class="feature-icon-mobile">
+                                <i class="fa-solid fa-bell"></i>
+                            </div>
+                            <h6>Notifications</h6>
+                            <small>Smart alerts</small>
                         </div>
                     </div>
                 </div>
@@ -699,8 +755,8 @@ input.form-control::placeholder, textarea.form-control::placeholder {
                         <div class="uscontent">
                             <h3>Product Management</h3>
                             <p>
-                                Complete inventory control with categories, brands, stock tracking, and low-stock alerts. 
-                                Manage unlimited products with barcode support.
+                                Complete inventory control with categories, brands, stock tracking, OCR image processing, 
+                                bulk import (CSV/Excel), and automated low-stock alerts. Stock receiving with receipt history tracking.
                             </p>
                         </div>
                     </div>
@@ -713,26 +769,10 @@ input.form-control::placeholder, textarea.form-control::placeholder {
                             <i class="fa-solid fa-calendar-check"></i>
                         </div>
                         <div class="uscontent">
-                            <h3>Service Booking</h3>
+                            <h3>Service Booking System</h3>
                             <p>
-                                Manage service appointments, staff assignments, commission tracking, and bundled services. 
-                                Perfect for salons, repair shops, and service businesses.
-                            </p>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Customer Management -->
-                <div class="col-md-4">
-                    <div class="uscard h-100">
-                        <div class="usicon text-center">
-                            <i class="fa-solid fa-users"></i>
-                        </div>
-                        <div class="uscontent">
-                            <h3>Customer Management</h3>
-                            <p>
-                                Build lasting relationships with comprehensive customer profiles, order history, 
-                                and personalized marketing campaigns.
+                                Complete service management with bookings, staff assignments, commission tracking, 
+                                bundled services, bulk entry, PDF/Excel reports, and automated email notifications.
                             </p>
                         </div>
                     </div>
@@ -745,26 +785,26 @@ input.form-control::placeholder, textarea.form-control::placeholder {
                             <i class="fa-solid fa-cash-register"></i>
                         </div>
                         <div class="uscontent">
-                            <h3>Point of Sale</h3>
+                            <h3>Point of Sale System</h3>
                             <p>
-                                Intuitive POS system with barcode scanning, multiple payment methods, 
-                                and real-time inventory updates. Perfect for retail operations.
+                                Full-featured POS with cart management, barcode scanning, multiple payment methods 
+                                (Cash, M-Pesa, Card, Bank), dynamic product conversions, receipt printing & order history.
                             </p>
                         </div>
                     </div>
                 </div>
 
-                <!-- M-Pesa Integration -->
+                <!-- Customer Management -->
                 <div class="col-md-4">
                     <div class="uscard h-100">
                         <div class="usicon text-center">
-                            <i class="fa-solid fa-mobile-alt"></i>
+                            <i class="fa-solid fa-users"></i>
                         </div>
                         <div class="uscontent">
-                            <h3>M-Pesa Integration</h3>
+                            <h3>Customer CRM</h3>
                             <p>
-                                Seamless payment processing with M-Pesa and PayPal integration. 
-                                Accept payments securely and track all transactions automatically.
+                                Manage individual & organization customers with complete purchase history, 
+                                walk-in customer support, and detailed customer profiles.
                             </p>
                         </div>
                     </div>
@@ -777,10 +817,10 @@ input.form-control::placeholder, textarea.form-control::placeholder {
                             <i class="fa-solid fa-user-tie"></i>
                         </div>
                         <div class="uscontent">
-                            <h3>Staff & Employee Management</h3>
+                            <h3>Staff Management</h3>
                             <p>
-                                Manage your team with employee records, commission tracking, 
-                                performance analytics, and automated payroll calculations.
+                                Complete HR system with employee records, salary management, commission calculations, 
+                                salary advances tracking, and detailed staff performance reports.
                             </p>
                         </div>
                     </div>
@@ -793,10 +833,26 @@ input.form-control::placeholder, textarea.form-control::placeholder {
                             <i class="fa-solid fa-warehouse"></i>
                         </div>
                         <div class="uscontent">
-                            <h3>Advanced Inventory</h3>
+                            <h3>Inventory Management</h3>
                             <p>
-                                Real-time inventory tracking with transaction history, 
-                                multi-location support, and automated reorder alerts.
+                                Real-time stock levels, stock receiving with receipts, inventory transactions, 
+                                automated low stock alerts, equipment tracking, and comprehensive inventory reports.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- AI-Powered Website Builder -->
+                <div class="col-md-4">
+                    <div class="uscard h-100">
+                        <div class="usicon text-center">
+                            <i class="fa-solid fa-globe"></i>
+                        </div>
+                        <div class="uscontent">
+                            <h3>AI Website Builder</h3>
+                            <p>
+                                Create professional websites with AI-powered theme recommendations, auto-generated content, 
+                                8 beautiful themes, drag & drop sections, SEO optimization, and custom domain support.
                             </p>
                         </div>
                     </div>
@@ -811,24 +867,72 @@ input.form-control::placeholder, textarea.form-control::placeholder {
                         <div class="uscontent">
                             <h3>Business Analytics</h3>
                             <p>
-                                Comprehensive reports and analytics for sales, inventory, 
-                                customer behavior, and staff performance. Make data-driven decisions.
+                                Real-time dashboard with sales analytics, service performance, staff metrics, 
+                                financial reports, profit margin calculations, and AI-powered business insights (KENADA).
                             </p>
                         </div>
                     </div>
                 </div>
 
-                <!-- Marketing Tools -->
+                <!-- Marketing & Social Media -->
                 <div class="col-md-4">
                     <div class="uscard h-100">
                         <div class="usicon text-center">
                             <i class="fa-solid fa-bullhorn"></i>
                         </div>
                         <div class="uscontent">
-                            <h3>Marketing & Promotions</h3>
+                            <h3>Marketing Automation</h3>
                             <p>
-                                Create targeted campaigns, manage promotions, track advertising spend, 
-                                and engage customers with automated marketing tools.
+                                Bulk SMS & email marketing, social media integration (Facebook, Instagram, Twitter, LinkedIn), 
+                                post scheduling, AI video generation, and promotions management.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- M-Pesa & Payments -->
+                <div class="col-md-4">
+                    <div class="uscard h-100">
+                        <div class="usicon text-center">
+                            <i class="fa-solid fa-mobile-alt"></i>
+                        </div>
+                        <div class="uscontent">
+                            <h3>Payment Integration</h3>
+                            <p>
+                                Accept payments via M-Pesa, Card, Cash, and Bank Transfer. Track all transactions, 
+                                generate receipts automatically, and manage payment history.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- AI Business Advisor -->
+                <div class="col-md-4">
+                    <div class="uscard h-100">
+                        <div class="usicon text-center">
+                            <i class="fa-solid fa-robot"></i>
+                        </div>
+                        <div class="uscontent">
+                            <h3>AI Business Advisor</h3>
+                            <p>
+                                KENADA - Your AI business consultant with continuous learning, business insights, 
+                                personalized recommendations, AI chat assistant, and data-driven growth strategies.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Notifications System -->
+                <div class="col-md-4">
+                    <div class="uscard h-100">
+                        <div class="usicon text-center">
+                            <i class="fa-solid fa-bell"></i>
+                        </div>
+                        <div class="uscontent">
+                            <h3>Smart Notifications</h3>
+                            <p>
+                                Dashboard notification center with email notifications for orders, bookings, and low stock. 
+                                Track unread count, mark as read/unread, and never miss important updates.
                             </p>
                         </div>
                     </div>
@@ -1059,7 +1163,7 @@ input.form-control::placeholder, textarea.form-control::placeholder {
                             <h3 class="card-title">Business Pro</h3>
                             <div class="price mb-4">
                                 <span class="currency">KSh</span>
-                                <span class="amount">2,500</span>
+                                <span class="amount">500</span>
                                 <span class="period">/month</span>
                             </div>
                             <ul class="list-unstyled pricing-list mb-4 text-start">
@@ -1083,7 +1187,7 @@ input.form-control::placeholder, textarea.form-control::placeholder {
                             <h3 class="card-title">Enterprise</h3>
                             <div class="price mb-4">
                                 <span class="currency">KSh</span>
-                                <span class="amount">5,000</span>
+                                <span class="amount">1,000</span>
                                 <span class="period">/month</span>
                             </div>
                             <ul class="list-unstyled pricing-list mb-4 text-start">
@@ -1126,40 +1230,56 @@ input.form-control::placeholder, textarea.form-control::placeholder {
 
             <div class="row">
                 <div class="col-lg-6">
-                    <form class="glass-card p-4" action="#" method="POST">
+                    <form class="glass-card p-4" action="{{ route('contact.submit') }}" method="POST" id="contactForm">
                         @csrf
                         <h3 class="mb-4 text-primary">Get Started Today</h3>
+                        
                         <div class="mb-3">
-                            <input type="text" name="name" class="form-control bg-transparent text-light" placeholder="Business Owner Name" required />
+                            <input type="text" name="name" class="form-control bg-transparent text-light" placeholder="Business Owner Name" value="{{ old('name') }}" required />
+                            @error('name')
+                                <small class="text-danger">{{ $message }}</small>
+                            @enderror
                         </div>
                         <div class="mb-3">
-                            <input type="email" name="email" class="form-control bg-transparent text-light" placeholder="Business Email" required />
+                            <input type="email" name="email" class="form-control bg-transparent text-light" placeholder="Business Email" value="{{ old('email') }}" required />
+                            @error('email')
+                                <small class="text-danger">{{ $message }}</small>
+                            @enderror
                         </div>
                         <div class="mb-3">
-                            <input type="tel" name="phone" class="form-control bg-transparent text-light" placeholder="Phone Number (e.g., +254717745891)" required />
+                            <input type="tel" name="phone" class="form-control bg-transparent text-light" placeholder="Phone Number (e.g., +254717745891)" value="{{ old('phone') }}" required />
+                            @error('phone')
+                                <small class="text-danger">{{ $message }}</small>
+                            @enderror
                         </div>
                         <div class="mb-3">
                             <select name="business_type" class="form-select bg-dark text-light" required>
                                 <option value="">Select Your Business Type...</option>
-                                <option value="retail">Retail Store</option>
-                                <option value="service">Service Business</option>
-                                <option value="restaurant">Restaurant/Food</option>
-                                <option value="salon">Salon/Beauty</option>
-                                <option value="electronics">Electronics</option>
-                                <option value="hardware">Hardware Store</option>
-                                <option value="clothing">Clothing/Fashion</option>
-                                <option value="other">Other</option>
+                                <option value="retail" {{ old('business_type') == 'retail' ? 'selected' : '' }}>Retail Store</option>
+                                <option value="service" {{ old('business_type') == 'service' ? 'selected' : '' }}>Service Business</option>
+                                <option value="restaurant" {{ old('business_type') == 'restaurant' ? 'selected' : '' }}>Restaurant/Food</option>
+                                <option value="salon" {{ old('business_type') == 'salon' ? 'selected' : '' }}>Salon/Beauty</option>
+                                <option value="electronics" {{ old('business_type') == 'electronics' ? 'selected' : '' }}>Electronics</option>
+                                <option value="hardware" {{ old('business_type') == 'hardware' ? 'selected' : '' }}>Hardware Store</option>
+                                <option value="clothing" {{ old('business_type') == 'clothing' ? 'selected' : '' }}>Clothing/Fashion</option>
+                                <option value="other" {{ old('business_type') == 'other' ? 'selected' : '' }}>Other</option>
                             </select>
+                            @error('business_type')
+                                <small class="text-danger">{{ $message }}</small>
+                            @enderror
                         </div>
                         <div class="mb-3">
                             <textarea name="message" class="form-control bg-transparent text-light" rows="4"
-                                placeholder="Tell us about your business challenges or questions" required></textarea>
+                                placeholder="Tell us about your business challenges or questions" required>{{ old('message') }}</textarea>
+                            @error('message')
+                                <small class="text-danger">{{ $message }}</small>
+                            @enderror
                         </div>
                         <button type="submit" class="btn btn-primary btn-lg w-100">
-                            <i class="fas fa-rocket me-2"></i>Start Free Account
+                            <i class="bi bi-send-fill me-2"></i>Send Your Message
                         </button>
                         <p class="small text-center mt-3 text-muted">
-                            No credit card required • Setup takes less than 5 minutes
+                            We'll respond within 24 hours • Free consultation available
                         </p>
                     </form>
                 </div>
@@ -1169,63 +1289,66 @@ input.form-control::placeholder, textarea.form-control::placeholder {
                         <h3 class="card-title mb-4 text-primary">Get in Touch</h3>
                         <ul class="list-unstyled contact-info">
                             <li class="mb-3">
-                                <i class="fas fa-envelope text-primary me-3"></i>
+                                <i class="bi bi-envelope-fill text-primary me-3 fs-4"></i>
                                 <div>
                                     <strong>Email Support</strong><br>
                                     <span>info@shopybook.com</span>
                                 </div>
                             </li>
                             <li class="mb-3">
-                                <i class="fas fa-phone text-primary me-3"></i>
+                                <i class="bi bi-telephone-fill text-primary me-3 fs-4"></i>
                                 <div>
                                     <strong>Phone Support</strong><br>
                                     <span>+254 717745891</span><br>
-                                    <small class="text-muted">Mon-Fri, 8AM-6PM EAT</small>
+                                    <small class="brandtext">Mon-Fri, 8AM-6PM EAT</small>
                                 </div>
                             </li>
                             <li class="mb-3">
-                                <i class="fas fa-whatsapp text-primary me-3"></i>
+                            <i class="bi bi-whatsapp text-primary me-3 fs-4"></i>	
                                 <div>
                                     <strong>WhatsApp Support</strong><br>
                                     <span>+254 717745891</span><br>
-                                    <small class="text-muted">Quick responses</small>
+                                    <small class="brandtext">Quick responses</small>
                                 </div>
                             </li>
                             <li class="mb-3">
-                                <i class="fas fa-map-marker-alt text-primary me-3"></i>
+                                <i class="bi bi-geo-alt-fill text-primary me-3 fs-4"></i>
                                 <div>
                                     <strong>Location</strong><br>
                                     <span>Nairobi, Kenya</span><br>
-                                    <small class="text-muted">Serving all of East Africa</small>
+                                    <small class="brandtext">Serving all of East Africa</small>
                                 </div>
                             </li>
                         </ul>
 
                         <div class="mt-4">
                             <h5 class="mb-3 text-primary">Connect With Us</h5>
-                            <div class="social-bubbles d-flex gap-3">
-                                <a href="#" class="social-bubble text-primary">
-                                    <i class="fab fa-twitter fa-lg"></i>
+                            <div class="social-bubbles d-flex gap-3 flex-wrap">
+                                <a href="https://wa.me/254717745891" target="_blank" class="social-bubble text-primary" title="WhatsApp">
+                                <i class="bi bi-whatsapp fs-4"></i>
                                 </a>
-                                <a href="#" class="social-bubble text-primary">
-                                    <i class="fab fa-linkedin-in fa-lg"></i>
+                                <a href="https://twitter.com/shopybook" target="_blank" class="social-bubble text-primary" title="Twitter">
+                                <i class="bi bi-twitter-x fs-4"></i>
                                 </a>
-                                <a href="#" class="social-bubble text-primary">
-                                    <i class="fab fa-facebook-f fa-lg"></i>
+                                <a href="https://www.linkedin.com/company/108257756/admin/dashboard/" target="_blank" class="social-bubble text-primary" title="LinkedIn">
+                                <i class="bi bi-linkedin fs-4"></i>
                                 </a>
-                                <a href="#" class="social-bubble text-primary">
-                                    <i class="fab fa-instagram fa-lg"></i>
+                                <a href="https://www.facebook.com/profile.php?id=61578210136925" target="_blank" class="social-bubble text-primary" title="Facebook">
+                                <i class="bi bi-facebook fs-4"></i>
+                                </a>
+                                <a href="https://www.instagram.com/shopybook254?igsh=MWMzaXI5Z3I3eXR4ZQ==" target="_blank" class="social-bubble text-primary" title="Instagram">
+                                <i class="bi bi-instagram fs-4"></i>
                                 </a>
                             </div>
                         </div>
 
                         <div class="mt-4 p-3 bg-dark rounded">
                             <h6 class="text-primary mb-2">
-                                <i class="fas fa-headset me-2"></i>Need Immediate Help?
+                                <i class="bi bi-headset me-2"></i>Need Immediate Help?
                             </h6>
                             <p class="mb-2 small">Our support team is ready to help you get started</p>
                             <a href="tel:+254f717745891" class="btn btn-outline-primary btn-sm">
-                                <i class="fas fa-phone me-1"></i>Call Now
+                                <i class="bi bi-telephone me-1"></i>Call Now
                             </a>
                         </div>
                     </div>
@@ -1234,8 +1357,86 @@ input.form-control::placeholder, textarea.form-control::placeholder {
         </div>
     </section>
 
+    <!-- Success Modal -->
+    <div class="modal fade" id="successModal" tabindex="-1" aria-labelledby="successModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content" style="background: #020258; border: 3px solid #13e8e9;">
+                <div class="modal-header" style="background: #13e8e9; border: none;">
+                    <h5 class="modal-title" id="successModalLabel" style="color: #020258;">
+                        <i class="bi bi-check-circle-fill me-2"></i>Message Sent Successfully!
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body text-center py-4" style="color: #fff;">
+                    <div class="mb-3">
+                        <i class="bi bi-envelope-check" style="font-size: 4rem; color: #13e8e9;"></i>
+                    </div>
+                    <h4 style="color: #13e8e9; margin-bottom: 1rem;">Thank You for Contacting Us!</h4>
+                    <p class="mb-2" style="color: #fff;">We've received your message and will get back to you shortly.</p>
+                    <p class="small" style="color: rgba(255, 255, 255, 0.7);">Our team typically responds within 24 hours during business days.</p>
+                </div>
+                <div class="modal-footer" style="border: none; justify-content: center;">
+                    <button type="button" class="btn btn-primary" data-bs-dismiss="modal">
+                        <i class="bi bi-check-lg me-2"></i>Got It
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Error Modal -->
+    <div class="modal fade" id="errorModal" tabindex="-1" aria-labelledby="errorModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content" style="background: #020258; border: 3px solid #dc3545;">
+                <div class="modal-header" style="background: #dc3545; border: none;">
+                    <h5 class="modal-title text-white" id="errorModalLabel">
+                        <i class="bi bi-exclamation-triangle-fill me-2"></i>Oops! Something Went Wrong
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body text-center py-4" style="color: #fff;">
+                    <div class="mb-3">
+                        <i class="bi bi-x-circle" style="font-size: 4rem; color: #dc3545;"></i>
+                    </div>
+                    <h4 style="color: #13e8e9; margin-bottom: 1rem;">Message Not Sent</h4>
+                    <p class="mb-3" style="color: #fff;">Sorry, there was an error sending your message. Please try again or contact us directly.</p>
+                    <div class="alert" style="background: rgba(19, 232, 233, 0.1); border: 1px solid #13e8e9; color: #fff;">
+                        <strong style="color: #13e8e9;">Alternative Contact:</strong><br>
+                        <i class="bi bi-envelope me-2"></i><a href="mailto:info@shopybook.com" style="color: #13e8e9; text-decoration: none;">info@shopybook.com</a><br>
+                        <i class="bi bi-telephone me-2"></i><a href="tel:+254717745891" style="color: #13e8e9; text-decoration: none;">+254 717745891</a><br>
+                        <i class="bi bi-whatsapp me-2"></i><a href="https://wa.me/254717745891" style="color: #13e8e9; text-decoration: none;" target="_blank">WhatsApp</a>
+                    </div>
+                </div>
+                <div class="modal-footer" style="border: none; justify-content: center;">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                        <i class="bi bi-arrow-left me-2"></i>Close
+                    </button>
+                    <button type="button" class="btn btn-primary" data-bs-dismiss="modal" onclick="document.getElementById('contactForm').scrollIntoView({behavior: 'smooth'});">
+                        <i class="bi bi-arrow-repeat me-2"></i>Try Again
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
         document.addEventListener('DOMContentLoaded', function () {
+            // Show success modal if success message exists
+            @if(session('success'))
+                var successModal = new bootstrap.Modal(document.getElementById('successModal'));
+                successModal.show();
+                // Clear form after showing success
+                setTimeout(function() {
+                    document.getElementById('contactForm').reset();
+                }, 500);
+            @endif
+
+            // Show error modal if error message exists
+            @if(session('error'))
+                var errorModal = new bootstrap.Modal(document.getElementById('errorModal'));
+                errorModal.show();
+            @endif
+
             // Add loaded class to trigger animations
             setTimeout(function () {
                 document.querySelector('.brandimgs-container').classList.add('loaded');
@@ -1496,5 +1697,7 @@ function connectImagesWithLines() {
 }
 </script>
  
+    <!-- Shopybook Customer Support Chatbot -->
+    @include('components.chatbot')
 
 @endsection

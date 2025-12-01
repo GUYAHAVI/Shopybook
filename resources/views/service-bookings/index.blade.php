@@ -19,9 +19,119 @@
 
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h2 class="fw-bold" style="color: var(--text-primary);">Service Bookings</h2>
-        <a href="{{ route('service-bookings.create') }}" class="btn btn-primary">
-            <i class="fas fa-plus me-1"></i> Book Service
-        </a>
+        <div class="btn-group" role="group">
+            <a href="{{ route('service-bookings.create') }}" class="btn btn-primary">
+                <i class="fas fa-plus me-1"></i> Book Service
+            </a>
+            <a href="{{ route('service-bookings.bulk-create') }}" class="btn btn-outline-primary">
+                <i class="fas fa-layer-group me-1"></i> Bulk Entry
+            </a>
+        </div>
+    </div>
+
+    <!-- Daily Reports Section -->
+    <div class="card shadow-sm mb-4" style="background: var(--card-bg); border: 1px solid var(--border-color);">
+        <div class="card-header" style="background: var(--bg-tertiary); border-bottom: 1px solid var(--border-color);">
+            <div class="d-flex justify-content-between align-items-center">
+                <h5 class="mb-0" style="color: var(--text-primary);">
+                    <i class="fas fa-chart-line me-2"></i>Daily Sales & Expense Reports
+                </h5>
+                <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="collapse" data-bs-target="#reportsSection">
+                    <i class="fas fa-chevron-down"></i>
+                </button>
+            </div>
+        </div>
+        <div class="collapse show" id="reportsSection">
+            <div class="card-body">
+                <div class="row align-items-end">
+                    <div class="col-md-3">
+                        <label for="report-date" class="form-label" style="color: var(--text-primary);">Select Date</label>
+                        <input type="date" class="form-control" id="report-date" value="{{ date('Y-m-d') }}"
+                               style="border: 1px solid var(--border-color); background: var(--card-bg); color: var(--text-primary);">
+                    </div>
+                    <div class="col-md-3">
+                        <div class="d-grid gap-2">
+                            <button class="btn btn-primary" id="generate-report-btn">
+                                <i class="fas fa-chart-bar me-1"></i> Generate Report
+                            </button>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="d-flex gap-2">
+                            <button class="btn btn-outline-success btn-sm" id="quick-today-btn">
+                                <i class="fas fa-calendar-day me-1"></i> Today
+                            </button>
+                            <button class="btn btn-outline-info btn-sm" id="quick-yesterday-btn">
+                                <i class="fas fa-calendar-minus me-1"></i> Yesterday
+                            </button>
+                            <button class="btn btn-outline-warning btn-sm" id="quick-week-btn">
+                                <i class="fas fa-calendar-week me-1"></i> This Week
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Reports Display Area -->
+                <div id="reports-display" class="mt-4" style="display: none;">
+                    <div class="row">
+                        <!-- Sales Summary -->
+                        <div class="col-md-6 mb-3">
+                            <div class="card border-success">
+                                <div class="card-header bg-success text-white">
+                                    <h6 class="mb-0"><i class="fas fa-dollar-sign me-2"></i>Sales Summary</h6>
+                                </div>
+                                <div class="card-body" id="sales-summary">
+                                    <!-- Sales data will be loaded here -->
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Expenses Summary -->
+                        <div class="col-md-6 mb-3">
+                            <div class="card border-danger">
+                                <div class="card-header bg-danger text-white">
+                                    <h6 class="mb-0"><i class="fas fa-receipt me-2"></i>Expenses Summary</h6>
+                                </div>
+                                <div class="card-body" id="expenses-summary">
+                                    <!-- Expenses data will be loaded here -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Net Profit/Loss -->
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="card border-primary">
+                                <div class="card-header bg-primary text-white">
+                                    <h6 class="mb-0"><i class="fas fa-calculator me-2"></i>Daily Summary</h6>
+                                </div>
+                                <div class="card-body" id="daily-summary">
+                                    <!-- Daily summary will be loaded here -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Export Options -->
+                    <div class="row mt-3">
+                        <div class="col-12">
+                            <div class="d-flex gap-2 justify-content-end">
+                                <button class="btn btn-outline-secondary btn-sm" id="print-report-btn">
+                                    <i class="fas fa-print me-1"></i> Print Report
+                                </button>
+                                <button class="btn btn-outline-primary btn-sm" id="export-pdf-btn">
+                                    <i class="fas fa-file-pdf me-1"></i> Export PDF
+                                </button>
+                                <button class="btn btn-outline-success btn-sm" id="export-excel-btn">
+                                    <i class="fas fa-file-excel me-1"></i> Export Excel
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
     @if(session('success'))
@@ -592,6 +702,224 @@ document.addEventListener('DOMContentLoaded', function() {
         
         modal.show();
     };
+
+    // Reports functionality
+    const reportDateInput = document.getElementById('report-date');
+    const generateReportBtn = document.getElementById('generate-report-btn');
+    const reportsDisplay = document.getElementById('reports-display');
+    const salesSummary = document.getElementById('sales-summary');
+    const expensesSummary = document.getElementById('expenses-summary');
+    const dailySummary = document.getElementById('daily-summary');
+    
+    const quickTodayBtn = document.getElementById('quick-today-btn');
+    const quickYesterdayBtn = document.getElementById('quick-yesterday-btn');
+    const quickWeekBtn = document.getElementById('quick-week-btn');
+    
+    const printReportBtn = document.getElementById('print-report-btn');
+    const exportPdfBtn = document.getElementById('export-pdf-btn');
+    const exportExcelBtn = document.getElementById('export-excel-btn');
+
+    // Quick date selection buttons
+    quickTodayBtn.addEventListener('click', function() {
+        const today = new Date().toISOString().split('T')[0];
+        reportDateInput.value = today;
+        generateReport();
+    });
+
+    quickYesterdayBtn.addEventListener('click', function() {
+        const yesterday = new Date();
+        yesterday.setDate(yesterday.getDate() - 1);
+        reportDateInput.value = yesterday.toISOString().split('T')[0];
+        generateReport();
+    });
+
+    quickWeekBtn.addEventListener('click', function() {
+        const today = new Date();
+        const startOfWeek = new Date(today.setDate(today.getDate() - today.getDay()));
+        reportDateInput.value = startOfWeek.toISOString().split('T')[0];
+        generateReport();
+    });
+
+    // Generate report button
+    generateReportBtn.addEventListener('click', generateReport);
+
+    // Export buttons
+    printReportBtn.addEventListener('click', function() {
+        window.print();
+    });
+
+    exportPdfBtn.addEventListener('click', function() {
+        const date = reportDateInput.value;
+        if (!date) {
+            alert('Please select a date first');
+            return;
+        }
+        window.open(`/service-bookings/reports/pdf?date=${date}`, '_blank');
+    });
+
+    exportExcelBtn.addEventListener('click', function() {
+        const date = reportDateInput.value;
+        if (!date) {
+            alert('Please select a date first');
+            return;
+        }
+        window.location.href = `/service-bookings/reports/excel?date=${date}`;
+    });
+
+    function generateReport() {
+        const date = reportDateInput.value;
+        if (!date) {
+            alert('Please select a date');
+            return;
+        }
+
+        // Show loading state
+        generateReportBtn.disabled = true;
+        generateReportBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Generating...';
+
+        // Fetch report data
+        fetch(`/service-bookings/reports/daily?date=${date}`, {
+            method: 'GET',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json',
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                displayReportData(data.data);
+                reportsDisplay.style.display = 'block';
+            } else {
+                alert('Error generating report: ' + (data.message || 'Unknown error'));
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error generating report. Please try again.');
+        })
+        .finally(() => {
+            // Reset button state
+            generateReportBtn.disabled = false;
+            generateReportBtn.innerHTML = '<i class="fas fa-chart-bar me-1"></i> Generate Report';
+        });
+    }
+
+    function displayReportData(data) {
+        // Display sales summary
+        salesSummary.innerHTML = `
+            <div class="row text-center">
+                <div class="col-6">
+                    <h4 class="text-success">${data.sales.count}</h4>
+                    <small class="text-muted">Services Sold</small>
+                </div>
+                <div class="col-6">
+                    <h4 class="text-success">KSh ${formatNumber(data.sales.total_amount)}</h4>
+                    <small class="text-muted">Total Revenue</small>
+                </div>
+            </div>
+            <hr>
+            <div class="row">
+                <div class="col-12">
+                    <h6>Payment Methods:</h6>
+                    ${data.sales.payment_methods.map(method => 
+                        `<div class="d-flex justify-content-between">
+                            <span>${method.method}:</span>
+                            <span>KSh ${formatNumber(method.amount)}</span>
+                        </div>`
+                    ).join('')}
+                </div>
+            </div>
+            <hr>
+            <div class="row">
+                <div class="col-12">
+                    <h6>Top Services:</h6>
+                    ${data.sales.top_services.map(service => 
+                        `<div class="d-flex justify-content-between">
+                            <span>${service.name} (${service.count}x):</span>
+                            <span>KSh ${formatNumber(service.total)}</span>
+                        </div>`
+                    ).join('')}
+                </div>
+            </div>
+        `;
+
+        // Display expenses summary
+        expensesSummary.innerHTML = `
+            <div class="row text-center">
+                <div class="col-6">
+                    <h4 class="text-danger">${data.expenses.count}</h4>
+                    <small class="text-muted">Total Expenses</small>
+                </div>
+                <div class="col-6">
+                    <h4 class="text-danger">KSh ${formatNumber(data.expenses.total_amount)}</h4>
+                    <small class="text-muted">Total Cost</small>
+                </div>
+            </div>
+            <hr>
+            <div class="row">
+                <div class="col-12">
+                    <h6>Expense Categories:</h6>
+                    ${data.expenses.by_type.map(type => 
+                        `<div class="d-flex justify-content-between">
+                            <span>${type.type}:</span>
+                            <span>KSh ${formatNumber(type.amount)}</span>
+                        </div>`
+                    ).join('')}
+                </div>
+            </div>
+        `;
+
+        // Display daily summary
+        const netAmount = data.sales.total_amount - data.expenses.total_amount;
+        const netClass = netAmount >= 0 ? 'text-success' : 'text-danger';
+        const netLabel = netAmount >= 0 ? 'Net Profit' : 'Net Loss';
+
+        dailySummary.innerHTML = `
+            <div class="row text-center">
+                <div class="col-md-3">
+                    <h5 class="text-success">KSh ${formatNumber(data.sales.total_amount)}</h5>
+                    <small class="text-muted">Total Sales</small>
+                </div>
+                <div class="col-md-3">
+                    <h5 class="text-danger">KSh ${formatNumber(data.expenses.total_amount)}</h5>
+                    <small class="text-muted">Total Expenses</small>
+                </div>
+                <div class="col-md-3">
+                    <h5 class="${netClass}">KSh ${formatNumber(Math.abs(netAmount))}</h5>
+                    <small class="text-muted">${netLabel}</small>
+                </div>
+                <div class="col-md-3">
+                    <h5 class="text-info">${data.sales.commission_total ? 'KSh ' + formatNumber(data.sales.commission_total) : 'KSh 0.00'}</h5>
+                    <small class="text-muted">Staff Commission</small>
+                </div>
+            </div>
+            <hr>
+            <div class="row">
+                <div class="col-12 text-center">
+                    <p class="mb-0"><strong>Report Date:</strong> ${formatDate(data.report_date)}</p>
+                    <p class="mb-0"><small class="text-muted">Generated on ${new Date().toLocaleString()}</small></p>
+                </div>
+            </div>
+        `;
+    }
+
+    function formatNumber(number) {
+        return parseFloat(number).toLocaleString('en-KE', {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        });
+    }
+
+    function formatDate(dateString) {
+        const date = new Date(dateString);
+        return date.toLocaleDateString('en-KE', {
+            weekday: 'long',
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+        });
+    }
 });
 </script>
 @endsection

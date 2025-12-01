@@ -11,9 +11,9 @@
                 <div class="card-header bg-primary text-white">
                     <h5 class="mb-0">
                         <i class="fas fa-robot me-2"></i>
-                        KENADA Business Assistant
+                        Claude Business Assistant
                     </h5>
-                    <small class="text-light">Powered by Kenya National Data MSME Intelligence</small>
+                    <small class="text-light">Powered by Claude Sonnet 4 AI - Your Intelligent Business Advisor</small>
                 </div>
                 <div class="card-body p-0">
                     <!-- Chat Messages -->
@@ -23,32 +23,32 @@
                     
                     <!-- Chat Input -->
                     <div class="chat-input-container p-3 border-top">
-                        <div class="row">
-                            <div class="col-md-8">
-                                <div class="input-group">
-                                    <input type="text" id="message-input" class="form-control" placeholder="Ask KENADA about your business insights..." maxlength="1000">
-                                    <button class="btn btn-primary" type="button" id="send-button">
-                                        <i class="fas fa-paper-plane"></i>
-                                    </button>
-                                </div>
+                        <div class="mb-2 d-flex align-items-center justify-content-between">
+                            <div>
+                                <small class="text-muted">Chatting about:</small>
+                                <strong class="ms-2 text-primary">{{ $business->name }}</strong>
                             </div>
-                            <div class="col-md-4">
-                                <select id="business-select" class="form-select">
-                                    <option value="">Select Business</option>
-                                    @foreach($businesses as $business)
-                                        <option value="{{ $business->id }}">{{ $business->name }}</option>
-                                    @endforeach
-                                </select>
-                            </div>
+                            <input type="hidden" id="business-id" value="{{ $business->id }}">
+                        </div>
+                        <div class="input-group mb-3">
+                            <input type="text" id="message-input" class="form-control" placeholder="Ask Claude about your business..." maxlength="1000">
+                            <button class="btn btn-primary" type="button" id="send-button">
+                                <i class="fas fa-paper-plane"></i>
+                            </button>
                         </div>
                         
                         <!-- Quick Suggestions -->
                         <div id="suggestions" class="mt-3">
-                            <small class="text-muted">Quick suggestions:</small>
+                            <small class="text-muted">Quick questions:</small>
                             <div class="suggestion-buttons mt-1">
-                                <button class="btn btn-sm btn-outline-secondary suggestion-btn" data-message="How are my sales performing?">Sales Performance</button>
-                                <button class="btn btn-sm btn-outline-secondary suggestion-btn" data-message="What market trends should I know?">Market Trends</button>
-                                <button class="btn btn-sm btn-outline-secondary suggestion-btn" data-message="Give me business recommendations">Recommendations</button>
+                                <button class="btn btn-sm btn-outline-primary suggestion-btn" data-message="What are my top selling products?">Top Products</button>
+                                <button class="btn btn-sm btn-outline-primary suggestion-btn" data-message="Show me my total expenses including salaries and costs">Total Expenses</button>
+                                <button class="btn btn-sm btn-outline-success suggestion-btn" data-message="What is my profit margin?">Profit Analysis</button>
+                                <button class="btn btn-sm btn-outline-info suggestion-btn" data-message="How much am I spending on employees and staff?">Labor Costs</button>
+                                <button class="btn btn-sm btn-outline-warning suggestion-btn" data-message="What items are low in stock?">Inventory Alert</button>
+                                <button class="btn btn-sm btn-outline-secondary suggestion-btn" data-message="Which products need price adjustments?">Pricing Strategy</button>
+                                <button class="btn btn-sm btn-outline-danger suggestion-btn" data-message="Suggest better suppliers for my products">Find Suppliers</button>
+                                <button class="btn btn-sm btn-outline-dark suggestion-btn" data-message="How can I reduce my operating costs?">Cut Costs</button>
                             </div>
                         </div>
                     </div>
@@ -226,6 +226,12 @@ $(document).ready(function() {
     loadAIStatus();
     loadConversationHistory();
     
+    // Auto-load insights for user's business
+    const businessId = $('#business-id').val();
+    if (businessId) {
+        loadQuickInsights(businessId);
+    }
+    
     // Send message
     $('#send-button').click(sendMessage);
     $('#message-input').keypress(function(e) {
@@ -244,17 +250,8 @@ $(document).ready(function() {
     // Clear history
     $('#clear-history').click(clearHistory);
     
-    // Business select change
-    $('#business-select').change(function() {
-        const businessId = $(this).val();
-        if (businessId) {
-            loadQuickInsights(businessId);
-        }
-    });
-    
     function sendMessage() {
         const message = $('#message-input').val().trim();
-        const businessId = $('#business-select').val();
         
         if (!message) return;
         
@@ -267,11 +264,10 @@ $(document).ready(function() {
         
         // Send to AI
         $.ajax({
-            url: '{{ route("ai.process-message") }}',
+            url: '{{ route("ai-comm.process-message") }}',
             method: 'POST',
             data: {
                 message: message,
-                business_id: businessId,
                 _token: '{{ csrf_token() }}'
             },
             success: function(response) {
@@ -329,7 +325,7 @@ $(document).ready(function() {
     
     function loadAIStatus() {
         $.ajax({
-            url: '{{ route("ai.status") }}',
+            url: '{{ route("ai-comm.status") }}',
             method: 'GET',
             success: function(response) {
                 if (response.success) {
@@ -358,7 +354,7 @@ $(document).ready(function() {
     
     function loadQuickInsights(businessId) {
         $.ajax({
-            url: '{{ route("ai.quick-insights") }}',
+            url: '{{ route("ai-comm.quick-insights") }}',
             method: 'POST',
             data: {
                 business_id: businessId,
@@ -398,7 +394,7 @@ $(document).ready(function() {
     
     function loadConversationHistory() {
         $.ajax({
-            url: '{{ route("ai.history") }}',
+            url: '{{ route("ai-comm.history") }}',
             method: 'GET',
             success: function(response) {
                 if (response.success) {
@@ -434,7 +430,7 @@ $(document).ready(function() {
     function clearHistory() {
         if (confirm('Are you sure you want to clear the conversation history?')) {
             $.ajax({
-                url: '{{ route("ai.clear-history") }}',
+                url: '{{ route("ai-comm.clear-history") }}',
                 method: 'POST',
                 data: {
                     _token: '{{ csrf_token() }}'

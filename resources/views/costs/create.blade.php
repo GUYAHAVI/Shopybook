@@ -15,6 +15,7 @@
                             <option value="product" @if(old('type')=='product') selected @endif>Product</option>
                             <option value="rent" @if(old('type')=='rent') selected @endif>Rent</option>
                             <option value="water" @if(old('type')=='water') selected @endif>Water</option>
+                            <option value="salary" @if(old('type')=='salary') selected @endif>Salary</option>
                             <option value="misc" @if(old('type')=='misc') selected @endif>Miscellaneous</option>
                             <option value="activity" @if(old('type')=='activity') selected @endif>Activity</option>
                             <option value="renovation" @if(old('type')=='renovation') selected @endif>Renovation</option>

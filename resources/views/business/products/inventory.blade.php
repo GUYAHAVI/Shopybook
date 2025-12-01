@@ -8,6 +8,12 @@
             <p class="text-muted">Track and manage your product inventory</p>
         </div>
         <div class="d-flex gap-2">
+            <a href="{{ route('products.receive') }}" class="btn btn-info">
+                <i class="fas fa-truck-loading me-2"></i>Receive Stock
+            </a>
+            <a href="{{ route('product-conversions.index') }}" class="btn btn-outline-info">
+                <i class="fas fa-exchange-alt me-2"></i>Product Conversions
+            </a>
             <button class="btn btn-outline-primary" onclick="exportInventory()">
                 <i class="fas fa-download me-2"></i>Export
             </button>
