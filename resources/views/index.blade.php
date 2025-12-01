@@ -1164,6 +1164,7 @@ input.form-control::placeholder, textarea.form-control::placeholder {
                             <div class="price mb-4">
                                 <span class="currency">KSh</span>
                                 <span class="amount">500</span>
+                                <span class="amount">500</span>
                                 <span class="period">/month</span>
                             </div>
                             <ul class="list-unstyled pricing-list mb-4 text-start">
@@ -1187,6 +1188,7 @@ input.form-control::placeholder, textarea.form-control::placeholder {
                             <h3 class="card-title">Enterprise</h3>
                             <div class="price mb-4">
                                 <span class="currency">KSh</span>
+                                <span class="amount">1,000</span>
                                 <span class="amount">1,000</span>
                                 <span class="period">/month</span>
                             </div>
