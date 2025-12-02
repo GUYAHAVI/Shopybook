@@ -563,6 +563,12 @@ if (typeof enhanceTextarea === 'function') {
                 <p class="text-muted mb-3">Choose a logo style and let AI create a unique logo for your business.</p>
                 
                 <div class="mb-3">
+                    <label for="logoTagline" class="form-label"><i class="fas fa-tag"></i> Business Tagline (Optional)</label>
+                    <input type="text" id="logoTagline" class="form-control" placeholder="e.g., Quality You Trust" maxlength="50">
+                    <div class="form-text">Leave empty to auto-generate from your business description</div>
+                </div>
+                
+                <div class="mb-3">
                     <label for="logoStyle" class="form-label"><i class="fas fa-palette"></i> Logo Style</label>
                     <select id="logoStyle" class="form-select">
                         <option value="modern">Modern - Clean and contemporary</option>
@@ -616,13 +622,14 @@ function openLogoGenerator() {
 
 async function generateLogoFromModal() {
     const style = document.getElementById('logoStyle').value;
+    const tagline = document.getElementById('logoTagline').value.trim();
     const statusDiv = document.getElementById('generationStatus');
     const statusMessage = document.getElementById('statusMessage');
     const generateBtn = document.getElementById('generateLogoModalBtn');
     const logoContainer = document.getElementById('generatedLogoContainer');
     
     statusDiv.style.display = 'block';
-    statusMessage.textContent = 'Generating your logo... This may take 30-60 seconds.';
+    statusMessage.textContent = 'Generating your logo with business name and tagline... This may take 15-30 seconds.';
     generateBtn.disabled = true;
     logoContainer.style.display = 'none';
     
@@ -643,7 +650,8 @@ async function generateLogoFromModal() {
                 business_name: businessName,
                 business_description: businessDescription || 'A professional ' + businessType + ' business providing quality services',
                 business_type: businessType,
-                logo_style: style
+                logo_style: style,
+                tagline: tagline || null
             }),
             credentials: 'same-origin'
         });

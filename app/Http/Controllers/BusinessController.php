@@ -683,10 +683,12 @@ class BusinessController extends Controller
             'business_description' => 'nullable|string',
             'business_type' => 'required|string',
             'logo_style' => 'nullable|string|in:modern,classic,minimal,bold,playful,corporate',
+            'tagline' => 'nullable|string|max:50',
         ]);
 
         try {
             $style = $request->logo_style ?? 'modern';
+            $tagline = $request->tagline;
             
             // Ensure description meets minimum requirements
             $description = $request->business_description;
@@ -697,28 +699,31 @@ class BusinessController extends Controller
             Log::info('Logo generation requested', [
                 'business_name' => $request->business_name,
                 'business_type' => $request->business_type,
-                'style' => $style
+                'style' => $style,
+                'has_tagline' => !empty($tagline)
             ]);
 
             $logoResult = $this->claudeService->generateBusinessLogo(
                 $request->business_name,
                 $description,
                 $request->business_type,
-                $style
+                $style,
+                $tagline
             );
 
             if ($logoResult && isset($logoResult['public_url'])) {
                 Log::info('Logo generation successful', [
                     'business_name' => $request->business_name,
                     'style' => $style,
-                    'logo_url' => $logoResult['public_url']
+                    'logo_url' => $logoResult['public_url'],
+                    'has_tagline' => !empty($tagline)
                 ]);
                 
                 return response()->json([
                     'success' => true,
                     'logo_url' => $logoResult['public_url'],
                     'logo_path' => $logoResult['local_path'],
-                    'message' => 'Logo generated successfully!'
+                    'message' => 'Logo generated successfully with business name and tagline!'
                 ]);
             }
 

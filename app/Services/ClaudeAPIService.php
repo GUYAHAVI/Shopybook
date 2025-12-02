@@ -2063,32 +2063,24 @@ Return ONLY the enhanced prompt, no explanations or additional text.";
      * @return array Array containing public_url and local_path of the generated logo
      * @throws \Exception If logo generation fails
      */
-    public function generateBusinessLogo($businessName, $businessDescription, $businessType = 'retail', $style = 'modern')
+    public function generateBusinessLogo($businessName, $businessDescription, $businessType = 'retail', $style = 'modern', $tagline = null)
     {
         try {
             Log::info('Starting business logo generation', [
                 'business_name' => $businessName,
                 'business_type' => $businessType,
-                'style' => $style
+                'style' => $style,
+                'has_tagline' => !empty($tagline)
             ]);
 
-            // Strategy 1: Try Pollinations.AI with optimized prompts (free, no API key)
-            $result = $this->tryPollinationsLogo($businessName, $businessType, $style);
-            if ($result) return $result;
+            // Generate tagline from description if not provided
+            if (empty($tagline) && !empty($businessDescription)) {
+                $tagline = $this->generateTaglineFromDescription($businessDescription, $businessType);
+                Log::info('Generated tagline from description', ['tagline' => $tagline]);
+            }
 
-            // Strategy 2: Try DiceBear API with business-themed styles (free, no API key)
-            Log::info('Trying DiceBear API fallback');
-            $result = $this->tryDiceBearLogo($businessName, $style);
-            if ($result) return $result;
-
-            // Strategy 3: Try UI Avatars with business initials (free, no API key)
-            Log::info('Trying UI Avatars fallback');
-            $result = $this->tryUIAvatarsLogo($businessName, $style);
-            if ($result) return $result;
-
-            // Strategy 4: Generate locally with PHP GD (always works)
-            Log::info('Generating local placeholder logo');
-            return $this->generateLocalLogo($businessName, $businessType, $style);
+            // Generate logo with business name and tagline
+            return $this->generateLocalLogoWithText($businessName, $tagline, $businessType, $style);
 
         } catch (\Exception $e) {
             Log::error('Business Logo Generation Error: ' . $e->getMessage(), [
@@ -2096,6 +2088,87 @@ Return ONLY the enhanced prompt, no explanations or additional text.";
             ]);
             throw $e;
         }
+    }
+
+    /**
+     * Generate a catchy tagline from business description using Claude AI
+     */
+    private function generateTaglineFromDescription($description, $businessType)
+    {
+        try {
+            if (empty($this->apiKey)) {
+                return $this->generateFallbackTagline($businessType);
+            }
+
+            $prompt = "Based on this business description, create a SHORT, catchy tagline (maximum 5 words):
+
+Description: {$description}
+Business Type: {$businessType}
+
+Requirements:
+- Maximum 5 words
+- Memorable and impactful
+- Professional tone
+- No quotes or punctuation at the end
+- Just the tagline text, nothing else
+
+Tagline:";
+
+            $response = Http::withHeaders([
+                'x-api-key' => $this->apiKey,
+                'anthropic-version' => '2023-06-01',
+                'Content-Type' => 'application/json',
+            ])->timeout(15)->post($this->baseUrl, [
+                'model' => $this->model,
+                'max_tokens' => 50,
+                'temperature' => 0.8,
+                'messages' => [[
+                    'role' => 'user',
+                    'content' => $prompt
+                ]]
+            ]);
+
+            if ($response->successful()) {
+                $data = $response->json();
+                $tagline = trim($data['content'][0]['text'] ?? '');
+                $tagline = trim($tagline, '."\'');
+                
+                // Ensure it's under 5 words
+                $words = explode(' ', $tagline);
+                if (count($words) > 5) {
+                    $tagline = implode(' ', array_slice($words, 0, 5));
+                }
+                
+                return $tagline ?: $this->generateFallbackTagline($businessType);
+            }
+        } catch (\Exception $e) {
+            Log::warning('Tagline generation failed, using fallback: ' . $e->getMessage());
+        }
+        
+        return $this->generateFallbackTagline($businessType);
+    }
+
+    /**
+     * Generate a fallback tagline based on business type
+     */
+    private function generateFallbackTagline($businessType)
+    {
+        $taglines = [
+            'retail' => 'Quality You Trust',
+            'service' => 'Excellence in Service',
+            'restaurant' => 'Taste the Difference',
+            'salon' => 'Beauty Redefined',
+            'tech' => 'Innovation First',
+            'health' => 'Your Health Matters',
+            'education' => 'Learn & Grow',
+            'finance' => 'Smart Money Solutions',
+            'real_estate' => 'Find Your Home',
+            'automotive' => 'Drive with Confidence',
+            'fashion' => 'Style that Speaks',
+            'sports' => 'Play to Win'
+        ];
+        
+        return $taglines[$businessType] ?? 'Quality & Trust';
     }
 
     private function tryPollinationsLogo($businessName, $businessType, $style)
@@ -2367,6 +2440,137 @@ Return ONLY the enhanced prompt, no explanations or additional text.";
             'path' => $filePath,
             'style' => $style,
             'initials' => $initials
+        ]);
+        
+        return [
+            'public_url' => asset('storage/' . $relativePath),
+            'local_path' => $relativePath
+        ];
+    }
+
+    /**
+     * Generate a professional logo with business name and tagline
+     */
+    private function generateLocalLogoWithText($businessName, $tagline, $businessType, $style)
+    {
+        $dir = storage_path('app/public/marketing/logos');
+        if (!file_exists($dir)) mkdir($dir, 0755, true);
+
+        $filename = 'logo-' . Str::slug($businessName) . '-' . time() . '.png';
+        $filePath = $dir . '/' . $filename;
+        $relativePath = 'marketing/logos/' . $filename;
+
+        // Create larger canvas for text
+        $width = 800;
+        $height = 400;
+        $img = imagecreatetruecolor($width, $height);
+        
+        // Style-specific color schemes
+        $colorSchemes = [
+            'modern' => ['bg' => [255, 255, 255], 'primary' => [79, 70, 229], 'secondary' => [139, 92, 246], 'text' => [31, 41, 55]],
+            'classic' => ['bg' => [255, 255, 255], 'primary' => [31, 41, 55], 'secondary' => [107, 114, 128], 'text' => [55, 65, 81]],
+            'minimal' => ['bg' => [255, 255, 255], 'primary' => [0, 0, 0], 'secondary' => [156, 163, 175], 'text' => [75, 85, 99]],
+            'bold' => ['bg' => [255, 255, 255], 'primary' => [220, 38, 38], 'secondary' => [239, 68, 68], 'text' => [127, 29, 29]],
+            'playful' => ['bg' => [255, 255, 255], 'primary' => [236, 72, 153], 'secondary' => [244, 114, 182], 'text' => [157, 23, 77]],
+            'corporate' => ['bg' => [255, 255, 255], 'primary' => [30, 58, 138], 'secondary' => [59, 130, 246], 'text' => [30, 64, 175]]
+        ];
+        
+        $colors = $colorSchemes[$style] ?? $colorSchemes['modern'];
+        
+        $bgColor = imagecolorallocate($img, $colors['bg'][0], $colors['bg'][1], $colors['bg'][2]);
+        $primaryColor = imagecolorallocate($img, $colors['primary'][0], $colors['primary'][1], $colors['primary'][2]);
+        $secondaryColor = imagecolorallocate($img, $colors['secondary'][0], $colors['secondary'][1], $colors['secondary'][2]);
+        $textColor = imagecolorallocate($img, $colors['text'][0], $colors['text'][1], $colors['text'][2]);
+        
+        // Fill background
+        imagefilledrectangle($img, 0, 0, $width, $height, $bgColor);
+        
+        // Add subtle decorative elements based on style
+        if (in_array($style, ['modern', 'corporate'])) {
+            // Add geometric shapes
+            imagefilledrectangle($img, 0, 0, 150, $height, $primaryColor);
+            imagefilledellipse($img, 75, 200, 120, 120, $secondaryColor);
+        } elseif ($style === 'playful') {
+            // Add circles
+            imagefilledellipse($img, 100, 100, 80, 80, $primaryColor);
+            imagefilledellipse($img, 120, 300, 60, 60, $secondaryColor);
+        } elseif ($style === 'bold') {
+            // Add bold rectangle
+            imagefilledrectangle($img, 0, 0, 120, $height, $primaryColor);
+        }
+        
+        // Use TrueType font if available, otherwise use built-in
+        $fontPath = storage_path('fonts/DejaVuSans-Bold.ttf');
+        $useTTF = file_exists($fontPath);
+        
+        if ($useTTF) {
+            // Draw business name
+            $nameSize = 48;
+            $nameBox = imagettfbbox($nameSize, 0, $fontPath, $businessName);
+            $nameWidth = abs($nameBox[4] - $nameBox[0]);
+            $nameX = ($width - $nameWidth) / 2 + 30;
+            $nameY = $height / 2 - 20;
+            
+            imagettftext($img, $nameSize, 0, $nameX, $nameY, $primaryColor, $fontPath, $businessName);
+            
+            // Draw tagline
+            if (!empty($tagline)) {
+                $taglineSize = 20;
+                $taglineBox = imagettfbbox($taglineSize, 0, $fontPath, $tagline);
+                $taglineWidth = abs($taglineBox[4] - $taglineBox[0]);
+                $taglineX = ($width - $taglineWidth) / 2 + 30;
+                $taglineY = $nameY + 50;
+                
+                imagettftext($img, $taglineSize, 0, $taglineX, $taglineY, $textColor, $fontPath, $tagline);
+            }
+        } else {
+            // Fallback to built-in fonts
+            $font = 5;
+            $charWidth = imagefontwidth($font);
+            
+            // Draw business name (larger, bold)
+            $nameLength = strlen($businessName);
+            $nameX = ($width - ($nameLength * $charWidth * 3)) / 2 + 60;
+            $nameY = $height / 2 - 40;
+            
+            for ($i = 0; $i < 3; $i++) {
+                for ($j = 0; $j < 3; $j++) {
+                    for ($k = 0; $k < $nameLength; $k++) {
+                        imagestring($img, $font, $nameX + ($k * $charWidth * 3) + $i, $nameY + $j, $businessName[$k], $primaryColor);
+                    }
+                }
+            }
+            
+            // Draw tagline
+            if (!empty($tagline)) {
+                $taglineLength = strlen($tagline);
+                $taglineX = ($width - ($taglineLength * $charWidth * 2)) / 2 + 60;
+                $taglineY = $nameY + 60;
+                
+                for ($i = 0; $i < 2; $i++) {
+                    for ($j = 0; $j < 2; $j++) {
+                        for ($k = 0; $k < $taglineLength; $k++) {
+                            imagestring($img, 3, $taglineX + ($k * $charWidth * 2) + $i, $taglineY + $j, $tagline[$k], $textColor);
+                        }
+                    }
+                }
+            }
+        }
+        
+        // Add subtle border for classic/corporate styles
+        if (in_array($style, ['classic', 'corporate'])) {
+            imagerectangle($img, 2, 2, $width-3, $height-3, $primaryColor);
+        }
+        
+        imagepng($img, $filePath);
+        imagedestroy($img);
+        
+        Log::info('Logo with text generated successfully', [
+            'path' => $filePath,
+            'style' => $style,
+            'business_name' => $businessName,
+            'tagline' => $tagline,
+            'used_ttf' => $useTTF
         ]);
         
         return [

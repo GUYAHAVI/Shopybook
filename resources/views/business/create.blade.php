@@ -626,6 +626,14 @@ body, .container-fluid, .card, .main-content, .content {
                 <div id="generateLogoSection" class="logo-section" style="display: none;">
                     <div class="ai-logo-generator">
                         <div class="form-group" style="margin-bottom: 15px;">
+                            <label for="logoTagline" style="font-size: 14px; color: #374151; margin-bottom: 8px; display: block;">
+                                Business Tagline (Optional)
+                            </label>
+                            <input type="text" id="logoTagline" class="form-control" placeholder="e.g., Quality You Trust" maxlength="50" style="width: 100%;">
+                            <small style="color: #6b7280; font-size: 12px; display: block; margin-top: 4px;">Leave empty to auto-generate from your business description</small>
+                        </div>
+                        
+                        <div class="form-group" style="margin-bottom: 15px;">
                             <label for="logoStyle" style="font-size: 14px; color: #374151; margin-bottom: 8px; display: block;">
                                 Logo Style
                             </label>
@@ -1023,6 +1031,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const businessDescription = form.querySelector('[name="description"]').value.trim();
             const businessType = form.querySelector('[name="business_type"]').value;
             const logoStyle = document.getElementById('logoStyle').value;
+            const logoTagline = document.getElementById('logoTagline').value.trim();
             
             // Validation
             if (!businessName) {
@@ -1078,7 +1087,8 @@ document.addEventListener('DOMContentLoaded', function() {
                         business_name: businessName,
                         business_description: businessDescription,
                         business_type: businessType,
-                        logo_style: logoStyle
+                        logo_style: logoStyle,
+                        tagline: logoTagline || null
                     }),
                     credentials: 'same-origin'
                 });
