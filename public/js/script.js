@@ -1,6 +1,7 @@
 /* ---- particles.js config ---- */
 
-particlesJS("particles-js", {
+if (typeof particlesJS !== 'undefined') {
+  particlesJS("particles-js", {
     particles: {
       number: {
         value: 380,
@@ -110,11 +111,14 @@ particlesJS("particles-js", {
     },
     retina_detect: true,
   });
+}
   /* ---- particles.js config ---- */
   
   
-  document.getElementById("contactForm").addEventListener("submit", function (e) {
-    e.preventDefault();
+  const contactForm = document.getElementById("contactForm");
+  if (contactForm) {
+    contactForm.addEventListener("submit", function (e) {
+      e.preventDefault();
   
     // Form validation
     const name = this.name.value.trim();
@@ -170,6 +174,7 @@ particlesJS("particles-js", {
       }, 5000);
     }
   });
+}
   document.addEventListener('DOMContentLoaded', function() {
     const brandimgs = document.querySelector('.brandimgs');
     

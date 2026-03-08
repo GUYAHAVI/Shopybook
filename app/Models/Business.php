@@ -168,6 +168,16 @@ class Business extends BaseTenant implements TenantWithDatabase
         return $this->hasOne(TaxSetting::class);
     }
 
+    public function apps()
+    {
+        return $this->hasMany(BusinessApp::class);
+    }
+
+    public function activeApps()
+    {
+        return $this->hasMany(BusinessApp::class)->where('is_active', true)->orderBy('order');
+    }
+
     /**
      * Get or create tax settings for this business
      */

@@ -98,6 +98,9 @@ Route::get('/businesses', [BusinessController::class, 'index'])->name('businesse
 Route::get('/docs', function () {
     return view('docs.index');
 })->name('docs');
+Route::get('/pricing', function () {
+    return view('pricing');
+})->name('pricing');
 
 // Public website viewer (no subdomain needed - quick access)
 use App\Http\Controllers\PublicWebsiteController;
@@ -923,6 +926,14 @@ Route::middleware(['auth'])->prefix('website-builder')->name('website.builder.')
     
     // Enterprise AI Feature: Auto-build complete website
     Route::post('/ai/auto-build', [WebsiteBuilderController::class, 'autoBuildWebsite'])->name('ai.auto-build');
+});
+
+// App Management Routes
+Route::middleware(['auth'])->prefix('apps')->name('apps.')->group(function () {
+    Route::get('/', [App\Http\Controllers\AppManagementController::class, 'index'])->name('index');
+    Route::post('/toggle', [App\Http\Controllers\AppManagementController::class, 'toggle'])->name('toggle');
+    Route::post('/update-order', [App\Http\Controllers\AppManagementController::class, 'updateOrder'])->name('update-order');
+    Route::get('/enabled', [App\Http\Controllers\AppManagementController::class, 'getEnabledApps'])->name('enabled');
 });
 
 // PUBLIC BUSINESS SHOW ROUTE

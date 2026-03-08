@@ -657,10 +657,16 @@ document.getElementById('orderForm').addEventListener('submit', function(e) {
         method: 'POST',
         body: formData,
         headers: {
-            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+            'Accept': 'application/json'
         }
     })
-    .then(response => response.json())
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Network response was not ok: ' + response.statusText);
+        }
+        return response.json();
+    })
     .then(data => {
         hideLoadingModal();
         if (data.success) {
@@ -668,13 +674,13 @@ document.getElementById('orderForm').addEventListener('submit', function(e) {
             bootstrap.Modal.getInstance(document.getElementById('orderModal')).hide();
             this.reset();
         } else {
-            showErrorModal('Error placing order: ' + data.message);
+            showErrorModal('Error placing order: ' + (data.message || 'Unknown error'));
         }
     })
     .catch(error => {
         hideLoadingModal();
         console.error('Error:', error);
-        showErrorModal('Error placing order. Please try again.');
+        showErrorModal('Error placing order: ' + error.message + '. Please try again.');
     });
 });
 
@@ -689,10 +695,16 @@ document.getElementById('serviceForm').addEventListener('submit', function(e) {
         method: 'POST',
         body: formData,
         headers: {
-            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+            'Accept': 'application/json'
         }
     })
-    .then(response => response.json())
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Network response was not ok: ' + response.statusText);
+        }
+        return response.json();
+    })
     .then(data => {
         hideLoadingModal();
         if (data.success) {
@@ -700,13 +712,13 @@ document.getElementById('serviceForm').addEventListener('submit', function(e) {
             bootstrap.Modal.getInstance(document.getElementById('serviceModal')).hide();
             this.reset();
         } else {
-            showErrorModal('Error booking service: ' + data.message);
+            showErrorModal('Error booking service: ' + (data.message || 'Unknown error'));
         }
     })
     .catch(error => {
         hideLoadingModal();
         console.error('Error:', error);
-        showErrorModal('Error booking service. Please try again.');
+        showErrorModal('Error booking service: ' + error.message + '. Please try again.');
     });
 });
 </script>

@@ -32,7 +32,7 @@ class BusinessController extends Controller
         $query = Business::query();
 
         if ($type !== 'all') {
-            $query->where('business_type', $type);
+            $query->where('business_category', $type);
         }
 
         $groupedBusinesses = $query->orderBy($sort, $order)

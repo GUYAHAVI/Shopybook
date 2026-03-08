@@ -212,6 +212,28 @@
             letter-spacing: 0.05em;
             padding: 0 1.5rem 0.5rem;
             margin-bottom: 0.5rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            transition: all 0.2s ease;
+        }
+        
+        .nav-section-title:hover {
+            color: var(--text-primary);
+        }
+        
+        .nav-section-title i.collapse-icon {
+            font-size: 0.875rem;
+            transition: transform 0.3s ease;
+        }
+        
+        .nav-section.collapsed .collapse-icon {
+            transform: rotate(-90deg);
+        }
+        
+        .nav-section.collapsed .nav-section-content {
+            display: none;
         }
         
         .nav-item {
@@ -1273,10 +1295,45 @@
                 <input type="text" class="search-input" placeholder="Search menu..." id="sidebarSearch">
             </div>
         </div>
+
+        @php
+            // Get enabled apps for the current business
+            $business = auth()->user()->business ?? null;
+            $enabledAppSlugs = [];
+            
+            if ($business) {
+                $enabledAppSlugs = \App\Models\BusinessApp::where('business_id', $business->id)
+                    ->where('is_active', true)
+                    ->pluck('app_slug')
+                    ->toArray();
+            }
+            
+            // If no apps configured yet, show everything (first-time users)
+            $showAll = empty($enabledAppSlugs);
+            
+            // Helper function to check if app section should be shown
+            function shouldShowApp($appSlug, $enabledApps, $showAll) {
+                return $showAll || in_array($appSlug, $enabledApps);
+            }
+        @endphp
         
         <nav class="sidebar-nav">
+            <!-- App Customization Link (Always visible) -->
+            <div class="nav-section" style="margin-bottom: 1rem;">
+                <a href="{{ route('apps.index') }}" class="nav-link" style="background: linear-gradient(135deg, #020258, #13e8e9); color: white; margin: 0 0.75rem; border-radius: 0.5rem;">
+                    <i class="fas fa-th"></i>
+                    <span>⚙️ Customize Dashboard</span>
+                    @if($showAll)
+                        <span class="badge bg-warning text-dark ms-auto" style="font-size: 0.65rem;">Setup</span>
+                    @endif
+                </a>
+            </div>
             <div class="nav-section">
-                <div class="nav-section-title">Quick Actions</div>
+                <div class="nav-section-title" onclick="toggleSection(this)">
+                    <span>Quick Actions</span>
+                    <i class="fas fa-chevron-down collapse-icon"></i>
+                </div>
+                <div class="nav-section-content">
                 <div class="nav-item">
                     <a href="{{ route('sales.pos') }}" class="nav-link {{ request()->routeIs('sales.pos') ? 'active' : '' }}">
                         <i class="fas fa-cash-register"></i>
@@ -1310,10 +1367,15 @@
                         <span class="badge bg-yellow-400 text-blue-600 ms-auto">New</span>
                     </button>
                 </div>
+                </div>
             </div>
             
             <div class="nav-section">
-                <div class="nav-section-title">Main</div>
+                <div class="nav-section-title" onclick="toggleSection(this)">
+                    <span>Main</span>
+                    <i class="fas fa-chevron-down collapse-icon"></i>
+                </div>
+                <div class="nav-section-content">
                 <div class="nav-item">
                     <a href="{{ route('dashboard') }}" class="nav-link {{ request()->routeIs('dashboard') ? 'active' : '' }}">
                         <i class="fas fa-tachometer-alt"></i>
@@ -1326,10 +1388,16 @@
                         <span>Analysis</span>
                     </a>
                 </div>
+                </div>
             </div>
             
+            @if(shouldShowApp('products', $enabledAppSlugs, $showAll) || shouldShowApp('sales', $enabledAppSlugs, $showAll))
             <div class="nav-section">
-                <div class="nav-section-title">Sales & Products</div>
+                <div class="nav-section-title" onclick="toggleSection(this)">
+                    <span>Sales & Products</span>
+                    <i class="fas fa-chevron-down collapse-icon"></i>
+                </div>
+                <div class="nav-section-content">
                 <div class="nav-item">
                     <a href="{{ route('products.index') }}" class="nav-link {{ request()->routeIs('products.*') ? 'active' : '' }}">
                         <i class="fas fa-box"></i>
@@ -1373,10 +1441,17 @@
                         <span>Suppliers</span>
                     </a>
                 </div>
+                </div>
             </div>
+            @endif
             
+            @if(shouldShowApp('finance', $enabledAppSlugs, $showAll))
             <div class="nav-section">
-                <div class="nav-section-title">Finance</div>
+                <div class="nav-section-title" onclick="toggleSection(this)">
+                    <span>Finance</span>
+                    <i class="fas fa-chevron-down collapse-icon"></i>
+                </div>
+                <div class="nav-section-content">
                 <div class="nav-item">
                     <a href="{{ route('costs.index') }}" class="nav-link {{ request()->routeIs('costs.*') ? 'active' : '' }}">
                         <i class="fas fa-receipt"></i>
@@ -1403,10 +1478,17 @@
                         <span class="badge bg-success ms-auto">New</span>
                     </a>
                 </div>
+                </div>
             </div>
+            @endif
             
+            @if(shouldShowApp('services', $enabledAppSlugs, $showAll))
             <div class="nav-section">
-                <div class="nav-section-title">Services</div>
+                <div class="nav-section-title" onclick="toggleSection(this)">
+                    <span>Services</span>
+                    <i class="fas fa-chevron-down collapse-icon"></i>
+                </div>
+                <div class="nav-section-content">
                 <div class="nav-item">
                     <a href="{{ route('services.index') }}" class="nav-link {{ request()->routeIs('services.*') ? 'active' : '' }}">
                         <i class="fas fa-concierge-bell"></i>
@@ -1425,10 +1507,17 @@
                         <span>Staff</span>
                     </a>
                 </div>
+                </div>
             </div>
+            @endif
             
+            @if(shouldShowApp('marketing', $enabledAppSlugs, $showAll))
             <div class="nav-section">
-                <div class="nav-section-title">Marketing</div>
+                <div class="nav-section-title" onclick="toggleSection(this)">
+                    <span>Marketing</span>
+                    <i class="fas fa-chevron-down collapse-icon"></i>
+                </div>
+                <div class="nav-section-content">
                 <div class="nav-item">
                     <a href="{{ route('website.builder.index') }}" class="nav-link {{ request()->routeIs('website.builder.*') ? 'active' : '' }}">
                         <i class="fas fa-globe"></i>
@@ -1448,10 +1537,17 @@
                         <span>AI Content Enhancer</span>
                     </a>
                 </div>
+                </div>
             </div>
+            @endif
             
+            @if(shouldShowApp('ai_tools', $enabledAppSlugs, $showAll))
             <div class="nav-section">
-                <div class="nav-section-title">AI & Tools</div>
+                <div class="nav-section-title" onclick="toggleSection(this)">
+                    <span>AI & Tools</span>
+                    <i class="fas fa-chevron-down collapse-icon"></i>
+                </div>
+                <div class="nav-section-content">
                 <div class="nav-item">
                     <a href="{{ route('ai-comm.chat') }}" class="nav-link {{ request()->routeIs('ai-comm.*') ? 'active' : '' }}">
                         <i class="fas fa-robot"></i>
@@ -1471,10 +1567,16 @@
                         <span>Knowledge Base</span>
                     </a>
                 </div>
+                </div>
             </div>
+            @endif
             
             <div class="nav-section">
-                <div class="nav-section-title">Settings</div>
+                <div class="nav-section-title" onclick="toggleSection(this)">
+                    <span>Settings</span>
+                    <i class="fas fa-chevron-down collapse-icon"></i>
+                </div>
+                <div class="nav-section-content">
                 <div class="nav-item">
                     <a href="{{ route('settings.index') }}" class="nav-link {{ request()->routeIs('settings.*') ? 'active' : '' }}">
                         <i class="fas fa-cog"></i>
@@ -1512,6 +1614,7 @@
                         <i class="fas fa-trash-alt"></i>
                         <span>Delete Business</span>
                     </a>
+                </div>
                 </div>
             </div>
         </nav>
@@ -1640,6 +1743,36 @@
                     hidePWAInstallElements();
                 }
             }, 5000);
+        });
+    </script>
+    
+    <!-- Collapsible Sidebar Sections -->
+    <script>
+        // Toggle sidebar section collapse
+        function toggleSection(element) {
+            const section = element.closest('.nav-section');
+            section.classList.toggle('collapsed');
+            
+            // Save state to localStorage
+            const sectionTitle = element.querySelector('span').textContent;
+            const isCollapsed = section.classList.contains('collapsed');
+            localStorage.setItem(`sidebar-${sectionTitle}`, isCollapsed ? 'collapsed' : 'expanded');
+        }
+        
+        // Restore collapsed states on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            const sections = document.querySelectorAll('.nav-section');
+            sections.forEach(section => {
+                const titleElement = section.querySelector('.nav-section-title span');
+                if (titleElement) {
+                    const sectionTitle = titleElement.textContent;
+                    const savedState = localStorage.getItem(`sidebar-${sectionTitle}`);
+                    
+                    if (savedState === 'collapsed') {
+                        section.classList.add('collapsed');
+                    }
+                }
+            });
         });
     </script>
     
