@@ -46,52 +46,9 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\TeamController;
 
-// Temporary debugging route - REMOVE after debugging
-Route::get('/debug-notifications', function() {
-    try {
-        $checks = [
-            'storage_writable' => is_writable(storage_path('logs')),
-            'cache_working' => Cache::put('test_key', 'test_value', 60) && Cache::get('test_key') === 'test_value',
-            'database_connected' => DB::connection()->getPdo() !== null,
-            'notifications_table_exists' => Schema::hasTable('notifications'),
-            'cache_driver' => config('cache.default'),
-            'log_channel' => config('logging.default'),
-            'app_debug' => config('app.debug'),
-            'app_env' => config('app.env'),
-        ];
-        
-        // Check recent notifications
-        $recentNotifications = DB::table('notifications')->orderBy('created_at', 'desc')->limit(5)->get();
-        
-        // Get recent log errors
-        $logFile = storage_path('logs/laravel.log');
-        $logErrors = [];
-        if (file_exists($logFile)) {
-            $logContent = file_get_contents($logFile);
-            preg_match_all('/Failed to send.*?notifications.*?$/m', $logContent, $matches);
-            $logErrors = array_slice($matches[0], -10);
-        }
-        
-        return response()->json([
-            'system_checks' => $checks,
-            'recent_notifications' => $recentNotifications,
-            'recent_errors' => $logErrors,
-            'permissions' => [
-                'storage_path' => storage_path(),
-                'logs_path' => storage_path('logs'),
-                'logs_writable' => is_writable(storage_path('logs')),
-                'storage_writable' => is_writable(storage_path()),
-            ]
-        ], 200, [], JSON_PRETTY_PRINT);
-        
-    } catch (\Exception $e) {
-        return response()->json([
-            'error' => $e->getMessage(),
-            'trace' => $e->getTraceAsString()
-        ], 500);
-    }
-})->name('debug.notifications');
+// Debug routes removed for security
 
 Route::get('/',[IndexController::class,'index'])->name('index');
 Route::get('/businesses', [BusinessController::class, 'index'])->name('businesses');
@@ -108,6 +65,8 @@ Route::get('/site/{subdomain}', [PublicWebsiteController::class, 'homepage'])
     ->name('public.website.direct');
 Route::get('/site/{subdomain}/{slug}', [PublicWebsiteController::class, 'page'])
     ->name('public.website.direct.page');
+Route::post('/site/{subdomain}/contact', [PublicWebsiteController::class, 'submitContact'])
+    ->name('public.website.contact');
 
 Route::post('/orders', [OrderController::class, 'store'])->name('orders.store');
 Route::post('/service-bookings/public', [ServiceBookingController::class, 'storePublic'])->name('service-bookings.store-public');
@@ -155,25 +114,7 @@ Route::post('/email/verification-notification', function (Illuminate\Http\Reques
     return back()->with('message', 'Verification link sent!');
 })->middleware(['auth', 'throttle:6,1'])->name('verification.send');
 
-// Test route for flash messages
-Route::get('/test-flash', function () {
-    return redirect()->route('dashboard')->with('success', 'Flash message test successful! This message should appear immediately.');
-})->middleware('auth');
 
-// Debug route to test business access
-Route::get('/debug-business', function () {
-    $user = auth()->user();
-    $business = $user ? $user->business : null;
-    
-    return response()->json([
-        'authenticated' => auth()->check(),
-        'user_id' => $user ? $user->id : null,
-        'has_business' => $business ? true : false,
-        'business_id' => $business ? $business->id : null,
-        'business_name' => $business ? $business->name : null,
-        'business_slug' => $business ? $business->slug : null,
-    ]);
-})->middleware('auth');
 
 // PUBLIC BUSINESS SHOW ROUTE - Moved AFTER specific business routes to avoid conflicts
 
@@ -186,7 +127,7 @@ Route::post('/business/enhance-description', [BusinessController::class, 'enhanc
 Route::post('/business/generate-logo', [BusinessController::class, 'generateLogo'])->name('business.generate-logo')->middleware('auth');
 
 // OCR Data Capture Routes
-Route::prefix('ocr')->middleware('auth')->group(function () {
+Route::prefix('ocr')->middleware(['auth', 'has.business', 'permission:products'])->group(function () {
     Route::get('/', [OCRController::class, 'index'])->name('ocr.index');
     Route::post('/extract', [OCRController::class, 'extract'])->name('ocr.extract');
     Route::post('/save', [OCRController::class, 'save'])->name('ocr.save');
@@ -205,7 +146,7 @@ Route::prefix('social')->middleware('auth')->group(function () {
 });
 
 // Marketing & Social Media Routes (available to all authenticated users with business)
-Route::prefix('marketing')->middleware(['auth', 'has.business'])->group(function () {
+Route::prefix('marketing')->middleware(['auth', 'has.business', 'permission:marketing'])->group(function () {
     Route::get('/social-media', [MarketingPostController::class, 'index'])->name('marketing.social-media');
     
     // Marketing Posts
@@ -311,8 +252,20 @@ Route::prefix('notifications')->name('notifications.')->middleware(['auth', 'has
     Route::patch('/mark-all-read', [\App\Http\Controllers\NotificationController::class, 'markAllAsRead'])->name('mark-all-read');
 });
 
+// ── Team / RBAC Routes ──────────────────────────────────────────────────────
+Route::prefix('team')->name('team.')->middleware(['auth', 'has.business'])->group(function () {
+    Route::get('/',                          [TeamController::class, 'index'])->name('index');
+    Route::post('/',                         [TeamController::class, 'store'])->name('store');
+    Route::put('/{member}',                  [TeamController::class, 'update'])->name('update');
+    Route::delete('/{member}',               [TeamController::class, 'destroy'])->name('destroy');
+    Route::patch('/{member}/toggle-status',  [TeamController::class, 'toggleStatus'])->name('toggleStatus');
+    Route::get('/role-defaults/{role}',      [TeamController::class, 'roleDefaults'])->name('roleDefaults');
+    Route::get('/logs',                      [TeamController::class, 'logs'])->name('logs');
+});
+
+
     // Products Routes
-    Route::prefix('products')->middleware(['auth', 'has.business'])->group(function () {
+    Route::prefix('products')->middleware(['auth', 'has.business', 'permission:products'])->group(function () {
         Route::get('/', [ProductsController::class, 'index'])->name('products.index');
         
         // Specific routes MUST come before dynamic {product} routes
@@ -354,7 +307,7 @@ Route::prefix('notifications')->name('notifications.')->middleware(['auth', 'has
     });
 
     // Sales Routes
-    Route::prefix('sales')->middleware(['auth', 'has.business'])->group(function () {
+    Route::prefix('sales')->middleware(['auth', 'has.business', 'permission:pos,orders,customers'])->group(function () {
         Route::get('/pos', [SalesController::class, 'pos'])->name('sales.pos');
         Route::get('/orders', [SalesController::class, 'orders'])->name('sales.orders');
         Route::get('/orders/{order}/details', [SalesController::class, 'orderDetails'])->name('sales.order-details');
@@ -401,7 +354,7 @@ Route::post('/orders', [SalesController::class, 'createOrder'])->name('sales.cre
     });
 
     // Contact Import Routes
-    Route::prefix('contacts')->middleware(['auth', 'has.business'])->group(function () {
+    Route::prefix('contacts')->middleware(['auth', 'has.business', 'permission:marketing'])->group(function () {
         Route::get('/', [\App\Http\Controllers\ContactImportController::class, 'index'])->name('contacts.index');
         Route::get('/create-group', [\App\Http\Controllers\ContactImportController::class, 'createGroup'])->name('contacts.create-group');
         Route::post('/store-group', [\App\Http\Controllers\ContactImportController::class, 'storeGroup'])->name('contacts.store-group');
@@ -419,7 +372,7 @@ Route::post('/orders', [SalesController::class, 'createOrder'])->name('sales.cre
     });
 
     // Marketing Routes
-    Route::prefix('marketing')->group(function () {
+    Route::prefix('marketing')->middleware(['has.business', 'permission:marketing'])->group(function () {
         // Promotions
         Route::get('/promotions', [MarketingController::class, 'promotions'])->name('marketing.promotions')->middleware('has.business');
         Route::get('/promotions/create', [MarketingController::class, 'createPromotion'])->name('marketing.promotions.create')->middleware('has.business');
@@ -455,25 +408,25 @@ Route::post('/orders', [SalesController::class, 'createOrder'])->name('sales.cre
     });
 
     // Business Analysis Routes
-    Route::prefix('analysis')->group(function () {
-        Route::get('/', [BusinessAnalysisController::class, 'index'])->name('business.analysis.index')->middleware('has.business');
-        Route::post('/generate', [BusinessAnalysisController::class, 'generateAnalysis'])->name('business.analysis.generate')->middleware('has.business');
-        Route::get('/financial', [BusinessAnalysisController::class, 'financialReport'])->name('business.analysis.financial')->middleware('has.business');
+    Route::prefix('analysis')->middleware(['has.business', 'permission:reports'])->group(function () {
+        Route::get('/', [BusinessAnalysisController::class, 'index'])->name('business.analysis.index');
+        Route::post('/generate', [BusinessAnalysisController::class, 'generateAnalysis'])->name('business.analysis.generate');
+        Route::get('/financial', [BusinessAnalysisController::class, 'financialReport'])->name('business.analysis.financial');
     });
 
     // Enhanced AI Business Analysis Routes (Canadian Model)
-    Route::prefix('ai-analysis')->group(function () {
-        Route::get('/', [\App\Http\Controllers\EnhancedBusinessAnalysisController::class, 'index'])->name('business.ai-analysis.index')->middleware('has.business');
-        Route::post('/generate', [\App\Http\Controllers\EnhancedBusinessAnalysisController::class, 'generateEnhancedAnalysis'])->name('business.ai-analysis.generate')->middleware('has.business');
-        Route::get('/financial', [\App\Http\Controllers\EnhancedBusinessAnalysisController::class, 'getFinancialAnalysis'])->name('business.ai-analysis.financial')->middleware('has.business');
-        Route::get('/operational', [\App\Http\Controllers\EnhancedBusinessAnalysisController::class, 'getOperationalAnalysis'])->name('business.ai-analysis.operational')->middleware('has.business');
-        Route::get('/growth', [\App\Http\Controllers\EnhancedBusinessAnalysisController::class, 'getGrowthPredictions'])->name('business.ai-analysis.growth')->middleware('has.business');
-        Route::get('/benchmarks', [\App\Http\Controllers\EnhancedBusinessAnalysisController::class, 'getBenchmarkComparison'])->name('business.ai-analysis.benchmarks')->middleware('has.business');
-        Route::post('/export', [\App\Http\Controllers\EnhancedBusinessAnalysisController::class, 'exportAnalysisReport'])->name('business.ai-analysis.export')->middleware('has.business');
+    Route::prefix('ai-analysis')->middleware(['has.business', 'permission:reports'])->group(function () {
+        Route::get('/', [\App\Http\Controllers\EnhancedBusinessAnalysisController::class, 'index'])->name('business.ai-analysis.index');
+        Route::post('/generate', [\App\Http\Controllers\EnhancedBusinessAnalysisController::class, 'generateEnhancedAnalysis'])->name('business.ai-analysis.generate');
+        Route::get('/financial', [\App\Http\Controllers\EnhancedBusinessAnalysisController::class, 'getFinancialAnalysis'])->name('business.ai-analysis.financial');
+        Route::get('/operational', [\App\Http\Controllers\EnhancedBusinessAnalysisController::class, 'getOperationalAnalysis'])->name('business.ai-analysis.operational');
+        Route::get('/growth', [\App\Http\Controllers\EnhancedBusinessAnalysisController::class, 'getGrowthPredictions'])->name('business.ai-analysis.growth');
+        Route::get('/benchmarks', [\App\Http\Controllers\EnhancedBusinessAnalysisController::class, 'getBenchmarkComparison'])->name('business.ai-analysis.benchmarks');
+        Route::post('/export', [\App\Http\Controllers\EnhancedBusinessAnalysisController::class, 'exportAnalysisReport'])->name('business.ai-analysis.export');
     });
 
     // Tax Management Routes
-    Route::prefix('tax')->middleware('has.business')->group(function () {
+    Route::prefix('tax')->middleware(['has.business', 'permission:expenses'])->group(function () {
         Route::get('/settings', [TaxController::class, 'settings'])->name('tax.settings');
         Route::put('/settings', [TaxController::class, 'updateSettings'])->name('tax.settings.update');
         Route::get('/reports', [TaxController::class, 'reports'])->name('tax.reports');
@@ -482,7 +435,7 @@ Route::post('/orders', [SalesController::class, 'createOrder'])->name('sales.cre
     });
 
     // Comprehensive Reports Routes
-    Route::prefix('reports')->middleware('has.business')->group(function () {
+    Route::prefix('reports')->middleware(['has.business', 'permission:reports'])->group(function () {
         Route::get('/', [ReportsController::class, 'index'])->name('reports.index');
         Route::get('/sales', [ReportsController::class, 'salesReport'])->name('reports.sales');
         Route::get('/products', [ReportsController::class, 'productReport'])->name('reports.products');
@@ -493,7 +446,7 @@ Route::post('/orders', [SalesController::class, 'createOrder'])->name('sales.cre
     });
 
     // Comprehensive Settings Routes
-    Route::prefix('settings')->middleware('has.business')->group(function () {
+    Route::prefix('settings')->middleware(['has.business', 'permission:settings'])->group(function () {
         Route::get('/', [SettingsController::class, 'index'])->name('settings.index');
         Route::put('/general', [SettingsController::class, 'updateGeneral'])->name('settings.update.general');
         Route::put('/pos', [SettingsController::class, 'updatePOS'])->name('settings.update.pos');
@@ -516,7 +469,7 @@ Route::post('/orders', [SalesController::class, 'createOrder'])->name('sales.cre
     Route::post('/subscription/paystack/webhook', [App\Http\Controllers\SubscriptionController::class, 'paystackWebhook'])->name('subscription.paystack.webhook');
 
     // Returns & Refunds Routes
-    Route::prefix('returns')->middleware(['auth', 'has.business'])->group(function () {
+    Route::prefix('returns')->middleware(['auth', 'has.business', 'permission:returns'])->group(function () {
         Route::get('/', [ReturnsController::class, 'index'])->name('returns.index');
         Route::get('/create', [ReturnsController::class, 'create'])->name('returns.create');
         Route::post('/', [ReturnsController::class, 'store'])->name('returns.store');
@@ -528,7 +481,7 @@ Route::post('/orders', [SalesController::class, 'createOrder'])->name('sales.cre
     });
 
     // Services Management Routes
-    Route::prefix('services')->middleware('has.business')->group(function () {
+    Route::prefix('services')->middleware(['has.business', 'permission:services'])->group(function () {
         Route::get('/', [ServiceController::class, 'index'])->name('services.index');
         Route::get('/create', [ServiceController::class, 'create'])->name('services.create');
         Route::post('/', [ServiceController::class, 'store'])->name('services.store');
@@ -542,7 +495,7 @@ Route::post('/orders', [SalesController::class, 'createOrder'])->name('sales.cre
     });
 
     // Staff Management Routes
-    Route::prefix('staff')->middleware('has.business')->group(function () {
+    Route::prefix('staff')->middleware(['has.business', 'permission:staff'])->group(function () {
         Route::get('/', [StaffController::class, 'index'])->name('staff.index');
         Route::get('/create', [StaffController::class, 'create'])->name('staff.create');
         Route::post('/', [StaffController::class, 'store'])->name('staff.store');
@@ -559,7 +512,7 @@ Route::post('/orders', [SalesController::class, 'createOrder'])->name('sales.cre
     });
 
     // Salary Advance Routes
-    Route::prefix('salary-advances')->middleware('has.business')->group(function () {
+    Route::prefix('salary-advances')->middleware(['has.business', 'permission:staff'])->group(function () {
         Route::get('/', [SalaryAdvanceController::class, 'index'])->name('salary-advances.index');
         Route::get('/create', [SalaryAdvanceController::class, 'create'])->name('salary-advances.create');
         Route::post('/', [SalaryAdvanceController::class, 'store'])->name('salary-advances.store');
@@ -574,7 +527,7 @@ Route::post('/orders', [SalesController::class, 'createOrder'])->name('sales.cre
     });
 
     // Service Bookings Routes
-    Route::prefix('service-bookings')->middleware('has.business')->group(function () {
+    Route::prefix('service-bookings')->middleware(['has.business', 'permission:services'])->group(function () {
         Route::get('/', [ServiceBookingController::class, 'index'])->name('service-bookings.index');
         Route::get('/create', [ServiceBookingController::class, 'create'])->name('service-bookings.create');
         Route::post('/', [ServiceBookingController::class, 'store'])->name('service-bookings.store');
@@ -601,10 +554,10 @@ Route::post('/orders', [SalesController::class, 'createOrder'])->name('sales.cre
     });
 
     // Commission Reports Route
-    Route::get('/commission-reports', [StaffController::class, 'commissionReports'])->middleware('has.business')->name('commission-reports');
+    Route::get('/commission-reports', [StaffController::class, 'commissionReports'])->middleware(['has.business', 'permission:staff'])->name('commission-reports');
 
     // Costs Routes
-    Route::prefix('costs')->middleware('has.business')->group(function () {
+    Route::prefix('costs')->middleware(['has.business', 'permission:expenses'])->group(function () {
         Route::get('/', [CostController::class, 'index'])->name('costs.index');
         Route::get('/create', [CostController::class, 'create'])->name('costs.create');
         Route::post('/', [CostController::class, 'store'])->name('costs.store');
@@ -615,7 +568,7 @@ Route::post('/orders', [SalesController::class, 'createOrder'])->name('sales.cre
     });
 
     // Inventory Management Routes
-    Route::prefix('inventory')->middleware('has.business')->group(function () {
+    Route::prefix('inventory')->middleware(['has.business', 'permission:products'])->group(function () {
         Route::get('/', [InventoryController::class, 'index'])->name('inventory.index');
         Route::get('/create', [InventoryController::class, 'create'])->name('inventory.create');
         Route::post('/', [InventoryController::class, 'store'])->name('inventory.store');
@@ -629,7 +582,7 @@ Route::post('/orders', [SalesController::class, 'createOrder'])->name('sales.cre
     });
 
     // Commissions Routes
-    Route::prefix('commissions')->middleware('has.business')->group(function () {
+    Route::prefix('commissions')->middleware(['has.business', 'permission:staff'])->group(function () {
         Route::get('/', [CommissionPayoutController::class, 'index'])->name('commissions.index');
         Route::get('/create', [CommissionPayoutController::class, 'create'])->name('commissions.create');
         Route::post('/', [CommissionPayoutController::class, 'store'])->name('commissions.store');
@@ -644,7 +597,7 @@ Route::post('/orders', [SalesController::class, 'createOrder'])->name('sales.cre
     });
 
     // Suppliers Routes
-    Route::prefix('suppliers')->middleware(['auth', 'has.business'])->group(function () {
+    Route::prefix('suppliers')->middleware(['auth', 'has.business', 'permission:suppliers'])->group(function () {
         Route::get('/', [SupplierController::class, 'index'])->name('suppliers.index');
         Route::get('/create', [SupplierController::class, 'create'])->name('suppliers.create');
         Route::post('/', [SupplierController::class, 'store'])->name('suppliers.store');
@@ -655,7 +608,7 @@ Route::post('/orders', [SalesController::class, 'createOrder'])->name('sales.cre
     });
 
     // Employees Routes
-    Route::prefix('employees')->middleware('has.business')->group(function () {
+    Route::prefix('employees')->middleware(['has.business', 'permission:staff'])->group(function () {
         Route::get('/', [EmployeeController::class, 'index'])->name('employees.index');
         Route::get('/create', [EmployeeController::class, 'create'])->name('employees.create');
         Route::post('/', [EmployeeController::class, 'store'])->name('employees.store');
@@ -666,7 +619,7 @@ Route::post('/orders', [SalesController::class, 'createOrder'])->name('sales.cre
     });
 
     // Categories Routes  
-    Route::prefix('categories')->middleware('has.business')->group(function () {
+    Route::prefix('categories')->middleware(['has.business', 'permission:products'])->group(function () {
         Route::get('/', [CategoryController::class, 'index'])->name('categories.index');
         Route::get('/create', [CategoryController::class, 'create'])->name('categories.create');
         Route::post('/', [CategoryController::class, 'store'])->name('categories.store');
@@ -677,7 +630,7 @@ Route::post('/orders', [SalesController::class, 'createOrder'])->name('sales.cre
     });
 
     // Brands Routes
-    Route::prefix('brands')->middleware('has.business')->group(function () {
+    Route::prefix('brands')->middleware(['has.business', 'permission:products'])->group(function () {
         Route::get('/', [BrandController::class, 'index'])->name('brands.index');
         Route::get('/create', [BrandController::class, 'create'])->name('brands.create');
         Route::post('/', [BrandController::class, 'store'])->name('brands.store');
@@ -708,7 +661,7 @@ Route::post('/orders', [SalesController::class, 'createOrder'])->name('sales.cre
     });
 
     // Product Conversions (for specialized businesses like greenhouse materials)
-    Route::prefix('product-conversions')->name('product-conversions.')->group(function () {
+    Route::prefix('product-conversions')->name('product-conversions.')->middleware(['has.business', 'permission:products'])->group(function () {
         Route::get('/', [ProductConversionController::class, 'index'])->name('index');
         Route::get('/create', [ProductConversionController::class, 'create'])->name('create');
         Route::post('/', [ProductConversionController::class, 'store'])->name('store');
@@ -733,7 +686,7 @@ Route::post('/orders', [SalesController::class, 'createOrder'])->name('sales.cre
     });
 
     // AI Analysis Routes
-    Route::prefix('ai')->name('ai.')->middleware('has.business')->group(function () {
+    Route::prefix('ai')->name('ai.')->middleware(['has.business', 'permission:ai'])->group(function () {
         Route::get('/dashboard', [AIAnalysisController::class, 'dashboard'])->name('dashboard');
         Route::get('/analysis/comprehensive', [AIAnalysisController::class, 'comprehensiveAnalysis'])->name('analysis.comprehensive');
         Route::get('/analysis/specific', [AIAnalysisController::class, 'specificAnalysis'])->name('analysis.specific');
@@ -754,7 +707,7 @@ Route::post('/orders', [SalesController::class, 'createOrder'])->name('sales.cre
     });
 
     // AI Content Enhancement Routes
-    Route::prefix('ai-content')->name('ai-content.')->middleware('has.business')->group(function () {
+    Route::prefix('ai-content')->name('ai-content.')->middleware(['has.business', 'permission:ai'])->group(function () {
         Route::get('/', [AIContentController::class, 'index'])->name('index');
         Route::post('/enhance', [AIContentController::class, 'enhance'])->name('enhance');
         Route::post('/generate', [AIContentController::class, 'generate'])->name('generate');
@@ -765,7 +718,7 @@ Route::post('/orders', [SalesController::class, 'createOrder'])->name('sales.cre
     });
 
     // AI Advice Routes
-    Route::prefix('ai-advice')->name('ai-advice.')->middleware('has.business')->group(function () {
+    Route::prefix('ai-advice')->name('ai-advice.')->middleware(['has.business', 'permission:ai'])->group(function () {
         Route::get('/', [AIAdviceController::class, 'index'])->name('index');
         Route::post('/ai-learning/trigger', [AIAdviceController::class, 'triggerLearning'])->name('ai-learning.trigger');
         Route::put('/ai-settings/update', [AIAdviceController::class, 'updateSettings'])->name('ai-settings.update');
@@ -776,24 +729,10 @@ Route::post('/orders', [SalesController::class, 'createOrder'])->name('sales.cre
         Route::post('/generate-performance', [AIAdviceController::class, 'generatePerformanceAdvice'])->name('generate-performance');
     });
 
-    // Continuous Knowledge System Routes
-    Route::prefix('knowledge')->name('knowledge.')->middleware('auth')->group(function () {
-        Route::get('/dashboard', [ContinuousKnowledgeController::class, 'dashboard'])->name('dashboard');
-        Route::post('/start-learning', [ContinuousKnowledgeController::class, 'startLearning'])->name('start-learning');
-        Route::post('/stop-learning', [ContinuousKnowledgeController::class, 'stopLearning'])->name('stop-learning');
-        Route::get('/latest', [ContinuousKnowledgeController::class, 'getLatestKnowledge'])->name('latest');
-        Route::get('/trending-topics', [ContinuousKnowledgeController::class, 'getTrendingTopics'])->name('trending-topics');
-        Route::get('/stats', [ContinuousKnowledgeController::class, 'getKnowledgeStats'])->name('stats');
-        Route::get('/system-status', [ContinuousKnowledgeController::class, 'getSystemStatus'])->name('system-status');
-        Route::get('/search', [ContinuousKnowledgeController::class, 'searchKnowledge'])->name('search');
-        Route::get('/export', [ContinuousKnowledgeController::class, 'exportKnowledge'])->name('export');
-        Route::post('/generate-business-insights', [ContinuousKnowledgeController::class, 'generateBusinessInsights'])->name('generate-business-insights');
-        Route::get('/business-insights', [ContinuousKnowledgeController::class, 'getBusinessInsights'])->name('business-insights');
-        Route::get('/business/{businessId}/dashboard', [ContinuousKnowledgeController::class, 'businessKnowledgeDashboard'])->name('business-dashboard');
-    });
+    // Continuous Knowledge System — disabled (internal system, not a business module)
 
     // AI Communication System Routes
-    Route::prefix('ai-communication')->name('ai-comm.')->middleware('auth')->group(function () {
+    Route::prefix('ai-communication')->name('ai-comm.')->middleware(['has.business', 'permission:ai'])->group(function () {
         Route::get('/chat', [AICommunicationController::class, 'chat'])->name('chat');
         Route::post('/process-message', [AICommunicationController::class, 'processMessage'])->name('process-message');
         Route::get('/history', [AICommunicationController::class, 'getHistory'])->name('history');
@@ -803,12 +742,7 @@ Route::post('/orders', [SalesController::class, 'createOrder'])->name('sales.cre
         Route::post('/quick-insights', [AICommunicationController::class, 'getQuickInsights'])->name('quick-insights');
     });
 
-    // Learning system routes
-    Route::prefix('learning')->name('learning.')->middleware('auth')->group(function () {
-        Route::get('/dashboard', [LearningTriggerController::class, 'dashboard'])->name('dashboard');
-        Route::post('/trigger', [LearningTriggerController::class, 'triggerLearning'])->name('trigger');
-        Route::get('/status', [LearningTriggerController::class, 'getStatus'])->name('status');
-    });
+    // Learning system routes — disabled (internal system)
 });
 
 // Legal and Compliance Routes (Public - No Authentication Required)
@@ -838,20 +772,7 @@ Route::get('/auth/facebook/data-deletion', function () {
     return redirect()->route('data-deletion');
 })->name('facebook.data-deletion');
 
-Route::get('/manual-symlink', function () {
-    $target = storage_path('app/public');   // source folder
-    $link = public_path('storage');        // destination symlink
 
-    try {
-        if (!file_exists($link)) {
-            symlink($target, $link);
-            return "Symlink created manually!";
-        }
-        return "Symlink already exists.";
-    } catch (\Exception $e) {
-        return "Error: " . $e->getMessage();
-    }
-});
 
 /*
 |--------------------------------------------------------------------------
@@ -863,37 +784,26 @@ use App\Http\Controllers\WebsiteConfiguratorController;
 
 // Website Configurator Routes (Odoo-style step-by-step setup)
 Route::middleware(['auth'])->prefix('website-configurator')->name('website-configurator.')->group(function () {
-    Route::get('/step1', [WebsiteConfiguratorController::class, 'step1'])->name('step1');
-    Route::post('/step1', [WebsiteConfiguratorController::class, 'step1Submit'])->name('step1.submit');
-    Route::get('/step2', [WebsiteConfiguratorController::class, 'step2View'])->name('step2');
-    Route::post('/step2', [WebsiteConfiguratorController::class, 'step2'])->name('step2.submit');
-    Route::post('/generate-website-description', [WebsiteConfiguratorController::class, 'generateWebsiteDescription'])->name('generate-website-description');
-    Route::get('/step3', [WebsiteConfiguratorController::class, 'step3View'])->name('step3');
-    Route::post('/step3', [WebsiteConfiguratorController::class, 'step3'])->name('step3.submit');
-    Route::get('/step4', [WebsiteConfiguratorController::class, 'step4View'])->name('step4');
-    Route::post('/build', [WebsiteConfiguratorController::class, 'build'])->name('build');
-    Route::post('/process', [WebsiteConfiguratorController::class, 'process'])->name('process');
-    
-    // Debug route to check session (only for development)
-    Route::get('/debug-session', function () {
-        return response()->json([
-            'session_id' => session()->getId(),
-            'website_type' => session('website_type'),
-            'business_name' => session('business_name'),
-            'business_description' => session('business_description'),
-            'website_config' => session('website_config'),
-            'all_session' => session()->all(),
-        ]);
-    })->name('debug-session');
+    Route::get('/step1', [WebsiteConfiguratorController::class, 'step1'])->name('step1')->middleware(['has.business', 'permission:website']);
+    Route::post('/step1', [WebsiteConfiguratorController::class, 'step1Submit'])->name('step1.submit')->middleware(['has.business', 'permission:website']);
+    Route::get('/step2', [WebsiteConfiguratorController::class, 'step2View'])->name('step2')->middleware(['has.business', 'permission:website']);
+    Route::post('/step2', [WebsiteConfiguratorController::class, 'step2'])->name('step2.submit')->middleware(['has.business', 'permission:website']);
+    Route::post('/generate-website-description', [WebsiteConfiguratorController::class, 'generateWebsiteDescription'])->name('generate-website-description')->middleware(['has.business', 'permission:website']);
+    Route::get('/step3', [WebsiteConfiguratorController::class, 'step3View'])->name('step3')->middleware(['has.business', 'permission:website']);
+    Route::post('/step3', [WebsiteConfiguratorController::class, 'step3'])->name('step3.submit')->middleware(['has.business', 'permission:website']);
+    Route::get('/step4', [WebsiteConfiguratorController::class, 'step4View'])->name('step4')->middleware(['has.business', 'permission:website']);
+    Route::post('/build', [WebsiteConfiguratorController::class, 'build'])->name('build')->middleware(['has.business', 'permission:website']);
+    Route::post('/process', [WebsiteConfiguratorController::class, 'process'])->name('process')->middleware(['has.business', 'permission:website']);
 });
 
-Route::middleware(['auth'])->prefix('website-builder')->name('website.builder.')->group(function () {
+Route::middleware(['auth', 'has.business', 'permission:website'])->prefix('website-builder')->name('website.builder.')->group(function () {
     Route::get('/', [WebsiteBuilderController::class, 'index'])->name('index');
     Route::get('/setup', [WebsiteBuilderController::class, 'showSetup'])->name('setup');
     Route::post('/create', [WebsiteBuilderController::class, 'create'])->name('create');
     
     // Website settings
     Route::post('/settings', [WebsiteBuilderController::class, 'updateSettings'])->name('settings.update');
+    Route::post('/customize', [WebsiteBuilderController::class, 'updateCustomization'])->name('customize');
     Route::post('/publish', [WebsiteBuilderController::class, 'publish'])->name('publish');
     Route::post('/unpublish', [WebsiteBuilderController::class, 'unpublish'])->name('unpublish');
     Route::post('/change-theme', [WebsiteBuilderController::class, 'changeTheme'])->name('theme.change');
@@ -923,6 +833,9 @@ Route::middleware(['auth'])->prefix('website-builder')->name('website.builder.')
     Route::post('/ai/generate-seo', [WebsiteBuilderController::class, 'generateSEO'])->name('ai.generate-seo');
     Route::get('/ai/guidance', [WebsiteBuilderController::class, 'getGuidance'])->name('ai.guidance');
     Route::post('/ai/suggest-images', [WebsiteBuilderController::class, 'suggestImages'])->name('ai.suggest-images');
+    Route::post('/ai/generate-section-image', [WebsiteBuilderController::class, 'generateSectionImage'])->name('ai.generate-section-image');
+    Route::post('/sections/{section}/upload-image', [WebsiteBuilderController::class, 'uploadSectionImage'])->name('sections.upload-image');
+    Route::post('/upload-logo', [WebsiteBuilderController::class, 'uploadLogo'])->name('upload-logo');
     
     // Enterprise AI Feature: Auto-build complete website
     Route::post('/ai/auto-build', [WebsiteBuilderController::class, 'autoBuildWebsite'])->name('ai.auto-build');

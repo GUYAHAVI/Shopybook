@@ -148,6 +148,22 @@ class Business extends BaseTenant implements TenantWithDatabase
         return $this->belongsTo(User::class);
     }
 
+    /**
+     * Alias for user() – the owner of the business.
+     */
+    public function owner()
+    {
+        return $this->belongsTo(User::class, 'user_id');
+    }
+
+    /**
+     * Team members (non-owner users with access to this business).
+     */
+    public function members()
+    {
+        return $this->hasMany(BusinessMember::class, 'business_id', 'id');
+    }
+
     public function products()
     {
         return $this->hasMany(Product::class);

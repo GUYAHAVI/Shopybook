@@ -138,7 +138,7 @@ class Website extends Model
         
         // Default path-based for 127.0.0.1 or localhost
         $baseUrl = rtrim($baseUrl, '/');
-        return "{$baseUrl}/website/{$this->subdomain}";
+        return "{$baseUrl}/site/{$this->subdomain}";
     }
 
     /**

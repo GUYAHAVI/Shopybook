@@ -253,34 +253,36 @@ class WebsiteConfiguratorController extends Controller
                 ->with('error', 'Please complete all previous steps first. Session data was missing.');
         }
 
-        // Load available themes
-        $themes = WebsiteTheme::where('is_active', true)
-            ->where('is_free', true)
-            ->orderBy('name')
-            ->get();
+        Log::info('Step 3 view rendering');
 
-        Log::info('Step 3 view rendering', ['themes_count' => $themes->count()]);
-
-        return view('website-configurator.step3', compact('themes'));
+        return view('website-configurator.step3');
     }
 
     /**
-     * Step 3: Choose pages and features (submission handler)
+     * Step 3: Choose colors and fonts (submission handler)
      */
     public function step3(Request $request)
     {
         $validated = $request->validate([
-            'theme' => 'required|string',
-            'pages' => 'nullable|array',
-            'pages.*' => 'string',
-            'features' => 'nullable|array',
-            'features.*' => 'string',
+            'primary_color'   => ['required', 'string', 'regex:/^#[0-9A-Fa-f]{6}$/'],
+            'secondary_color' => ['required', 'string', 'regex:/^#[0-9A-Fa-f]{6}$/'],
+            'accent_color'    => ['required', 'string', 'regex:/^#[0-9A-Fa-f]{6}$/'],
+            'heading_font'    => 'required|string|max:100',
+            'body_font'       => 'required|string|max:100',
         ]);
 
         $config = session('website_config', []);
-        $config['theme'] = $validated['theme'];
-        $config['pages'] = $validated['pages'] ?? ['home', 'contact'];
-        $config['features'] = $validated['features'] ?? [];
+        $config['colors'] = [
+            'primary'    => $validated['primary_color'],
+            'secondary'  => $validated['secondary_color'],
+            'accent'     => $validated['accent_color'],
+            'background' => '#ffffff',
+            'text'       => '#212121',
+        ];
+        $config['fonts'] = [
+            'heading' => $validated['heading_font'],
+            'body'    => $validated['body_font'],
+        ];
         session(['website_config' => $config]);
 
         return redirect()->route('website-configurator.step4');
@@ -348,8 +350,8 @@ class WebsiteConfiguratorController extends Controller
                     'contact_phone' => $business->phone,
                     'website_type' => $config['website_type'] ?? 'business',
                 ],
-                'colors' => $theme->default_colors,
-                'fonts' => $theme->default_fonts,
+                'colors' => $config['colors'] ?? $theme->default_colors,
+                'fonts'  => $config['fonts']  ?? $theme->default_fonts,
             ]);
 
             // Initialize website with comprehensive default content
@@ -369,7 +371,7 @@ class WebsiteConfiguratorController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => 'Website created successfully!',
-                'redirect_url' => route('website.builder.index'),
+                'redirect_url' => route('website.builder.preview'),
             ]);
 
         } catch (\Exception $e) {

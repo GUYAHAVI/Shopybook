@@ -207,6 +207,15 @@ function showPWAInstallGuide() {
 function closePWAInstallGuide() {
     const guide = document.getElementById('pwaInstallGuide');
     guide.style.display = 'none';
+
+    // Mark as dismissed so it doesn't re-appear this session
+    sessionStorage.setItem('pwaGuideShown', 'true');
+
+    // Nullify the deferred prompt so no browser install dialog can fire
+    if (window.pwaManager) {
+        window.pwaManager.deferredPrompt = null;
+        window.pwaManager.hideInstallPrompt();
+    }
 }
 
 // Auto-show guide for new users (once per session)

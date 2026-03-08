@@ -4,14 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ $page->getMetaTitle() }} - {{ $website->business->name }}</title>
-    
+
     <!-- SEO Meta Tags -->
     <meta name="description" content="{{ $page->getMetaDescription() }}">
     @if($page->meta_keywords)
     <meta name="keywords" content="{{ $page->meta_keywords }}">
     @endif
-    
-    <!-- Open Graph / Facebook -->
+
+    <!-- Open Graph -->
     <meta property="og:type" content="website">
     <meta property="og:url" content="{{ $page->url }}">
     <meta property="og:title" content="{{ $page->getMetaTitle() }}">
@@ -19,326 +19,2146 @@
     @if($page->getOgImage())
     <meta property="og:image" content="{{ asset('storage/' . $page->getOgImage()) }}">
     @endif
-    
-    <!-- Twitter -->
-    <meta property="twitter:card" content="summary_large_image">
-    <meta property="twitter:url" content="{{ $page->url }}">
-    <meta property="twitter:title" content="{{ $page->getMetaTitle() }}">
-    <meta property="twitter:description" content="{{ $page->getMetaDescription() }}">
-    
+
     <!-- Favicon -->
     @if($website->favicon_path)
     <link rel="icon" href="{{ asset('storage/' . $website->favicon_path) }}">
     @endif
-    
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    
+
+    <!-- Bootstrap 5 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
     <!-- Google Fonts -->
     @php
     $fonts = $website->getFonts();
+    $headingFont = $fonts['heading'] ?? 'Poppins';
+    $bodyFont = $fonts['body'] ?? 'Open Sans';
+    $colors = $website->getColorScheme();
+    $primaryColor   = $colors['primary']    ?? '#1a237e';
+    $secondaryColor = $colors['secondary']  ?? '#ff6f00';
+    $accentColor    = $colors['accent']     ?? '#00bcd4';
+    $bgColor        = $colors['background'] ?? '#ffffff';
+    $textColor      = $colors['text']       ?? '#212121';
+
+    // Derive dark variant of primary for gradient
+    // Simple approach: darken by reducing hex
+    function hexDarken($hex, $amount = 30) {
+        $hex = ltrim($hex, '#');
+        if(strlen($hex) == 3) $hex = $hex[0].$hex[0].$hex[1].$hex[1].$hex[2].$hex[2];
+        $r = max(0, hexdec(substr($hex,0,2)) - $amount);
+        $g = max(0, hexdec(substr($hex,2,2)) - $amount);
+        $b = max(0, hexdec(substr($hex,4,2)) - $amount);
+        return '#'.sprintf('%02x%02x%02x', $r, $g, $b);
+    }
+    $primaryDark = hexDarken($primaryColor, 40);
+
+    // Build Google Fonts URL
+    $hf = urlencode($headingFont);
+    $bf = urlencode($bodyFont);
     @endphp
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family={{ str_replace(' ', '+', $fonts['heading']) }}:wght@400;600;700&family={{ str_replace(' ', '+', $fonts['body']) }}:wght@400;500;600&display=swap" rel="stylesheet">
-    
+    <link href="https://fonts.googleapis.com/css2?family={{ $hf }}:wght@300;400;500;600;700;800&family={{ $bf }}:wght@300;400;500;600&display=swap" rel="stylesheet">
+
     <style>
         :root {
-            @php
-            $colors = $website->getColorScheme();
-            @endphp
-            --color-primary: {{ $colors['primary'] }};
-            --color-secondary: {{ $colors['secondary'] }};
-            --color-accent: {{ $colors['accent'] }};
-            --color-background: {{ $colors['background'] }};
-            --color-text: {{ $colors['text'] }};
-            --font-heading: '{{ $fonts['heading'] }}', sans-serif;
-            --font-body: '{{ $fonts['body'] }}', sans-serif;
+            --primary:     {{ $primaryColor }};
+            --primary-dark: {{ $primaryDark }};
+            --secondary:   {{ $secondaryColor }};
+            --accent:      {{ $accentColor }};
+            --bg:          {{ $bgColor }};
+            --text:        {{ $textColor }};
+            --font-heading: '{{ $headingFont }}', sans-serif;
+            --font-body:    '{{ $bodyFont }}', sans-serif;
+            --light-bg:    #f8f9fa;
+            --dark-bg:     #1a1a2e;
+            --card-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            --card-hover:  0 8px 30px rgba(0,0,0,0.15);
+            --border-radius: 12px;
+            --transition: all 0.3s ease;
         }
-        
+
+        *, *::before, *::after { box-sizing: border-box; }
+
+        html { scroll-behavior: smooth; }
+
         body {
             font-family: var(--font-body);
-            color: var(--color-text);
-            background-color: var(--color-background);
+            color: var(--text);
+            background-color: var(--bg);
+            overflow-x: hidden;
         }
-        
+
         h1, h2, h3, h4, h5, h6 {
             font-family: var(--font-heading);
             font-weight: 700;
         }
-        
-        .btn-primary {
-            background-color: var(--color-primary);
-            color: white;
+
+        a { text-decoration: none; transition: var(--transition); }
+
+        /* ── TOP BAR ─────────────────────────────── */
+        .topbar {
+            background-color: #fff;
+            border-bottom: 1px solid rgba(0,0,0,0.08);
+            padding: 8px 0;
+            font-size: 0.85rem;
+        }
+        .topbar a { color: var(--text); margin-right: 20px; }
+        .topbar a:hover { color: var(--primary); }
+        .topbar a i { color: var(--primary); margin-right: 5px; }
+        .topbar .social a { color: var(--primary); margin-left: 14px; margin-right: 0; font-size: 0.95rem; }
+        .topbar .social a:hover { color: var(--secondary); }
+
+        /* ── NAVBAR ──────────────────────────────── */
+        .site-navbar {
+            background-color: var(--primary);
+            padding: 14px 0;
+            transition: var(--transition);
+        }
+        .site-navbar.scrolled {
+            padding: 8px 0;
+            box-shadow: 0 2px 20px rgba(0,0,0,0.15);
+        }
+        .navbar-brand-text {
+            font-family: var(--font-heading);
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: #fff !important;
+            letter-spacing: -0.5px;
+        }
+        .navbar-brand img { height: 48px; object-fit: contain; }
+        .site-navbar .nav-link {
+            color: rgba(255,255,255,0.88) !important;
+            font-weight: 500;
+            font-size: 0.95rem;
+            padding: 10px 16px !important;
+            border-radius: 6px;
+            transition: var(--transition);
+        }
+        .site-navbar .nav-link:hover,
+        .site-navbar .nav-link.active { color: #fff !important; background: rgba(255,255,255,0.12); }
+        .site-navbar .nav-cta {
+            background-color: var(--secondary);
+            color: #fff !important;
+            border-radius: 6px;
+            padding: 10px 24px !important;
+            font-weight: 600;
+        }
+        .site-navbar .nav-cta:hover { background-color: #fff; color: var(--primary) !important; }
+        .navbar-toggler { border-color: rgba(255,255,255,0.4); }
+        .navbar-toggler-icon { filter: invert(1); }
+
+        /* ── BUTTONS ─────────────────────────────── */
+        .btn-brand-primary {
+            background-color: var(--primary);
+            color: #fff;
+            border: 2px solid var(--primary);
+            padding: 12px 32px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.95rem;
+            display: inline-block;
+            transition: var(--transition);
+        }
+        .btn-brand-primary:hover {
+            background-color: var(--primary-dark);
+            border-color: var(--primary-dark);
+            color: #fff;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+        }
+        .btn-brand-outline {
+            background: transparent;
+            color: #fff;
+            border: 2px solid rgba(255,255,255,0.7);
+            padding: 12px 32px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.95rem;
+            display: inline-block;
+            transition: var(--transition);
+        }
+        .btn-brand-outline:hover {
+            background: #fff;
+            color: var(--primary);
+            border-color: #fff;
+            transform: translateY(-2px);
+        }
+        .btn-brand-secondary {
+            background-color: var(--secondary);
+            color: #fff;
+            border: 2px solid var(--secondary);
             padding: 12px 32px;
             border-radius: 8px;
             font-weight: 600;
             display: inline-block;
-            transition: all 0.3s;
+            transition: var(--transition);
         }
-        
-        .btn-primary:hover {
+        .btn-brand-secondary:hover {
+            background-color: transparent;
+            color: var(--secondary);
             transform: translateY(-2px);
-            box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1);
         }
-    </style>
-    
-    @if($isPreview)
-    <style>
-        body::before {
-            content: "PREVIEW MODE";
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            background: #f59e0b;
-            color: white;
+
+        /* ── SECTION LABEL ───────────────────────── */
+        .section-label {
+            display: inline-block;
+            font-size: 0.8rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: var(--secondary);
+            margin-bottom: 10px;
+        }
+        .section-title {
+            font-size: 2.4rem;
+            font-weight: 800;
+            line-height: 1.2;
+            color: var(--text);
+            margin-bottom: 16px;
+        }
+        .section-subtitle {
+            font-size: 1.05rem;
+            color: #6c757d;
+            max-width: 600px;
+            line-height: 1.7;
+        }
+        .section-divider {
+            width: 60px;
+            height: 4px;
+            background: var(--secondary);
+            border-radius: 2px;
+            margin-bottom: 20px;
+        }
+
+        /* ── HERO SECTION ────────────────────────── */
+        .hero-section {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            min-height: 88vh;
+            display: flex;
+            align-items: center;
+            position: relative;
+            overflow: hidden;
+            padding: 80px 0;
+        }
+        .hero-section::before {
+            content: '';
+            position: absolute;
+            width: 600px; height: 600px;
+            background: rgba(255,255,255,0.04);
+            border-radius: 50%;
+            top: -150px; right: -150px;
+        }
+        .hero-section::after {
+            content: '';
+            position: absolute;
+            width: 400px; height: 400px;
+            background: rgba(255,255,255,0.03);
+            border-radius: 50%;
+            bottom: -100px; left: -100px;
+        }
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(255,255,255,0.15);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.25);
+            color: #fff;
+            padding: 8px 20px;
+            border-radius: 50px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-bottom: 24px;
+        }
+        .hero-title {
+            font-size: clamp(2.2rem, 5vw, 3.6rem);
+            font-weight: 800;
+            color: #fff;
+            line-height: 1.15;
+            margin-bottom: 20px;
+        }
+        .hero-title span { color: var(--secondary); }
+        .hero-subtitle {
+            font-size: 1.15rem;
+            color: rgba(255,255,255,0.85);
+            line-height: 1.7;
+            margin-bottom: 36px;
+            max-width: 520px;
+        }
+        .hero-visual {
+            position: relative;
+            z-index: 2;
+        }
+        .hero-visual-box {
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 20px;
+            padding: 30px;
             text-align: center;
-            padding: 8px;
-            z-index: 10000;
-            font-weight: bold;
         }
-        body {
-            padding-top: 40px;
+        .hero-visual-box .stat-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(255,255,255,0.15);
+            border: 1px solid rgba(255,255,255,0.2);
+            color: #fff;
+            padding: 10px 18px;
+            border-radius: 50px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin: 6px;
+        }
+        .hero-image-wrap {
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            min-height: 380px;
+        }
+        .hero-image-wrap img { width: 100%; height: 380px; object-fit: cover; display: block; opacity: 0; transition: opacity 0.6s ease; }
+        .hero-image-wrap img.img-loaded { opacity: 1; }
+
+        /* ── SECTION IMAGE EDIT OVERLAY (preview mode only) ── */
+        .section-img-wrap { position: relative; }
+        .section-img-edit-overlay {
+            position: absolute; inset: 0;
+            background: rgba(0,0,0,0); display: flex; align-items: center; justify-content: center;
+            gap: 10px; opacity: 0; transition: opacity 0.25s, background 0.25s;
+            border-radius: inherit; z-index: 10;
+        }
+        .section-img-wrap:hover .section-img-edit-overlay { opacity: 1; background: rgba(0,0,0,0.55); }
+        .img-edit-btn {
+            background: #fff; border: none; border-radius: 8px; padding: 9px 16px;
+            font-size: 0.82rem; font-weight: 600; cursor: pointer; display: flex;
+            align-items: center; gap: 6px; color: #111; box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+            transition: transform 0.15s;
+        }
+        .img-edit-btn:hover { transform: scale(1.05); }
+        .img-edit-btn.ai-btn { background: var(--primary); color: #fff; }
+        .img-generating { display:flex; align-items:center; gap:8px; color:#fff; font-weight:600; font-size:0.9rem; }
+        .img-spinner { width:20px; height:20px; border:3px solid rgba(255,255,255,0.4); border-top-color:#fff; border-radius:50%; animation: spin 0.8s linear infinite; display:inline-block; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* ── STATS BAR ───────────────────────────── */
+        .stats-bar {
+            background-color: #fff;
+            padding: 36px 0;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+        }
+        .stat-item { text-align: center; padding: 10px 20px; }
+        .stat-item .stat-number {
+            font-size: 2.2rem;
+            font-weight: 800;
+            color: var(--primary);
+            font-family: var(--font-heading);
+            line-height: 1;
+        }
+        .stat-item .stat-label {
+            font-size: 0.88rem;
+            color: #6c757d;
+            margin-top: 4px;
+            font-weight: 500;
+        }
+        .stat-divider {
+            width: 1px;
+            height: 50px;
+            background: #e9ecef;
+            margin: auto;
+        }
+
+        /* ── SERVICES STRIP ──────────────────────── */
+        .services-strip {
+            background: var(--light-bg);
+            padding: 28px 0;
+            border-top: 1px solid #e9ecef;
+            border-bottom: 1px solid #e9ecef;
+        }
+        .service-pill {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 24px;
+            background: #fff;
+            border-radius: 50px;
+            box-shadow: var(--card-shadow);
+            font-weight: 600;
+            font-size: 0.9rem;
+            color: var(--text);
+            white-space: nowrap;
+            transition: var(--transition);
+        }
+        .service-pill:hover { box-shadow: var(--card-hover); transform: translateY(-2px); }
+        .service-pill i { color: var(--primary); font-size: 1.1rem; }
+
+        /* ── SECTION WRAPPER ─────────────────────── */
+        .section-pad { padding: 90px 0; }
+        .section-pad-sm { padding: 60px 0; }
+
+        /* ── ABOUT SECTION ───────────────────────── */
+        .about-section { background: #fff; }
+        .about-img-wrap { position: relative; background: linear-gradient(135deg, var(--primary), var(--accent)); border-radius: var(--border-radius); min-height: 360px; }
+        .about-img-wrap img {
+            width: 100%;
+            border-radius: var(--border-radius);
+            box-shadow: 0 20px 50px rgba(0,0,0,0.12);
+            display: block;
+            opacity: 0; transition: opacity 0.6s ease;
+        }
+        .about-img-wrap img.img-loaded { opacity: 1; }
+        .about-stats-badge {
+            position: absolute;
+            bottom: -20px;
+            right: -20px;
+            background: var(--primary);
+            color: #fff;
+            border-radius: var(--border-radius);
+            padding: 20px 24px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        .about-stats-badge .badge-number {
+            font-size: 2rem;
+            font-weight: 800;
+            display: block;
+            line-height: 1;
+            font-family: var(--font-heading);
+        }
+        .about-stats-badge .badge-label { font-size: 0.78rem; opacity: 0.9; margin-top: 4px; }
+        .about-feature-list li {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            margin-bottom: 12px;
+            font-size: 0.95rem;
+        }
+        .about-feature-list li i {
+            color: var(--secondary);
+            font-size: 1rem;
+            margin-top: 3px;
+            flex-shrink: 0;
+        }
+
+        /* ── SERVICES GRID ───────────────────────── */
+        .services-section { background: var(--light-bg); }
+        .service-card {
+            background: #fff;
+            border-radius: var(--border-radius);
+            padding: 32px 28px;
+            box-shadow: var(--card-shadow);
+            transition: var(--transition);
+            height: 100%;
+            border-bottom: 4px solid transparent;
+        }
+        .service-card:hover {
+            transform: translateY(-6px);
+            box-shadow: var(--card-hover);
+            border-bottom-color: var(--primary);
+        }
+        .service-icon {
+            width: 64px; height: 64px;
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+        .service-icon i { color: #fff; font-size: 1.5rem; }
+        .service-card h4 { font-size: 1.1rem; margin-bottom: 10px; color: var(--text); }
+        .service-card p { font-size: 0.9rem; color: #6c757d; line-height: 1.6; margin-bottom: 0; }
+
+        /* ── WHY CHOOSE US ───────────────────────── */
+        .why-section {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            position: relative;
+            overflow: hidden;
+        }
+        .why-section::before {
+            content: '';
+            position: absolute;
+            width: 500px; height: 500px;
+            border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 50%;
+            top: -200px; right: -100px;
+        }
+        .why-card {
+            text-align: center;
+            color: #fff;
+            padding: 20px;
+        }
+        .why-card .icon-wrap {
+            width: 70px; height: 70px;
+            background: rgba(255,255,255,0.12);
+            border: 2px solid rgba(255,255,255,0.2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 16px;
+            font-size: 1.6rem;
+        }
+        .why-card h5 { font-size: 1rem; font-weight: 700; margin-bottom: 8px; }
+        .why-card p { font-size: 0.87rem; opacity: 0.82; line-height: 1.6; }
+
+        /* ── PRODUCTS SECTION ────────────────────── */
+        .products-section { background: #fff; }
+        .product-card {
+            border-radius: var(--border-radius);
+            overflow: hidden;
+            box-shadow: var(--card-shadow);
+            transition: var(--transition);
+            height: 100%;
+            background: #fff;
+        }
+        .product-card:hover { transform: translateY(-6px); box-shadow: var(--card-hover); }
+        .product-card .product-img {
+            width: 100%; height: 200px;
+            object-fit: cover; display: block;
+        }
+        .product-card .product-img-placeholder {
+            width: 100%; height: 200px;
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            display: flex; align-items: center; justify-content: center;
+        }
+        .product-card .product-img-placeholder i { color: rgba(255,255,255,0.5); font-size: 3rem; }
+        .product-card .product-body { padding: 20px; }
+        .product-card .product-name { font-weight: 700; font-size: 1rem; margin-bottom: 6px; color: var(--text); }
+        .product-price { font-size: 1.3rem; font-weight: 800; color: var(--primary); }
+
+        /* ── TESTIMONIALS ────────────────────────── */
+        .testimonials-section { background: var(--light-bg); }
+        .testimonial-card {
+            background: #fff;
+            border-radius: var(--border-radius);
+            padding: 28px;
+            box-shadow: var(--card-shadow);
+            height: 100%;
+            position: relative;
+        }
+        .testimonial-card::before {
+            content: '\201C';
+            font-size: 5rem;
+            color: var(--primary);
+            opacity: 0.12;
+            position: absolute;
+            top: 10px; left: 20px;
+            line-height: 1;
+            font-family: serif;
+        }
+        .testimonial-card .stars { color: var(--secondary); margin-bottom: 12px; }
+        .testimonial-card .quote { font-size: 0.95rem; color: #495057; line-height: 1.7; margin-bottom: 16px; }
+        .testimonial-card .author { font-weight: 700; font-size: 0.9rem; color: var(--text); }
+        .testimonial-card .role { font-size: 0.82rem; color: #6c757d; }
+
+        /* ── CTA SECTION ─────────────────────────── */
+        .cta-section {
+            background: linear-gradient(135deg, var(--secondary), var(--accent));
+            padding: 80px 0;
+            text-align: center;
+        }
+        .cta-section h2 { color: #fff; font-size: 2.4rem; margin-bottom: 16px; }
+        .cta-section p { color: rgba(255,255,255,0.9); font-size: 1.1rem; margin-bottom: 32px; max-width: 600px; margin-left: auto; margin-right: auto; }
+
+        /* ── CONTACT SECTION ─────────────────────── */
+        .contact-section { background: #fff; }
+        .contact-form-card {
+            background: var(--light-bg);
+            border-radius: var(--border-radius);
+            padding: 40px;
+        }
+        .contact-form-card .form-control, .contact-form-card .form-select {
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 12px 16px;
+            font-size: 0.95rem;
+            background: #fff;
+            transition: var(--transition);
+        }
+        .contact-form-card .form-control:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(0,0,0,0.06);
+        }
+        .contact-info-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 16px;
+            margin-bottom: 28px;
+        }
+        .contact-info-item .icon-box {
+            width: 48px; height: 48px;
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        .contact-info-item .icon-box i { color: #fff; font-size: 1rem; }
+        .contact-info-item .info-text strong { display: block; font-weight: 700; margin-bottom: 2px; color: var(--text); }
+        .contact-info-item .info-text span { font-size: 0.9rem; color: #6c757d; }
+
+        /* ── FOOTER ──────────────────────────────── */
+        .site-footer { background: var(--dark-bg); color: rgba(255,255,255,0.75); padding: 70px 0 0; }
+        .site-footer .footer-brand { font-size: 1.5rem; font-weight: 800; color: #fff; font-family: var(--font-heading); margin-bottom: 12px; }
+        .site-footer .footer-desc { font-size: 0.9rem; line-height: 1.7; max-width: 280px; }
+        .site-footer h5 { color: #fff; font-weight: 700; font-size: 1rem; margin-bottom: 20px; }
+        .site-footer ul { list-style: none; padding: 0; margin: 0; }
+        .site-footer ul li { margin-bottom: 10px; }
+        .site-footer ul li a { color: rgba(255,255,255,0.65); font-size: 0.9rem; transition: var(--transition); }
+        .site-footer ul li a:hover { color: var(--secondary); padding-left: 4px; }
+        .site-footer .footer-contact li { font-size: 0.9rem; margin-bottom: 10px; display: flex; align-items: flex-start; gap: 10px; }
+        .site-footer .footer-contact li i { color: var(--secondary); margin-top: 2px; flex-shrink: 0; }
+        .footer-social a {
+            width: 38px; height: 38px;
+            background: rgba(255,255,255,0.08);
+            border: 1px solid rgba(255,255,255,0.12);
+            border-radius: 50%;
+            display: inline-flex; align-items: center; justify-content: center;
+            color: rgba(255,255,255,0.7);
+            margin-right: 6px; margin-bottom: 6px;
+            font-size: 0.9rem;
+            transition: var(--transition);
+        }
+        .footer-social a:hover { background: var(--secondary); border-color: var(--secondary); color: #fff; }
+        .footer-bottom {
+            border-top: 1px solid rgba(255,255,255,0.08);
+            margin-top: 50px;
+            padding: 20px 0;
+            font-size: 0.85rem;
+        }
+        .footer-bottom a { color: var(--secondary); }
+
+        /* ── PREVIEW BAR / EDITOR TOOLBAR ───────── */
+        .preview-bar {
+            position: fixed; top: 0; left: 0; right: 0;
+            background: #f59e0b; color: #fff;
+            text-align: center; padding: 8px 16px;
+            font-weight: 700; font-size: 0.85rem;
+            z-index: 100000; letter-spacing: 1px;
+        }
+        /* ── EDITOR TOOLBAR ──────────────────────── */
+        .editor-toolbar {
+            position: fixed; top: 0; left: 0; right: 0; height: 52px;
+            background: #1e293b; display: flex; align-items: center; gap: 7px;
+            padding: 0 14px; z-index: 100001; font-family: system-ui,-apple-system,sans-serif;
+            box-shadow: 0 2px 16px rgba(0,0,0,0.35); flex-wrap: nowrap;
+        }
+        .et-brand { font-weight: 800; font-size: 0.88rem; color: #f59e0b; white-space: nowrap; flex-shrink: 0; }
+        .et-sep { width: 1px; height: 26px; background: rgba(255,255,255,0.12); margin: 0 3px; flex-shrink: 0; }
+        .et-label { font-size: 0.7rem; color: rgba(255,255,255,0.5); white-space: nowrap; flex-shrink: 0; }
+        .et-page-select { background: rgba(255,255,255,0.09); color: #fff; border: 1px solid rgba(255,255,255,0.2); border-radius: 6px; padding: 5px 8px; font-size: 0.78rem; cursor: pointer; max-width: 160px; flex-shrink: 1; }
+        .et-page-select option { background: #1e293b; color: #fff; }
+        .et-btn { background: rgba(255,255,255,0.08); color: #fff; border: 1px solid rgba(255,255,255,0.2); border-radius: 6px; padding: 5px 11px; font-size: 0.78rem; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; transition: background 0.15s; white-space: nowrap; flex-shrink: 0; }
+        .et-btn:hover { background: rgba(255,255,255,0.2); }
+        .et-btn-green { background: #16a34a !important; border-color: #16a34a !important; }
+        .et-btn-green:hover { background: #15803d !important; }
+        .et-spacer { flex: 1; min-width: 4px; }
+        .et-status { font-size: 0.72rem; color: rgba(255,255,255,0.4); white-space: nowrap; flex-shrink: 0; transition: color 0.3s; }
+        .et-status.saved { color: #4ade80; }
+        .et-status.saving { color: #fbbf24; }
+        .et-exit { color: rgba(255,255,255,0.55); text-decoration: none; font-size: 0.74rem; padding: 5px 10px; border: 1px solid rgba(255,255,255,0.15); border-radius: 6px; transition: all 0.15s; white-space: nowrap; flex-shrink: 0; }
+        .et-exit:hover { color: #fff; border-color: rgba(255,255,255,0.4); }
+        /* ── SECTION EDIT WRAPPER ────────────────── */
+        .sew { position: relative; }
+        .seb { position: absolute; top: 14px; left: 14px; z-index: 90; background: rgba(30,41,59,0.82); color: #fff; border: 1px solid rgba(255,255,255,0.22); border-radius: 6px; padding: 5px 13px; font-size: 0.74rem; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 5px; opacity: 0; transition: opacity 0.2s; backdrop-filter: blur(4px); }
+        .sew:hover .seb { opacity: 1; }
+        .seb:hover { background: rgba(30,41,59,1); }
+        /* ── EDITOR PANEL (right drawer) ─────────── */
+        .editor-panel { position: fixed; top: 52px; right: -380px; bottom: 0; width: 360px; background: #fff; box-shadow: -4px 0 28px rgba(0,0,0,0.18); z-index: 100000; transition: right 0.28s ease; display: flex; flex-direction: column; font-family: system-ui,-apple-system,sans-serif; }
+        .editor-panel.open { right: 0; }
+        .ep-hdr { padding: 13px 18px; background: #1e293b; color: #fff; display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; }
+        .ep-hdr h6 { margin: 0; font-size: 0.88rem; font-weight: 700; color: #fff; }
+        .ep-hdr button { background: none; border: none; color: rgba(255,255,255,0.6); font-size: 1.3rem; cursor: pointer; line-height: 1; padding: 0 4px; }
+        .ep-hdr button:hover { color: #fff; }
+        .ep-tabs { display: flex; gap: 4px; padding: 10px 14px; border-bottom: 1px solid #e5e7eb; flex-shrink: 0; }
+        .ep-tab { flex: 1; text-align: center; padding: 6px 2px; border: 1.5px solid #e5e7eb; border-radius: 6px; font-size: 0.7rem; font-weight: 600; cursor: pointer; background: #f8fafc; color: #64748b; transition: all 0.15s; white-space: nowrap; }
+        .ep-tab.active { background: #1e293b; color: #fff; border-color: #1e293b; }
+        .ep-body { flex: 1; overflow-y: auto; padding: 16px; }
+        .ep-lbl { font-size: 0.68rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; display: block; }
+        .ep-input { width: 100%; border: 1.5px solid #e2e8f0; border-radius: 7px; padding: 7px 10px; font-size: 0.83rem; font-family: inherit; color: #1e293b; transition: border-color 0.15s; background: #fff; box-sizing: border-box; }
+        .ep-input:focus { border-color: #64748b; outline: none; }
+        textarea.ep-input { resize: vertical; min-height: 68px; }
+        .ep-field { margin-bottom: 11px; }
+        .ep-btn { width: 100%; padding: 9px; border: none; border-radius: 8px; font-size: 0.84rem; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 7px; transition: all 0.15s; margin-bottom: 8px; }
+        .ep-btn-dark { background: #1e293b; color: #fff; }
+        .ep-btn-dark:hover { background: #0f172a; }
+        .ep-btn-ai { background: linear-gradient(135deg,#7c3aed,#4f46e5); color: #fff; }
+        .ep-btn-ai:hover { opacity: 0.9; }
+        .ep-btn-green { background: #16a34a; color: #fff; }
+        .ep-btn-green:hover { background: #15803d; }
+        .ep-msg { border-radius: 6px; padding: 7px 10px; font-size: 0.78rem; margin-bottom: 10px; display: none; }
+        .ep-msg-success { background: #dcfce7; color: #166534; }
+        .ep-msg-error { background: #fee2e2; color: #991b1b; }
+        .ep-msg-info { background: #dbeafe; color: #1e40af; }
+        .ep-divider { border: none; border-top: 1px solid #e5e7eb; margin: 13px 0; }
+        .ep-clr-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+        .ep-clr-swatch { width: 34px; height: 34px; border-radius: 50%; border: 2.5px solid #e5e7eb; cursor: pointer; overflow: hidden; padding: 0; flex-shrink: 0; }
+        .ep-clr-swatch input[type=color] { width: 46px; height: 46px; border: none; cursor: pointer; margin: -6px; padding: 0; }
+        .ep-clr-lbl { font-size: 0.8rem; color: #475569; }
+        .ep-font-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 12px; }
+        .ep-font-opt { border: 1.5px solid #e5e7eb; border-radius: 7px; padding: 8px 6px; text-align: center; cursor: pointer; transition: all 0.15s; background: #fff; }
+        .ep-font-opt:hover { border-color: #94a3b8; }
+        .ep-font-opt.selected { border-color: #1e293b; background: #f0f4ff; }
+        .ep-font-opt .fname { font-size: 0.8rem; font-weight: 700; color: #1e293b; display: block; }
+        .ep-font-opt .fpair { font-size: 0.64rem; color: #94a3b8; margin-top: 2px; display: block; }
+        .ep-logo-drop { border: 2px dashed #e2e8f0; border-radius: 10px; padding: 22px 16px; text-align: center; cursor: pointer; transition: border-color 0.2s; background: #fafafa; margin-bottom: 12px; display: block; }
+        .ep-logo-drop:hover { border-color: #94a3b8; }
+        .ep-logo-preview { max-height: 64px; max-width: 200px; object-fit: contain; margin-bottom: 10px; }
+        .ep-note { font-size: 0.73rem; color: #64748b; line-height: 1.45; margin-bottom: 12px; }
+        .ep-spinner { display: inline-block; width: 15px; height: 15px; border: 2.5px solid rgba(255,255,255,0.4); border-top-color: #fff; border-radius: 50%; }
+        @keyframes ep-spin { to { transform: rotate(360deg); } }
+        .ep-spinner { animation: ep-spin 0.8s linear infinite; }
+
+        /* ── RESPONSIVE ──────────────────────────── */
+        @media (max-width: 991.98px) {
+            .hero-section { min-height: auto; padding: 100px 0 60px; }
+            .hero-title { font-size: 2.2rem; }
+            .section-title { font-size: 1.9rem; }
+            .about-stats-badge { position: static; margin-top: 20px; display: inline-block; }
+            .section-pad { padding: 60px 0; }
+        }
+        @media (max-width: 767.98px) {
+            body { padding-top: {{ $isPreview ? '52px' : '0' }}; }
+            .topbar { display: none; }
+            .stat-divider { display: none; }
+            .hero-visual { margin-top: 40px; }
         }
     </style>
-    @endif
 </head>
-<body>
-    <!-- Navigation -->
-    <nav class="bg-white shadow-sm sticky top-0 z-50">
-        <div class="container mx-auto px-4 py-4">
-            <div class="flex items-center justify-between">
-                <!-- Logo -->
-                <a href="{{ $website->url }}" class="flex items-center gap-3">
-                    @if($website->logo_path || $website->business->logo_path)
-                    <img src="{{ asset('storage/' . ($website->logo_path ?? $website->business->logo_path)) }}" 
-                         alt="{{ $website->business->name }}" class="h-12">
+<body{{ $isPreview ? ' style="padding-top:52px"' : '' }}>
+
+    @if($isPreview)
+    {{-- ── RICH EDITOR TOOLBAR ───────────────────────────────────── --}}
+    <div class="editor-toolbar" id="editorToolbar">
+        <span class="et-brand">✏️&nbsp;ShopyEditor</span>
+        <div class="et-sep"></div>
+        <span class="et-label">Page:</span>
+        <select class="et-page-select" id="pageNavSelect" onchange="_gotoPage(this.value)">
+            @foreach($menuPages as $menuPage)
+            <option value="{{ $menuPage->url }}?preview=1" {{ $page->id === $menuPage->id ? 'selected' : '' }}>
+                {{ $menuPage->title }}
+            </option>
+            @endforeach
+        </select>
+        <div class="et-sep"></div>
+        <button class="et-btn" onclick="_openPanel('design')">🎨 Design</button>
+        <button class="et-btn" onclick="_openPanel('logo')">🖼 Logo</button>
+        <button class="et-btn et-btn-green" onclick="_publishSite()">🚀 Publish</button>
+        <div class="et-spacer"></div>
+        <span class="et-status" id="etStatus"></span>
+        <div class="et-sep"></div>
+        <a href="{{ route('website.builder.index') }}" class="et-exit">← Exit</a>
+    </div>
+
+    {{-- ── EDITOR PANEL (right drawer) ──────────────────────────── --}}
+    <div class="editor-panel" id="editorPanel">
+        <div class="ep-hdr">
+            <h6 id="epTitle">Editor</h6>
+            <button onclick="_closePanel()" title="Close">×</button>
+        </div>
+        <div class="ep-tabs">
+            <button class="ep-tab active" id="tab_content" onclick="_switchTab('content')">✏️ Content</button>
+            <button class="ep-tab" id="tab_design" onclick="_switchTab('design')">🎨 Design</button>
+            <button class="ep-tab" id="tab_logo" onclick="_switchTab('logo')">🖼️ Logo</button>
+        </div>
+        <div class="ep-body" id="epBody">
+            <p style="color:#94a3b8;font-size:0.82rem;text-align:center;margin-top:28px;padding:0 10px;">
+                Hover over any section and click <strong style="color:#1e293b;">Edit</strong> to start editing.
+            </p>
+        </div>
+    </div>
+    @endif
+
+    <!-- ── TOP BAR ─────────────────────────────────── -->
+    <div class="topbar d-none d-md-block">
+        <div class="container">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    @if($website->settings['contact_phone'] ?? $website->business->phone)
+                    <a href="tel:{{ $website->settings['contact_phone'] ?? $website->business->phone }}">
+                        <i class="fas fa-phone-alt"></i>{{ $website->settings['contact_phone'] ?? $website->business->phone }}
+                    </a>
                     @endif
-                    <span class="text-2xl font-bold" style="color: var(--color-primary)">
-                        {{ $website->business->name }}
-                    </span>
+                    @if($website->settings['contact_email'] ?? $website->business->email)
+                    <a href="mailto:{{ $website->settings['contact_email'] ?? $website->business->email }}">
+                        <i class="fas fa-envelope"></i>{{ $website->settings['contact_email'] ?? $website->business->email }}
+                    </a>
+                    @endif
+                    @if($website->business->address)
+                    <span><i class="fas fa-map-marker-alt" style="color:var(--primary);margin-right:4px;"></i>{{ $website->business->city ?? $website->business->address }}</span>
+                    @endif
+                </div>
+                <div class="social">
+                    <a href="#"><i class="fab fa-facebook-f"></i></a>
+                    <a href="#"><i class="fab fa-twitter"></i></a>
+                    <a href="#"><i class="fab fa-instagram"></i></a>
+                    <a href="#"><i class="fab fa-linkedin-in"></i></a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── NAVBAR ──────────────────────────────────── -->
+    <nav class="site-navbar sticky-top" id="siteNav">
+        <div class="container">
+            <div class="d-flex align-items-center justify-content-between flex-wrap gap-3">
+                <!-- Brand -->
+                <a href="{{ $website->url }}{{ $isPreview ? '?preview=1' : '' }}" class="d-flex align-items-center gap-3 text-decoration-none">
+                    @if($website->logo_path || $website->business->logo_path)
+                    <img src="{{ asset('storage/' . ($website->logo_path ?? $website->business->logo_path)) }}"
+                         id="siteLogoImg"
+                         alt="{{ $website->business->name }}" class="navbar-brand-img" style="height:46px;object-fit:contain;">
+                    @endif
+                    <span class="navbar-brand-text">{{ $website->business->name }}</span>
                 </a>
-                
-                <!-- Menu -->
-                <div class="hidden md:flex items-center gap-6">
+
+                <!-- Desktop Nav -->
+                <div class="d-none d-lg-flex align-items-center gap-1">
                     @foreach($menuPages as $menuPage)
-                    <a href="{{ $menuPage->url }}" 
-                       class="text-gray-700 hover:text-gray-900 font-medium transition-colors
-                              {{ $page->id === $menuPage->id ? 'text-gray-900 border-b-2' : '' }}"
-                       style="border-color: var(--color-primary)">
-                        {{ $menuPage->title }}
+                    @php
+                        // Strip leading filler words then keep max 2 words
+                        $navLabel = preg_replace('/^(our|the|my)\s+/i', '', $menuPage->title);
+                        $navWords = explode(' ', trim($navLabel));
+                        $navLabel = implode(' ', array_slice($navWords, 0, 2));
+                    @endphp
+                    <a href="{{ $menuPage->url }}{{ $isPreview ? '?preview=1' : '' }}"
+                       class="nav-link {{ $page->id === $menuPage->id ? 'active' : '' }}">
+                        {{ $navLabel }}
                     </a>
                     @endforeach
+                    @if($website->settings['contact_email'] ?? $website->business->email)
+                    <a href="#contact" class="nav-link nav-cta ms-2">Contact</a>
+                    @endif
                 </div>
-                
-                <!-- Mobile Menu Button -->
-                <button onclick="toggleMobileMenu()" class="md:hidden">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
-                    </svg>
+
+                <!-- Mobile Toggle -->
+                <button class="navbar-toggler d-lg-none" type="button" id="mobileToggle">
+                    <span class="navbar-toggler-icon"></span>
                 </button>
             </div>
-            
+
             <!-- Mobile Menu -->
-            <div id="mobile-menu" class="hidden md:hidden mt-4 pb-4 space-y-2">
+            <div id="mobileMenu" style="display:none;" class="py-3 border-top border-white border-opacity-25 mt-2">
                 @foreach($menuPages as $menuPage)
-                <a href="{{ $menuPage->url }}" 
-                   class="block px-4 py-2 text-gray-700 hover:bg-gray-100 rounded">
-                    {{ $menuPage->title }}
-                </a>
+                @php
+                    $mNavLabel = preg_replace('/^(our|the|my)\s+/i', '', $menuPage->title);
+                    $mNavWords = explode(' ', trim($mNavLabel));
+                    $mNavLabel = implode(' ', array_slice($mNavWords, 0, 2));
+                @endphp
+                <a href="{{ $menuPage->url }}{{ $isPreview ? '?preview=1' : '' }}" class="nav-link d-block py-2">{{ $mNavLabel }}</a>
                 @endforeach
+                <a href="#contact" class="nav-link nav-cta d-inline-block mt-2">Contact</a>
             </div>
         </div>
     </nav>
 
-    <!-- Sections -->
+    <!-- ── MAIN SECTIONS ────────────────────────────── -->
     <main>
-        @foreach($page->visibleSections as $section)
-            @php
-            $content = $section->getContentWithDefaults();
-            $settings = $section->getSettingsWithDefaults();
-            @endphp
-            
-            <section class="py-16 @if($section->background_type === 'color') bg-[{{ $section->background_value }}] @endif"
-                     style="{{ $section->getBackgroundStyle() }}">
-                <div class="container mx-auto px-4">
-                    @if($section->type === 'hero')
-                        <!-- Hero Section -->
-                        <div class="text-center max-w-4xl mx-auto">
-                            <h1 class="text-5xl md:text-6xl font-bold mb-6">
-                                {{ $content['heading'] ?? 'Welcome' }}
-                            </h1>
-                            @if(isset($content['subheading']))
-                            <p class="text-xl md:text-2xl text-gray-600 mb-8">
-                                {{ $content['subheading'] }}
-                            </p>
-                            @endif
-                            @if(isset($content['cta_text']))
-                            <a href="{{ $content['cta_link'] ?? '#' }}" class="btn-primary">
-                                {{ $content['cta_text'] }}
-                            </a>
-                            @endif
-                        </div>
-                    
-                    @elseif($section->type === 'about')
-                        <!-- About Section -->
-                        <div class="grid md:grid-cols-2 gap-12 items-center">
-                            <div>
-                                <h2 class="text-4xl font-bold mb-6">{{ $content['heading'] ?? 'About Us' }}</h2>
-                                <div class="text-lg text-gray-700 prose max-w-none">
-                                    {!! nl2br(e($content['text'] ?? '')) !!}
-                                </div>
-                            </div>
-                            @if(isset($content['image']) && $content['image'])
-                            <div>
-                                <img src="{{ asset('storage/' . $content['image']) }}" 
-                                     alt="{{ $content['heading'] }}" 
-                                     class="rounded-lg shadow-xl">
-                            </div>
-                            @endif
-                        </div>
-                    
-                    @elseif($section->type === 'products' && $products->count())
-                        <!-- Products Section -->
-                        <div class="text-center mb-12">
-                            <h2 class="text-4xl font-bold mb-4">{{ $content['heading'] ?? 'Our Products' }}</h2>
-                            @if(isset($content['subheading']))
-                            <p class="text-xl text-gray-600">{{ $content['subheading'] }}</p>
-                            @endif
-                        </div>
-                        <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-8">
-                            @foreach($products->take($content['max_products'] ?? 6) as $product)
-                            <div class="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow">
-                                @if($product->image)
-                                <img src="{{ asset('storage/' . $product->image) }}" 
-                                     alt="{{ $product->name }}" 
-                                     class="w-full h-48 object-cover">
-                                @endif
-                                <div class="p-4">
-                                    <h3 class="font-bold text-lg mb-2">{{ $product->name }}</h3>
-                                    @if($content['show_price'] ?? true)
-                                    <p class="text-2xl font-bold" style="color: var(--color-primary)">
-                                        KSh {{ number_format($product->price, 2) }}
-                                    </p>
-                                    @endif
-                                </div>
-                            </div>
-                            @endforeach
-                        </div>
-                    
-                    @elseif($section->type === 'contact')
-                        <!-- Contact Section -->
-                        <div class="max-w-2xl mx-auto">
-                            <div class="text-center mb-12">
-                                <h2 class="text-4xl font-bold mb-4">{{ $content['heading'] ?? 'Contact Us' }}</h2>
-                                @if(isset($content['subheading']))
-                                <p class="text-xl text-gray-600">{{ $content['subheading'] }}</p>
-                                @endif
-                            </div>
-                            
-                            @if($content['show_form'] ?? true)
-                            <form action="{{ route('public.website.contact', $website->subdomain) }}" method="POST" class="space-y-6">
-                                @csrf
-                                <div>
-                                    <input type="text" name="name" placeholder="Your Name" required
-                                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
-                                </div>
-                                <div>
-                                    <input type="email" name="email" placeholder="Your Email" required
-                                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
-                                </div>
-                                <div>
-                                    <input type="tel" name="phone" placeholder="Phone Number"
-                                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
-                                </div>
-                                <div>
-                                    <textarea name="message" rows="5" placeholder="Your Message" required
-                                              class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"></textarea>
-                                </div>
-                                <button type="submit" class="w-full btn-primary">
-                                    Send Message
-                                </button>
-                            </form>
-                            @endif
-                            
-                            <!-- Contact Info -->
-                            <div class="mt-12 text-center space-y-4">
-                                @if(isset($content['email']))
-                                <p class="flex items-center justify-center gap-2">
-                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
-                                    </svg>
-                                    {{ $content['email'] }}
-                                </p>
-                                @endif
-                                @if(isset($content['phone']))
-                                <p class="flex items-center justify-center gap-2">
-                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/>
-                                    </svg>
-                                    {{ $content['phone'] }}
-                                </p>
-                                @endif
-                            </div>
-                        </div>
-                    @endif
-                </div>
-            </section>
-        @endforeach
-    </main>
+    @php $sections = $page->visibleSections; @endphp
 
-    <!-- Footer -->
-    <footer class="bg-gray-900 text-white py-12">
-        <div class="container mx-auto px-4">
-            <div class="grid md:grid-cols-3 gap-8">
-                <div>
-                    <h3 class="text-xl font-bold mb-4">{{ $website->business->name }}</h3>
-                    <p class="text-gray-400">{{ $website->business->description }}</p>
-                </div>
-                <div>
-                    <h4 class="font-bold mb-4">Quick Links</h4>
-                    <div class="space-y-2">
-                        @foreach($menuPages as $menuPage)
-                        <a href="{{ $menuPage->url }}" class="block text-gray-400 hover:text-white">
-                            {{ $menuPage->title }}
+    @foreach($sections as $section)
+    @php
+        $content  = $section->getContentWithDefaults();
+        $settings = $section->getSettingsWithDefaults();
+        // Sanitize any bare internal paths AI might generate (e.g. "/contact" → "#contact")
+        $safeCtaLink = function($link, $default = '#contact') {
+            if (!$link) return $default;
+            // Already an anchor or external URL — use as-is
+            if (str_starts_with($link, '#') || str_starts_with($link, 'http')) return $link;
+            // Bare relative path like "/contact" → "#contact"
+            if (str_starts_with($link, '/')) return '#' . ltrim(basename($link), '/');
+            return $default;
+        };
+    @endphp
+
+    @if($isPreview)
+    <div class="sew" id="sew-{{ $section->id }}">
+        <button class="seb" onclick="_openContentPanel({{ $section->id }})">
+            <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+            Edit
+        </button>
+    @endif
+
+    {{-- ════════ HERO ════════ --}}
+    @if($section->type === 'hero')
+    <section class="hero-section" id="home">
+        <div class="container position-relative" style="z-index:2;">
+            <div class="row align-items-center g-5">
+                <div class="col-lg-7">
+                    <div class="hero-badge">
+                        <i class="fas fa-star" style="color:var(--secondary);"></i>
+                        {{ $website->settings['site_name'] ?? $website->business->name }}
+                    </div>
+                    <h1 class="hero-title">
+                        {!! str_replace(
+                            ['{name}', '{business}'],
+                            ['<span>'.$website->business->name.'</span>', '<span>'.$website->business->name.'</span>'],
+                            e($content['heading'] ?? $website->business->name)
+                        ) !!}
+                    </h1>
+                    <p class="hero-subtitle">
+                        {{ $content['subheading'] ?? ($website->settings['tagline'] ?? $website->business->description) }}
+                    </p>
+                    <div class="d-flex flex-wrap gap-3">
+                        @if(isset($content['cta_text']))
+                        <a href="{{ $safeCtaLink($content['cta_link'] ?? null, '#contact') }}" class="btn-brand-secondary">
+                            <i class="fas fa-arrow-right me-2"></i>{{ $content['cta_text'] }}
                         </a>
-                        @endforeach
+                        @endif
+                        @if(isset($content['cta_text_2']))
+                        <a href="{{ $safeCtaLink($content['cta_link_2'] ?? null, '#about') }}" class="btn-brand-outline">
+                            {{ $content['cta_text_2'] }}
+                        </a>
+                        @else
+                        <a href="#about" class="btn-brand-outline">
+                            <i class="fas fa-play me-2"></i>Learn More
+                        </a>
+                        @endif
                     </div>
                 </div>
-                <div>
-                    <h4 class="font-bold mb-4">Contact</h4>
-                    <div class="space-y-2 text-gray-400">
-                        @if($website->business->email)
-                        <p>{{ $website->business->email }}</p>
+                <div class="col-lg-5 hero-visual">
+                    @php $heroImgSrc = isset($content['image']) && $content['image'] ? (str_starts_with($content['image'], 'http') ? $content['image'] : asset('storage/'.$content['image'])) : null; @endphp
+                    @if($heroImgSrc)
+                    <div class="hero-image-wrap section-img-wrap" id="img-wrap-{{ $section->id }}">
+                        <img src="{{ $heroImgSrc }}" alt="{{ $content['heading'] ?? '' }}" loading="eager"
+                             id="section-img-{{ $section->id }}" class="img-loaded"
+                             onerror="this.onerror=null;this.classList.add('img-loaded');">
+                        @if($isPreview)
+                        @include('public-website.partials.image-edit-overlay', ['section' => $section, 'imageQuery' => $content['image_query'] ?? null])
                         @endif
-                        @if($website->business->phone)
-                        <p>{{ $website->business->phone }}</p>
+                    </div>
+                    @else
+                    <div class="hero-visual-box section-img-wrap" id="img-wrap-{{ $section->id }}">
+                        @if($isPreview)
+                        <div style="position:absolute;top:12px;right:12px;z-index:10;">
+                            <button class="img-edit-btn ai-btn" onclick="openImageModal({{ $section->id }}, '{{ addslashes($content['image_query'] ?? '') }}')">
+                                <i class="fas fa-magic"></i> Add Image
+                            </button>
+                        </div>
                         @endif
-                        @if($website->business->address)
-                        <p>{{ $website->business->address }}, {{ $website->business->city }}</p>
+                        <div class="mb-4" style="font-size:4rem;">🚀</div>
+                        <h4 style="color:#fff;font-size:1.3rem;margin-bottom:16px;">{{ $website->business->name }}</h4>
+                        @php $heroStats = $content['stats'] ?? []; @endphp
+                        @if(!empty($heroStats))
+                            @foreach(array_slice($heroStats, 0, 3) as $stat)
+                            <div class="stat-pill">
+                                <i class="fas fa-check-circle" style="color:var(--secondary);"></i>
+                                {{ $stat['label'] ?? $stat }}
+                            </div>
+                            @endforeach
+                        @else
+                            <div class="stat-pill"><i class="fas fa-check-circle" style="color:var(--secondary);"></i> Professional Service</div>
+                            <div class="stat-pill"><i class="fas fa-check-circle" style="color:var(--secondary);"></i> Quality Results</div>
+                            <div class="stat-pill"><i class="fas fa-check-circle" style="color:var(--secondary);"></i> Trusted by Clients</div>
+                        @endif
+                    </div>
+                    @endif
+                </div>
+            </div>
+        </div>
+    </section>
+
+    {{-- ════════ STATS (from hero content or standalone) ════════ --}}
+    @php
+        $heroContent = $content;
+        $statsItems = $heroContent['stats'] ?? [];
+    @endphp
+    @if(!empty($statsItems) && is_array($statsItems))
+    <div class="stats-bar">
+        <div class="container">
+            <div class="row justify-content-center g-3">
+                @foreach(array_slice($statsItems, 0, 4) as $i => $stat)
+                @if($i > 0)<div class="col-auto d-none d-md-block"><div class="stat-divider"></div></div>@endif
+                <div class="col-auto stat-item">
+                    <div class="stat-number">{{ $stat['value'] ?? ($stat['number'] ?? '—') }}</div>
+                    <div class="stat-label">{{ $stat['label'] ?? '' }}</div>
+                </div>
+                @endforeach
+            </div>
+        </div>
+    </div>
+    @endif
+
+    {{-- ════════ ABOUT ════════ --}}
+    @elseif($section->type === 'about')
+    <section class="about-section section-pad" id="about">
+        <div class="container">
+            <div class="row align-items-center g-5">
+                <div class="col-lg-6">
+                    <span class="section-label">About Us</span>
+                    <div class="section-divider"></div>
+                    <h2 class="section-title">{{ $content['heading'] ?? 'About '.$website->business->name }}</h2>
+                    <p style="color:#6c757d;line-height:1.8;font-size:0.97rem;margin-bottom:24px;">
+                        {!! nl2br(e($content['text'] ?? $website->business->description ?? '')) !!}
+                    </p>
+                    @if(isset($content['features']) && is_array($content['features']))
+                    <ul class="about-feature-list list-unstyled mb-4">
+                        @foreach($content['features'] as $feat)
+                        <li>
+                            <i class="fas fa-check-circle"></i>
+                            <span>{{ is_array($feat) ? ($feat['text'] ?? $feat['title'] ?? '') : $feat }}</span>
+                        </li>
+                        @endforeach
+                    </ul>
+                    @endif
+                    <a href="#contact" class="btn-brand-primary">
+                        <i class="fas fa-arrow-right me-2"></i>Work With Us
+                    </a>
+                </div>
+                <div class="col-lg-6">
+                    @php $aboutImgSrc = isset($content['image']) && $content['image'] ? (str_starts_with($content['image'], 'http') ? $content['image'] : asset('storage/'.$content['image'])) : null; @endphp
+                    <div class="about-img-wrap section-img-wrap" id="img-wrap-{{ $section->id }}">
+                        @if($aboutImgSrc)
+                        <img src="{{ $aboutImgSrc }}" alt="About {{ $website->business->name }}"
+                             id="section-img-{{ $section->id }}" class="img-loaded"
+                             onerror="this.onerror=null;this.classList.add('img-loaded');">
+                        @if($isPreview)
+                        @include('public-website.partials.image-edit-overlay', ['section' => $section, 'imageQuery' => $content['image_query'] ?? null])
+                        @endif
+                        @else
+                        <div style="background:linear-gradient(135deg,var(--primary),var(--accent));border-radius:var(--border-radius);height:380px;display:flex;align-items:center;justify-content:center;position:relative;">
+                            @if($isPreview)
+                            <div style="position:absolute;top:12px;right:12px;z-index:10;">
+                                <button class="img-edit-btn ai-btn" onclick="openImageModal({{ $section->id }}, '{{ addslashes($content['image_query'] ?? '') }}')">
+                                    <i class="fas fa-magic"></i> Add Image
+                                </button>
+                            </div>
+                            @endif
+                            <div class="text-center text-white p-4">
+                                <i class="fas fa-building" style="font-size:4rem;opacity:0.4;margin-bottom:16px;display:block;"></i>
+                                <h4 class="text-white">{{ $website->business->name }}</h4>
+                                @if($website->business->description)
+                                <p class="mb-0" style="opacity:0.8;font-size:0.9rem;">{{ Str::limit($website->business->description, 120) }}</p>
+                                @endif
+                            </div>
+                        </div>
+                        @endif
+                        @if(isset($content['stats']) && is_array($content['stats']))
+                        <div class="about-stats-badge">
+                            @php $firstStat = $content['stats'][0] ?? null; @endphp
+                            @if($firstStat)
+                            <span class="badge-number">{{ $firstStat['value'] ?? $firstStat['number'] ?? '★' }}</span>
+                            <div class="badge-label">{{ $firstStat['label'] ?? '' }}</div>
+                            @endif
+                        </div>
                         @endif
                     </div>
                 </div>
             </div>
-            <div class="border-t border-gray-800 mt-8 pt-8 text-center text-gray-400">
-                <p>© {{ date('Y') }} {{ $website->business->name }}. All rights reserved.</p>
-                <p class="mt-2 text-sm">Powered by <a href="https://shopybook.com" class="text-indigo-400 hover:text-indigo-300">Shopybook</a></p>
+
+            {{-- Stats row below about --}}
+            @if(isset($content['stats']) && count($content['stats']) > 1)
+            <div class="row g-4 mt-5 pt-3 border-top">
+                @foreach(array_slice($content['stats'], 0, 4) as $stat)
+                <div class="col-6 col-md-3 text-center">
+                    <div class="stat-number">{{ $stat['value'] ?? $stat['number'] ?? '' }}</div>
+                    <div style="color:#6c757d;font-size:0.88rem;margin-top:4px;">{{ $stat['label'] ?? '' }}</div>
+                </div>
+                @endforeach
+            </div>
+            @endif
+        </div>
+    </section>
+
+    {{-- ════════ FEATURES ════════ --}}
+    @elseif($section->type === 'features')
+    <section class="services-strip section-pad-sm" id="features">
+        <div class="container">
+            @if(isset($content['heading']))
+            <div class="text-center mb-5">
+                <span class="section-label">What We Do</span>
+                <div class="section-divider mx-auto"></div>
+                <h2 class="section-title">{{ $content['heading'] }}</h2>
+                @if(isset($content['subheading']))
+                <p class="section-subtitle mx-auto">{{ $content['subheading'] }}</p>
+                @endif
+            </div>
+            @endif
+            @if(isset($content['items']) && is_array($content['items']))
+            <div class="d-flex flex-wrap justify-content-center gap-3">
+                @foreach($content['items'] as $item)
+                <div class="service-pill">
+                    <i class="{{ $item['icon'] ?? 'fas fa-check-circle' }}"></i>
+                    {{ $item['title'] ?? $item['name'] ?? (is_string($item) ? $item : '') }}
+                </div>
+                @endforeach
+            </div>
+            @endif
+        </div>
+    </section>
+
+    {{-- ════════ SERVICES ════════ --}}
+    @elseif($section->type === 'services')
+    <section class="services-section section-pad" id="services">
+        <div class="container">
+            <div class="text-center mb-5">
+                <span class="section-label">Our Services</span>
+                <div class="section-divider mx-auto"></div>
+                <h2 class="section-title">{{ $content['heading'] ?? 'What We Offer' }}</h2>
+                @if(isset($content['subheading']))
+                <p class="section-subtitle mx-auto">{{ $content['subheading'] }}</p>
+                @endif
+            </div>
+            @if(isset($content['items']) && is_array($content['items']))
+            <div class="row g-4">
+                @foreach($content['items'] as $item)
+                <div class="col-12 col-md-6 col-lg-4">
+                    <div class="service-card">
+                        <div class="service-icon">
+                            <i class="{{ $item['icon'] ?? 'fas fa-cog' }}"></i>
+                        </div>
+                        <h4>{{ $item['title'] ?? $item['name'] ?? '' }}</h4>
+                        <p>{{ $item['description'] ?? $item['desc'] ?? '' }}</p>
+                        @if(isset($item['price']))
+                        <div class="mt-3 pt-3 border-top d-flex justify-content-between align-items-center">
+                            <strong style="color:var(--primary);">{{ $item['price'] }}</strong>
+                            <a href="#contact" class="btn-brand-primary" style="padding:8px 20px;font-size:0.85rem;">Order Now</a>
+                        </div>
+                        @endif
+                    </div>
+                </div>
+                @endforeach
+            </div>
+            @endif
+        </div>
+    </section>
+
+    {{-- ════════ STATS ════════ --}}
+    @elseif($section->type === 'stats')
+    <section class="why-section section-pad" id="stats">
+        <div class="container position-relative" style="z-index:2;">
+            @if(isset($content['heading']))
+            <div class="text-center mb-5">
+                <h2 style="color:#fff;font-size:2.2rem;margin-bottom:8px;">{{ $content['heading'] }}</h2>
+                @if(isset($content['subheading']))
+                <p style="color:rgba(255,255,255,0.8);">{{ $content['subheading'] }}</p>
+                @endif
+            </div>
+            @endif
+            @if(isset($content['items']) && is_array($content['items']))
+            <div class="row g-4 justify-content-center">
+                @foreach($content['items'] as $item)
+                <div class="col-6 col-md-3">
+                    <div class="why-card">
+                        <div class="icon-wrap">
+                            <i class="{{ $item['icon'] ?? 'fas fa-star' }}"></i>
+                        </div>
+                        <h5>{{ $item['value'] ?? $item['number'] ?? '' }}</h5>
+                        <p>{{ $item['label'] ?? $item['title'] ?? '' }}</p>
+                    </div>
+                </div>
+                @endforeach
+            </div>
+            @endif
+        </div>
+    </section>
+
+    {{-- ════════ TESTIMONIALS ════════ --}}
+    @elseif($section->type === 'testimonials')
+    <section class="testimonials-section section-pad" id="testimonials">
+        <div class="container">
+            <div class="text-center mb-5">
+                <span class="section-label">Testimonials</span>
+                <div class="section-divider mx-auto"></div>
+                <h2 class="section-title">{{ $content['heading'] ?? 'What Our Clients Say' }}</h2>
+            </div>
+            @if(isset($content['items']) && is_array($content['items']))
+            <div class="row g-4">
+                @foreach($content['items'] as $testimonial)
+                <div class="col-12 col-md-6 col-lg-4">
+                    <div class="testimonial-card">
+                        <div class="stars">
+                            @for($s=0; $s<5; $s++) <i class="fas fa-star"></i> @endfor
+                        </div>
+                        <p class="quote">"{{ $testimonial['quote'] ?? $testimonial['text'] ?? '' }}"</p>
+                        <div class="author">{{ $testimonial['name'] ?? 'Client' }}</div>
+                        @if(isset($testimonial['role']) || isset($testimonial['position']))
+                        <div class="role">{{ $testimonial['role'] ?? $testimonial['position'] ?? '' }}</div>
+                        @endif
+                    </div>
+                </div>
+                @endforeach
+            </div>
+            @endif
+        </div>
+    </section>
+
+    {{-- ════════ CTA ════════ --}}
+    @elseif($section->type === 'cta')
+    <section class="cta-section">
+        <div class="container">
+            <h2>{{ $content['heading'] ?? 'Ready to Get Started?' }}</h2>
+            @if(isset($content['subheading']))
+            <p>{{ $content['subheading'] }}</p>
+            @endif
+            <a href="{{ $safeCtaLink($content['cta_link'] ?? null, '#contact') }}" 
+               style="background:#fff;color:var(--secondary);padding:14px 40px;border-radius:8px;font-weight:700;display:inline-block;font-size:1rem;">
+                {{ $content['cta_text'] ?? 'Contact Us Today' }}
+            </a>
+        </div>
+    </section>
+
+    {{-- ════════ PRODUCTS ════════ --}}
+    @elseif($section->type === 'products' && $products->count())
+    @php
+        $previewCount = $content['max_products'] ?? 4;
+        $productsPage = $menuPages->firstWhere('slug', 'products');
+        $productsPageUrl = $productsPage
+            ? route('public.website.page', [$website->subdomain, $productsPage->slug])
+            : null;
+    @endphp
+    <section class="products-section section-pad" id="products">
+        <div class="container">
+            <div class="text-center mb-5">
+                <span class="section-label">Our Products</span>
+                <div class="section-divider mx-auto"></div>
+                <h2 class="section-title">{{ $content['heading'] ?? 'Our Products &amp; Services' }}</h2>
+                @if(isset($content['subheading']))
+                <p class="section-subtitle mx-auto">{{ $content['subheading'] }}</p>
+                @endif
+            </div>
+            <div class="row g-4">
+                @foreach($products->take($previewCount) as $product)
+                <div class="col-6 col-md-4 col-lg-3">
+                    <div class="product-card">
+                        @if($product->image)
+                        <img src="{{ asset('storage/' . $product->image) }}"
+                             alt="{{ $product->name }}" class="product-img">
+                        @else
+                        <div class="product-img-placeholder">
+                            <i class="fas fa-box-open"></i>
+                        </div>
+                        @endif
+                        <div class="product-body">
+                            <div class="product-name">{{ $product->name }}</div>
+                            @if($content['show_price'] ?? true)
+                            <div class="product-price">KSh {{ number_format($product->price, 0) }}</div>
+                            @endif
+                        </div>
+                    </div>
+                </div>
+                @endforeach
+            </div>
+            @if($products->count() > $previewCount || $productsPageUrl)
+            <div class="text-center mt-5">
+                <a href="{{ $productsPageUrl ?? '#products' }}"
+                   class="btn-brand-primary" style="padding:14px 40px;font-size:1rem;">
+                    <i class="fas fa-th me-2"></i>View All Products
+                    @if($products->count() > $previewCount)
+                    <span class="ms-2 badge" style="background:rgba(255,255,255,0.2);color:#fff;border-radius:50px;padding:3px 10px;font-size:0.8rem;">
+                        {{ $products->count() - $previewCount }}+ more
+                    </span>
+                    @endif
+                </a>
+            </div>
+            @endif
+        </div>
+    </section>
+
+    {{-- ════════ CONTACT ════════ --}}
+    @elseif($section->type === 'contact')
+    <section class="contact-section section-pad" id="contact">
+        <div class="container">
+            <div class="row g-5">
+                <!-- Form -->
+                <div class="col-lg-7">
+                    <span class="section-label">Get In Touch</span>
+                    <div class="section-divider"></div>
+                    <h2 class="section-title">{{ $content['heading'] ?? 'Contact Us' }}</h2>
+                    @if(isset($content['subheading']))
+                    <p class="section-subtitle mb-4">{{ $content['subheading'] }}</p>
+                    @endif
+                    <div class="contact-form-card">
+                        @if(session('contact_success'))
+                        <div class="alert alert-success rounded-3 mb-4">
+                            <i class="fas fa-check-circle me-2"></i>{{ session('contact_success') }}
+                        </div>
+                        @endif
+                        <form action="{{ route('public.website.contact', $website->subdomain) }}" method="POST">
+                            @csrf
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <input type="text" name="name" placeholder="Your Full Name" required
+                                           class="form-control" value="{{ old('name') }}">
+                                </div>
+                                <div class="col-md-6">
+                                    <input type="email" name="email" placeholder="Email Address" required
+                                           class="form-control" value="{{ old('email') }}">
+                                </div>
+                                <div class="col-md-6">
+                                    <input type="tel" name="phone" placeholder="Phone Number"
+                                           class="form-control" value="{{ old('phone') }}">
+                                </div>
+                                <div class="col-md-6">
+                                    <input type="text" name="subject" placeholder="Subject"
+                                           class="form-control" value="{{ old('subject') }}">
+                                </div>
+                                <div class="col-12">
+                                    <textarea name="message" rows="5" placeholder="Tell us about your project..." required
+                                              class="form-control">{{ old('message') }}</textarea>
+                                </div>
+                                <div class="col-12">
+                                    <button type="submit" class="btn-brand-primary w-100"
+                                            style="padding:14px;font-size:1rem;border:none;cursor:pointer;">
+                                        <i class="fas fa-paper-plane me-2"></i>Send Message
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Info -->
+                <div class="col-lg-5">
+                    <div class="pt-5">
+                        <h4 class="mb-4" style="font-size:1.3rem;">Contact Information</h4>
+
+                        @if($website->settings['contact_phone'] ?? $website->business->phone)
+                        <div class="contact-info-item">
+                            <div class="icon-box"><i class="fas fa-phone-alt"></i></div>
+                            <div class="info-text">
+                                <strong>Phone</strong>
+                                <span>{{ $website->settings['contact_phone'] ?? $website->business->phone }}</span>
+                            </div>
+                        </div>
+                        @endif
+
+                        @if($website->settings['contact_email'] ?? $website->business->email)
+                        <div class="contact-info-item">
+                            <div class="icon-box"><i class="fas fa-envelope"></i></div>
+                            <div class="info-text">
+                                <strong>Email</strong>
+                                <span>{{ $website->settings['contact_email'] ?? $website->business->email }}</span>
+                            </div>
+                        </div>
+                        @endif
+
+                        @if($website->business->address)
+                        <div class="contact-info-item">
+                            <div class="icon-box"><i class="fas fa-map-marker-alt"></i></div>
+                            <div class="info-text">
+                                <strong>Location</strong>
+                                <span>{{ $website->business->address }}{{ $website->business->city ? ', '.$website->business->city : '' }}</span>
+                            </div>
+                        </div>
+                        @endif
+
+                        <div class="mt-4 pt-4 border-top">
+                            <strong class="d-block mb-3" style="font-size:0.9rem;">Follow Us</strong>
+                            <div class="footer-social">
+                                <a href="#"><i class="fab fa-facebook-f"></i></a>
+                                <a href="#"><i class="fab fa-twitter"></i></a>
+                                <a href="#"><i class="fab fa-instagram"></i></a>
+                                <a href="#"><i class="fab fa-linkedin-in"></i></a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    @endif {{-- end section type --}}
+    @if($isPreview)</div>@endif{{-- /sew --}}
+    @endforeach
+    </main>
+
+    <!-- ── FOOTER ───────────────────────────────────── -->
+    <footer class="site-footer">
+        <div class="container">
+            <div class="row g-5">
+                <!-- Brand -->
+                <div class="col-lg-4">
+                    <div class="footer-brand">{{ $website->business->name }}</div>
+                    @php
+                        $footerDesc = $website->business->description ?? '';
+                        $footerWords = explode(' ', $footerDesc);
+                        if (count($footerWords) > 25) {
+                            $footerDesc = implode(' ', array_slice($footerWords, 0, 25)) . '...';
+                        }
+                    @endphp
+                    <p class="footer-desc">{{ $footerDesc }}</p>
+                    <div class="footer-social mt-3">
+                        <a href="#"><i class="fab fa-facebook-f"></i></a>
+                        <a href="#"><i class="fab fa-twitter"></i></a>
+                        <a href="#"><i class="fab fa-instagram"></i></a>
+                        <a href="#"><i class="fab fa-linkedin-in"></i></a>
+                    </div>
+                </div>
+
+                <!-- Quick Links -->
+                <div class="col-sm-6 col-lg-2">
+                    <h5>Quick Links</h5>
+                    <ul>
+                        @foreach($menuPages as $menuPage)
+                        @php
+                            $lNavLabel = preg_replace('/^(our|the|my)\s+/i', '', $menuPage->title);
+                            $lNavWords = explode(' ', trim($lNavLabel));
+                            $lNavLabel = implode(' ', array_slice($lNavWords, 0, 2));
+                        @endphp
+                        <li><a href="{{ $menuPage->url }}{{ $isPreview ? '?preview=1' : '' }}">{{ $lNavLabel }}</a></li>
+                        @endforeach
+                    </ul>
+                </div>
+
+                <!-- Services -->
+                @php $servicesSection = $sections->firstWhere('type','services'); @endphp
+                @if($servicesSection)
+                @php $servContent = $servicesSection->getContentWithDefaults(); @endphp
+                <div class="col-sm-6 col-lg-2">
+                    <h5>Services</h5>
+                    <ul>
+                        @foreach(array_slice($servContent['items'] ?? [], 0, 5) as $item)
+                        <li><a href="#services">{{ $item['title'] ?? $item['name'] ?? '' }}</a></li>
+                        @endforeach
+                    </ul>
+                </div>
+                @endif
+
+                <!-- Contact -->
+                <div class="col-lg-3">
+                    <h5>Contact</h5>
+                    <ul class="footer-contact">
+                        @if($website->settings['contact_email'] ?? $website->business->email)
+                        <li><i class="fas fa-envelope"></i><span>{{ $website->settings['contact_email'] ?? $website->business->email }}</span></li>
+                        @endif
+                        @if($website->settings['contact_phone'] ?? $website->business->phone)
+                        <li><i class="fas fa-phone-alt"></i><span>{{ $website->settings['contact_phone'] ?? $website->business->phone }}</span></li>
+                        @endif
+                        @if($website->business->address)
+                        <li><i class="fas fa-map-marker-alt"></i><span>{{ $website->business->address }}{{ $website->business->city ? ', '.$website->business->city : '' }}</span></li>
+                        @endif
+                    </ul>
+                </div>
+            </div>
+
+            <div class="footer-bottom d-flex flex-wrap justify-content-between align-items-center">
+                <span>© {{ date('Y') }} <strong style="color:#fff;">{{ $website->business->name }}</strong>. All rights reserved.</span>
+                <span>Built with <a href="https://shopybook.com">Shopybook</a></span>
             </div>
         </div>
     </footer>
 
     @if(session('success'))
-    <div class="fixed bottom-4 right-4 bg-green-500 text-white px-6 py-4 rounded-lg shadow-lg z-50">
-        {{ session('success') }}
+    <div id="successToast" style="position:fixed;bottom:24px;right:24px;background:#10b981;color:#fff;padding:16px 24px;border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,0.2);z-index:9999;font-weight:600;display:flex;align-items:center;gap:10px;">
+        <i class="fas fa-check-circle"></i>{{ session('success') }}
     </div>
+    <script>setTimeout(()=>{const t=document.getElementById('successToast');if(t)t.remove();},4000);</script>
     @endif
 
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script>
+        // ── Sticky nav scroll ──────────────────────────────────
+        const nav = document.getElementById('siteNav');
+        window.addEventListener('scroll', () => {
+            nav.classList.toggle('scrolled', window.scrollY > 50);
+        });
+
+        // ── Mobile toggle ──────────────────────────────────────
+        document.getElementById('mobileToggle').addEventListener('click', () => {
+            const menu = document.getElementById('mobileMenu');
+            menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
+        });
+
+        // ── Smooth scroll for anchor links ─────────────────────
+        document.querySelectorAll('a[href^="#"]').forEach(a => {
+            a.addEventListener('click', e => {
+                const target = document.querySelector(a.getAttribute('href'));
+                if (target) {
+                    e.preventDefault();
+                    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    document.getElementById('mobileMenu').style.display = 'none';
+                }
+            });
+        });
+
         function toggleMobileMenu() {
-            document.getElementById('mobile-menu').classList.toggle('hidden');
+            document.getElementById('mobileMenu').style.display =
+                document.getElementById('mobileMenu').style.display === 'none' ? 'block' : 'none';
         }
+
+        // Graceful AI image loading — Pollinations images are generated on demand (may take
+        // 10-30 seconds). Show branded gradient placeholder, fade image in when ready.
+        (function() {
+            function loadAiImage(img) {
+                if (!img.src) return;
+                if (img.complete && img.naturalWidth > 0) {
+                    img.classList.add('img-loaded');
+                    return;
+                }
+                img.addEventListener('load', function() { img.classList.add('img-loaded'); });
+                img.addEventListener('error', function() {
+                    // Fallback to a picsum photo using section-specific seed
+                    var seed = img.dataset.seed || Math.floor(Math.random() * 9000);
+                    var w = img.dataset.w || 800;
+                    var h = img.dataset.h || 500;
+                    img.src = 'https://picsum.photos/seed/' + seed + '/' + w + '/' + h;
+                    img.classList.add('img-loaded');
+                });
+            }
+            document.querySelectorAll('.hero-image-wrap img, .about-img-wrap img').forEach(loadAiImage);
+        })();
     </script>
+
+@if($isPreview)
+{{-- ── FULL IN-PREVIEW VISUAL EDITOR ─────────────────────────────── --}}
+
+{{-- IMAGE EDITOR MODAL ──────────────────────────────────────────── --}}
+<div id="imgEditModal" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.6);align-items:center;justify-content:center;">
+    <div style="background:#fff;border-radius:16px;padding:32px;width:min(500px,95vw);box-shadow:0 24px 80px rgba(0,0,0,0.3);">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+            <h5 style="margin:0;font-weight:700;font-size:1.1rem;">✨ Generate AI Image</h5>
+            <button onclick="closeImageModal()" style="background:none;border:none;font-size:1.4rem;cursor:pointer;line-height:1;">×</button>
+        </div>
+        <p style="color:#666;font-size:0.88rem;margin-bottom:16px;">Describe what should appear in this image. Be specific about your products or business.</p>
+        <textarea id="imgPromptInput" rows="3" placeholder="e.g. luxury bedding store display with duvets and pillows, warm lighting, professional photo"
+            style="width:100%;border:1.5px solid #e5e7eb;border-radius:8px;padding:10px 12px;font-size:0.9rem;resize:vertical;margin-bottom:16px;font-family:inherit;"></textarea>
+        <input type="hidden" id="imgModalSectionId">
+        <div id="imgGeneratingState" style="display:none;text-align:center;padding:12px 0;">
+            <span class="img-spinner" style="display:inline-block;"></span>
+            <span style="margin-left:10px;color:#555;font-size:0.9rem;">Generating image… this takes 20–40 seconds</span>
+        </div>
+        <div id="imgErrorMsg" style="display:none;color:#dc2626;font-size:0.85rem;margin-bottom:12px;"></div>
+        <div style="display:flex;gap:10px;justify-content:flex-end;">
+            <button onclick="closeImageModal()" style="padding:9px 20px;border:1.5px solid #e5e7eb;border-radius:8px;background:#fff;cursor:pointer;font-size:0.9rem;">Cancel</button>
+            <button id="imgGenerateBtn" onclick="runAiGenerate()"
+                style="padding:9px 24px;border:none;border-radius:8px;background:var(--primary);color:#fff;font-weight:600;cursor:pointer;font-size:0.9rem;">
+                <i class="fas fa-magic" style="margin-right:6px;"></i>Generate
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+/* ═══════════════════════════════════════════════════════════════════
+   SHOPY VISUAL EDITOR — All-in-one in-preview editor
+   ═══════════════════════════════════════════════════════════════════ */
+
+// ── GLOBAL CONFIG ───────────────────────────────────────────────────
+var _imgCsrf        = '{{ csrf_token() }}';
+var _csrf           = '{{ csrf_token() }}';
+var _websiteId      = {{ $website->id }};
+var _generateUrl    = '{{ route("website.builder.ai.generate-section-image") }}';
+var _uploadBase     = '{{ url("website-builder/sections") }}';
+var _publishUrl     = '{{ route("website.builder.publish") }}';
+var _customizeUrl   = '{{ route("website.builder.customize") }}';
+var _genContentUrl  = '{{ route("website.builder.ai.generate-content") }}';
+var _uploadLogoUrl  = '{{ route("website.builder.upload-logo") }}';
+
+// Current colours / fonts (from PHP rendering context)
+var _colors = {
+    primary:    '{{ $primaryColor }}',
+    secondary:  '{{ $secondaryColor }}',
+    accent:     '{{ $accentColor }}',
+    background: '{{ $bgColor }}',
+    text:       '{{ $textColor }}'
+};
+var _fonts = { heading: '{{ $headingFont }}', body: '{{ $bodyFont }}' };
+
+// All section data indexed by id
+var _sectionsData = {!! json_encode(
+    $sections->mapWithKeys(fn($s) => [$s->id => ['type' => $s->type, 'content' => $s->getContentWithDefaults()]])->all(),
+    JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT
+) !!};
+
+// ── FIELD DEFINITIONS BY SECTION TYPE ──────────────────────────────
+var _FIELDS = {
+    hero: [
+        { key:'heading',           label:'Headline',                type:'text'     },
+        { key:'subheading',        label:'Subheading / Tagline',    type:'textarea' },
+        { key:'cta_text',          label:'Primary Button Text',     type:'text'     },
+        { key:'secondary_cta_text',label:'Secondary Button Text',   type:'text'     },
+    ],
+    about: [
+        { key:'heading',    label:'Section Heading', type:'text'     },
+        { key:'subheading', label:'Subheading',      type:'text'     },
+        { key:'text',       label:'Body Text',       type:'textarea' },
+    ],
+    features: [
+        { key:'heading',    label:'Section Heading', type:'text'     },
+        { key:'subheading', label:'Subheading',      type:'textarea' },
+    ],
+    services: [
+        { key:'heading',    label:'Section Heading', type:'text'     },
+        { key:'subheading', label:'Subheading',      type:'textarea' },
+    ],
+    cta: [
+        { key:'heading',  label:'Heading',     type:'text'     },
+        { key:'text',     label:'Body Text',   type:'textarea' },
+        { key:'cta_text', label:'Button Text', type:'text'     },
+    ],
+    testimonials: [
+        { key:'heading', label:'Section Heading', type:'text' },
+    ],
+    contact: [
+        { key:'heading', label:'Section Heading', type:'text' },
+        { key:'email',   label:'Email Address',   type:'text' },
+        { key:'phone',   label:'Phone Number',    type:'text' },
+        { key:'address', label:'Address',         type:'text' },
+    ],
+    stats: [
+        { key:'heading',    label:'Section Heading', type:'text' },
+        { key:'subheading', label:'Subheading',      type:'text' },
+    ],
+    products: [
+        { key:'heading',    label:'Section Heading', type:'text'     },
+        { key:'subheading', label:'Subheading',      type:'textarea' },
+    ],
+    gallery:      [{ key:'heading', label:'Section Heading', type:'text' }],
+    team:         [{ key:'heading', label:'Section Heading', type:'text' }],
+    faq: [
+        { key:'heading',    label:'Section Heading', type:'text'     },
+        { key:'subheading', label:'Subheading',      type:'textarea' },
+    ],
+};
+
+// ── FONT PAIRS ──────────────────────────────────────────────────────
+var _FONT_PAIRS = [
+    { name:'Modern Pro',        heading:'Poppins',            body:'Inter'           },
+    { name:'Classic Serif',     heading:'Playfair Display',   body:'Source Sans Pro' },
+    { name:'Bold Business',     heading:'Montserrat',         body:'Open Sans'       },
+    { name:'Elegant Luxury',    heading:'Cormorant Garamond', body:'Raleway'         },
+    { name:'Clean Slab',        heading:'Roboto Slab',        body:'Roboto'          },
+    { name:'Fresh & Friendly',  heading:'Nunito',             body:'Lato'            },
+    { name:'Luxury Editorial',  heading:'Libre Baskerville',  body:'Mulish'          },
+    { name:'Tech Modern',       heading:'Space Grotesk',      body:'DM Sans'         },
+];
+
+// ── EDITOR STATE ────────────────────────────────────────────────────
+var _activeTab       = 'content';
+var _activeSectionId = null;
+var _editColors      = Object.assign({}, _colors);
+var _editFonts       = Object.assign({}, _fonts);
+
+// ── PANEL OPEN / CLOSE ──────────────────────────────────────────────
+function _openPanel(tab) {
+    _activeSectionId = null;
+    _switchTab(tab || 'content');
+    document.getElementById('editorPanel').classList.add('open');
+    document.getElementById('epTitle').textContent =
+        tab === 'design' ? '🎨 Design' : tab === 'logo' ? '🖼️ Logo' : '✏️ Editor';
+}
+
+function _openContentPanel(sectionId) {
+    _activeSectionId = sectionId;
+    var sd = _sectionsData[sectionId];
+    var typeName = sd ? sd.type.charAt(0).toUpperCase() + sd.type.slice(1) : 'Section';
+    document.getElementById('epTitle').textContent = '✏️ ' + typeName;
+    document.getElementById('editorPanel').classList.add('open');
+    _switchTab('content');
+}
+
+function _closePanel() {
+    document.getElementById('editorPanel').classList.remove('open');
+}
+
+// ── TAB SWITCHING ───────────────────────────────────────────────────
+function _switchTab(tab) {
+    _activeTab = tab;
+    document.querySelectorAll('.ep-tab').forEach(function(t) { t.classList.remove('active'); });
+    var tabEl = document.getElementById('tab_' + tab);
+    if (tabEl) tabEl.classList.add('active');
+    if (tab === 'content') _renderContentTab();
+    else if (tab === 'design') _renderDesignTab();
+    else if (tab === 'logo')   _renderLogoTab();
+}
+
+// ── CONTENT TAB ─────────────────────────────────────────────────────
+function _renderContentTab() {
+    var body = document.getElementById('epBody');
+    if (!_activeSectionId) {
+        body.innerHTML = '<p style="color:#94a3b8;font-size:0.82rem;text-align:center;margin-top:30px;padding:0 10px;">Hover a section and click <strong style="color:#1e293b;">Edit</strong> to edit its text.</p>';
+        return;
+    }
+    var sd = _sectionsData[_activeSectionId];
+    if (!sd) { body.innerHTML = '<p style="color:#ef4444;font-size:0.82rem;">Section not found.</p>'; return; }
+
+    var fields = _FIELDS[sd.type] || [{ key:'heading', label:'Heading', type:'text' }];
+    var html = '<div id="epMsg" class="ep-msg"></div>';
+    fields.forEach(function(f) {
+        var val = (sd.content[f.key] !== undefined && sd.content[f.key] !== null)
+                  ? String(sd.content[f.key]) : '';
+        var safeVal = val.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;');
+        html += '<div class="ep-field">';
+        html += '<label class="ep-lbl" for="epf_' + f.key + '">' + f.label + '</label>';
+        if (f.type === 'textarea') {
+            html += '<textarea class="ep-input" id="epf_' + f.key + '" rows="3">' + safeVal + '</textarea>';
+        } else {
+            html += '<input type="text" class="ep-input" id="epf_' + f.key + '" value="' + safeVal + '">';
+        }
+        html += '</div>';
+    });
+    html += '<hr class="ep-divider">';
+    html += '<button class="ep-btn ep-btn-dark" onclick="_saveContent()">'
+          + '<svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" style="flex-shrink:0"><path d="M5 13l4 4L19 7"/></svg>'
+          + ' Save Changes</button>';
+    html += '<button class="ep-btn ep-btn-ai" onclick="_aiRegen()">'
+          + '<span id="aiSpin" class="ep-spinner" style="display:none"></span>'
+          + ' ✨ AI Regenerate</button>';
+    body.innerHTML = html;
+}
+
+function _saveContent() {
+    if (!_activeSectionId) return;
+    var sd = _sectionsData[_activeSectionId];
+    if (!sd) return;
+    var fields = _FIELDS[sd.type] || [];
+    var updated = Object.assign({}, sd.content);
+    fields.forEach(function(f) {
+        var el = document.getElementById('epf_' + f.key);
+        if (el) updated[f.key] = el.value;
+    });
+    _setStatus('saving');
+    _showMsg('');
+    fetch('{{ url("website-builder/sections") }}/' + _activeSectionId, {
+        method: 'PUT',
+        headers: { 'Content-Type':'application/json', 'X-CSRF-TOKEN':_csrf, 'Accept':'application/json' },
+        body: JSON.stringify({ content: updated })
+    })
+    .then(function(r){ return r.json(); })
+    .then(function(data) {
+        if (data.success !== false) {
+            _sectionsData[_activeSectionId].content = updated;
+            _updateSectionDOM(_activeSectionId, sd.type, updated);
+            _setStatus('saved');
+            _showMsg('✓ Changes saved!', 'success');
+        } else {
+            _showMsg('Save failed: ' + (data.message || 'Error'), 'error');
+            _setStatus('');
+        }
+    })
+    .catch(function() { _showMsg('Network error. Please try again.', 'error'); _setStatus(''); });
+}
+
+function _aiRegen() {
+    if (!_activeSectionId) return;
+    var sd = _sectionsData[_activeSectionId];
+    if (!sd) return;
+    var btn = document.querySelector('.ep-btn-ai');
+    var spin = document.getElementById('aiSpin');
+    if (btn) btn.disabled = true;
+    if (spin) spin.style.display = 'inline-block';
+    _showMsg('Generating new content…', 'info');
+    fetch(_genContentUrl, {
+        method: 'POST',
+        headers: { 'Content-Type':'application/json', 'X-CSRF-TOKEN':_csrf, 'Accept':'application/json' },
+        body: JSON.stringify({ section_type: sd.type, website_id: _websiteId, existing_content: sd.content })
+    })
+    .then(function(r){ return r.json(); })
+    .then(function(data) {
+        if (btn) btn.disabled = false;
+        if (spin) spin.style.display = 'none';
+        if (data.content) {
+            Object.assign(_sectionsData[_activeSectionId].content, data.content);
+            _renderContentTab();
+            _showMsg('✓ New content ready — review and save.', 'success');
+        } else {
+            _showMsg('Generation failed: ' + (data.error || 'Unknown error'), 'error');
+        }
+    })
+    .catch(function() {
+        if (btn) btn.disabled = false;
+        if (spin) spin.style.display = 'none';
+        _showMsg('Network error.', 'error');
+    });
+}
+
+function _updateSectionDOM(sectionId, type, content) {
+    var wrapper = document.getElementById('sew-' + sectionId);
+    if (!wrapper) return;
+    if (content.heading) {
+        var h1 = wrapper.querySelector('.hero-title');
+        if (h1) h1.textContent = content.heading;
+        var st = wrapper.querySelector('.section-title');
+        if (st) st.textContent = content.heading;
+        // Fallback: first h2 that is not section-title
+        if (!h1 && !st) {
+            var h2 = wrapper.querySelector('h2');
+            if (h2) h2.textContent = content.heading;
+        }
+    }
+    if (content.subheading) {
+        var sub = wrapper.querySelector('.hero-subtitle, .section-subtitle');
+        if (sub) sub.textContent = content.subheading;
+    }
+    if (type === 'hero' && content.cta_text) {
+        var ctaLink = wrapper.querySelector('.btn-brand-secondary, .btn-brand-primary');
+        if (ctaLink) ctaLink.textContent = content.cta_text;
+    }
+    if (type === 'about' && content.text) {
+        var aboutTxt = wrapper.querySelector('p.section-subtitle, .about-text');
+        // Find the longest <p> as the body text paragraph
+        if (!aboutTxt) {
+            var ps = wrapper.querySelectorAll('p');
+            var longest = null;
+            ps.forEach(function(p) { if (!longest || p.textContent.length > longest.textContent.length) longest = p; });
+            aboutTxt = longest;
+        }
+        if (aboutTxt) aboutTxt.textContent = content.text;
+    }
+    if (type === 'cta') {
+        if (content.heading) {
+            var ctaH2 = wrapper.querySelector('h2');
+            if (ctaH2) ctaH2.textContent = content.heading;
+        }
+        if (content.cta_text) {
+            var ctaBtn = wrapper.querySelector('a[style], a.btn');
+            if (ctaBtn) ctaBtn.textContent = content.cta_text;
+        }
+    }
+}
+
+// ── DESIGN TAB ──────────────────────────────────────────────────────
+function _renderDesignTab() {
+    document.getElementById('epTitle').textContent = '🎨 Design';
+    var colorDefs = [
+        { key:'primary',   label:'Primary Color'       },
+        { key:'secondary', label:'CTA / Accent Color'  },
+        { key:'accent',    label:'Highlight Color'     },
+    ];
+    var html = '<div id="epMsg" class="ep-msg"></div>';
+    html += '<p class="ep-note">Changes apply instantly so you can preview before saving.</p>';
+    html += '<strong style="font-size:0.72rem;font-weight:700;color:#1e293b;display:block;margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px;">Colors</strong>';
+    colorDefs.forEach(function(c) {
+        var val = _editColors[c.key] || '#000000';
+        html += '<div class="ep-clr-row">';
+        html += '<div class="ep-clr-swatch"><input type="color" id="clr_' + c.key + '" value="' + val + '" oninput="_liveColor(\'' + c.key + '\',this.value)"></div>';
+        html += '<span class="ep-clr-lbl">' + c.label + '</span>';
+        html += '</div>';
+    });
+    html += '<hr class="ep-divider">';
+    html += '<strong style="font-size:0.72rem;font-weight:700;color:#1e293b;display:block;margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px;">Font Combinations</strong>';
+    html += '<div class="ep-font-grid">';
+    _FONT_PAIRS.forEach(function(fp, i) {
+        var sel = (fp.heading === _editFonts.heading && fp.body === _editFonts.body) ? ' selected' : '';
+        html += '<div class="ep-font-opt' + sel + '" onclick="_selectFont(' + i + ')" id="fp_' + i + '">';
+        html += '<span class="fname">' + fp.name + '</span>';
+        html += '<span class="fpair">' + fp.heading + '</span>';
+        html += '</div>';
+    });
+    html += '</div>';
+    html += '<hr class="ep-divider">';
+    html += '<button class="ep-btn ep-btn-dark" onclick="_saveDesign()">💾 Save Design</button>';
+    document.getElementById('epBody').innerHTML = html;
+}
+
+function _liveColor(key, val) {
+    _editColors[key] = val;
+    document.documentElement.style.setProperty('--' + key, val);
+    if (key === 'primary') {
+        document.documentElement.style.setProperty('--primary-dark', _hexDarken(val, 40));
+    }
+}
+
+function _hexDarken(hex, amt) {
+    hex = hex.replace('#','');
+    if (hex.length === 3) hex = hex[0]+hex[0]+hex[1]+hex[1]+hex[2]+hex[2];
+    var r = Math.max(0, parseInt(hex.substr(0,2),16)-amt);
+    var g = Math.max(0, parseInt(hex.substr(2,2),16)-amt);
+    var b = Math.max(0, parseInt(hex.substr(4,2),16)-amt);
+    return '#' + [r,g,b].map(function(n){ return n.toString(16).padStart(2,'0'); }).join('');
+}
+
+function _selectFont(idx) {
+    document.querySelectorAll('.ep-font-opt').forEach(function(el) { el.classList.remove('selected'); });
+    var fp = _FONT_PAIRS[idx];
+    var el = document.getElementById('fp_' + idx);
+    if (el) el.classList.add('selected');
+    _editFonts.heading = fp.heading;
+    _editFonts.body    = fp.body;
+    // Load font from Google and apply live
+    var link = document.createElement('link');
+    link.rel = 'stylesheet';
+    link.href = 'https://fonts.googleapis.com/css2?family=' + fp.heading.replace(/ /g,'+')
+              + ':wght@400;700&family=' + fp.body.replace(/ /g,'+') + ':wght@400;600&display=swap';
+    document.head.appendChild(link);
+    document.documentElement.style.setProperty('--font-heading', "'" + fp.heading + "', sans-serif");
+    document.documentElement.style.setProperty('--font-body', "'" + fp.body + "', sans-serif");
+}
+
+function _saveDesign() {
+    _setStatus('saving');
+    _showMsg('');
+    fetch(_customizeUrl, {
+        method: 'POST',
+        headers: { 'Content-Type':'application/json', 'X-CSRF-TOKEN':_csrf, 'Accept':'application/json' },
+        body: JSON.stringify({
+            primary_color:    _editColors.primary,
+            secondary_color:  _editColors.secondary,
+            accent_color:     _editColors.accent,
+            background_color: _editColors.background || '#ffffff',
+            text_color:       _editColors.text || '#212121',
+            heading_font:     _editFonts.heading,
+            body_font:        _editFonts.body,
+        })
+    })
+    .then(function(r){ return r.json(); })
+    .then(function(data) {
+        if (data.success) {
+            _setStatus('saved');
+            _showMsg('✓ Design saved! Refreshing to apply…', 'success');
+            setTimeout(function(){ location.reload(); }, 1200);
+        } else {
+            _showMsg('Save failed: ' + (data.message || ''), 'error');
+            _setStatus('');
+        }
+    })
+    .catch(function() { _showMsg('Network error.', 'error'); _setStatus(''); });
+}
+
+// ── LOGO TAB ────────────────────────────────────────────────────────
+function _renderLogoTab() {
+    document.getElementById('epTitle').textContent = '🖼️ Logo';
+    var navLogo = document.getElementById('siteLogoImg');
+    var html = '<div id="epMsg" class="ep-msg"></div>';
+    if (navLogo && navLogo.src && !navLogo.src.endsWith('undefined')) {
+        html += '<div style="text-align:center;margin-bottom:14px;">';
+        html += '<img src="' + navLogo.src + '" id="epLogoPreview" class="ep-logo-preview">';
+        html += '</div>';
+    } else {
+        html += '<div style="text-align:center;margin-bottom:14px;padding:18px;background:#f8fafc;border-radius:8px;">';
+        html += '<span style="font-size:2.2rem;">🏢</span><br><span style="color:#94a3b8;font-size:0.8rem;margin-top:6px;display:block;">No logo yet</span>';
+        html += '</div>';
+    }
+    html += '<label class="ep-logo-drop" onclick="document.getElementById(\'logoFileInput\').click()">';
+    html += '<svg width="28" height="28" fill="none" stroke="#94a3b8" stroke-width="1.5" viewBox="0 0 24 24"><path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1M8 12l4-4 4 4M12 8v8"/></svg>';
+    html += '<div style="margin-top:8px;font-size:0.82rem;color:#64748b;font-weight:600;">Click to upload new logo</div>';
+    html += '<div style="font-size:0.7rem;color:#94a3b8;margin-top:3px;">PNG, JPG, SVG — max 5 MB</div>';
+    html += '</label>';
+    html += '<input type="file" id="logoFileInput" accept="image/*" style="display:none;" onchange="_uploadLogo(this)">';
+    html += '<p class="ep-note">Your logo appears in the navbar and footer. For best results, use a transparent PNG.</p>';
+    document.getElementById('epBody').innerHTML = html;
+}
+
+function _uploadLogo(input) {
+    if (!input.files || !input.files[0]) return;
+    var fd = new FormData();
+    fd.append('logo', input.files[0]);
+    fd.append('_token', _csrf);
+    _setStatus('saving');
+    _showMsg('Uploading logo…', 'info');
+    fetch(_uploadLogoUrl, {
+        method: 'POST',
+        headers: { 'Accept': 'application/json' },
+        body: fd
+    })
+    .then(function(r){ return r.json(); })
+    .then(function(data) {
+        if (data.success && data.logo_url) {
+            var navLogo = document.getElementById('siteLogoImg');
+            if (navLogo) {
+                navLogo.src = data.logo_url;
+            } else {
+                // Create the logo element in the navbar
+                var brand = document.querySelector('.navbar-brand-text');
+                if (brand) {
+                    var img = document.createElement('img');
+                    img.id = 'siteLogoImg';
+                    img.src = data.logo_url;
+                    img.alt = '';
+                    img.style.cssText = 'height:46px;object-fit:contain;';
+                    brand.parentNode.insertBefore(img, brand);
+                }
+            }
+            var prev = document.getElementById('epLogoPreview');
+            if (prev) prev.src = data.logo_url;
+            else _renderLogoTab();
+            _setStatus('saved');
+            _showMsg('✓ Logo updated!', 'success');
+        } else {
+            _showMsg('Upload failed: ' + (data.error || 'Unknown error'), 'error');
+            _setStatus('');
+        }
+    })
+    .catch(function() { _showMsg('Network error.', 'error'); _setStatus(''); });
+}
+
+// ── PUBLISH ─────────────────────────────────────────────────────────
+function _publishSite() {
+    if (!confirm('Publish your website? It will be visible to visitors.')) return;
+    _setStatus('saving');
+    fetch(_publishUrl, {
+        method: 'POST',
+        headers: { 'Content-Type':'application/json', 'X-CSRF-TOKEN':_csrf, 'Accept':'application/json' }
+    })
+    .then(function(r){ return r.json(); })
+    .then(function(data) {
+        if (data.success) {
+            _setStatus('saved');
+            alert('🎉 Your website is now live!');
+        } else {
+            alert('Publish failed: ' + (data.message || 'Unknown error'));
+            _setStatus('');
+        }
+    })
+    .catch(function() { alert('Network error.'); _setStatus(''); });
+}
+
+// ── PAGE NAVIGATION ─────────────────────────────────────────────────
+function _gotoPage(url) { if (url) window.location.href = url; }
+
+// ── UTILITIES ───────────────────────────────────────────────────────
+function _setStatus(state) {
+    var el = document.getElementById('etStatus');
+    if (!el) return;
+    el.className = 'et-status';
+    if (state === 'saving') { el.textContent = '● Saving…'; el.classList.add('saving'); }
+    else if (state === 'saved') {
+        el.textContent = '✓ Saved'; el.classList.add('saved');
+        setTimeout(function(){ el.textContent = ''; }, 3000);
+    } else { el.textContent = ''; }
+}
+
+function _showMsg(msg, type) {
+    var el = document.getElementById('epMsg');
+    if (!el) return;
+    if (!msg) { el.style.display = 'none'; return; }
+    el.className = 'ep-msg ep-msg-' + (type === 'success' ? 'success' : type === 'error' ? 'error' : 'info');
+    el.style.display = 'block';
+    el.textContent = msg;
+}
+
+// ── IMAGE EDITING (existing functionality) ──────────────────────────
+function openImageModal(sectionId, defaultPrompt) {
+    document.getElementById('imgModalSectionId').value = sectionId;
+    document.getElementById('imgPromptInput').value = defaultPrompt || '';
+    document.getElementById('imgErrorMsg').style.display = 'none';
+    document.getElementById('imgGeneratingState').style.display = 'none';
+    document.getElementById('imgGenerateBtn').disabled = false;
+    document.getElementById('imgEditModal').style.display = 'flex';
+    setTimeout(function(){ document.getElementById('imgPromptInput').focus(); }, 50);
+}
+
+function closeImageModal() {
+    document.getElementById('imgEditModal').style.display = 'none';
+}
+
+function runAiGenerate() {
+    var sectionId = document.getElementById('imgModalSectionId').value;
+    var prompt    = document.getElementById('imgPromptInput').value.trim();
+    if (!prompt) { document.getElementById('imgPromptInput').focus(); return; }
+
+    document.getElementById('imgGenerateBtn').disabled = true;
+    document.getElementById('imgGeneratingState').style.display = 'block';
+    document.getElementById('imgErrorMsg').style.display = 'none';
+
+    var wrap = document.getElementById('img-wrap-' + sectionId);
+    if (wrap) {
+        var spinner = wrap.querySelector('.section-img-edit-overlay');
+        if (spinner) spinner.innerHTML = '<div class="img-generating"><span class="img-spinner"></span> Generating…</div>';
+    }
+
+    fetch(_generateUrl, {
+        method: 'POST',
+        headers: { 'Content-Type':'application/json', 'X-CSRF-TOKEN':_imgCsrf, 'Accept':'application/json' },
+        body: JSON.stringify({ section_id: sectionId, prompt: prompt })
+    })
+    .then(function(r){ return r.json(); })
+    .then(function(data) {
+        if (data.success && data.image_url) {
+            applyNewImage(sectionId, data.image_url);
+            closeImageModal();
+        } else {
+            _showImgError(data.error || 'Generation failed. Try again.');
+        }
+    })
+    .catch(function(){ _showImgError('Network error. Please try again.'); });
+}
+
+function uploadSectionImage(sectionId, input) {
+    if (!input.files || !input.files[0]) return;
+    var formData = new FormData();
+    formData.append('image', input.files[0]);
+    formData.append('_token', _imgCsrf);
+
+    var wrap = document.getElementById('img-wrap-' + sectionId);
+    if (wrap) {
+        var overlay = wrap.querySelector('.section-img-edit-overlay');
+        if (overlay) overlay.innerHTML = '<div class="img-generating"><span class="img-spinner"></span> Uploading…</div>';
+    }
+
+    fetch(_uploadBase + '/' + sectionId + '/upload-image', {
+        method: 'POST',
+        headers: { 'Accept': 'application/json' },
+        body: formData
+    })
+    .then(function(r){ return r.json(); })
+    .then(function(data) {
+        if (data.success && data.image_url) {
+            applyNewImage(sectionId, data.image_url);
+        } else {
+            alert('Upload failed: ' + (data.error || 'Unknown error'));
+            location.reload();
+        }
+    })
+    .catch(function(){ alert('Upload failed. Please try again.'); location.reload(); });
+}
+
+function applyNewImage(sectionId, imageUrl) {
+    var wrap = document.getElementById('img-wrap-' + sectionId);
+    if (!wrap) { location.reload(); return; }
+
+    var existing = document.getElementById('section-img-' + sectionId);
+    if (existing) {
+        existing.src = imageUrl;
+        existing.classList.add('img-loaded');
+    } else {
+        var isHero = wrap.classList.contains('hero-image-wrap');
+        var imgEl = document.createElement('img');
+        imgEl.src = imageUrl;
+        imgEl.id = 'section-img-' + sectionId;
+        imgEl.alt = '';
+        imgEl.classList.add('img-loaded');
+        if (isHero) { imgEl.style.width='100%'; imgEl.style.height='380px'; imgEl.style.objectFit='cover'; }
+        wrap.innerHTML = '';
+        wrap.appendChild(imgEl);
+    }
+
+    var ov = wrap.querySelector('.section-img-edit-overlay');
+    var ovHtml = '<button class="img-edit-btn ai-btn" onclick="openImageModal('+sectionId+',\'\')">'
+               +'<i class="fas fa-magic"></i> AI Image</button>'
+               +'<label class="img-edit-btn" style="cursor:pointer;"><i class="fas fa-upload"></i> Upload'
+               +'<input type="file" accept="image/*" style="display:none;" onchange="uploadSectionImage('+sectionId+',this)"></label>';
+    if (ov) {
+        ov.innerHTML = ovHtml;
+    } else {
+        var newOv = document.createElement('div');
+        newOv.className = 'section-img-edit-overlay';
+        newOv.innerHTML = ovHtml;
+        wrap.appendChild(newOv);
+    }
+}
+
+function _showImgError(msg) {
+    var el = document.getElementById('imgErrorMsg');
+    el.textContent = msg; el.style.display = 'block';
+    document.getElementById('imgGeneratingState').style.display = 'none';
+    document.getElementById('imgGenerateBtn').disabled = false;
+}
+
+// Close modal on backdrop click
+document.getElementById('imgEditModal').addEventListener('click', function(e) {
+    if (e.target === this) closeImageModal();
+});
+
+// Close editor panel when clicking outside panel + toolbar + section wrappers
+document.addEventListener('click', function(e) {
+    var panel = document.getElementById('editorPanel');
+    if (!panel) return;
+    if (!panel.classList.contains('open')) return;
+    var toolbar = document.getElementById('editorToolbar');
+    if (panel.contains(e.target) || (toolbar && toolbar.contains(e.target))) return;
+    if (e.target.closest && e.target.closest('.seb')) return; // section edit buttons
+    _closePanel();
+});
+</script>
+@endif
 </body>
 </html>
 

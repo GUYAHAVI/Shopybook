@@ -1,776 +1,335 @@
-@extends('layouts.dash')
+﻿@extends('layouts.dash')
 
-@section('title', 'Select Pages & Features - Step 3')
+@section('title', 'Choose Style & Fonts - Step 3')
 
 @section('content')
 <style>
-    :root {
-        --primary-purple: #8b5cf6;
-        --dark-bg: #1e293b;
-        --darker-bg: #0f172a;
-        --card-hover: #334155;
-    }
-    
-    body {
-        background: var(--darker-bg);
-        color: #e2e8f0;
-    }
-    
-    .alert {
-        padding: 1rem 1.5rem;
-        border-radius: 8px;
-        margin-bottom: 1.5rem;
-        display: flex;
-        align-items: center;
-        gap: 0.75rem;
-        font-size: 0.95rem;
-    }
-    
-    .alert-success {
-        background: rgba(16, 185, 129, 0.1);
-        border: 1px solid rgba(16, 185, 129, 0.3);
-        color: #10b981;
-    }
-    
-    .alert-error,
-    .alert-danger {
-        background: rgba(239, 68, 68, 0.1);
-        border: 1px solid rgba(239, 68, 68, 0.3);
-        color: #ef4444;
-    }
-    
-    .alert-icon {
-        font-size: 1.2rem;
-    }
-    
-    .configurator-container {
-        max-width: 1400px;
-        margin: 0 auto;
-        padding: 3rem 1.5rem;
-    }
-    
-    .progress-bar {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        margin-bottom: 4rem;
-        gap: 1rem;
-    }
-    
-    .progress-step {
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-    }
-    
-    .step-circle {
-        width: 40px;
-        height: 40px;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-weight: 600;
-        font-size: 0.9rem;
-    }
-    
-    .step-circle.completed {
-        background: #10b981;
-        color: white;
-    }
-    
-    .step-circle.active {
-        background: var(--primary-purple);
-        color: white;
-        box-shadow: 0 0 20px rgba(139, 92, 246, 0.5);
-    }
-    
-    .step-circle.pending {
-        background: var(--dark-bg);
-        color: #64748b;
-        border: 2px solid #475569;
-    }
-    
-    .step-label {
-        font-size: 0.85rem;
-        color: #94a3b8;
-    }
-    
-    .step-label.active {
-        color: white;
-        font-weight: 600;
-    }
-    
-    .progress-line {
-        width: 60px;
-        height: 2px;
-        background: #475569;
-    }
-    
-    .progress-line.completed {
-        background: #10b981;
-    }
-    
-    .header-section {
-        text-align: center;
-        margin-bottom: 3rem;
-    }
-    
-    .main-title {
-        font-size: 2.5rem;
-        font-weight: 300;
-        color: #fff;
-        margin-bottom: 0.5rem;
-    }
-    
-    .main-subtitle {
-        font-size: 1.1rem;
-        color: #94a3b8;
-        font-weight: 300;
-    }
-    
-    .section-header {
-        display: flex;
-        align-items: center;
-        gap: 0.75rem;
-        margin-bottom: 1.5rem;
-    }
-    
-    .section-icon {
-        width: 28px;
-        height: 28px;
-        color: var(--primary-purple);
-    }
-    
-    .section-title {
-        font-size: 1.5rem;
-        font-weight: 600;
-        color: white;
-    }
-    
-    .selection-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-        gap: 1rem;
-        margin-bottom: 3rem;
-    }
-    
-    .selection-card {
-        background: var(--dark-bg);
-        border: 2px solid #334155;
-        border-radius: 10px;
-        padding: 1.25rem;
-        cursor: pointer;
-        transition: all 0.25s ease;
-        position: relative;
-    }
-    
-    .selection-card:hover {
-        border-color: var(--primary-purple);
-        transform: translateY(-3px);
-        box-shadow: 0 10px 25px rgba(139, 92, 246, 0.15);
-    }
-    
-    .selection-card.selected {
-        border-color: var(--primary-purple);
-        background: #2d1b4e;
-        box-shadow: 0 10px 25px rgba(139, 92, 246, 0.2);
-    }
-    
-    .selection-card.disabled {
-        opacity: 0.6;
-        cursor: not-allowed;
-    }
-    
-    /* Theme-specific styles */
-    .theme-grid {
-        grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-    }
-    
-    .theme-card {
-        padding: 0;
-        overflow: hidden;
-    }
-    
-    .theme-preview-container {
-        width: 100%;
-        height: 200px;
-        overflow: hidden;
-        background: var(--darker-bg);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
-    
-    @media (min-width: 768px) {
-        .theme-preview-container {
-            height: 220px;
-        }
-    }
-    
-    @media (min-width: 1200px) {
-        .theme-preview-container {
-            height: 250px;
-        }
-    }
-    
-    .theme-preview-image {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-        transition: transform 0.3s ease;
-    }
-    
-    .theme-card:hover .theme-preview-image {
-        transform: scale(1.05);
-    }
-    
-    .theme-preview-placeholder {
-        width: 100%;
-        height: 100%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
-    
-    .theme-card .card-header {
-        padding: 1.25rem;
-    }
-    
-    .theme-style-badge {
-        display: inline-block;
-        padding: 0.25rem 0.75rem;
-        border-radius: 12px;
-        font-size: 0.75rem;
-        font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-    }
-    
-    .theme-note {
-        display: flex;
-        align-items: center;
-        gap: 0.75rem;
-        padding: 1rem 1.25rem;
-        background: rgba(59, 130, 246, 0.1);
-        border: 1px solid rgba(59, 130, 246, 0.2);
-        border-radius: 8px;
-        margin-top: -1.5rem;
-        margin-bottom: 3rem;
-        font-size: 0.9rem;
-        color: #94a3b8;
-    }
-    
-    .card-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: flex-start;
-        margin-bottom: 0.5rem;
-    }
-    
-    .card-content {
-        flex: 1;
-    }
-    
-    .card-title {
-        font-size: 1.1rem;
-        font-weight: 600;
-        color: white;
-        margin-bottom: 0.35rem;
-    }
-    
-    .card-description {
-        font-size: 0.875rem;
-        color: #94a3b8;
-        line-height: 1.5;
-    }
-    
-    .card-icon {
-        width: 20px;
-        height: 20px;
-        color: var(--primary-purple);
-        flex-shrink: 0;
-    }
-    
-    .checkbox-indicator {
-        width: 22px;
-        height: 22px;
-        border: 2px solid #475569;
-        border-radius: 5px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        transition: all 0.2s;
-        flex-shrink: 0;
-    }
-    
-    .radio-indicator {
-        border-radius: 50%;
-    }
-    
-    .selection-card.selected .checkbox-indicator {
-        background: var(--primary-purple);
-        border-color: var(--primary-purple);
-    }
-    
-    .checkbox-check {
-        display: none;
-        width: 12px;
-        height: 12px;
-        color: white;
-    }
-    
-    .selection-card.selected .checkbox-check {
-        display: block;
-    }
-    
-    .required-badge {
-        display: inline-block;
-        background: rgba(139, 92, 246, 0.2);
-        color: var(--primary-purple);
-        padding: 0.25rem 0.6rem;
-        border-radius: 4px;
-        font-size: 0.7rem;
-        font-weight: 600;
-        margin-top: 0.5rem;
-    }
-    
-    .summary-box {
-        background: var(--dark-bg);
-        border: 2px solid #334155;
-        border-radius: 10px;
-        padding: 1.5rem;
-        margin-bottom: 2rem;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-    }
-    
-    .summary-text {
-        font-size: 1rem;
-        color: #94a3b8;
-    }
-    
-    .summary-count {
-        color: var(--primary-purple);
-        font-weight: 700;
-        font-size: 1.1rem;
-    }
-    
-    .build-time {
-        text-align: right;
-    }
-    
-    .build-time-label {
-        font-size: 0.85rem;
-        color: #64748b;
-        margin-bottom: 0.25rem;
-    }
-    
-    .build-time-value {
-        font-size: 1.4rem;
-        color: var(--primary-purple);
-        font-weight: 700;
-    }
-    
-    .action-buttons {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-top: 2rem;
-    }
-    
-    .btn {
-        padding: 0.9rem 2.5rem;
-        border-radius: 8px;
-        font-size: 1rem;
-        font-weight: 600;
-        border: none;
-        cursor: pointer;
-        transition: all 0.3s ease;
-        display: inline-flex;
-        align-items: center;
-        gap: 0.5rem;
-    }
-    
-    .btn-back {
-        background: transparent;
-        color: #94a3b8;
-        border: 2px solid #475569;
-    }
-    
-    .btn-back:hover {
-        color: white;
-        border-color: #64748b;
-    }
-    
-    .btn-next {
-        background: var(--primary-purple);
-        color: white;
-    }
-    
-    .btn-next:hover {
-        background: #7c3aed;
-        transform: translateY(-2px);
-        box-shadow: 0 10px 25px rgba(139, 92, 246, 0.3);
-    }
-    
-    .btn-icon {
-        width: 18px;
-        height: 18px;
-    }
-    
-    .tips-box {
-        background: rgba(59, 130, 246, 0.1);
-        border: 1px solid rgba(59, 130, 246, 0.3);
-        border-radius: 10px;
-        padding: 1.25rem;
-        margin-top: 2rem;
-    }
-    
-    .tips-header {
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-        margin-bottom: 0.75rem;
-    }
-    
-    .tips-icon {
-        width: 20px;
-        height: 20px;
-        color: #60a5fa;
-    }
-    
-    .tips-title {
-        font-size: 1rem;
-        font-weight: 600;
-        color: #93c5fd;
-    }
-    
-    .tips-list {
-        list-style: none;
-        padding: 0;
-        margin: 0;
-    }
-    
-    .tips-list li {
-        font-size: 0.9rem;
-        color: #bfdbfe;
-        padding: 0.25rem 0;
-    }
+    :root { --pp: #8b5cf6; --db: #1e293b; --ddb: #0f172a; }
+    body { background: var(--ddb); color: #e2e8f0; }
+    .cfg { max-width: 960px; margin: 0 auto; padding: 3rem 1.5rem; }
+    /* progress */
+    .prog { display:flex; justify-content:center; align-items:center; gap:1rem; margin-bottom:3.5rem; }
+    .prog-step { display:flex; align-items:center; gap:.5rem; }
+    .prog-circle { width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.9rem; }
+    .prog-circle.done { background:#10b981;color:#fff; }
+    .prog-circle.curr { background:var(--pp);color:#fff;box-shadow:0 0 20px rgba(139,92,246,.5); }
+    .prog-circle.pend { background:var(--db);color:#64748b;border:2px solid #475569; }
+    .prog-label { font-size:.85rem;color:#94a3b8; }
+    .prog-label.curr { color:#fff;font-weight:600; }
+    .prog-line { width:60px;height:2px;background:#475569; }
+    .prog-line.done { background:#10b981; }
+    /* alerts */
+    .alert { padding:1rem 1.5rem;border-radius:8px;margin-bottom:1.5rem;display:flex;align-items:center;gap:.75rem;font-size:.95rem; }
+    .alert-danger { background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);color:#ef4444; }
+    /* sections */
+    .sec-head { display:flex;align-items:center;gap:.75rem;margin-bottom:1.25rem; }
+    .sec-icon { width:26px;height:26px;color:var(--pp); }
+    .sec-title { font-size:1.35rem;font-weight:700;color:#fff; }
+    /* palette grid */
+    .palette-grid { display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:1rem;margin-bottom:2.5rem; }
+    .palette-card { border:2px solid #334155;border-radius:12px;overflow:hidden;cursor:pointer;transition:all .25s;background:var(--db); }
+    .palette-card:hover { border-color:var(--pp);transform:translateY(-3px); }
+    .palette-card.active { border-color:var(--pp);box-shadow:0 0 0 3px rgba(139,92,246,.25); }
+    .palette-swatches { height:54px;display:flex; }
+    .swatch { flex:1; }
+    .palette-name { padding:.6rem 1rem;font-size:.875rem;font-weight:600;color:#e2e8f0;display:flex;justify-content:space-between;align-items:center; }
+    .palette-radio { display:none; }
+    .palette-check { width:18px;height:18px;border-radius:50%;background:var(--pp);display:none;align-items:center;justify-content:center; }
+    .palette-card.active .palette-check { display:flex; }
+    /* custom colors */
+    .custom-row { display:flex;flex-wrap:wrap;gap:1.5rem;margin-bottom:2.5rem; }
+    .color-field { display:flex;flex-direction:column;gap:.35rem; }
+    .color-field label { font-size:.82rem;color:#94a3b8;font-weight:500; }
+    .color-wrap { display:flex;align-items:center;gap:.6rem; }
+    .color-wrap input[type=color] { width:44px;height:44px;border:none;border-radius:8px;cursor:pointer;background:none;padding:2px; }
+    .color-hex { width:90px;background:#334155;border:1px solid #475569;border-radius:6px;padding:.45rem .6rem;color:#e2e8f0;font-size:.85rem;font-family:monospace; }
+    /* fonts */
+    .font-grid { display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;margin-bottom:2.5rem; }
+    @media(max-width:600px){ .font-grid{ grid-template-columns:1fr; } }
+    .font-field label { display:block;font-size:.9rem;color:#94a3b8;font-weight:500;margin-bottom:.5rem; }
+    .font-select { width:100%;background:#1e293b;border:2px solid #334155;border-radius:8px;padding:.75rem 1rem;color:#e2e8f0;font-size:.95rem;cursor:pointer;transition:border-color .2s; }
+    .font-select:focus { outline:none;border-color:var(--pp); }
+    /* preview strip */
+    .preview-strip { border-radius:12px;overflow:hidden;margin-bottom:2.5rem;border:1px solid #334155; }
+    .preview-nav { height:44px;display:flex;align-items:center;gap:1rem;padding:0 1.5rem;font-size:.8rem;font-weight:600;letter-spacing:.5px; }
+    .preview-body { padding:2rem; }
+    .preview-h { font-size:1.6rem;font-weight:700;margin-bottom:.6rem; }
+    .preview-p { font-size:.9rem;line-height:1.7;margin-bottom:1rem; }
+    .preview-btn { display:inline-block;padding:.5rem 1.2rem;border-radius:6px;font-size:.85rem;font-weight:600; }
+    /* action */
+    .actions { display:flex;justify-content:space-between;align-items:center;margin-top:1.5rem; }
+    .btn-back { background:transparent;color:#94a3b8;border:2px solid #475569;border-radius:8px;padding:.85rem 2rem;font-weight:600;font-size:1rem;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:.5rem;transition:all .2s; }
+    .btn-back:hover { color:#fff;border-color:#64748b; }
+    .btn-next { background:var(--pp);color:#fff;border:none;border-radius:8px;padding:.85rem 2.25rem;font-weight:700;font-size:1rem;cursor:pointer;display:inline-flex;align-items:center;gap:.5rem;transition:all .2s; }
+    .btn-next:hover { background:#7c3aed;transform:translateY(-2px);box-shadow:0 10px 25px rgba(139,92,246,.35); }
+    .tip { background:rgba(59,130,246,.1);border:1px solid rgba(59,130,246,.3);border-radius:10px;padding:1.1rem 1.25rem;margin-top:2rem;font-size:.875rem;color:#bfdbfe; }
 </style>
 
-<div class="configurator-container">
-    <!-- Error/Success Messages -->
-    @if(session('success'))
-    <div class="alert alert-success">
-        <span class="alert-icon">✓</span>
-        <span>{{ session('success') }}</span>
-    </div>
-    @endif
+<!-- Google Fonts preloader — updated dynamically by JS -->
+<link id="gfontLink" rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&family=Open+Sans&display=swap">
 
-    @if(session('error'))
-    <div class="alert alert-error">
-        <span class="alert-icon">⚠</span>
-        <span>{{ session('error') }}</span>
-    </div>
-    @endif
+<div class="cfg">
 
     @if($errors->any())
     <div class="alert alert-danger">
-        <span class="alert-icon">⚠</span>
-        <div>
-            <strong>Please fix the following errors:</strong>
-            <ul style="margin: 0.5rem 0 0 1.5rem; padding: 0;">
-                @foreach($errors->all() as $error)
-                    <li>{{ $error }}</li>
-                @endforeach
+        <span>⚠</span>
+        <div><strong>Please fix the errors below:</strong>
+            <ul style="margin:.5rem 0 0 1.5rem;padding:0">
+                @foreach($errors->all() as $err)<li>{{ $err }}</li>@endforeach
             </ul>
         </div>
     </div>
     @endif
 
-    <!-- Progress Bar -->
-    <div class="progress-bar">
-        <div class="progress-step">
-            <div class="step-circle completed">✓</div>
-            <span class="step-label">Type</span>
-        </div>
-        <div class="progress-line completed"></div>
-        <div class="progress-step">
-            <div class="step-circle completed">✓</div>
-            <span class="step-label">Details</span>
-        </div>
-        <div class="progress-line completed"></div>
-        <div class="progress-step">
-            <div class="step-circle active">3</div>
-            <span class="step-label active">Pages</span>
-        </div>
-        <div class="progress-line"></div>
-        <div class="progress-step">
-            <div class="step-circle pending">4</div>
-            <span class="step-label">Build</span>
-        </div>
+    <!-- Progress -->
+    <div class="prog">
+        <div class="prog-step"><div class="prog-circle done">✓</div><span class="prog-label">Type</span></div>
+        <div class="prog-line done"></div>
+        <div class="prog-step"><div class="prog-circle done">✓</div><span class="prog-label">Details</span></div>
+        <div class="prog-line done"></div>
+        <div class="prog-step"><div class="prog-circle curr">3</div><span class="prog-label curr">Style</span></div>
+        <div class="prog-line"></div>
+        <div class="prog-step"><div class="prog-circle pend">4</div><span class="prog-label">Build</span></div>
     </div>
 
     <!-- Header -->
-    <div class="header-section">
-        <h1 class="main-title">Customize Your Website</h1>
-        <p class="main-subtitle">Choose your theme, pages, and features</p>
+    <div style="text-align:center;margin-bottom:2.5rem">
+        <h1 style="font-size:2.2rem;font-weight:300;color:#fff;margin-bottom:.4rem">Choose Your Style</h1>
+        <p style="color:#94a3b8;font-size:1.05rem">Pick a color palette and fonts — your AI website will use them throughout</p>
     </div>
 
-    <form id="step3Form" method="POST" action="{{ route('website-configurator.step3.submit') }}">
+    <form id="styleForm" method="POST" action="{{ route('website-configurator.step3.submit') }}">
         @csrf
 
-        <!-- Pages Section -->
-        <div>
-            <div class="section-header">
-                <svg class="section-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
-                </svg>
-                <h2 class="section-title">Pages</h2>
-            </div>
+        <!-- ── Color Schemes ─────────────────────────────────── -->
+        <div class="sec-head">
+            <svg class="sec-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01"/></svg>
+            <h2 class="sec-title">Color Scheme</h2>
+        </div>
 
-            <div class="selection-grid">
-                @php
-                $pages = [
-                    ['id' => 'home', 'name' => 'Home', 'description' => 'Landing page', 'required' => true],
-                    ['id' => 'about', 'name' => 'About Us', 'description' => 'Company information', 'required' => false],
-                    ['id' => 'services', 'name' => 'Services', 'description' => 'What you offer', 'required' => false],
-                    ['id' => 'products', 'name' => 'Products', 'description' => 'Product catalog', 'required' => false],
-                    ['id' => 'gallery', 'name' => 'Gallery', 'description' => 'Photo showcase', 'required' => false],
-                    ['id' => 'blog', 'name' => 'Blog', 'description' => 'Articles & news', 'required' => false],
-                    ['id' => 'team', 'name' => 'Our Team', 'description' => 'Meet the team', 'required' => false],
-                    ['id' => 'testimonials', 'name' => 'Testimonials', 'description' => 'Customer reviews', 'required' => false],
-                    ['id' => 'contact', 'name' => 'Contact', 'description' => 'Get in touch', 'required' => true],
-                ];
-                @endphp
+        @php
+        $palettes = [
+            ['id'=>'ocean',     'name'=>'Ocean Blue',       'primary'=>'#1565c0','secondary'=>'#00acc1','accent'=>'#ff7043'],
+            ['id'=>'forest',    'name'=>'Forest Green',     'primary'=>'#2e7d32','secondary'=>'#558b2f','accent'=>'#ffa000'],
+            ['id'=>'crimson',   'name'=>'Crimson & Gold',   'primary'=>'#c62828','secondary'=>'#ad1457','accent'=>'#f9a825'],
+            ['id'=>'royal',     'name'=>'Royal Purple',     'primary'=>'#4527a0','secondary'=>'#6a1b9a','accent'=>'#f57c00'],
+            ['id'=>'midnight',  'name'=>'Midnight Dark',    'primary'=>'#1a237e','secondary'=>'#283593','accent'=>'#00bcd4'],
+            ['id'=>'sunset',    'name'=>'Sunset Orange',    'primary'=>'#e65100','secondary'=>'#bf360c','accent'=>'#fdd835'],
+            ['id'=>'teal',      'name'=>'Teal & Coral',     'primary'=>'#00695c','secondary'=>'#00796b','accent'=>'#f44336'],
+            ['id'=>'slate',     'name'=>'Slate & Amber',    'primary'=>'#37474f','secondary'=>'#455a64','accent'=>'#ffb300'],
+        ];
+        $defaultPalette = 'ocean';
+        @endphp
 
-                @foreach($pages as $page)
-                <div class="selection-card {{ $page['required'] ? 'selected disabled' : '' }}" onclick="{{ $page['required'] ? '' : 'toggleSelection(this, \'page_' . $page['id'] . '\')' }}">
-                    <input type="checkbox" id="page_{{ $page['id'] }}" name="pages[]" value="{{ $page['id'] }}" style="display: none;" {{ $page['required'] ? 'checked disabled' : '' }}>
-                    <div class="card-header">
-                        <div class="card-content">
-                            <div class="card-title">{{ $page['name'] }}</div>
-                            <div class="card-description">{{ $page['description'] }}</div>
-                            @if($page['required'])
-                            <span class="required-badge">Required</span>
-                            @endif
-                        </div>
-                        <div class="checkbox-indicator">
-                            <svg class="checkbox-check" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
-                            </svg>
-                        </div>
-                    </div>
+        <div class="palette-grid">
+            @foreach($palettes as $p)
+            <div class="palette-card {{ $p['id'] === $defaultPalette ? 'active' : '' }}"
+                 onclick="selectPalette('{{ $p['id'] }}','{{ $p['primary'] }}','{{ $p['secondary'] }}','{{ $p['accent'] }}')"
+                 title="{{ $p['name'] }}">
+                <input class="palette-radio" type="radio" name="_palette" id="pal_{{ $p['id'] }}" value="{{ $p['id'] }}"
+                       {{ $p['id'] === $defaultPalette ? 'checked' : '' }}>
+                <div class="palette-swatches">
+                    <div class="swatch" style="background:{{ $p['primary'] }}"></div>
+                    <div class="swatch" style="background:{{ $p['secondary'] }}"></div>
+                    <div class="swatch" style="background:{{ $p['accent'] }}"></div>
                 </div>
-                @endforeach
+                <div class="palette-name">
+                    {{ $p['name'] }}
+                    <span class="palette-check">
+                        <svg width="10" height="10" fill="none" stroke="#fff" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
+                    </span>
+                </div>
+            </div>
+            @endforeach
+        </div>
+
+        <!-- Custom colors -->
+        <div style="margin-bottom:.75rem">
+            <span style="font-size:.85rem;color:#64748b;font-weight:500;">Or fine-tune with custom colors:</span>
+        </div>
+        <div class="custom-row">
+            <div class="color-field">
+                <label for="cp_primary">Primary Color</label>
+                <div class="color-wrap">
+                    <input type="color" id="cp_primary" value="#1565c0" oninput="syncHex('primary',this.value)">
+                    <input class="color-hex" type="text" id="hex_primary" value="#1565c0" maxlength="7"
+                           oninput="syncColor('primary',this.value)" placeholder="#1565c0">
+                </div>
+            </div>
+            <div class="color-field">
+                <label for="cp_secondary">Secondary Color</label>
+                <div class="color-wrap">
+                    <input type="color" id="cp_secondary" value="#00acc1" oninput="syncHex('secondary',this.value)">
+                    <input class="color-hex" type="text" id="hex_secondary" value="#00acc1" maxlength="7"
+                           oninput="syncColor('secondary',this.value)" placeholder="#00acc1">
+                </div>
+            </div>
+            <div class="color-field">
+                <label for="cp_accent">Accent Color</label>
+                <div class="color-wrap">
+                    <input type="color" id="cp_accent" value="#ff7043" oninput="syncHex('accent',this.value)">
+                    <input class="color-hex" type="text" id="hex_accent" value="#ff7043" maxlength="7"
+                           oninput="syncColor('accent',this.value)" placeholder="#ff7043">
+                </div>
             </div>
         </div>
 
-        <!-- Theme Selection Section -->
-        <div>
-            <div class="section-header">
-                <svg class="section-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01"></path>
-                </svg>
-                <h2 class="section-title">Choose Your Theme</h2>
-            </div>
+        <!-- Hidden color inputs submitted with form -->
+        <input type="hidden" name="primary_color"   id="val_primary"   value="#1565c0">
+        <input type="hidden" name="secondary_color" id="val_secondary" value="#00acc1">
+        <input type="hidden" name="accent_color"    id="val_accent"    value="#ff7043">
 
-            <div class="selection-grid theme-grid">
-                @foreach($themes as $theme)
-                <div class="selection-card theme-card" data-theme-id="{{ $theme->slug }}" onclick="selectTheme(this, '{{ $theme->slug }}')">
-                    <input type="radio" id="theme_{{ $theme->slug }}" name="theme" value="{{ $theme->slug }}" style="display: none;" required>
-                    
-                    <!-- Theme Preview Image -->
-                    <div class="theme-preview-container">
-                        @if($theme->thumbnail)
-                            <img src="{{ $theme->thumbnail }}" alt="{{ $theme->name }}" class="theme-preview-image">
-                        @else
-                            <div class="theme-preview-placeholder" style="background: linear-gradient(135deg, {{ $theme->default_colors['primary'] ?? '#4F46E5' }} 0%, {{ $theme->default_colors['secondary'] ?? '#6366F1' }} 100%)">
-                                <i class="fas fa-paint-brush fa-2x" style="color: white; opacity: 0.6;"></i>
-                            </div>
-                        @endif
-                    </div>
-                    
-                    <div class="card-header">
-                        <div class="card-content">
-                            <div class="card-title">{{ $theme->name }}</div>
-                            <div class="card-description">{{ $theme->description }}</div>
-                            
-                            <!-- Theme Badge -->
-                            <div style="margin-top: 0.5rem;">
-                                <span class="theme-style-badge" style="background: {{ $theme->default_colors['primary'] ?? '#4F46E5' }}20; color: {{ $theme->default_colors['primary'] ?? '#4F46E5' }};">
-                                    {{ ucfirst($theme->style) }}
-                                </span>
-                            </div>
-                        </div>
-                        <div class="checkbox-indicator radio-indicator">
-                            <svg class="checkbox-check" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
-                            </svg>
-                        </div>
-                    </div>
-                </div>
-                @endforeach
+        <!-- ── Fonts ─────────────────────────────────────────── -->
+        <div class="sec-head" style="margin-top:1rem">
+            <svg class="sec-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+            <h2 class="sec-title">Typography</h2>
+        </div>
+
+        @php
+        $googleFonts = [
+            'Poppins','Inter','Raleway','Lato','Montserrat','Open Sans','Nunito',
+            'Roboto','Work Sans','Josefin Sans','Outfit','DM Sans','Space Grotesk',
+            'Ubuntu','Source Sans 3','Quicksand','Jost','Barlow','Lexend',
+            'Playfair Display','Merriweather','Lora','Cormorant Garamond','EB Garamond',
+        ];
+        @endphp
+
+        <div class="font-grid">
+            <div class="font-field">
+                <label for="heading_font">Heading Font</label>
+                <select id="heading_font" name="heading_font" class="font-select" onchange="updateFontPreview()">
+                    @foreach($googleFonts as $font)
+                    <option value="{{ $font }}" {{ $font === 'Poppins' ? 'selected' : '' }}>{{ $font }}</option>
+                    @endforeach
+                </select>
             </div>
-            
-            <div class="theme-note">
-                <svg style="width: 20px; height: 20px; color: #60a5fa;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                </svg>
-                <span>You can change your theme anytime from the dashboard</span>
+            <div class="font-field">
+                <label for="body_font">Body Font</label>
+                <select id="body_font" name="body_font" class="font-select" onchange="updateFontPreview()">
+                    @foreach($googleFonts as $font)
+                    <option value="{{ $font }}" {{ $font === 'Open Sans' ? 'selected' : '' }}>{{ $font }}</option>
+                    @endforeach
+                </select>
             </div>
         </div>
 
-        <!-- Features Section -->
-        <div>
-            <div class="section-header">
-                <svg class="section-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
-                </svg>
-                <h2 class="section-title">Features</h2>
-            </div>
-
-            <div class="selection-grid">
-                @php
-                $features = [
-                    ['id' => 'contact_form', 'name' => 'Contact Form', 'description' => 'Let visitors reach you'],
-                    ['id' => 'newsletter', 'name' => 'Newsletter', 'description' => 'Collect email subscribers'],
-                    ['id' => 'social_media', 'name' => 'Social Media Links', 'description' => 'Connect social profiles'],
-                    ['id' => 'google_maps', 'name' => 'Google Maps', 'description' => 'Show your location'],
-                    ['id' => 'online_booking', 'name' => 'Online Booking', 'description' => 'Accept appointments'],
-                    ['id' => 'live_chat', 'name' => 'Live Chat', 'description' => 'Chat with visitors'],
-                    ['id' => 'search', 'name' => 'Search', 'description' => 'Site-wide search'],
-                    ['id' => 'multilingual', 'name' => 'Multi-language', 'description' => 'Multiple languages'],
-                    ['id' => 'analytics', 'name' => 'Analytics', 'description' => 'Track visitor stats'],
-                ];
-                @endphp
-
-                @foreach($features as $feature)
-                <div class="selection-card" onclick="toggleSelection(this, 'feature_{{ $feature['id'] }}')">
-                    <input type="checkbox" id="feature_{{ $feature['id'] }}" name="features[]" value="{{ $feature['id'] }}" style="display: none;">
-                    <div class="card-header">
-                        <div class="card-content">
-                            <div class="card-title">{{ $feature['name'] }}</div>
-                            <div class="card-description">{{ $feature['description'] }}</div>
-                        </div>
-                        <div class="checkbox-indicator">
-                            <svg class="checkbox-check" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
-                            </svg>
-                        </div>
-                    </div>
-                </div>
-                @endforeach
-            </div>
+        <!-- ── Live Preview ───────────────────────────────────── -->
+        <div class="sec-head" style="margin-top:.5rem">
+            <svg class="sec-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+            <h2 class="sec-title">Live Preview</h2>
         </div>
 
-        <!-- Summary Box -->
-        <div class="summary-box">
-            <div class="summary-info">
-                <span class="summary-text">
-                    <span class="summary-count" id="pagesCount">2</span> pages selected, 
-                    <span class="summary-count" id="featuresCount">0</span> features selected
+        <div class="preview-strip" id="previewStrip">
+            <div class="preview-nav" id="prevNav" style="background:#1565c0;color:#fff;">
+                <strong id="prevBrand" style="font-family:'Poppins',sans-serif">Your Business</strong>
+                <span style="opacity:.7">Home &nbsp; About &nbsp; Services &nbsp; Contact</span>
+            </div>
+            <div class="preview-body" id="prevBody" style="background:#ffffff">
+                <div class="preview-h" id="prevHeading" style="font-family:'Poppins',sans-serif;color:#1565c0">
+                    Building Something Great
+                </div>
+                <p class="preview-p" id="prevPara" style="font-family:'Open Sans',sans-serif;color:#333">
+                    Your AI-generated website will look stunning with this style. Professional content is created automatically for your business.
+                </p>
+                <span class="preview-btn" id="prevBtn" style="background:#1565c0;color:#fff;font-family:'Poppins',sans-serif">
+                    Get Started
+                </span>
+                &nbsp;
+                <span class="preview-btn" id="prevBtn2" style="background:transparent;border:2px solid #1565c0;color:#1565c0;font-family:'Poppins',sans-serif">
+                    Learn More
                 </span>
             </div>
-            <div class="build-time">
-                <div class="build-time-label">Estimated build time</div>
-                <div class="build-time-value" id="buildTime">~30s</div>
-            </div>
         </div>
 
-        <!-- Action Buttons -->
-        <div class="action-buttons">
-            <a href="{{ route('website-configurator.step2') }}" class="btn btn-back">
-                <svg class="btn-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
-                </svg>
+        <!-- ── Buttons ────────────────────────────────────────── -->
+        <div class="actions">
+            <a href="{{ route('website-configurator.step2') }}" class="btn-back">
+                <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
                 Back
             </a>
-            <button type="submit" class="btn btn-next">
+            <button type="submit" class="btn-next">
                 Continue to Build
-                <svg class="btn-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-                </svg>
+                <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
             </button>
         </div>
 
-        <!-- Tips Box -->
-        <div class="tips-box">
-            <div class="tips-header">
-                <svg class="tips-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                </svg>
-                <span class="tips-title">💡 Pro Tips</span>
-            </div>
-            <ul class="tips-list">
-                <li>• You can always add or remove pages later</li>
-                <li>• Start simple - you can enable more features as you grow</li>
-                <li>• Contact form is recommended for all business websites</li>
-            </ul>
+        <div class="tip">
+            💡 <strong>Tip:</strong> You can always update your colors and fonts from the website dashboard after the AI builds your site.
         </div>
     </form>
 </div>
 
 <script>
-function toggleSelection(card, checkboxId) {
-    if (card.classList.contains('disabled')) return;
-    
-    const checkbox = document.getElementById(checkboxId);
-    checkbox.checked = !checkbox.checked;
-    card.classList.toggle('selected');
-    updateSummary();
+// ── Palette logic ────────────────────────────────────────────
+function selectPalette(id, primary, secondary, accent) {
+    document.querySelectorAll('.palette-card').forEach(c => c.classList.remove('active'));
+    document.getElementById('pal_' + id).checked = true;
+    const card = document.querySelector('.palette-card[onclick*="' + id + '"]');
+    if (card) card.classList.add('active');
+
+    // Update pickers and hex fields
+    setColor('primary',   primary);
+    setColor('secondary', secondary);
+    setColor('accent',    accent);
+
+    updatePreview();
 }
 
-function selectTheme(card, themeId) {
-    // Remove selected class from all theme cards
-    document.querySelectorAll('.theme-card').forEach(themeCard => {
-        themeCard.classList.remove('selected');
-    });
-    
-    // Uncheck all theme radios
-    document.querySelectorAll('input[name="theme"]').forEach(radio => {
-        radio.checked = false;
-    });
-    
-    // Select this theme
-    card.classList.add('selected');
-    document.getElementById('theme_' + themeId).checked = true;
+function setColor(key, hex) {
+    document.getElementById('cp_'  + key).value  = hex;
+    document.getElementById('hex_' + key).value  = hex;
+    document.getElementById('val_' + key).value  = hex;
 }
 
-function updateSummary() {
-    const pagesCount = document.querySelectorAll('input[name="pages[]"]:checked').length;
-    const featuresCount = document.querySelectorAll('input[name="features[]"]:checked').length;
-    
-    document.getElementById('pagesCount').textContent = pagesCount;
-    document.getElementById('featuresCount').textContent = featuresCount;
-    
-    // Estimate build time (base 30s + 5s per page + 3s per feature)
-    const estimatedTime = 30 + (pagesCount * 5) + (featuresCount * 3);
-    document.getElementById('buildTime').textContent = `~${estimatedTime}s`;
+function syncHex(key, hex) {
+    document.getElementById('hex_' + key).value = hex;
+    document.getElementById('val_' + key).value  = hex;
+    updatePreview();
 }
 
-// Form validation
-document.addEventListener('DOMContentLoaded', function() {
-    updateSummary();
-    
-    document.getElementById('step3Form').addEventListener('submit', function(e) {
-        const themeSelected = document.querySelector('input[name="theme"]:checked');
-        
-        if (!themeSelected) {
-            e.preventDefault();
-            alert('⚠️ Please select a theme for your website');
-            
-            // Scroll to theme section
-            document.querySelector('.theme-card').scrollIntoView({ 
-                behavior: 'smooth', 
-                block: 'center' 
-            });
-            return false;
-        }
-    });
+function syncColor(key, hex) {
+    if (/^#[0-9A-Fa-f]{6}$/.test(hex)) {
+        document.getElementById('cp_'  + key).value = hex;
+        document.getElementById('val_' + key).value  = hex;
+        updatePreview();
+    }
+}
+
+// ── Font preview logic ────────────────────────────────────────
+function updateFontPreview() {
+    const hf = document.getElementById('heading_font').value;
+    const bf = document.getElementById('body_font').value;
+
+    // Build Google Fonts URL for both fonts
+    const families = [...new Set([hf, bf])].map(f => 'family=' + f.replace(/ /g, '+') + ':wght@400;700').join('&');
+    document.getElementById('gfontLink').href = 'https://fonts.googleapis.com/css2?' + families + '&display=swap';
+
+    updatePreview(hf, bf);
+}
+
+// ── Preview refresh ───────────────────────────────────────────
+function updatePreview(hf, bf) {
+    hf = hf || document.getElementById('heading_font').value;
+    bf = bf || document.getElementById('body_font').value;
+
+    const primary   = document.getElementById('val_primary').value   || '#1565c0';
+    const secondary = document.getElementById('val_secondary').value || '#00acc1';
+
+    document.getElementById('prevNav').style.background     = primary;
+    document.getElementById('prevBrand').style.fontFamily   = "'" + hf + "',sans-serif";
+    document.getElementById('prevHeading').style.color      = primary;
+    document.getElementById('prevHeading').style.fontFamily = "'" + hf + "',sans-serif";
+    document.getElementById('prevPara').style.fontFamily    = "'" + bf + "',sans-serif";
+    document.getElementById('prevBtn').style.background     = primary;
+    document.getElementById('prevBtn2').style.borderColor   = primary;
+    document.getElementById('prevBtn2').style.color         = primary;
+    document.getElementById('prevBtn').style.fontFamily     = "'" + hf + "',sans-serif";
+    document.getElementById('prevBtn2').style.fontFamily    = "'" + hf + "',sans-serif";
+}
+
+// Init on load
+document.addEventListener('DOMContentLoaded', function () {
+    updatePreview();
 });
 </script>
 @endsection
-

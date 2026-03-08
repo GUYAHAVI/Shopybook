@@ -50,7 +50,7 @@ class PublicWebsiteController extends Controller
 
             // Get products for product sections
             $products = $website->business->products()
-                ->where('quantity', '>', 0)
+                ->where('stock_quantity', '>', 0)
                 ->limit(12)
                 ->get();
 
@@ -117,7 +117,7 @@ class PublicWebsiteController extends Controller
 
             // Get products for product sections
             $products = $website->business->products()
-                ->where('quantity', '>', 0)
+                ->where('stock_quantity', '>', 0)
                 ->limit(12)
                 ->get();
 

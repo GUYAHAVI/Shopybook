@@ -402,6 +402,10 @@
             align-items: center;
             justify-content: space-between;
             flex-shrink: 0;
+            position: sticky;
+            top: 0;
+            z-index: 900;
+            box-shadow: 0 1px 6px var(--shadow-color);
         }
         
         .page-title {
@@ -474,7 +478,6 @@
         .dashboard-grid {
             padding: 2rem;
             flex: 1;
-            overflow-y: auto;
         }
         
         .kpi-grid {
@@ -1241,6 +1244,242 @@
                 max-height: 70vh;
             }
         }
+
+        /* ═══════════════════════════════════════
+           Google-style App Launcher
+        ═══════════════════════════════════════ */
+        .app-launcher-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            color: var(--text-secondary);
+            transition: background 0.2s ease, color 0.2s ease;
+            position: relative;
+        }
+        .app-launcher-btn:hover {
+            background: var(--bg-tertiary);
+            color: var(--primary-color);
+        }
+        .app-launcher-btn i {
+            font-size: 1.2rem;
+        }
+
+        .app-launcher-panel {
+            position: fixed;
+            top: 64px;
+            right: 16px;
+            width: 360px;
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            box-shadow: 0 8px 40px rgba(0,0,0,0.18);
+            z-index: 1100;
+            padding: 16px 12px 20px;
+            display: none;
+            animation: launcherIn 0.18s ease;
+        }
+        @keyframes launcherIn {
+            from { opacity: 0; transform: translateY(-10px) scale(0.97); }
+            to   { opacity: 1; transform: translateY(0)  scale(1); }
+        }
+        .app-launcher-panel.open {
+            display: block;
+        }
+        .app-launcher-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 8px 14px;
+            border-bottom: 1px solid var(--border-color);
+            margin-bottom: 14px;
+        }
+        .app-launcher-header span {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+        }
+        .app-launcher-close {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            padding: 4px;
+            border-radius: 6px;
+            line-height: 1;
+            transition: background 0.2s;
+        }
+        .app-launcher-close:hover { background: var(--bg-tertiary); }
+
+        .app-launcher-search {
+            width: 100%;
+            padding: 7px 12px;
+            margin-bottom: 14px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+            font-size: 0.85rem;
+        }
+        .app-launcher-search:focus {
+            outline: none;
+            border-color: var(--primary-color);
+        }
+
+        .app-launcher-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 4px;
+        }
+        .app-tile {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            padding: 12px 6px;
+            border-radius: 12px;
+            text-decoration: none;
+            color: var(--text-primary);
+            transition: background 0.2s ease, transform 0.15s ease;
+            cursor: pointer;
+        }
+        .app-tile:hover {
+            background: var(--bg-tertiary);
+            transform: translateY(-2px);
+            color: var(--text-primary);
+        }
+        .app-tile-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+            color: #fff;
+            flex-shrink: 0;
+        }
+        .app-tile-label {
+            font-size: 0.7rem;
+            font-weight: 500;
+            text-align: center;
+            line-height: 1.3;
+            color: var(--text-secondary);
+        }
+        .app-tile.active .app-tile-icon {
+            box-shadow: 0 0 0 2px var(--primary-color);
+        }
+
+        /* Top-right user avatar */
+        .topbar-user-avatar {
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            background: var(--primary-color);
+            color: #fff;
+            font-weight: 700;
+            font-size: 0.85rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: border-color 0.2s;
+            flex-shrink: 0;
+        }
+        .topbar-user-avatar:hover {
+            border-color: var(--primary-light);
+        }
+
+        .topbar-user-dropdown {
+            position: fixed;
+            top: 64px;
+            right: 16px;
+            width: 240px;
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.15);
+            z-index: 1100;
+            padding: 8px 0;
+            display: none;
+            animation: launcherIn 0.18s ease;
+        }
+        .topbar-user-dropdown.open { display: block; }
+        .topbar-user-dropdown .user-dd-header {
+            padding: 12px 16px 8px;
+            border-bottom: 1px solid var(--border-color);
+            margin-bottom: 6px;
+        }
+        .topbar-user-dropdown .user-dd-name {
+            font-weight: 600;
+            font-size: 0.875rem;
+            color: var(--text-primary);
+        }
+        .topbar-user-dropdown .user-dd-email {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+        .topbar-user-dropdown a,
+        .topbar-user-dropdown button {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 16px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 0.85rem;
+            font-weight: 500;
+            background: none;
+            border: none;
+            width: 100%;
+            text-align: left;
+            cursor: pointer;
+            transition: background 0.15s;
+        }
+        .topbar-user-dropdown a:hover,
+        .topbar-user-dropdown button:hover {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+        }
+        .topbar-user-dropdown .divider {
+            height: 1px;
+            background: var(--border-color);
+            margin: 4px 0;
+        }
+
+        /* ─── Clean Sidebar tweaks ─── */
+        .sidebar-nav-group-label {
+            font-size: 0.68rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: var(--text-muted);
+            padding: 1rem 1.5rem 0.4rem;
+        }
+        .sidebar-divider {
+            height: 1px;
+            background: var(--border-color);
+            margin: 0.75rem 1.5rem;
+        }
+
+        @media (max-width: 480px) {
+            .app-launcher-panel {
+                width: calc(100vw - 20px);
+                right: 10px;
+            }
+            .app-launcher-grid {
+                grid-template-columns: repeat(3,1fr);
+            }
+        }
     </style>
 </head>
 <!-- Google tag (gtag.js) -->
@@ -1317,306 +1556,107 @@
             }
         @endphp
         
+        @php
+            // ── Permission helpers (used by both sidebar and app launcher) ──────────
+            $__isOwner  = auth()->user()->business &&
+                          auth()->user()->business->user_id === auth()->id();
+            $__membership = $__isOwner ? null :
+                (auth()->user()->relationLoaded('activeMembership')
+                    ? auth()->user()->getRelation('activeMembership')
+                    : auth()->user()->activeMembership);
+            $__perms = $__isOwner ? [] : ($__membership?->permissions ?? []);
+            // $__can('module') → true for owners always; true for members if the module is granted
+            $__can = fn(string $m): bool => $__isOwner || in_array($m, $__perms);
+        @endphp
+
         <nav class="sidebar-nav">
-            <!-- App Customization Link (Always visible) -->
-            <div class="nav-section" style="margin-bottom: 1rem;">
-                <a href="{{ route('apps.index') }}" class="nav-link" style="background: linear-gradient(135deg, #020258, #13e8e9); color: white; margin: 0 0.75rem; border-radius: 0.5rem;">
-                    <i class="fas fa-th"></i>
-                    <span>⚙️ Customize Dashboard</span>
-                    @if($showAll)
-                        <span class="badge bg-warning text-dark ms-auto" style="font-size: 0.65rem;">Setup</span>
-                    @endif
+            {{-- ── Core navigation (always visible) ── --}}
+            <div class="nav-item">
+                <a href="{{ route('dashboard') }}" class="nav-link {{ request()->routeIs('dashboard') ? 'active' : '' }}">
+                    <i class="fas fa-tachometer-alt"></i>
+                    <span>Dashboard</span>
                 </a>
             </div>
-            <div class="nav-section">
-                <div class="nav-section-title" onclick="toggleSection(this)">
-                    <span>Quick Actions</span>
-                    <i class="fas fa-chevron-down collapse-icon"></i>
-                </div>
-                <div class="nav-section-content">
-                <div class="nav-item">
-                    <a href="{{ route('sales.pos') }}" class="nav-link {{ request()->routeIs('sales.pos') ? 'active' : '' }}">
-                        <i class="fas fa-cash-register"></i>
-                        <span>Point of Sale</span>
-                        <span class="badge bg-success ms-auto">Live</span>
-                    </a>
-                </div>
-                <div class="nav-item">
-                    <a href="{{ route('products.create') }}" class="nav-link {{ request()->routeIs('products.create') ? 'active' : '' }}">
-                        <i class="fas fa-plus-circle"></i>
-                        <span>Add Product</span>
-                    </a>
-                </div>
-                <div class="nav-item">
-                    <a href="{{ route('ocr.index') }}" class="nav-link {{ request()->routeIs('ocr.*') ? 'active' : '' }}">
-                        <i class="fas fa-camera"></i>
-                        <span>Scan Records (OCR)</span>
-                        <span class="badge bg-info ms-auto">AI</span>
-                    </a>
-                </div>
-                <div class="nav-item">
-                    <a href="{{ route('sales.customers') }}" class="nav-link {{ request()->routeIs('sales.customers*') ? 'active' : '' }}">
-                        <i class="fas fa-user-plus"></i>
-                        <span>Add Customer</span>
-                    </a>
-                </div>
-                <div class="nav-item" id="sidebar-install-app" style="display: none;">
-                    <button onclick="showPWAInstallGuide()" class="nav-link w-full text-left bg-gradient-to-r from-blue-500 to-blue-600 text-white border-0" id="pwa-install-sidebar-btn">
-                        <i class="fas fa-download"></i>
-                        <span>📱 Install App</span>
-                        <span class="badge bg-yellow-400 text-blue-600 ms-auto">New</span>
-                    </button>
-                </div>
-                </div>
-            </div>
-            
-            <div class="nav-section">
-                <div class="nav-section-title" onclick="toggleSection(this)">
-                    <span>Main</span>
-                    <i class="fas fa-chevron-down collapse-icon"></i>
-                </div>
-                <div class="nav-section-content">
-                <div class="nav-item">
-                    <a href="{{ route('dashboard') }}" class="nav-link {{ request()->routeIs('dashboard') ? 'active' : '' }}">
-                        <i class="fas fa-tachometer-alt"></i>
-                        <span>Dashboard</span>
-                    </a>
-                </div>
-                <div class="nav-item">
-                    <a href="{{ route('business.analysis.index') }}" class="nav-link {{ request()->routeIs('business.analysis.*') ? 'active' : '' }}">
-                        <i class="fas fa-chart-line"></i>
-                        <span>Analysis</span>
-                    </a>
-                </div>
-                </div>
-            </div>
-            
-            @if(shouldShowApp('products', $enabledAppSlugs, $showAll) || shouldShowApp('sales', $enabledAppSlugs, $showAll))
-            <div class="nav-section">
-                <div class="nav-section-title" onclick="toggleSection(this)">
-                    <span>Sales & Products</span>
-                    <i class="fas fa-chevron-down collapse-icon"></i>
-                </div>
-                <div class="nav-section-content">
-                <div class="nav-item">
-                    <a href="{{ route('products.index') }}" class="nav-link {{ request()->routeIs('products.*') ? 'active' : '' }}">
-                        <i class="fas fa-box"></i>
-                        <span>Products</span>
-                    </a>
-                </div>
-                <div class="nav-item">
-                    <a href="{{ route('products.inventory') }}" class="nav-link {{ request()->routeIs('products.inventory') ? 'active' : '' }}">
-                        <i class="fas fa-boxes"></i>
-                        <span>Inventory</span>
-                    </a>
-                </div>
-                <div class="nav-item">
-                    <a href="{{ route('sales.orders') }}" class="nav-link {{ request()->routeIs('sales.orders*') ? 'active' : '' }}">
-                        <i class="fas fa-shopping-cart"></i>
-                        <span>Orders</span>
-                    </a>
-                </div>
-                <div class="nav-item">
-                    <a href="{{ route('sales.customers') }}" class="nav-link {{ request()->routeIs('sales.customers*') ? 'active' : '' }}">
-                        <i class="fas fa-users"></i>
-                        <span>Customers</span>
-                    </a>
-                </div>
-                <div class="nav-item">
-                    <a href="{{ route('returns.index') }}" class="nav-link {{ request()->routeIs('returns.*') ? 'active' : '' }}">
-                        <i class="fas fa-undo"></i>
-                        <span>Returns & Refunds</span>
-                        <span class="badge bg-danger ms-auto">New</span>
-                    </a>
-                </div>
-                <div class="nav-item">
-                    <a href="{{ route('product-conversions.index') }}" class="nav-link {{ request()->routeIs('product-conversions.*') ? 'active' : '' }}">
-                        <i class="fas fa-exchange-alt"></i>
-                        <span>Unit Conversions</span>
-                    </a>
-                </div>
-                <div class="nav-item">
-                    <a href="{{ route('suppliers.index') }}" class="nav-link {{ request()->routeIs('suppliers.*') ? 'active' : '' }}">
-                        <i class="fas fa-truck"></i>
-                        <span>Suppliers</span>
-                    </a>
-                </div>
-                </div>
+            @if($__can('reports'))
+            <div class="nav-item">
+                <a href="{{ route('business.analysis.index') }}" class="nav-link {{ request()->routeIs('business.analysis.*') ? 'active' : '' }}">
+                    <i class="fas fa-chart-line"></i>
+                    <span>Analytics</span>
+                </a>
             </div>
             @endif
-            
-            @if(shouldShowApp('finance', $enabledAppSlugs, $showAll))
-            <div class="nav-section">
-                <div class="nav-section-title" onclick="toggleSection(this)">
-                    <span>Finance</span>
-                    <i class="fas fa-chevron-down collapse-icon"></i>
-                </div>
-                <div class="nav-section-content">
-                <div class="nav-item">
-                    <a href="{{ route('costs.index') }}" class="nav-link {{ request()->routeIs('costs.*') ? 'active' : '' }}">
-                        <i class="fas fa-receipt"></i>
-                        <span>Costs & Expenses</span>
-                    </a>
-                </div>
-                <div class="nav-item">
-                    <a href="{{ route('tax.settings') }}" class="nav-link {{ request()->routeIs('tax.*') ? 'active' : '' }}">
-                        <i class="fas fa-file-invoice-dollar"></i>
-                        <span>Tax Management</span>
-                        <span class="badge bg-warning ms-auto">VAT</span>
-                    </a>
-                </div>
-                <div class="nav-item">
-                    <a href="{{ route('business.analysis.financial') }}" class="nav-link {{ request()->routeIs('business.analysis.financial') ? 'active' : '' }}">
-                        <i class="fas fa-chart-pie"></i>
-                        <span>Financial Reports</span>
-                    </a>
-                </div>
-                <div class="nav-item">
-                    <a href="{{ route('reports.index') }}" class="nav-link {{ request()->routeIs('reports.*') ? 'active' : '' }}">
-                        <i class="fas fa-file-chart-line"></i>
-                        <span>Comprehensive Reports</span>
-                        <span class="badge bg-success ms-auto">New</span>
-                    </a>
-                </div>
-                </div>
+            @if($__can('pos'))
+            <div class="nav-item">
+                <a href="{{ route('sales.pos') }}" class="nav-link {{ request()->routeIs('sales.pos') ? 'active' : '' }}">
+                    <i class="fas fa-cash-register"></i>
+                    <span>Point of Sale</span>
+                    <span class="badge bg-success ms-auto" style="font-size:0.6rem;">Live</span>
+                </a>
             </div>
             @endif
-            
-            @if(shouldShowApp('services', $enabledAppSlugs, $showAll))
-            <div class="nav-section">
-                <div class="nav-section-title" onclick="toggleSection(this)">
-                    <span>Services</span>
-                    <i class="fas fa-chevron-down collapse-icon"></i>
-                </div>
-                <div class="nav-section-content">
-                <div class="nav-item">
-                    <a href="{{ route('services.index') }}" class="nav-link {{ request()->routeIs('services.*') ? 'active' : '' }}">
-                        <i class="fas fa-concierge-bell"></i>
-                        <span>Services</span>
-                    </a>
-                </div>
-                <div class="nav-item">
-                    <a href="{{ route('service-bookings.index') }}" class="nav-link {{ request()->routeIs('service-bookings.*') ? 'active' : '' }}">
-                        <i class="fas fa-calendar-check"></i>
-                        <span>Bookings</span>
-                    </a>
-                </div>
-                <div class="nav-item">
-                    <a href="{{ route('staff.index') }}" class="nav-link {{ request()->routeIs('staff.*') ? 'active' : '' }}">
-                        <i class="fas fa-user-tie"></i>
-                        <span>Staff</span>
-                    </a>
-                </div>
-                </div>
+
+            <div class="sidebar-divider"></div>
+            <div class="sidebar-nav-group-label">Business</div>
+
+            @if($__isOwner)
+            <div class="nav-item">
+                <a href="{{ route('business.profile') }}" class="nav-link {{ request()->routeIs('business.profile', 'business.edit') ? 'active' : '' }}">
+                    <i class="fas fa-building"></i>
+                    <span>Business Profile</span>
+                </a>
             </div>
             @endif
-            
-            @if(shouldShowApp('marketing', $enabledAppSlugs, $showAll))
-            <div class="nav-section">
-                <div class="nav-section-title" onclick="toggleSection(this)">
-                    <span>Marketing</span>
-                    <i class="fas fa-chevron-down collapse-icon"></i>
-                </div>
-                <div class="nav-section-content">
-                <div class="nav-item">
-                    <a href="{{ route('website.builder.index') }}" class="nav-link {{ request()->routeIs('website.builder.*') ? 'active' : '' }}">
-                        <i class="fas fa-globe"></i>
-                        <span>Website Builder</span>
-                        <span class="badge bg-gradient-to-r from-indigo-500 to-purple-500 ms-auto">✨ New</span>
-                    </a>
-                </div>
-                <div class="nav-item">
-                    <a href="{{ route('marketing.social-media') }}" class="nav-link {{ request()->routeIs('marketing.*') ? 'active' : '' }}">
-                        <i class="fas fa-bullhorn"></i>
-                        <span>Marketing</span>
-                    </a>
-                </div>
-                <div class="nav-item">
-                    <a href="{{ route('ai-content.index') }}" class="nav-link {{ request()->routeIs('ai-content.*') ? 'active' : '' }}">
-                        <i class="fas fa-magic"></i>
-                        <span>AI Content Enhancer</span>
-                    </a>
-                </div>
-                </div>
+            @if($__can('orders'))
+            <div class="nav-item">
+                <a href="{{ route('sales.orders') }}" class="nav-link {{ request()->routeIs('sales.orders*') ? 'active' : '' }}">
+                    <i class="fas fa-shopping-cart"></i>
+                    <span>Orders</span>
+                </a>
             </div>
             @endif
-            
-            @if(shouldShowApp('ai_tools', $enabledAppSlugs, $showAll))
-            <div class="nav-section">
-                <div class="nav-section-title" onclick="toggleSection(this)">
-                    <span>AI & Tools</span>
-                    <i class="fas fa-chevron-down collapse-icon"></i>
-                </div>
-                <div class="nav-section-content">
-                <div class="nav-item">
-                    <a href="{{ route('ai-comm.chat') }}" class="nav-link {{ request()->routeIs('ai-comm.*') ? 'active' : '' }}">
-                        <i class="fas fa-robot"></i>
-                        <span>AI Assistant</span>
-                        <span class="badge bg-info ms-auto">AI</span>
-                    </a>
-                </div>
-                <div class="nav-item">
-                    <a href="{{ route('ai-content.index') }}" class="nav-link {{ request()->routeIs('ai-content.*') ? 'active' : '' }}">
-                        <i class="fas fa-magic"></i>
-                        <span>Content Enhancer</span>
-                    </a>
-                </div>
-                <div class="nav-item">
-                    <a href="{{ route('knowledge.dashboard') }}" class="nav-link {{ request()->routeIs('knowledge.*') ? 'active' : '' }}">
-                        <i class="fas fa-brain"></i>
-                        <span>Knowledge Base</span>
-                    </a>
-                </div>
-                </div>
+            @if($__can('customers'))
+            <div class="nav-item">
+                <a href="{{ route('sales.customers') }}" class="nav-link {{ request()->routeIs('sales.customers*') ? 'active' : '' }}">
+                    <i class="fas fa-users"></i>
+                    <span>Customers</span>
+                </a>
             </div>
             @endif
-            
-            <div class="nav-section">
-                <div class="nav-section-title" onclick="toggleSection(this)">
+
+            <div class="sidebar-divider"></div>
+            <div class="sidebar-nav-group-label">System</div>
+
+            @if($__isOwner)
+            <div class="nav-item">
+                <a href="{{ route('team.index') }}" class="nav-link {{ request()->routeIs('team.*') ? 'active' : '' }}">
+                    <i class="fas fa-users-cog"></i>
+                    <span>Team & Access</span>
+                </a>
+            </div>
+            @endif
+            @if($__isOwner || $__can('settings'))
+            <div class="nav-item">
+                <a href="{{ route('settings.index') }}" class="nav-link {{ request()->routeIs('settings.*') ? 'active' : '' }}">
+                    <i class="fas fa-cog"></i>
                     <span>Settings</span>
-                    <i class="fas fa-chevron-down collapse-icon"></i>
-                </div>
-                <div class="nav-section-content">
-                <div class="nav-item">
-                    <a href="{{ route('settings.index') }}" class="nav-link {{ request()->routeIs('settings.*') ? 'active' : '' }}">
-                        <i class="fas fa-cog"></i>
-                        <span>All Settings</span>
-                        <span class="badge bg-success ms-auto">New</span>
-                    </a>
-                </div>
-                <div class="nav-item">
-                    <a href="{{ route('business.profile') }}" class="nav-link {{ request()->routeIs('business.profile', 'business.edit') ? 'active' : '' }}">
-                        <i class="fas fa-building"></i>
-                        <span>Business Profile</span>
-                    </a>
-                </div>
-                <div class="nav-item">
-                    <a href="{{ route('staff.index') }}" class="nav-link {{ request()->routeIs('staff.*') ? 'active' : '' }}">
-                        <i class="fas fa-user-tie"></i>
-                        <span>Staff Management</span>
-                    </a>
-                </div>
-                <div class="nav-item">
-                    <a href="{{ route('marketing.social-media') }}" class="nav-link {{ request()->routeIs('marketing.*') ? 'active' : '' }}">
-                        <i class="fas fa-bullhorn"></i>
-                        <span>Marketing</span>
-                    </a>
-                </div>
-                <div class="nav-item">
-                    <a href="{{ route('pwa.install-guide') }}" class="nav-link">
-                        <i class="fas fa-download"></i>
-                        <span>Install App</span>
-                        <span class="badge bg-info ms-auto">PWA</span>
-                    </a>
-                </div>
-                <div class="nav-item">
-                    <a href="#" onclick="initiateBusinessDeletion()" class="nav-link text-danger">
-                        <i class="fas fa-trash-alt"></i>
-                        <span>Delete Business</span>
-                    </a>
-                </div>
-                </div>
+                </a>
             </div>
+            @endif
+            <div class="nav-item">
+                <a href="{{ route('pwa.install-guide') }}" class="nav-link {{ request()->routeIs('pwa.*') ? 'active' : '' }}">
+                    <i class="fas fa-download"></i>
+                    <span>Install App</span>
+                    <span class="badge bg-info ms-auto" style="font-size:0.6rem;">PWA</span>
+                </a>
+            </div>
+            @if($__isOwner)
+            <div class="nav-item">
+                <a href="#" onclick="initiateBusinessDeletion()" class="nav-link text-danger">
+                    <i class="fas fa-trash-alt"></i>
+                    <span>Delete Business</span>
+                </a>
+            </div>
+            @endif
         </nav>
         
         <div class="sidebar-footer">
@@ -1661,16 +1701,20 @@
                     <input type="text" class="search-input" placeholder="Search">
                 </div>
                 
-                <!-- Connection Status Indicator -->
-                <!-- <div id="connection-status" class="connection-status">
-                    <i class="fas fa-wifi"></i>
-                    <span>Online</span>
-                </div> -->
-                
                 <!-- Notification Bell -->
                 <div class="notification-bell" onclick="toggleNotifications()">
                     <i class="fas fa-bell"></i>
                     <span id="notificationBadge" class="notification-badge" style="display: none;">0</span>
+                </div>
+
+                <!-- App Launcher (Google-style waffle) -->
+                <button class="app-launcher-btn" id="appLauncherBtn" onclick="toggleAppLauncher(event)" title="Apps">
+                    <i class="fas fa-th"></i>
+                </button>
+
+                <!-- Topbar User Avatar -->
+                <div class="topbar-user-avatar" id="topbarUserAvatar" onclick="toggleUserDropdown(event)" title="Account">
+                    {{ substr(auth()->user()->name, 0, 1) }}
                 </div>
             </div>
         </div>
@@ -1680,6 +1724,148 @@
         </div>
     </div>
     
+    <!-- ═══════════════════════════════════════════════════
+         Google-style App Launcher Panel
+    ════════════════════════════════════════════════════ -->
+    <div id="appLauncherPanel" class="app-launcher-panel">
+        <div class="app-launcher-header">
+            <span>Shopybook Apps</span>
+            <button class="app-launcher-close" onclick="closeAppLauncher()"><i class="fas fa-times"></i></button>
+        </div>
+        <input type="text" class="app-launcher-search" id="appLauncherSearch" placeholder="Search apps…" oninput="filterApps(this.value)">
+        <div class="app-launcher-grid" id="appLauncherGrid">
+            @if($__can('pos'))
+            <a href="{{ route('sales.pos') }}" class="app-tile {{ request()->routeIs('sales.pos') ? 'active' : '' }}" data-label="Point of Sale">
+                <div class="app-tile-icon" style="background:#22c55e;"><i class="fas fa-cash-register"></i></div>
+                <span class="app-tile-label">Point of Sale</span>
+            </a>
+            @endif
+            @if($__can('products'))
+            <a href="{{ route('products.index') }}" class="app-tile {{ request()->routeIs('products.*') ? 'active' : '' }}" data-label="Products">
+                <div class="app-tile-icon" style="background:#3b82f6;"><i class="fas fa-box"></i></div>
+                <span class="app-tile-label">Products</span>
+            </a>
+            <a href="{{ route('products.inventory') }}" class="app-tile {{ request()->routeIs('products.inventory') ? 'active' : '' }}" data-label="Inventory">
+                <div class="app-tile-icon" style="background:#8b5cf6;"><i class="fas fa-warehouse"></i></div>
+                <span class="app-tile-label">Inventory</span>
+            </a>
+            <a href="{{ route('product-conversions.index') }}" class="app-tile {{ request()->routeIs('product-conversions.*') ? 'active' : '' }}" data-label="Unit Conversions">
+                <div class="app-tile-icon" style="background:#475569;"><i class="fas fa-exchange-alt"></i></div>
+                <span class="app-tile-label">Conversions</span>
+            </a>
+            <a href="{{ route('ocr.index') }}" class="app-tile {{ request()->routeIs('ocr.*') ? 'active' : '' }}" data-label="OCR Scanner">
+                <div class="app-tile-icon" style="background:#0369a1;"><i class="fas fa-camera"></i></div>
+                <span class="app-tile-label">OCR Scan</span>
+            </a>
+            @endif
+            @if($__can('orders'))
+            <a href="{{ route('sales.orders') }}" class="app-tile {{ request()->routeIs('sales.orders*') ? 'active' : '' }}" data-label="Orders">
+                <div class="app-tile-icon" style="background:#f59e0b;"><i class="fas fa-shopping-cart"></i></div>
+                <span class="app-tile-label">Orders</span>
+            </a>
+            @endif
+            @if($__can('returns'))
+            <a href="{{ route('returns.index') }}" class="app-tile {{ request()->routeIs('returns.*') ? 'active' : '' }}" data-label="Returns">
+                <div class="app-tile-icon" style="background:#ef4444;"><i class="fas fa-undo"></i></div>
+                <span class="app-tile-label">Returns</span>
+            </a>
+            @endif
+            @if($__can('customers'))
+            <a href="{{ route('sales.customers') }}" class="app-tile {{ request()->routeIs('sales.customers*') ? 'active' : '' }}" data-label="Customers">
+                <div class="app-tile-icon" style="background:#06b6d4;"><i class="fas fa-users"></i></div>
+                <span class="app-tile-label">Customers</span>
+            </a>
+            @endif
+            @if($__can('suppliers'))
+            <a href="{{ route('suppliers.index') }}" class="app-tile {{ request()->routeIs('suppliers.*') ? 'active' : '' }}" data-label="Suppliers">
+                <div class="app-tile-icon" style="background:#64748b;"><i class="fas fa-truck"></i></div>
+                <span class="app-tile-label">Suppliers</span>
+            </a>
+            @endif
+            @if($__can('services'))
+            <a href="{{ route('services.index') }}" class="app-tile {{ request()->routeIs('services.*') ? 'active' : '' }}" data-label="Services">
+                <div class="app-tile-icon" style="background:#10b981;"><i class="fas fa-concierge-bell"></i></div>
+                <span class="app-tile-label">Services</span>
+            </a>
+            <a href="{{ route('service-bookings.index') }}" class="app-tile {{ request()->routeIs('service-bookings.*') ? 'active' : '' }}" data-label="Bookings">
+                <div class="app-tile-icon" style="background:#0ea5e9;"><i class="fas fa-calendar-check"></i></div>
+                <span class="app-tile-label">Bookings</span>
+            </a>
+            @endif
+            @if($__can('staff'))
+            <a href="{{ route('staff.index') }}" class="app-tile {{ request()->routeIs('staff.*') ? 'active' : '' }}" data-label="Staff">
+                <div class="app-tile-icon" style="background:#7c3aed;"><i class="fas fa-user-tie"></i></div>
+                <span class="app-tile-label">Staff</span>
+            </a>
+            @endif
+            @if($__can('expenses'))
+            <a href="{{ route('costs.index') }}" class="app-tile {{ request()->routeIs('costs.*') ? 'active' : '' }}" data-label="Expenses">
+                <div class="app-tile-icon" style="background:#f97316;"><i class="fas fa-receipt"></i></div>
+                <span class="app-tile-label">Expenses</span>
+            </a>
+            <a href="{{ route('tax.settings') }}" class="app-tile {{ request()->routeIs('tax.*') ? 'active' : '' }}" data-label="Tax">
+                <div class="app-tile-icon" style="background:#84cc16;"><i class="fas fa-file-invoice-dollar"></i></div>
+                <span class="app-tile-label">Tax</span>
+            </a>
+            @endif
+            @if($__can('reports'))
+            <a href="{{ route('reports.index') }}" class="app-tile {{ request()->routeIs('reports.*') ? 'active' : '' }}" data-label="Reports">
+                <div class="app-tile-icon" style="background:#020258;"><i class="fas fa-file-chart-line"></i></div>
+                <span class="app-tile-label">Reports</span>
+            </a>
+            <a href="{{ route('business.analysis.financial') }}" class="app-tile {{ request()->routeIs('business.analysis.financial') ? 'active' : '' }}" data-label="Financials">
+                <div class="app-tile-icon" style="background:#15803d;"><i class="fas fa-chart-pie"></i></div>
+                <span class="app-tile-label">Financials</span>
+            </a>
+            @endif
+            @if($__can('website'))
+            <a href="{{ route('website.builder.index') }}" class="app-tile {{ request()->routeIs('website.builder.*') ? 'active' : '' }}" data-label="Website Builder">
+                <div class="app-tile-icon" style="background:#6366f1;"><i class="fas fa-globe"></i></div>
+                <span class="app-tile-label">Website Builder</span>
+            </a>
+            @endif
+            @if($__can('marketing'))
+            <a href="{{ route('marketing.social-media') }}" class="app-tile {{ request()->routeIs('marketing.*') ? 'active' : '' }}" data-label="Marketing">
+                <div class="app-tile-icon" style="background:#ec4899;"><i class="fas fa-bullhorn"></i></div>
+                <span class="app-tile-label">Marketing</span>
+            </a>
+            @endif
+            @if($__can('ai'))
+            <a href="{{ route('ai-comm.chat') }}" class="app-tile {{ request()->routeIs('ai-comm.*') ? 'active' : '' }}" data-label="AI Assistant">
+                <div class="app-tile-icon" style="background:#13e8e9; color:#020258;"><i class="fas fa-robot"></i></div>
+                <span class="app-tile-label">AI Assistant</span>
+            </a>
+            <a href="{{ route('ai-content.index') }}" class="app-tile {{ request()->routeIs('ai-content.*') ? 'active' : '' }}" data-label="AI Content">
+                <div class="app-tile-icon" style="background:#a78bfa;"><i class="fas fa-magic"></i></div>
+                <span class="app-tile-label">AI Content</span>
+            </a>
+            @endif
+            @if($__can('settings'))
+            <a href="{{ route('apps.index') }}" class="app-tile {{ request()->routeIs('apps.*') ? 'active' : '' }}" data-label="Manage Apps">
+                <div class="app-tile-icon" style="background:linear-gradient(135deg,#020258,#13e8e9);"><i class="fas fa-th-large"></i></div>
+                <span class="app-tile-label">Manage Apps</span>
+            </a>
+            @endif
+        </div>
+    </div>
+
+    <!-- Topbar User Dropdown -->
+    <div id="topbarUserDropdown" class="topbar-user-dropdown">
+        <div class="user-dd-header">
+            <div class="user-dd-name">{{ auth()->user()->name }}</div>
+            <div class="user-dd-email">{{ auth()->user()->email }}</div>
+        </div>
+        <a href="{{ route('business.profile') }}"><i class="fas fa-building"></i> Business Profile</a>
+        <a href="{{ route('settings.index') }}"><i class="fas fa-cog"></i> Settings</a>
+        <div class="divider"></div>
+        <a href="{{ route('pwa.install-guide') }}"><i class="fas fa-download"></i> Install App</a>
+        <div class="divider"></div>
+        <button onclick="document.getElementById('topbar-logout-form').submit()">
+            <i class="fas fa-sign-out-alt"></i> Logout
+        </button>
+        <form id="topbar-logout-form" action="{{ route('logout') }}" method="POST" class="d-none">@csrf</form>
+    </div>
+
     <!-- Notifications Panel -->
     <div id="notificationsPanel" class="notifications-panel" style="display: none;">
         <div class="notifications-header">
@@ -2178,6 +2364,45 @@
             overlay.classList.toggle('show');
             document.body.classList.toggle('sidebar-open');
         }
+
+        // ── App Launcher ───────────────────────────────────────────
+        function toggleAppLauncher(e) {
+            e.stopPropagation();
+            const panel = document.getElementById('appLauncherPanel');
+            const userDd = document.getElementById('topbarUserDropdown');
+            userDd.classList.remove('open');
+            const isOpen = panel.classList.toggle('open');
+            if (isOpen) {
+                document.getElementById('appLauncherSearch').focus();
+            }
+        }
+        function closeAppLauncher() {
+            document.getElementById('appLauncherPanel').classList.remove('open');
+        }
+        function filterApps(q) {
+            q = q.toLowerCase();
+            document.querySelectorAll('#appLauncherGrid .app-tile').forEach(tile => {
+                const label = tile.dataset.label.toLowerCase();
+                tile.style.display = label.includes(q) ? '' : 'none';
+            });
+        }
+
+        // ── Topbar User Dropdown ───────────────────────────────────
+        function toggleUserDropdown(e) {
+            e.stopPropagation();
+            const dd = document.getElementById('topbarUserDropdown');
+            const panel = document.getElementById('appLauncherPanel');
+            panel.classList.remove('open');
+            dd.classList.toggle('open');
+        }
+
+        // Close both panels when clicking outside
+        document.addEventListener('click', function() {
+            document.getElementById('appLauncherPanel').classList.remove('open');
+            document.getElementById('topbarUserDropdown').classList.remove('open');
+        });
+        document.getElementById('appLauncherPanel').addEventListener('click', e => e.stopPropagation());
+        document.getElementById('topbarUserDropdown').addEventListener('click', e => e.stopPropagation());
 
         // Business deletion function
         function initiateBusinessDeletion() {

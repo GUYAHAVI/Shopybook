@@ -49,7 +49,7 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
     /**
-     * Get the user's business.
+     * Get the user's owned business (they are the owner).
      */
     public function business()
     {
@@ -57,11 +57,77 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
     /**
-     * Get the user's businesses.
+     * Get all businesses the user owns.
      */
     public function businesses()
     {
         return $this->hasMany(Business::class);
+    }
+
+    /**
+     * Get all business memberships for this user (as a team member).
+     */
+    public function businessMemberships()
+    {
+        return $this->hasMany(BusinessMember::class);
+    }
+
+    /**
+     * Get the active membership for this user (if they are a team member).
+     */
+    public function activeMembership()
+    {
+        return $this->hasOne(BusinessMember::class)->where('status', 'active');
+    }
+
+    /**
+     * Check if this user is the owner of the given business.
+     */
+    public function isOwnerOf(string $businessId): bool
+    {
+        if (array_key_exists('business', $this->relations)) {
+            return $this->relations['business']?->id === $businessId;
+        }
+        return $this->businesses()->where('id', $businessId)->exists();
+    }
+
+    /**
+     * Check if this user has a given module permission within their current business context.
+     * Owners always have full access.
+     *
+     * @param  string  $module  e.g. 'pos', 'reports'
+     * @param  string|null  $businessId  If null, uses the cached/active business
+     */
+    public function hasModulePermission(string $module, ?string $businessId = null): bool
+    {
+        // If user owns a business, they have all permissions
+        $ownedBusiness = $this->relations['business'] ?? $this->business;
+        if ($ownedBusiness) {
+            return true;
+        }
+
+        // Team member path – check membership permissions
+        $membership = $this->relations['activeMembership'] ?? $this->activeMembership;
+        if (!$membership) {
+            return false;
+        }
+
+        if ($businessId && $membership->business_id !== $businessId) {
+            return false;
+        }
+
+        return $membership->hasPermission($module);
+    }
+
+    /**
+     * Get this user's membership record for a specific business (if they are a member).
+     */
+    public function getMembershipFor(string $businessId): ?BusinessMember
+    {
+        return $this->businessMemberships()
+            ->where('business_id', $businessId)
+            ->where('status', 'active')
+            ->first();
     }
 
     /**

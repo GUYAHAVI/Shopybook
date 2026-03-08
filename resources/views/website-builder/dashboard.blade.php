@@ -206,10 +206,10 @@
                             <div class="stat-label">Published Pages</div>
                         </div>
                         <div class="stat-card">
-                            <div class="stat-value" style="color: var(--info-color);">
-                                {{ $website->theme->name ?? 'N/A' }}
+                            <div class="stat-value" style="color: var(--info-color); font-size:.95rem;">
+                                Jeriah Modern
                             </div>
-                            <div class="stat-label">Current Theme</div>
+                            <div class="stat-label">Template</div>
                         </div>
                     </div>
                 </div>
@@ -266,11 +266,6 @@
                 </div>
                 <div class="card-body p-2">
                     <div class="d-flex flex-column gap-2">
-                        <button onclick="openThemeSelector()" 
-                                class="btn btn-outline-primary btn-sm text-start">
-                            <i class="fas fa-palette me-2"></i>
-                            Change Theme
-                        </button>
                         <button onclick="openNewPageModal()" 
                                 class="btn btn-outline-success btn-sm text-start">
                             <i class="fas fa-plus me-2"></i>
@@ -294,6 +289,125 @@
 
         <!-- Main Content -->
         <div class="col-12 col-lg-8 col-xl-9">
+
+            <!-- Customize Colors & Fonts -->
+            <div class="card mb-4" style="background: var(--card-bg); border: 1px solid var(--border-color);">
+                <div class="card-header" style="background: transparent; border-bottom: 1px solid var(--border-color);">
+                    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                        <h2 class="mb-0 h6" style="color: var(--text-primary); font-weight: 600;">
+                            <i class="fas fa-palette me-2" style="color: var(--primary-color);"></i>Colors &amp; Fonts
+                        </h2>
+                        <button class="btn btn-link btn-sm p-0 text-muted" type="button"
+                                data-bs-toggle="collapse" data-bs-target="#customizePanel" aria-expanded="false">
+                            <i class="fas fa-chevron-down"></i>
+                        </button>
+                    </div>
+                </div>
+                <div id="customizePanel" class="collapse">
+                    <div class="card-body p-3">
+                        @php
+                            $colors = $website->colors ?? [];
+                            $fonts  = $website->fonts  ?? [];
+                            $primaryColor   = $colors['primary']    ?? '#1565c0';
+                            $secondaryColor = $colors['secondary']  ?? '#00acc1';
+                            $accentColor    = $colors['accent']     ?? '#ff7043';
+                            $bgColor        = $colors['background'] ?? '#ffffff';
+                            $textColor      = $colors['text']       ?? '#212121';
+                            $headingFont    = $fonts['heading']     ?? 'Poppins';
+                            $bodyFont       = $fonts['body']        ?? 'Open Sans';
+                            $fontOptions = ['Poppins','Open Sans','Roboto','Lato','Montserrat','Raleway','Nunito','Inter','Playfair Display','Merriweather','Source Sans Pro','Ubuntu'];
+                        @endphp
+
+                        <!-- Preset Palettes -->
+                        <div class="mb-3">
+                            <label class="form-label text-muted" style="font-size:0.8rem;font-weight:600;">QUICK PALETTES</label>
+                            <div class="d-flex flex-wrap gap-2">
+                                @foreach([
+                                    ['label'=>'Ocean Blue', 'p'=>'#1565c0','s'=>'#00acc1','a'=>'#ff7043'],
+                                    ['label'=>'Forest',     'p'=>'#2e7d32','s'=>'#66bb6a','a'=>'#ff7043'],
+                                    ['label'=>'Sunset',     'p'=>'#d84315','s'=>'#ff8f00','a'=>'#6a1b9a'],
+                                    ['label'=>'Royal',      'p'=>'#4a148c','s'=>'#7b1fa2','a'=>'#f50057'],
+                                    ['label'=>'Slate',      'p'=>'#37474f','s'=>'#546e7a','a'=>'#00bcd4'],
+                                    ['label'=>'Rose',       'p'=>'#c62828','s'=>'#e91e63','a'=>'#ff6f00'],
+                                ] as $palette)
+                                <button type="button" class="btn btn-sm palette-btn"
+                                        style="background:{{ $palette['p'] }};color:#fff;border:none;border-radius:6px;font-size:0.75rem;padding:4px 10px;"
+                                        onclick="applyPalette('{{ $palette['p'] }}','{{ $palette['s'] }}','{{ $palette['a'] }}')">
+                                    {{ $palette['label'] }}
+                                </button>
+                                @endforeach
+                            </div>
+                        </div>
+
+                        <form id="customizeForm">
+                            @csrf
+                            <div class="row g-3 mb-3">
+                                <div class="col-6 col-md-4">
+                                    <label class="form-label" style="font-size:0.8rem;font-weight:600;">Primary</label>
+                                    <div class="input-group input-group-sm">
+                                        <input type="color" class="form-control form-control-color" id="primaryColor" name="primary_color" value="{{ $primaryColor }}" style="width:42px;padding:2px;">
+                                        <input type="text" class="form-control" id="primaryColorHex" value="{{ $primaryColor }}" style="font-size:0.8rem;" oninput="document.getElementById('primaryColor').value=this.value">
+                                    </div>
+                                </div>
+                                <div class="col-6 col-md-4">
+                                    <label class="form-label" style="font-size:0.8rem;font-weight:600;">Secondary</label>
+                                    <div class="input-group input-group-sm">
+                                        <input type="color" class="form-control form-control-color" id="secondaryColor" name="secondary_color" value="{{ $secondaryColor }}" style="width:42px;padding:2px;">
+                                        <input type="text" class="form-control" id="secondaryColorHex" value="{{ $secondaryColor }}" style="font-size:0.8rem;" oninput="document.getElementById('secondaryColor').value=this.value">
+                                    </div>
+                                </div>
+                                <div class="col-6 col-md-4">
+                                    <label class="form-label" style="font-size:0.8rem;font-weight:600;">Accent</label>
+                                    <div class="input-group input-group-sm">
+                                        <input type="color" class="form-control form-control-color" id="accentColor" name="accent_color" value="{{ $accentColor }}" style="width:42px;padding:2px;">
+                                        <input type="text" class="form-control" id="accentColorHex" value="{{ $accentColor }}" style="font-size:0.8rem;" oninput="document.getElementById('accentColor').value=this.value">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Color swatches sync -->
+                            <script>
+                            ['primary','secondary','accent'].forEach(id => {
+                                const picker = document.getElementById(id+'Color');
+                                const hex    = document.getElementById(id+'ColorHex');
+                                if (picker && hex) {
+                                    picker.addEventListener('input', () => { hex.value = picker.value; });
+                                }
+                            });
+                            </script>
+
+                            <div class="row g-3 mb-3">
+                                <div class="col-6">
+                                    <label class="form-label" style="font-size:0.8rem;font-weight:600;">Heading Font</label>
+                                    <select class="form-select form-select-sm" name="heading_font" id="headingFont">
+                                        @foreach($fontOptions as $f)
+                                        <option value="{{ $f }}" {{ $headingFont === $f ? 'selected' : '' }}>{{ $f }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div class="col-6">
+                                    <label class="form-label" style="font-size:0.8rem;font-weight:600;">Body Font</label>
+                                    <select class="form-select form-select-sm" name="body_font" id="bodyFont">
+                                        @foreach($fontOptions as $f)
+                                        <option value="{{ $f }}" {{ $bodyFont === $f ? 'selected' : '' }}>{{ $f }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="d-flex gap-2">
+                                <button type="button" onclick="saveCustomization()" class="btn btn-primary btn-sm">
+                                    <i class="fas fa-save me-1"></i>Save &amp; Apply
+                                </button>
+                                <a href="{{ $website->url }}" target="_blank" class="btn btn-outline-secondary btn-sm">
+                                    <i class="fas fa-eye me-1"></i>Preview
+                                </a>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
             <!-- Pages List -->
             <div class="card" style="background: var(--card-bg); border: 1px solid var(--border-color);">
                 <div class="card-header" style="background: transparent; border-bottom: 1px solid var(--border-color);">
@@ -401,11 +515,6 @@ setTimeout(() => {
 
 @push('scripts')
 <script>
-function openThemeSelector() {
-    const modal = new bootstrap.Modal(document.getElementById('themeSelectorModal'));
-    modal.show();
-}
-
 function confirmAIRebuild() {
     const confirmed = confirm(
         '🤖 AI Website Rebuild\n\n' +
@@ -424,45 +533,6 @@ function confirmAIRebuild() {
 
     // Redirect to setup page with rebuild flag
     window.location.href = '{{ route("website.builder.setup") }}?rebuild=ai';
-}
-
-function selectTheme(themeId, themeName) {
-    // Visual feedback
-    document.querySelectorAll('.theme-card').forEach(card => {
-        card.classList.remove('active');
-    });
-    document.querySelector(`[data-theme-id="${themeId}"]`).classList.add('active');
-}
-
-function previewTheme(themeId) {
-    window.open(`/website-builder/preview-theme/${themeId}`, '_blank');
-}
-
-function applyTheme(themeId, themeName) {
-    if (!confirm(`Switch to "${themeName}" theme? This will change the look of your website.`)) {
-        return;
-    }
-    
-    fetch('/website-builder/change-theme', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
-        },
-        body: JSON.stringify({ theme_id: themeId })
-    })
-    .then(res => res.json())
-    .then(data => {
-        if (data.success) {
-            showToast(`✨ Theme changed to "${themeName}"!`, 'success');
-            setTimeout(() => location.reload(), 1500);
-        } else {
-            showToast('Failed to change theme: ' + (data.message || 'Unknown error'), 'danger');
-        }
-    })
-    .catch(err => {
-        showToast('An error occurred while changing theme', 'danger');
-    });
 }
 
 function showToast(message, type = 'info') {
@@ -540,6 +610,46 @@ function copyUrl(url) {
     });
 }
 
+function applyPalette(primary, secondary, accent) {
+    document.getElementById('primaryColor').value   = primary;
+    document.getElementById('primaryColorHex').value = primary;
+    document.getElementById('secondaryColor').value  = secondary;
+    document.getElementById('secondaryColorHex').value = secondary;
+    document.getElementById('accentColor').value    = accent;
+    document.getElementById('accentColorHex').value = accent;
+}
+
+function saveCustomization() {
+    const form = document.getElementById('customizeForm');
+    const data = {
+        _token:           '{{ csrf_token() }}',
+        primary_color:    document.getElementById('primaryColor').value,
+        secondary_color:  document.getElementById('secondaryColor').value,
+        accent_color:     document.getElementById('accentColor').value,
+        heading_font:     document.getElementById('headingFont').value,
+        body_font:        document.getElementById('bodyFont').value,
+    };
+
+    fetch('{{ route("website.builder.customize") }}', {
+        method: 'POST',
+        headers: {
+            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+    })
+    .then(r => r.json())
+    .then(resp => {
+        if (resp.success) {
+            showToast('Colors & fonts saved! Refresh your site to see changes.', 'success');
+        } else {
+            showToast('Failed to save: ' + (resp.message || resp.error), 'danger');
+        }
+    })
+    .catch(() => showToast('An error occurred', 'danger'));
+}
+
 function deletePage(pageId) {
     if (confirm('Are you sure you want to delete this page? This action cannot be undone.')) {
         fetch(`/website-builder/pages/${pageId}`, {
@@ -599,176 +709,7 @@ function openNewPageModal() {
 </script>
 @endpush
 
-<!-- Theme Selector Modal -->
-<div class="modal fade" id="themeSelectorModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-xl">
-        <div class="modal-content" style="background: var(--card-bg); border: 1px solid var(--border-color);">
-            <div class="modal-header" style="border-bottom: 1px solid var(--border-color);">
-                <h5 class="modal-title" style="color: var(--text-primary);">
-                    <i class="fas fa-palette me-2" style="color: var(--primary-color);"></i>
-                    Choose Your Theme
-                </h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body p-4">
-                <div class="row g-4">
-                    @foreach($themes as $theme)
-                    <div class="col-md-6 col-lg-4">
-                        <div class="theme-card {{ $website->theme_id == $theme->id ? 'active' : '' }}" 
-                             data-theme-id="{{ $theme->id }}"
-                             onclick="selectTheme({{ $theme->id }}, '{{ $theme->name }}')">
-                            <!-- Theme Preview Image -->
-                            <div class="theme-preview-img">
-                                @if($theme->preview_image)
-                                    <img src="{{ $theme->preview_image }}" alt="{{ $theme->name }}" loading="lazy">
-                                @else
-                                    <div class="theme-placeholder" style="background: linear-gradient(135deg, {{ $theme->default_colors['primary'] ?? '#4F46E5' }} 0%, {{ $theme->default_colors['secondary'] ?? '#6366F1' }} 100%)">
-                                        <i class="fas fa-paint-brush fa-3x" style="color: white; opacity: 0.5;"></i>
-                                    </div>
-                                @endif
-                                
-                                <!-- Active Badge -->
-                                @if($website->theme_id == $theme->id)
-                                <div class="active-badge">
-                                    <i class="fas fa-check-circle"></i> Active
-                                </div>
-                                @endif
-                            </div>
-                            
-                            <!-- Theme Info -->
-                            <div class="theme-info">
-                                <h6 class="theme-name">{{ $theme->name }}</h6>
-                                <p class="theme-description">{{ $theme->description }}</p>
-                                
-                                <!-- Theme Meta -->
-                                <div class="theme-meta">
-                                    <span class="badge" style="background: {{ $theme->default_colors['primary'] }}20; color: {{ $theme->default_colors['primary'] }};">
-                                        {{ ucfirst($theme->style) }}
-                                    </span>
-                                    @if(!$theme->is_free)
-                                    <span class="badge bg-warning">Premium</span>
-                                    @endif
-                                </div>
-                                
-                                <!-- Action Buttons -->
-                                <div class="theme-actions mt-3">
-                                    <button class="btn btn-sm btn-outline-primary w-100 mb-2" 
-                                            onclick="event.stopPropagation(); previewTheme({{ $theme->id }})">
-                                        <i class="fas fa-eye me-1"></i> Preview
-                                    </button>
-                                    @if($website->theme_id != $theme->id)
-                                    <button class="btn btn-sm btn-primary w-100" 
-                                            onclick="event.stopPropagation(); applyTheme({{ $theme->id }}, '{{ $theme->name }}')">
-                                        <i class="fas fa-check me-1"></i> Select Theme
-                                    </button>
-                                    @endif
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    @endforeach
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
 
-<style>
-.theme-card {
-    background: var(--card-bg);
-    border: 2px solid var(--border-color);
-    border-radius: 12px;
-    overflow: hidden;
-    transition: all 0.3s ease;
-    cursor: pointer;
-    height: 100%;
-}
-
-.theme-card:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
-    border-color: var(--primary-color);
-}
-
-.theme-card.active {
-    border-color: var(--primary-color);
-    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
-}
-
-.theme-preview-img {
-    position: relative;
-    height: 200px;
-    overflow: hidden;
-    background: #f5f5f5;
-}
-
-@media (min-width: 768px) {
-    .theme-preview-img {
-        height: 250px;
-    }
-}
-
-@media (min-width: 1200px) {
-    .theme-preview-img {
-        height: 280px;
-    }
-}
-
-.theme-preview-img img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    transition: transform 0.3s ease;
-}
-
-.theme-card:hover .theme-preview-img img {
-    transform: scale(1.05);
-}
-
-.theme-placeholder {
-    width: 100%;
-    height: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.active-badge {
-    position: absolute;
-    top: 10px;
-    right: 10px;
-    background: var(--success-color);
-    color: white;
-    padding: 4px 12px;
-    border-radius: 20px;
-    font-size: 0.75rem;
-    font-weight: 600;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-}
-
-.theme-info {
-    padding: 1rem;
-}
-
-.theme-name {
-    color: var(--text-primary);
-    font-weight: 600;
-    margin-bottom: 0.5rem;
-}
-
-.theme-description {
-    color: var(--text-secondary);
-    font-size: 0.875rem;
-    margin-bottom: 0.75rem;
-    line-height: 1.4;
-}
-
-    .theme-meta {
-        display: flex;
-        gap: 0.5rem;
-        flex-wrap: wrap;
-    }
-</style>
 
 @push('scripts')
 <script>

@@ -18,7 +18,7 @@ return Application::configure(basePath: dirname(__DIR__))
    ->withMiddleware(function (Middleware $middleware) {
     $middleware->alias([
         'has.business' => \App\Http\Middleware\HasBusiness::class,
-        // Other middleware aliases...
+        'permission'   => \App\Http\Middleware\CheckPermission::class,
     ]);
     
     // Exclude M-Pesa and Paystack webhooks from CSRF verification

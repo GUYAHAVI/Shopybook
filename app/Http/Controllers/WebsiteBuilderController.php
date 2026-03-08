@@ -45,9 +45,8 @@ class WebsiteBuilderController extends Controller
         }
 
         $pages = $website->pages()->orderBy('order')->get();
-        $themes = WebsiteTheme::active()->free()->get();
 
-        return view('website-builder.dashboard', compact('website', 'pages', 'themes', 'business'));
+        return view('website-builder.dashboard', compact('website', 'pages', 'business'));
     }
 
     /**
@@ -56,7 +55,8 @@ class WebsiteBuilderController extends Controller
     public function showSetup()
     {
         $business = Auth::user()->business;
-        $themes = WebsiteTheme::active()->get();
+
+        return view('website-builder.setup', compact('business'));
 
         return view('website-builder.setup', compact('themes', 'business'));
     }
@@ -111,10 +111,11 @@ class WebsiteBuilderController extends Controller
     {
         $this->authorize('update', $page->website);
 
+        $website = $page->website;
         $sections = $page->sections()->orderBy('order')->get();
         $availableSectionTypes = $this->getAvailableSectionTypes();
 
-        return view('website-builder.page-editor', compact('page', 'sections', 'availableSectionTypes'));
+        return view('website-builder.page-editor', compact('page', 'website', 'sections', 'availableSectionTypes'));
     }
 
     /**
@@ -346,6 +347,43 @@ class WebsiteBuilderController extends Controller
     }
 
     /**
+     * Update website colors and fonts
+     */
+    public function updateCustomization(\Illuminate\Http\Request $request)
+    {
+        $business = Auth::user()->business;
+        $website  = $business->website;
+
+        if (!$website) {
+            return response()->json(['error' => 'Website not found'], 404);
+        }
+
+        $request->validate([
+            'primary_color'   => 'required|regex:/^#[0-9a-fA-F]{6}$/',
+            'secondary_color' => 'required|regex:/^#[0-9a-fA-F]{6}$/',
+            'accent_color'    => 'required|regex:/^#[0-9a-fA-F]{6}$/',
+            'heading_font'    => 'required|string|max:80',
+            'body_font'       => 'required|string|max:80',
+        ]);
+
+        $website->update([
+            'colors' => [
+                'primary'    => $request->primary_color,
+                'secondary'  => $request->secondary_color,
+                'accent'     => $request->accent_color,
+                'background' => $request->input('background_color', '#ffffff'),
+                'text'       => $request->input('text_color', '#212121'),
+            ],
+            'fonts' => [
+                'heading' => $request->heading_font,
+                'body'    => $request->body_font,
+            ],
+        ]);
+
+        return response()->json(['success' => true, 'message' => 'Customization saved!']);
+    }
+
+    /**
      * Unpublish website
      */
     public function unpublish()
@@ -509,13 +547,18 @@ class WebsiteBuilderController extends Controller
      */
     protected function showPreviewPage(WebsitePage $page, bool $isPreview = false)
     {
-        $website = $page->website;
+        $website   = $page->website;
         $menuPages = $website->menuPages;
+        $products  = $website->business->products()
+                        ->where('stock_quantity', '>', 0)
+                        ->limit(12)
+                        ->get();
 
         return view('public-website.page', [
-            'website' => $website,
-            'page' => $page,
+            'website'   => $website,
+            'page'      => $page,
             'menuPages' => $menuPages,
+            'products'  => $products,
             'isPreview' => $isPreview,
         ]);
     }
@@ -794,10 +837,143 @@ class WebsiteBuilderController extends Controller
     }
 
     /**
+     * AI: Generate an image for a website section using Pollinations.AI (same as marketing module)
+     */
+    public function generateSectionImage(Request $request)
+    {
+        $request->validate([
+            'section_id' => 'required|exists:website_sections,id',
+            'prompt'     => 'nullable|string|max:500',
+        ]);
+
+        $section = \App\Models\WebsiteSection::with('page.website.business')->findOrFail($request->section_id);
+        $website = $section->page->website;
+        $this->authorize('update', $website);
+
+        $business  = $website->business;
+        $content   = $section->getContentWithDefaults();
+
+        // Build the prompt: use user-supplied prompt → stored image_query → smart default
+        $userPrompt = $request->prompt;
+        if (!$userPrompt) {
+            $imageQuery = $content['image_query'] ?? null;
+            if ($imageQuery) {
+                $userPrompt = $imageQuery;
+            } else {
+                // Smart default from section type + business
+                $typeDefaults = [
+                    'hero'         => "professional storefront display for {$business->name}, {$business->business_type} business",
+                    'about'        => "professional team or office interior for {$business->name}",
+                    'services'     => "professional service delivery, {$business->business_type}",
+                    'features'     => "quality product detail, {$business->business_type}",
+                    'testimonials' => "happy satisfied customers, professional setting",
+                    'products'     => "product display, {$business->business_type} store",
+                    'contact'      => "welcoming business environment, {$business->business_type}",
+                ];
+                $userPrompt = $typeDefaults[$section->type] ?? "{$business->business_type} business, professional photo";
+            }
+        }
+
+        // Determine size based on section type
+        $size = ($section->type === 'hero') ? '1200x600' : '800x500';
+
+        try {
+            $imageData = $this->claudeAPIService->generateMarketingImage(
+                $userPrompt,
+                'realistic',
+                $size,
+                $business->name,
+                $business->business_type ?? 'general'
+            );
+
+            if (!$imageData || !isset($imageData['public_url'])) {
+                return response()->json(['error' => 'Image generation failed. Please try again.'], 500);
+            }
+
+            // Save the local path into section content
+            $content['image'] = $imageData['relative_path'];
+            $section->content = $content;
+            $section->save();
+
+            return response()->json([
+                'success'    => true,
+                'image_url'  => $imageData['public_url'],
+                'local_path' => $imageData['relative_path'],
+                'section_id' => $section->id,
+            ]);
+
+        } catch (\Exception $e) {
+            \Log::error('Website section image generation failed', [
+                'section_id' => $section->id,
+                'error'      => $e->getMessage(),
+            ]);
+            return response()->json(['error' => 'Image generation failed: ' . $e->getMessage()], 500);
+        }
+    }
+
+    /**
+     * Upload a custom image for a website section
+     */
+    public function uploadSectionImage(Request $request, \App\Models\WebsiteSection $section)
+    {
+        $request->validate(['image' => 'required|image|max:5120']);
+
+        $website = $section->page->website;
+        $this->authorize('update', $website);
+
+        $path = $request->file('image')->store(
+            'website-images/' . $website->subdomain,
+            'public'
+        );
+
+        $content = $section->content ?? [];
+        $content['image'] = $path;
+        $section->content = $content;
+        $section->save();
+
+        return response()->json([
+            'success'   => true,
+            'image_url' => asset('storage/' . $path),
+            'local_path'=> $path,
+            'section_id'=> $section->id,
+        ]);
+    }
+
+    /**
+     * Upload website logo
+     */
+    public function uploadLogo(Request $request)
+    {
+        $request->validate(['logo' => 'required|image|mimes:jpg,jpeg,png,gif,svg,webp|max:5120']);
+
+        $business = Auth::user()->business;
+        $website  = $business->website;
+
+        if (!$website) {
+            return response()->json(['error' => 'Website not found'], 404);
+        }
+
+        $path = $request->file('logo')->store(
+            'website-logos/' . $website->subdomain,
+            'public'
+        );
+
+        $website->update(['logo_path' => $path]);
+
+        return response()->json([
+            'success'  => true,
+            'logo_url' => asset('storage/' . $path),
+        ]);
+    }
+
+    /**
      * AI: Auto-build complete website (Enterprise Only)
      */
     public function autoBuildWebsite(Request $request)
     {
+        // Claude AI can take 2-3 minutes to generate a full website; remove PHP's 60s limit
+        set_time_limit(300);
+
         try {
             Log::info('Auto-build website started', ['request_data' => $request->all()]);
             
@@ -873,6 +1049,39 @@ class WebsiteBuilderController extends Controller
                 'pages_count' => count($websiteStructure['pages'] ?? [])
             ]);
 
+            // Hero and About sections use the template's built-in gradient visuals (no external image needed).
+            // Other sections (services, features, etc.) can use loremflickr for background accents.
+            $businessSlug = \Str::slug($businessData['name']);
+            $skipImageTypes = ['hero', 'about']; // These have beautiful built-in gradient fallbacks
+            $typeKeywordFallback = [
+                'services'     => $businessData['type'] . ',services,professional',
+                'features'     => $businessData['type'] . ',quality,detail',
+                'stats'        => $businessData['type'] . ',business,success',
+                'testimonials' => 'happy,customers,satisfied',
+                'cta'          => $businessData['type'] . ',lifestyle',
+                'products'     => $businessData['type'] . ',products,retail',
+                'contact'      => 'office,building,interior',
+            ];
+            foreach ($websiteStructure['pages'] as &$pageData) {
+                foreach ($pageData['sections'] as &$sectionData) {
+                    $type = $sectionData['type'] ?? 'general';
+                    // Skip hero/about — let them use the template's gradient visual box
+                    if (in_array($type, $skipImageTypes)) {
+                        unset($sectionData['content']['image']);
+                        continue;
+                    }
+                    $seed = abs(crc32($businessSlug . $type)) % 9999;
+                    $rawQuery = $sectionData['content']['image_query']
+                        ?? ($typeKeywordFallback[$type] ?? $businessData['type'] . ',professional');
+                    // Encode each word individually — commas must stay literal in the URL path
+                    $words = array_slice(preg_split('/[\s,]+/', strtolower(trim($rawQuery))), 0, 5);
+                    $words = array_map('rawurlencode', array_filter($words));
+                    $keywords = implode(',', $words);
+                    $sectionData['content']['image'] = "https://loremflickr.com/800/500/{$keywords}?lock={$seed}";
+                }
+            }
+            unset($pageData, $sectionData);
+
             DB::beginTransaction();
 
             // Create website
@@ -893,7 +1102,7 @@ class WebsiteBuilderController extends Controller
                     'site_description' => $business->description ?? "Welcome to {$business->name}",
                 ],
                 'logo_path' => $business->logo_path,
-                'is_published' => false,
+                'is_published' => true,
             ]);
 
             $createdPages = [];
@@ -901,6 +1110,7 @@ class WebsiteBuilderController extends Controller
 
             // Create all pages with sections
             foreach ($websiteStructure['pages'] as $pageData) {
+                $isHomepage = $pageData['is_homepage'] ?? false;
                 $page = WebsitePage::create([
                     'website_id' => $website->id,
                     'title' => $pageData['title'] ?? 'Untitled Page',
@@ -908,7 +1118,8 @@ class WebsiteBuilderController extends Controller
                     'meta_description' => $pageData['meta_description'] ?? '',
                     'meta_keywords' => $pageData['meta_keywords'] ?? '',
                     'is_published' => true,
-                    'is_homepage' => $pageData['is_homepage'] ?? false,
+                    'is_homepage' => $isHomepage,
+                    'show_in_menu' => true,
                     'order' => $pageOrder++,
                 ]);
 
