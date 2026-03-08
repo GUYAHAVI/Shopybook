@@ -20,8 +20,19 @@ class PublicWebsiteController extends Controller
                 ->with(['business', 'theme'])
                 ->firstOrFail();
 
-            // Check if preview mode - allow authenticated users to preview even if not published
-            $isPreview = $request->user() && $request->user()->businesses()->where('id', $website->business_id)->exists();
+            // Determine preview mode:
+            // 1. Session flag set by WebsiteBuilderController::preview() (most reliable)
+            // 2. Ownership check as fallback (covers direct /site/ visits while logged in)
+            $user = $request->user();
+            $isPreview = false;
+            if ($user) {
+                if (session('website_preview_id') == $website->id) {
+                    $isPreview = true;
+                } else {
+                    $isPreview = $user->businesses()->where('id', $website->business_id)->exists()
+                              || ($user->business && $user->business->id == $website->business_id);
+                }
+            }
 
             // Check if website is accessible (skip check for authenticated owners)
             if (!$isPreview && !$website->isAccessible()) {
@@ -81,8 +92,17 @@ class PublicWebsiteController extends Controller
                 ->with(['business', 'theme'])
                 ->firstOrFail();
 
-            // Check if preview mode - allow authenticated users to preview even if not published
-            $isPreview = $request->user() && $request->user()->businesses()->where('id', $website->business_id)->exists();
+            // Determine preview mode (same logic as homepage)
+            $user = $request->user();
+            $isPreview = false;
+            if ($user) {
+                if (session('website_preview_id') == $website->id) {
+                    $isPreview = true;
+                } else {
+                    $isPreview = $user->businesses()->where('id', $website->business_id)->exists()
+                              || ($user->business && $user->business->id == $website->business_id);
+                }
+            }
 
             // Check if website is accessible (skip check for authenticated owners)
             if (!$isPreview && !$website->isAccessible()) {

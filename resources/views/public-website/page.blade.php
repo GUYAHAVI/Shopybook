@@ -714,6 +714,32 @@
         @keyframes ep-spin { to { transform: rotate(360deg); } }
         .ep-spinner { animation: ep-spin 0.8s linear infinite; }
 
+        /* ── CUSTOM MODALS ───────────────────────── */
+        #seToast { position: fixed; top: 64px; left: 50%; transform: translateX(-50%) translateY(-80px); z-index: 99999; min-width: 280px; max-width: 420px; background: #1e293b; color: #fff; border-radius: 12px; padding: 14px 20px 14px 16px; display: flex; align-items: flex-start; gap: 12px; box-shadow: 0 8px 32px rgba(0,0,0,0.28); transition: transform 0.3s cubic-bezier(.4,0,.2,1), opacity 0.3s; opacity: 0; pointer-events: none; }
+        #seToast.se-toast-show { transform: translateX(-50%) translateY(0); opacity: 1; pointer-events: auto; }
+        #seToast .se-toast-icon { font-size: 1.3rem; flex-shrink: 0; margin-top: 1px; }
+        #seToast .se-toast-body { flex: 1; }
+        #seToast .se-toast-title { font-weight: 700; font-size: 0.92rem; margin-bottom: 2px; }
+        #seToast .se-toast-msg { font-size: 0.82rem; color: #cbd5e1; line-height: 1.4; }
+        #seToast.se-success { border-left: 4px solid #22c55e; }
+        #seToast.se-error { border-left: 4px solid #ef4444; }
+        #seToast.se-info { border-left: 4px solid #3b82f6; }
+        #seToast .se-toast-close { background: none; border: none; color: #94a3b8; font-size: 1.1rem; cursor: pointer; padding: 0; line-height: 1; flex-shrink: 0; }
+        #seToast .se-toast-close:hover { color: #fff; }
+        #seConfirmBackdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.55); z-index: 99998; display: none; align-items: center; justify-content: center; }
+        #seConfirmBackdrop.se-open { display: flex; }
+        #seConfirmBox { background: #fff; border-radius: 16px; padding: 28px 28px 24px; max-width: 380px; width: 90%; box-shadow: 0 20px 60px rgba(0,0,0,0.22); text-align: center; animation: sePopIn 0.18s ease; }
+        @keyframes sePopIn { from { transform: scale(0.88); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        #seConfirmBox .se-ci { font-size: 2.4rem; margin-bottom: 10px; }
+        #seConfirmBox .se-ct { font-weight: 800; font-size: 1.05rem; color: #1e293b; margin-bottom: 6px; }
+        #seConfirmBox .se-cm { font-size: 0.88rem; color: #64748b; line-height: 1.5; margin-bottom: 22px; }
+        #seConfirmBox .se-cbtns { display: flex; gap: 10px; justify-content: center; }
+        #seConfirmBox .se-cbtn { padding: 9px 22px; border-radius: 8px; font-size: 0.88rem; font-weight: 600; border: none; cursor: pointer; transition: opacity 0.15s; }
+        #seConfirmBox .se-cbtn:hover { opacity: 0.85; }
+        #seConfirmBox .se-cbtn-cancel { background: #f1f5f9; color: #475569; }
+        #seConfirmBox .se-cbtn-ok { background: #1e293b; color: #fff; }
+        #seConfirmBox .se-cbtn-ok.se-danger { background: #ef4444; }
+
         /* ── RESPONSIVE ──────────────────────────── */
         @media (max-width: 991.98px) {
             .hero-section { min-height: auto; padding: 100px 0 60px; }
@@ -740,7 +766,7 @@
         <span class="et-label">Page:</span>
         <select class="et-page-select" id="pageNavSelect" onchange="_gotoPage(this.value)">
             @foreach($menuPages as $menuPage)
-            <option value="{{ $menuPage->url }}?preview=1" {{ $page->id === $menuPage->id ? 'selected' : '' }}>
+            <option value="{{ route('website.builder.preview.page', $menuPage->id) }}" {{ $page->id === $menuPage->id ? 'selected' : '' }}>
                 {{ $menuPage->title }}
             </option>
             @endforeach
@@ -752,7 +778,7 @@
         <div class="et-spacer"></div>
         <span class="et-status" id="etStatus"></span>
         <div class="et-sep"></div>
-        <a href="{{ route('website.builder.index') }}" class="et-exit">← Exit</a>
+        <a href="{{ route('dashboard') }}" class="et-exit">← Exit Editor</a>
     </div>
 
     {{-- ── EDITOR PANEL (right drawer) ──────────────────────────── --}}
@@ -770,6 +796,29 @@
             <p style="color:#94a3b8;font-size:0.82rem;text-align:center;margin-top:28px;padding:0 10px;">
                 Hover over any section and click <strong style="color:#1e293b;">Edit</strong> to start editing.
             </p>
+        </div>
+    </div>
+
+    {{-- ── TOAST NOTIFICATION ────────────────────────────────────── --}}
+    <div id="seToast">
+        <span class="se-toast-icon" id="seToastIcon"></span>
+        <div class="se-toast-body">
+            <div class="se-toast-title" id="seToastTitle"></div>
+            <div class="se-toast-msg" id="seToastMsg"></div>
+        </div>
+        <button class="se-toast-close" onclick="_hideToast()">×</button>
+    </div>
+
+    {{-- ── CONFIRM DIALOG ───────────────────────────────────────── --}}
+    <div id="seConfirmBackdrop">
+        <div id="seConfirmBox">
+            <div class="se-ci" id="seConfirmIcon"></div>
+            <div class="se-ct" id="seConfirmTitle"></div>
+            <div class="se-cm" id="seConfirmMsg"></div>
+            <div class="se-cbtns">
+                <button class="se-cbtn se-cbtn-cancel" id="seConfirmCancel">Cancel</button>
+                <button class="se-cbtn se-cbtn-ok" id="seConfirmOk">Confirm</button>
+            </div>
         </div>
     </div>
     @endif
@@ -808,7 +857,7 @@
         <div class="container">
             <div class="d-flex align-items-center justify-content-between flex-wrap gap-3">
                 <!-- Brand -->
-                <a href="{{ $website->url }}{{ $isPreview ? '?preview=1' : '' }}" class="d-flex align-items-center gap-3 text-decoration-none">
+                <a href="{{ $isPreview ? route('website.builder.preview') : $website->url }}" class="d-flex align-items-center gap-3 text-decoration-none">
                     @if($website->logo_path || $website->business->logo_path)
                     <img src="{{ asset('storage/' . ($website->logo_path ?? $website->business->logo_path)) }}"
                          id="siteLogoImg"
@@ -826,7 +875,7 @@
                         $navWords = explode(' ', trim($navLabel));
                         $navLabel = implode(' ', array_slice($navWords, 0, 2));
                     @endphp
-                    <a href="{{ $menuPage->url }}{{ $isPreview ? '?preview=1' : '' }}"
+                    <a href="{{ $isPreview ? route('website.builder.preview.page', $menuPage->id) : $menuPage->url }}"
                        class="nav-link {{ $page->id === $menuPage->id ? 'active' : '' }}">
                         {{ $navLabel }}
                     </a>
@@ -850,7 +899,7 @@
                     $mNavWords = explode(' ', trim($mNavLabel));
                     $mNavLabel = implode(' ', array_slice($mNavWords, 0, 2));
                 @endphp
-                <a href="{{ $menuPage->url }}{{ $isPreview ? '?preview=1' : '' }}" class="nav-link d-block py-2">{{ $mNavLabel }}</a>
+                <a href="{{ $isPreview ? route('website.builder.preview.page', $menuPage->id) : $menuPage->url }}" class="nav-link d-block py-2">{{ $mNavLabel }}</a>
                 @endforeach
                 <a href="#contact" class="nav-link nav-cta d-inline-block mt-2">Contact</a>
             </div>
@@ -1401,7 +1450,7 @@
                             $lNavWords = explode(' ', trim($lNavLabel));
                             $lNavLabel = implode(' ', array_slice($lNavWords, 0, 2));
                         @endphp
-                        <li><a href="{{ $menuPage->url }}{{ $isPreview ? '?preview=1' : '' }}">{{ $lNavLabel }}</a></li>
+                        <li><a href="{{ $isPreview ? route('website.builder.preview.page', $menuPage->id) : $menuPage->url }}">{{ $lNavLabel }}</a></li>
                         @endforeach
                     </ul>
                 </div>
@@ -1981,27 +2030,75 @@ function _uploadLogo(input) {
 
 // ── PUBLISH ─────────────────────────────────────────────────────────
 function _publishSite() {
-    if (!confirm('Publish your website? It will be visible to visitors.')) return;
-    _setStatus('saving');
-    fetch(_publishUrl, {
-        method: 'POST',
-        headers: { 'Content-Type':'application/json', 'X-CSRF-TOKEN':_csrf, 'Accept':'application/json' }
-    })
-    .then(function(r){ return r.json(); })
-    .then(function(data) {
-        if (data.success) {
-            _setStatus('saved');
-            alert('🎉 Your website is now live!');
-        } else {
-            alert('Publish failed: ' + (data.message || 'Unknown error'));
-            _setStatus('');
-        }
-    })
-    .catch(function() { alert('Network error.'); _setStatus(''); });
+    _confirm('🚀 Publish Website', 'Your website will be visible to the public. Ready to go live?', 'Go Live!', false, function() {
+        _setStatus('saving');
+        fetch(_publishUrl, {
+            method: 'POST',
+            headers: { 'Content-Type':'application/json', 'X-CSRF-TOKEN':_csrf, 'Accept':'application/json' }
+        })
+        .then(function(r){ return r.json(); })
+        .then(function(data) {
+            if (data.success) {
+                _setStatus('saved');
+                _toast('success', '🎉 You\'re Live!', 'Your website is now visible to visitors.');
+            } else {
+                _toast('error', 'Publish Failed', data.message || 'An unknown error occurred.');
+                _setStatus('');
+            }
+        })
+        .catch(function() { _toast('error', 'Network Error', 'Could not reach the server. Please try again.'); _setStatus(''); });
+    });
 }
 
 // ── PAGE NAVIGATION ─────────────────────────────────────────────────
 function _gotoPage(url) { if (url) window.location.href = url; }
+
+// ── TOAST NOTIFICATION ──────────────────────────────────────────────
+var _toastTimer = null;
+function _toast(type, title, msg, duration) {
+    duration = duration || 4500;
+    var icons = { success: '✅', error: '❌', info: 'ℹ️' };
+    document.getElementById('seToastIcon').textContent  = icons[type] || 'ℹ️';
+    document.getElementById('seToastTitle').textContent = title || '';
+    document.getElementById('seToastMsg').textContent   = msg   || '';
+    var el = document.getElementById('seToast');
+    el.className = 'se-toast-show se-' + (type || 'info');
+    clearTimeout(_toastTimer);
+    _toastTimer = setTimeout(_hideToast, duration);
+}
+function _hideToast() {
+    var el = document.getElementById('seToast');
+    if (el) el.className = '';
+}
+
+// ── CONFIRM DIALOG ───────────────────────────────────────────────────
+function _confirm(title, msg, okLabel, danger, onOk) {
+    var iconMatch = (title || '').match(/^(\S+)\s/);
+    document.getElementById('seConfirmIcon').textContent  = iconMatch ? iconMatch[1] : '❓';
+    document.getElementById('seConfirmTitle').textContent = title || 'Are you sure?';
+    document.getElementById('seConfirmMsg').textContent   = msg   || '';
+    var okBtn = document.getElementById('seConfirmOk');
+    okBtn.textContent = okLabel || 'Confirm';
+    okBtn.className = 'se-cbtn se-cbtn-ok' + (danger ? ' se-danger' : '');
+    var bd = document.getElementById('seConfirmBackdrop');
+    bd.classList.add('se-open');
+    // Clone buttons to remove previous listeners
+    var newOk = okBtn.cloneNode(true);
+    okBtn.parentNode.replaceChild(newOk, okBtn);
+    var cancelBtn = document.getElementById('seConfirmCancel');
+    var newCancel = cancelBtn.cloneNode(true);
+    cancelBtn.parentNode.replaceChild(newCancel, cancelBtn);
+    document.getElementById('seConfirmOk').addEventListener('click', function() {
+        bd.classList.remove('se-open');
+        if (onOk) onOk();
+    });
+    document.getElementById('seConfirmCancel').addEventListener('click', function() {
+        bd.classList.remove('se-open');
+    });
+    bd.addEventListener('click', function(e) {
+        if (e.target === bd) bd.classList.remove('se-open');
+    }, { once: true });
+}
 
 // ── UTILITIES ───────────────────────────────────────────────────────
 function _setStatus(state) {
@@ -2093,11 +2190,11 @@ function uploadSectionImage(sectionId, input) {
         if (data.success && data.image_url) {
             applyNewImage(sectionId, data.image_url);
         } else {
-            alert('Upload failed: ' + (data.error || 'Unknown error'));
+            _toast('error', 'Upload Failed', data.error || 'An unknown error occurred.');
             location.reload();
         }
     })
-    .catch(function(){ alert('Upload failed. Please try again.'); location.reload(); });
+    .catch(function(){ _toast('error', 'Upload Failed', 'Could not upload image. Please try again.'); location.reload(); });
 }
 
 function applyNewImage(sectionId, imageUrl) {

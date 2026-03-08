@@ -809,6 +809,7 @@ Route::middleware(['auth', 'has.business', 'permission:website'])->prefix('websi
     Route::post('/change-theme', [WebsiteBuilderController::class, 'changeTheme'])->name('theme.change');
     Route::delete('/delete', [WebsiteBuilderController::class, 'deleteWebsite'])->name('delete');
     Route::get('/preview', [WebsiteBuilderController::class, 'preview'])->name('preview');
+    Route::get('/preview/page/{page}', [WebsiteBuilderController::class, 'previewPage'])->name('preview.page');
     Route::post('/preview-theme', [WebsiteBuilderController::class, 'previewTheme'])->name('preview-theme');
     Route::get('/preview-theme/{themeId}', [WebsiteBuilderController::class, 'previewThemeGet'])->name('preview-theme.get');
     

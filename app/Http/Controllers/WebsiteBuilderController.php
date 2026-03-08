@@ -31,6 +31,9 @@ class WebsiteBuilderController extends Controller
      */
     public function index()
     {
+        // Clear preview session so owner links revert to non-editor mode
+        session()->forget('website_preview_id');
+
         $business = Auth::user()->business;
         
         if (!$business) {
@@ -44,9 +47,8 @@ class WebsiteBuilderController extends Controller
             return redirect()->route('website-configurator.step1');
         }
 
-        $pages = $website->pages()->orderBy('order')->get();
-
-        return view('website-builder.dashboard', compact('website', 'pages', 'business'));
+        // Website exists — go straight to the editor preview
+        return redirect()->route('website.builder.preview');
     }
 
     /**
@@ -423,6 +425,20 @@ class WebsiteBuilderController extends Controller
     /**
      * Preview website
      */
+    public function previewPage(WebsitePage $page)
+    {
+        $business = Auth::user()->business;
+        $website  = $business ? $business->website : null;
+
+        // Security: ensure the page belongs to this user's website
+        if (!$website || $page->website_id !== $website->id) {
+            abort(403);
+        }
+
+        session(['website_preview_id' => $website->id]);
+        return $this->showPreviewPage($page, true);
+    }
+
     public function preview()
     {
         $business = Auth::user()->business;
@@ -434,13 +450,19 @@ class WebsiteBuilderController extends Controller
 
         // Get homepage
         $homepage = $website->homepage;
-        
+
         if (!$homepage) {
             return redirect()->route('website.builder.index')
                 ->with('error', 'No homepage found. Please create pages first.');
         }
 
-        // Return preview view directly instead of redirecting
+        // Store preview flag in session so secondary pages (About, Services, etc.)
+        // also show the editor toolbar when navigated to via nav links.
+        session(['website_preview_id' => $website->id]);
+
+        // Render directly at the /website-builder/preview URL (no redirect).
+        // Nav links in the template append ?preview=1 and PublicWebsiteController
+        // checks the session flag above to keep the editor on those pages too.
         return $this->showPreviewPage($homepage, true);
     }
 

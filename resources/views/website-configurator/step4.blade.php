@@ -216,9 +216,26 @@ document.addEventListener('DOMContentLoaded', function() {
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
             `;
 
-            // Submit the form to complete the build
+            // Submit the form via fetch so we can follow the redirect_url from JSON
             setTimeout(() => {
-                document.getElementById('completeBuildForm').submit();
+                const form = document.getElementById('completeBuildForm');
+                const formData = new FormData(form);
+                fetch(form.action, {
+                    method: 'POST',
+                    headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+                    body: formData
+                })
+                .then(r => r.json())
+                .then(data => {
+                    if (data.redirect_url) {
+                        window.location.href = data.redirect_url;
+                    } else {
+                        window.location.href = '{{ route('website.builder.preview') }}';
+                    }
+                })
+                .catch(() => {
+                    window.location.href = '{{ route('website.builder.preview') }}';
+                });
             }, 2000);
         }, 500);
     }
