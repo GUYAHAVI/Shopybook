@@ -1861,9 +1861,22 @@ Return ONLY the enhanced prompt, no explanations or additional text.";
                     }
                     
                     if ($attempt < $maxRetries) {
-                        $delay = $attempt * 5; // 5s, 10s between retries
+                        $delay = $attempt * 5; // 5s, 10s between retries for non-429 failures
                         Log::warning("Attempt {$attempt} failed, retrying in {$delay}s...");
                         sleep($delay);
+                    }
+                } catch (\RuntimeException $e) {
+                    if ($e->getCode() === 429) {
+                        // Rate limited — must wait for Pollinations queue to drain before retrying
+                        $delay = 60;
+                        Log::warning("Pollinations rate limited on attempt {$attempt}, waiting {$delay}s for queue to drain...");
+                        if ($attempt < $maxRetries) {
+                            sleep($delay);
+                        }
+                    } else {
+                        Log::error("Download attempt {$attempt} runtime error: " . $e->getMessage());
+                        if ($attempt === $maxRetries) throw $e;
+                        sleep($attempt * 5);
                     }
                 } catch (\Exception $e) {
                     Log::error("Download attempt {$attempt} exception: " . $e->getMessage());
@@ -1872,6 +1885,12 @@ Return ONLY the enhanced prompt, no explanations or additional text.";
                     }
                     sleep($attempt * 5);
                 }
+            }
+            
+            // If Pollinations failed after all retries, try Lexica.art as a fallback
+            if (!$downloadResult) {
+                Log::warning('Pollinations failed after all retries, trying Lexica.art fallback', ['prompt' => substr($prompt, 0, 100)]);
+                $downloadResult = $this->fetchLexicaImage($prompt, $businessName, $width, $height);
             }
             
             if ($downloadResult) {
@@ -1952,6 +1971,70 @@ Return ONLY the enhanced prompt, no explanations or additional text.";
     }
 
     /**
+     * Fallback image source: search Lexica.art for a relevant AI-generated image.
+     * Free, no auth required, instant response. Used when Pollinations is rate-limited or down.
+     */
+    private function fetchLexicaImage(string $prompt, string $businessName, int $width = 1200, int $height = 600): ?array
+    {
+        try {
+            // Extract the first 5-8 meaningful words from the prompt as the search query
+            $words        = preg_split('/[\s,]+/', $prompt);
+            $searchTerms  = array_slice($words, 0, 7);
+            $searchQuery  = implode(' ', $searchTerms);
+
+            $searchUrl = 'https://lexica.art/api/v1/search?q=' . rawurlencode($searchQuery);
+            Log::info('Trying Lexica.art fallback', ['search_query' => $searchQuery]);
+
+            $response = Http::timeout(20)
+                ->withOptions(['verify' => false])
+                ->get($searchUrl);
+
+            if (!$response->successful()) {
+                Log::warning('Lexica.art search failed', ['status' => $response->status()]);
+                return null;
+            }
+
+            $data   = $response->json();
+            $images = $data['images'] ?? [];
+
+            if (empty($images)) {
+                Log::warning('Lexica.art returned no images', ['query' => $searchQuery]);
+                return null;
+            }
+
+            // Pick an image whose dimensions are closest to what we need
+            $bestImage = null;
+            $bestScore = PHP_INT_MAX;
+            foreach (array_slice($images, 0, 20) as $img) {
+                $imgW  = $img['width']  ?? 512;
+                $imgH  = $img['height'] ?? 512;
+                $score = abs($imgW - $width) + abs($imgH - $height);
+                if ($score < $bestScore) {
+                    $bestScore = $score;
+                    $bestImage = $img;
+                }
+            }
+
+            if (!$bestImage || empty($bestImage['src'])) {
+                Log::warning('Lexica.art no suitable image found');
+                return null;
+            }
+
+            Log::info('Lexica.art image selected', [
+                'src'    => $bestImage['src'],
+                'width'  => $bestImage['width'] ?? '?',
+                'height' => $bestImage['height'] ?? '?',
+            ]);
+
+            return $this->downloadAndStoreImage($bestImage['src'], $businessName, 'generated-images');
+
+        } catch (\Exception $e) {
+            Log::warning('Lexica.art fallback failed', ['error' => $e->getMessage()]);
+            return null;
+        }
+    }
+
+    /**
      * Download and store image locally
      * Returns array with both public_url and local_path
      */
@@ -1993,6 +2076,13 @@ Return ONLY the enhanced prompt, no explanations or additional text.";
                 if ($response->successful()) {
                     $imageContent = $response->body();
                     Log::info('Http facade download succeeded', ['status' => $response->status(), 'bytes' => strlen($imageContent ?? '')]);
+                } elseif ($response->status() === 429) {
+                    // Rate limited — bubble this up so the retry loop can wait the full 60s
+                    Log::warning('Pollinations rate limited (429)', [
+                        'body' => substr($response->body(), 0, 300),
+                        'url'  => substr($imageUrl, 0, 150),
+                    ]);
+                    throw new \RuntimeException('Pollinations rate limited: queue full for this IP', 429);
                 } else {
                     Log::warning('Http facade got non-2xx response', [
                         'status'   => $response->status(),
@@ -2000,6 +2090,15 @@ Return ONLY the enhanced prompt, no explanations or additional text.";
                         'url'      => substr($imageUrl, 0, 150),
                     ]);
                 }
+            } catch (\RuntimeException $httpEx) {
+                // Re-throw rate-limit exceptions so the retry loop can handle them intelligently
+                if ($httpEx->getCode() === 429) {
+                    throw $httpEx;
+                }
+                Log::warning('Http facade failed, will try file_get_contents fallback', [
+                    'error' => $httpEx->getMessage(),
+                    'url'   => substr($imageUrl, 0, 150),
+                ]);
             } catch (\Exception $httpEx) {
                 Log::warning('Http facade failed, will try file_get_contents fallback', [
                     'error' => $httpEx->getMessage(),
