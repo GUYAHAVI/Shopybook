@@ -75,8 +75,8 @@ class MarketingPost extends Model
             return $this->status === 'pending';
         }
 
-        return $this->status === 'pending' && 
-               $this->scheduled_at && 
+        return in_array($this->status, ['scheduled', 'pending']) &&
+               $this->scheduled_at &&
                now()->greaterThanOrEqualTo($this->scheduled_at);
     }
 

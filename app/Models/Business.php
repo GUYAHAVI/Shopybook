@@ -329,11 +329,11 @@ class Business extends BaseTenant implements TenantWithDatabase
     }
 
     /**
-     * Check if business has premium subscription
+     * Check if business has premium subscription (includes enterprise)
      */
     public function isPremium(): bool
     {
-        return in_array($this->plan ?? 'free', ['premium', 'basic']);
+        return in_array($this->plan ?? 'free', ['basic', 'premium', 'enterprise']);
     }
 
     /**

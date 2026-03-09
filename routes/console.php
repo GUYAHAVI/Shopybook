@@ -10,3 +10,6 @@ Artisan::command('inspire', function () {
 
 // Refresh Kenyan market intelligence cache every day at 3 AM
 Schedule::command('ai:fetch-market-insights')->dailyAt('03:00');
+
+// Publish scheduled marketing posts every minute
+Schedule::command('marketing:publish-scheduled')->everyMinute();

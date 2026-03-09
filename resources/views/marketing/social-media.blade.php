@@ -570,7 +570,7 @@
                                         <div class="card" style="background: var(--card-bg); border: 1px solid var(--border-color);">
                                             <div class="card-body">
                                                 <h6 class="card-title" style="color: var(--text-primary);">Generated Image</h6>
-                                                <img id="previewImage" src="" class="w-100" style="max-height: 400px; object-fit: contain;" alt="Generated image">
+                                                <img id="previewImage" src="" style="display: block; max-width: 100%; width: auto; height: auto; max-height: 480px; margin: 0 auto; border-radius: 0.375rem;" alt="Generated image">
                                                 <input type="hidden" id="generatedImageUrl" name="generated_image_url">
                                                 <input type="hidden" id="generatedImageLocalPath" name="generated_image_local_path">
                                                 <input type="hidden" id="generatedImageRelativePath" name="generated_image_relative_path">
@@ -2095,64 +2095,65 @@ document.addEventListener('DOMContentLoaded', function() {
             console.log('Response headers:', response.headers);
             console.log('Response OK:', response.ok);
             
-            if (!response.ok) {
-                // Log the response for debugging
-                return response.text().then(text => {
-                    console.error('Server error response:', text);
-                    throw new Error(`Server error: ${response.status} - ${text.substring(0, 200)}`);
-                });
-            }
-            
-            return response.json().catch(err => {
-                console.error('Failed to parse JSON response:', err);
-                throw new Error('Server returned invalid response. Check browser console for details.');
-            });
+            // Always try to parse as JSON first (works for both success and error responses)
+            return response.json().catch(() => null).then(data => ({ ok: response.ok, status: response.status, data }));
         })
-        .then(data => {
-            console.log('Response data:', data);
-            if (data.success) {
+        .then(({ ok, status, data }) => {
+            console.log('Response status:', status, 'Data:', data);
+
+            if (!ok) {
+                // 422 = Laravel validation errors
+                if (status === 422 && data && data.errors) {
+                    const fieldLabels = {
+                        title: 'Post Title',
+                        content: 'Post Content',
+                        platforms: 'Platforms',
+                        media_type: 'Media Type',
+                        media: 'Media File',
+                        scheduled_at: 'Scheduled Date',
+                    };
+                    const lines = [];
+                    for (const [field, messages] of Object.entries(data.errors)) {
+                        const label = fieldLabels[field] || field.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+                        lines.push(`<li><strong>${label}:</strong> ${messages.join(', ')}</li>`);
+                    }
+                    showAlert('<strong>Please fix the following:</strong><ul class="mb-0 mt-1 text-start">' + lines.join('') + '</ul>', 'error');
+                } else {
+                    const msg = (data && data.message) ? data.message : `An unexpected error occurred (${status}).`;
+                    showAlert(msg, 'error');
+                }
+                return;
+            }
+
+            if (data && data.success) {
                 showAlert('Post created and published successfully!', 'success');
                 
                 // Show publishing results if available
                 if (data.publishing_results) {
                     let resultsMessage = '<br><strong>Publishing Results:</strong><br>';
                     for (const [platform, result] of Object.entries(data.publishing_results)) {
-                        const status = result.success ? '✓' : '✗';
-                        const statusClass = result.success ? 'text-success' : 'text-danger';
-                        resultsMessage += `<span class="${statusClass}">${status} ${platform.charAt(0).toUpperCase() + platform.slice(1)}</span><br>`;
+                        const icon = result.success ? '✓' : '✗';
+                        const cls  = result.success ? 'text-success' : 'text-danger';
+                        resultsMessage += `<span class="${cls}">${icon} ${platform.charAt(0).toUpperCase() + platform.slice(1)}</span><br>`;
                         if (!result.success) {
                             resultsMessage += `<small class="text-muted">Error: ${result.message}</small><br>`;
                         }
                     }
-                    
-                    // Update the alert with results
-                    setTimeout(() => {
-                        showAlert('Post created! ' + resultsMessage, 'info');
-                    }, 1000);
+                    setTimeout(() => showAlert('Post created! ' + resultsMessage, 'info'), 1000);
                 }
                 
                 // Close modal and refresh page
                 const modal = bootstrap.Modal.getInstance(document.getElementById('createPostModal'));
-                if (modal) {
-                    modal.hide();
-                }
+                if (modal) modal.hide();
                 setTimeout(() => window.location.reload(), 2000);
             } else {
-                // Handle validation errors
-                if (data.errors) {
-                    let errorMessage = 'Validation errors:\n';
-                    for (const [field, messages] of Object.entries(data.errors)) {
-                        errorMessage += `${field}: ${messages.join(', ')}\n`;
-                    }
-                    showAlert(errorMessage, 'error');
-                } else {
-                    throw new Error(data.message || 'Failed to create post');
-                }
+                const msg = (data && data.message) ? data.message : 'Failed to create post. Please try again.';
+                showAlert(msg, 'error');
             }
         })
         .catch(error => {
             console.error('Error creating post:', error);
-            showAlert('Failed to create post: ' + error.message, 'error');
+            showAlert('A network error occurred. Please check your connection and try again.', 'error');
         })
         .finally(() => {
             // Reset button and flag

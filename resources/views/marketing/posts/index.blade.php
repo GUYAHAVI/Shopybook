@@ -113,12 +113,14 @@
                         <!-- Action Buttons -->
                         <div class="btn-group btn-group-sm">
                             @if($post->publications->where('status', 'published')->count() === 0 && (!$post->scheduled_at || $post->scheduled_at->isPast()))
-                                <form action="{{ route('marketing.posts.publish', $post) }}" method="POST" class="d-inline">
-                                    @csrf
-                                    <button type="submit" class="btn btn-sm btn-outline-primary" title="Publish Now">
-                                        <i class="fas fa-share"></i>
-                                    </button>
-                                </form>
+                                <button type="button"
+                                        class="btn btn-sm btn-outline-primary publish-btn"
+                                        data-url="{{ route('marketing.posts.publish', $post) }}"
+                                        data-csrf="{{ csrf_token() }}"
+                                        data-id="{{ $post->id }}"
+                                        title="Publish Now">
+                                    <i class="fas fa-share"></i>
+                                </button>
                             @endif
                             <a href="{{ route('marketing.posts.analytics', $post) }}" class="btn btn-sm btn-outline-info" title="View Analytics">
                                 <i class="fas fa-chart-bar"></i>
@@ -165,6 +167,18 @@
     </div>
 @endif
 
+<!-- Toast Notification -->
+<div class="position-fixed top-0 end-0 p-3" style="z-index: 11000;">
+    <div id="publishToast" class="toast align-items-center border-0" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="5000">
+        <div class="d-flex">
+            <div class="toast-body" id="publishToastBody">
+                <!-- message injected by JS -->
+            </div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+    </div>
+</div>
+
 <style>
 .platform-icons i {
     font-size: 1.1rem;
@@ -183,4 +197,77 @@
     font-size: 0.75rem;
 }
 </style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    function showPublishToast(message, isSuccess) {
+        const toastEl = document.getElementById('publishToast');
+        const toastBody = document.getElementById('publishToastBody');
+
+        toastEl.classList.remove('bg-success', 'bg-danger', 'text-white');
+        toastEl.classList.add(isSuccess ? 'bg-success' : 'bg-danger', 'text-white');
+
+        const icon = isSuccess ? 'fa-check-circle' : 'fa-exclamation-circle';
+        toastBody.innerHTML = `<i class="fas ${icon} me-2"></i>${message}`;
+
+        const toast = new bootstrap.Toast(toastEl);
+        toast.show();
+    }
+
+    document.querySelectorAll('.publish-btn').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            const url    = this.dataset.url;
+            const csrf   = this.dataset.csrf;
+            const postId = this.dataset.id;
+            const btnEl  = this;
+
+            // Show a spinner while publishing
+            const originalHTML = btnEl.innerHTML;
+            btnEl.disabled = true;
+            btnEl.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+
+            fetch(url, {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': csrf,
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(function (response) {
+                return response.json().then(function (data) {
+                    return { ok: response.ok, data: data };
+                });
+            })
+            .then(function (result) {
+                if (result.ok && result.data.message) {
+                    showPublishToast(result.data.message, true);
+                    // Update the status badge on the card
+                    const card = btnEl.closest('.card');
+                    if (card) {
+                        const badgeEl = card.querySelector('.badge.bg-secondary, .badge.bg-warning');
+                        if (badgeEl) {
+                            badgeEl.className = 'badge bg-success';
+                            badgeEl.innerHTML = '<i class="fas fa-check me-1"></i>Published';
+                        }
+                        // Hide the publish button after success
+                        btnEl.remove();
+                    }
+                } else {
+                    const errMsg = result.data.error || result.data.message || 'Something went wrong. Please try again.';
+                    showPublishToast(errMsg, false);
+                    btnEl.disabled = false;
+                    btnEl.innerHTML = originalHTML;
+                }
+            })
+            .catch(function (err) {
+                console.error('Publish error:', err);
+                showPublishToast('Network error — please check your connection and try again.', false);
+                btnEl.disabled = false;
+                btnEl.innerHTML = originalHTML;
+            });
+        });
+    });
+});
+</script>
 @endsection

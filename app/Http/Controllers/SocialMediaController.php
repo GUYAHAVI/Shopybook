@@ -244,7 +244,6 @@ class SocialMediaController extends Controller
             $response = Http::withToken($accessToken)
                 ->withHeaders([
                     'X-RestLi-Protocol-Version' => '2.0.0',
-                    'LinkedIn-Version' => '202304'
                 ])
                 ->get('https://api.linkedin.com/v2/userinfo');
 

@@ -237,7 +237,7 @@ class MarketingPostController extends Controller
                 'hashtags' => $validatedData['hashtags'] ? json_decode($validatedData['hashtags'], true) : null,
                 'media_files' => $mediaFiles,
                 'target_platforms' => $targetPlatforms,
-                'status' => 'draft',
+                'status' => (isset($validatedData['scheduled_at']) && $validatedData['scheduled_at']) ? 'scheduled' : 'draft',
                 'post_type' => isset($validatedData['scheduled_at']) && $validatedData['scheduled_at'] ? 'scheduled' : 'immediate',
                 'scheduled_at' => $validatedData['scheduled_at'] ?? null,
                 'metadata' => [
@@ -329,6 +329,9 @@ class MarketingPostController extends Controller
             'target_platforms.*' => 'string|in:facebook,instagram,twitter,linkedin',
             'post_type' => 'required|in:immediate,scheduled',
             'scheduled_at' => 'nullable|date|after:now',
+            'generated_image_url' => 'nullable|string',
+            'generated_image_local_path' => 'nullable|string',
+            'generated_image_relative_path' => 'nullable|string',
         ]);
 
         // Process hashtags
@@ -339,6 +342,20 @@ class MarketingPostController extends Controller
             }, explode(' ', $request->input('hashtags'))));
         }
 
+        // Resolve new generated image if provided
+        $mediaFiles = $post->media_files ?? [];
+        $localPath     = $request->input('generated_image_local_path');
+        $relativePath  = $request->input('generated_image_relative_path');
+
+        if ($localPath && file_exists($localPath)) {
+            $mediaFiles = [$localPath];
+        } elseif ($relativePath) {
+            $absPath = storage_path('app/public/' . $relativePath);
+            if (file_exists($absPath)) {
+                $mediaFiles = [$absPath];
+            }
+        }
+
         $post->update([
             'title' => $request->input('title'),
             'content' => $request->input('content'),
@@ -347,9 +364,10 @@ class MarketingPostController extends Controller
             'post_type' => $request->input('post_type'),
             'scheduled_at' => $request->input('post_type') === 'scheduled' ? $request->input('scheduled_at') : null,
             'status' => $request->input('post_type') === 'immediate' ? 'pending' : 'scheduled',
+            'media_files' => $mediaFiles,
         ]);
 
-        return redirect()->route('marketing.social-media')
+        return redirect()->route('marketing.posts.show', $post)
             ->with('success', 'Post updated successfully!');
     }
 

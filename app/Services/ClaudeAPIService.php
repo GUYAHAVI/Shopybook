@@ -1810,21 +1810,34 @@ Return ONLY the enhanced prompt, no explanations or additional text.";
                 'business' => $businessName
             ]);
 
+            // Detect whether the prompt likely involves people so we can add face-quality directives
+            $faceKeywords = ['people', 'person', 'man', 'woman', 'team', 'staff', 'customer', 'portrait', 'face', 'human', 'employee', 'worker', 'professional', 'family', 'business'];
+            $combinedText = strtolower($prompt . ' ' . ($postContent ?? ''));
+            $likelyHasPeople = false;
+            foreach ($faceKeywords as $kw) {
+                if (str_contains($combinedText, $kw)) { $likelyHasPeople = true; break; }
+            }
+
             // Enhance the prompt with style, business context, and post content
             $enhancedPrompt = $this->enhanceImagePrompt($prompt, $style, $businessName, $businessType, $postContent, $postTitle);
-            
-            Log::info('Prompt enhanced', ['enhanced_prompt' => substr($enhancedPrompt, 0, 150)]);
-            
+
+            // Build negative prompt to suppress ugly artifacts / bad faces
+            $negativePrompt = $this->buildNegativePrompt($likelyHasPeople);
+
+            Log::info('Prompt enhanced', ['enhanced_prompt' => substr($enhancedPrompt, 0, 150), 'has_people' => $likelyHasPeople]);
+
             // Clean and encode the prompt properly
             $cleanPrompt = trim($enhancedPrompt);
-            $encodedPrompt = rawurlencode($cleanPrompt);
-            
+            $encodedPrompt   = rawurlencode($cleanPrompt);
+            $encodedNegative = rawurlencode($negativePrompt);
+
             // Extract width and height from size (e.g., "1024x1024")
             list($width, $height) = explode('x', $size);
-            
+
             // Use Pollinations.AI - free, no API key required
-            // Format: https://image.pollinations.ai/prompt/{prompt}?width={w}&height={h}&nologo=true&model=flux
-            $imageUrl = "https://image.pollinations.ai/prompt/{$encodedPrompt}?width={$width}&height={$height}&nologo=true&model=flux";
+            // &negative= suppresses unwanted features; &enhance=true lets the model auto-improve the prompt; &seed for variety
+            $seed     = rand(1, 999999);
+            $imageUrl = "https://image.pollinations.ai/prompt/{$encodedPrompt}?width={$width}&height={$height}&nologo=true&model=flux&enhance=true&negative={$encodedNegative}&seed={$seed}";
             
             Log::info('Generating AI image via Pollinations.AI', [
                 'prompt' => substr($prompt, 0, 100),
@@ -1885,29 +1898,55 @@ Return ONLY the enhanced prompt, no explanations or additional text.";
     private function enhanceImagePrompt($prompt, $style, $businessName, $businessType, $postContent = null, $postTitle = null)
     {
         $styleModifiers = [
-            'realistic' => 'photorealistic, high quality, professional photography, 8k, detailed',
-            'digital-art' => 'digital art, vibrant colors, modern, artistic, creative',
-            'illustration' => 'illustration, hand-drawn style, artistic, colorful',
-            '3d-render' => '3D render, CGI, modern, sleek, high quality',
+            'realistic' => 'photorealistic, high quality, professional photography, 8k, sharp focus, natural skin tones, well-lit',
+            'digital-art' => 'digital art, vibrant colors, modern, artistic, creative, polished',
+            'illustration' => 'clean illustration, hand-drawn style, artistic, colorful, polished',
+            '3d-render' => '3D render, CGI, modern, sleek, high quality, precise details',
             'minimalist' => 'minimalist, clean, simple, modern design, elegant',
             'vibrant' => 'vibrant colors, energetic, bold, eye-catching, dynamic'
         ];
 
         $modifier = $styleModifiers[$style] ?? $styleModifiers['realistic'];
-        
+
         // Build enhanced prompt with all context
         $enhancedPrompt = $prompt;
-        
+
         // Add post context if available (helps match the image to the post)
         if ($postContent && strlen($postContent) > 20) {
             $contentContext = substr($postContent, 0, 100);
             $enhancedPrompt .= " (context: {$contentContext})";
         }
-        
+
         // Add style and business context
         $enhancedPrompt .= ", {$modifier}, professional marketing image for {$businessType} business";
-        
+
+        // If the prompt likely involves people, add face-quality boosters
+        $faceKeywords = ['people', 'person', 'man', 'woman', 'team', 'staff', 'customer', 'portrait', 'face', 'human', 'employee', 'worker', 'professional', 'family', 'business'];
+        $promptLower  = strtolower($prompt . ' ' . ($postContent ?? ''));
+        $likelyHasPeople = false;
+        foreach ($faceKeywords as $kw) {
+            if (str_contains($promptLower, $kw)) { $likelyHasPeople = true; break; }
+        }
+
+        if ($likelyHasPeople) {
+            $enhancedPrompt .= ', beautiful face, perfect facial features, smooth skin, clear eyes, symmetrical face, professional appearance';
+        }
+
         return $enhancedPrompt;
+    }
+
+    /**
+     * Build a negative prompt to suppress common AI image artifacts, especially bad faces
+     */
+    private function buildNegativePrompt(bool $likelyHasPeople = false): string
+    {
+        $base = 'blurry, low quality, pixelated, watermark, text overlay, logo, distorted, deformed, ugly, bad anatomy, extra limbs, mutation, bad proportions';
+
+        if ($likelyHasPeople) {
+            $base .= ', disfigured face, deformed face, ugly face, bad face, extra fingers, mutated hands, poorly drawn face, poorly drawn hands, missing fingers, extra fingers, fused fingers, too many fingers, long neck, cross-eyed, bad eyes, asymmetric eyes, unnatural skin, blotchy skin, acne, hairy face, facial hair on women, monkey face, neanderthal, primitive, ape-like features, wrinkled face, old skin, skin disease, zombie, uncanny valley';
+        }
+
+        return $base;
     }
 
     /**
