@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Services\ClaudeAPIService;
+use App\Services\AIMemoryService;
+use App\Jobs\ExtractBusinessMemoryJob;
 use App\Models\Business;
 use App\Models\Product;
 use App\Models\Service;
@@ -21,10 +23,12 @@ use Illuminate\Support\Facades\Log;
 class AICommunicationController extends Controller
 {
     protected $claudeService;
+    protected $memoryService;
 
-    public function __construct(ClaudeAPIService $claudeService)
+    public function __construct(ClaudeAPIService $claudeService, AIMemoryService $memoryService)
     {
-        $this->claudeService = $claudeService;
+        $this->claudeService  = $claudeService;
+        $this->memoryService  = $memoryService;
     }
 
     /**
@@ -53,36 +57,68 @@ class AICommunicationController extends Controller
         ]);
 
         try {
-            $user = Auth::user();
-            $message = $request->input('message');
-
-            // Automatically use logged-in user's business
+            $user     = Auth::user();
+            $message  = $request->input('message');
             $business = $user->business;
-            $businessData = [];
-            
+
+            $businessData = $business ? $this->gatherBusinessData($business) : [];
+
+            // ── Session identifier (scopes per-browser-session) ───────────
+            $sessionId = $request->session()->getId();
+
+            // ── Build multi-turn messages array ───────────────────────────
+            // Retrieve the last N turns for this session
+            $history = $business
+                ? $this->memoryService->getConversationHistory($business->id, $sessionId)
+                : [];
+
+            // Append the new user turn
+            $messages   = $history;
+            $messages[] = ['role' => 'user', 'content' => $message];
+
+            // ── Build enriched system prompt ──────────────────────────────
+            $contextSections = [];
             if ($business) {
-                $businessData = $this->gatherBusinessData($business);
+                $contextSections = $this->memoryService->buildContextBlock(
+                    $business->id,
+                    $business->business_type ?? 'general',
+                    $sessionId
+                );
             }
 
-            // Use Claude to analyze and respond
-            $response = $this->claudeService->chatWithBusinessContext(
-                $message,
+            $systemPrompt = $this->claudeService->buildSystemPrompt(
                 $businessData,
-                $business
+                $business,
+                $contextSections
             );
 
+            // ── Call Claude with full conversation history ────────────────
+            $response = $this->claudeService->chatWithConversationHistory(
+                $systemPrompt,
+                $messages
+            );
+
+            // ── Persist the new turns ─────────────────────────────────────
+            if ($business) {
+                $this->memoryService->storeConversationTurn($business->id, $sessionId, 'user',      $message);
+                $this->memoryService->storeConversationTurn($business->id, $sessionId, 'assistant', $response);
+
+                // Async: extract & store business memory facets from this turn
+                dispatch(new ExtractBusinessMemoryJob($business->id, $message, $response));
+            }
+
             return response()->json([
-                'success' => true,
-                'response' => $response,
-                'source' => 'claude_ai',
-                'business_name' => $business ? $business->name : null
+                'success'       => true,
+                'response'      => $response,
+                'source'        => 'claude_ai',
+                'business_name' => $business ? $business->name : null,
             ]);
 
         } catch (\Exception $e) {
             Log::error('Chat Error: ' . $e->getMessage());
             return response()->json([
                 'success' => false,
-                'message' => 'Error processing message: ' . $e->getMessage()
+                'message' => 'Error processing message: ' . $e->getMessage(),
             ], 500);
         }
     }
@@ -374,43 +410,57 @@ class AICommunicationController extends Controller
     }
 
     /**
-     * Get conversation history
+     * Get conversation history for the current session
      */
     public function getHistory(Request $request)
     {
         try {
-            // For now, return empty history as we're focusing on real-time analysis
-            // TODO: Implement conversation history storage if needed
+            $user     = Auth::user();
+            $business = $user->business;
+
+            if (! $business) {
+                return response()->json(['success' => true, 'history' => []]);
+            }
+
+            $sessionId = $request->session()->getId();
+            $history   = $this->memoryService->getConversationHistory($business->id, $sessionId, 20);
+
             return response()->json([
                 'success' => true,
-                'history' => []
+                'history' => $history,
             ]);
 
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Error getting history: ' . $e->getMessage()
+                'message' => 'Error getting history: ' . $e->getMessage(),
             ], 500);
         }
     }
 
     /**
-     * Clear conversation history
+     * Clear conversation history for the current session
      */
     public function clearHistory(Request $request)
     {
         try {
-            // For now, just return success
-            // TODO: Implement if conversation history storage is added
+            $user     = Auth::user();
+            $business = $user->business;
+
+            if ($business) {
+                $sessionId = $request->session()->getId();
+                $this->memoryService->clearSession($business->id, $sessionId);
+            }
+
             return response()->json([
                 'success' => true,
-                'message' => 'Conversation history cleared successfully'
+                'message' => 'Conversation history cleared successfully',
             ]);
 
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Error clearing history: ' . $e->getMessage()
+                'message' => 'Error clearing history: ' . $e->getMessage(),
             ], 500);
         }
     }

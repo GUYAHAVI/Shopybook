@@ -664,6 +664,76 @@ class ClaudeAPIService
     }
 
     /**
+     * Multi-turn conversation with full Claude messages array.
+     * $systemPrompt  — business data context (from buildSystemPrompt)
+     * $messages      — [{role: user|assistant, content: string}, ...]
+     *                  must end with the current user turn
+     */
+    public function chatWithConversationHistory(string $systemPrompt, array $messages): string
+    {
+        try {
+            $response = Http::withHeaders([
+                'x-api-key'         => $this->apiKey,
+                'anthropic-version' => '2023-06-01',
+                'Content-Type'      => 'application/json',
+            ])->timeout(60)->post($this->baseUrl, [
+                'model'       => $this->model,
+                'max_tokens'  => 2048,
+                'temperature' => 0.7,
+                'system'      => $systemPrompt,
+                'messages'    => $messages,
+            ]);
+
+            if ($response->successful()) {
+                return $response->json()['content'][0]['text']
+                    ?? 'I apologize, but I could not process your request at this time.';
+            }
+
+            Log::warning('Claude multi-turn HTTP error', [
+                'status' => $response->status(),
+                'body'   => $response->body(),
+            ]);
+
+            return 'I apologize, but I encountered an issue connecting to the AI service. Please try again.';
+
+        } catch (\Exception $e) {
+            Log::error('Claude chatWithConversationHistory error: ' . $e->getMessage());
+            return 'I apologize, but I encountered an error. Please try again later.';
+        }
+    }
+
+    /**
+     * Minimal single-turn call strictly for internal JSON extraction tasks
+     * (e.g. memory fact extraction from a conversation turn).
+     * Returns raw text; caller is responsible for JSON-decoding.
+     */
+    public function extractJSON(string $prompt): string
+    {
+        try {
+            $response = Http::withHeaders([
+                'x-api-key'         => $this->apiKey,
+                'anthropic-version' => '2023-06-01',
+                'Content-Type'      => 'application/json',
+            ])->timeout(30)->post($this->baseUrl, [
+                'model'      => $this->model,
+                'max_tokens' => 512,
+                'temperature'=> 0.2,
+                'messages'   => [['role' => 'user', 'content' => $prompt]],
+            ]);
+
+            if ($response->successful()) {
+                return $response->json()['content'][0]['text'] ?? '';
+            }
+
+            return '';
+
+        } catch (\Exception $e) {
+            Log::warning('Claude extractJSON error: ' . $e->getMessage());
+            return '';
+        }
+    }
+
+    /**
      * Build comprehensive prompt for business chat
      */
     protected function buildBusinessChatPrompt(string $userMessage, array $businessData, $business): string
@@ -921,6 +991,54 @@ class ClaudeAPIService
         $prompt .= "11. Always end with a practical next step or recommendation\n\n";
 
         $prompt .= "**Your Response:**";
+
+        return $prompt;
+    }
+
+    /**
+     * Build the SYSTEM portion of the prompt — business data context + response
+     * guidelines — without embedding the user question.  Used by the multi-turn
+     * path so the system content goes into the Anthropic `system` parameter and
+     * the conversation history occupies the `messages` array.
+     *
+     * @param array  $businessData     From AICommunicationController::gatherBusinessData()
+     * @param mixed  $business         Business model instance (or null)
+     * @param array  $contextSections  Extra context blocks from AIMemoryService::buildContextBlock()
+     *                                 Keys: 'memory', 'benchmarks', 'market'
+     */
+    public function buildSystemPrompt(array $businessData, $business, array $contextSections = []): string
+    {
+        // Build the same comprehensive business-data block as buildBusinessChatPrompt()
+        // but stop before injecting the user message.
+        $prompt = $this->buildBusinessChatPrompt('__USER_PLACEHOLDER__', $businessData, $business);
+
+        // Strip from "## USER QUESTION:" to end (injected by buildBusinessChatPrompt)
+        $cutoff = strpos($prompt, "\n## USER QUESTION:\n");
+        if ($cutoff !== false) {
+            $prompt = substr($prompt, 0, $cutoff);
+        }
+
+        // ── Append enriched context sections (memory, benchmarks, market) ───
+        if (! empty($contextSections)) {
+            $prompt .= "\n\n---\n## ENRICHED CONTEXT\n";
+            foreach ($contextSections as $section) {
+                $prompt .= "\n" . $section . "\n";
+            }
+        }
+
+        // ── Always-present response guidelines ───────────────────────────────
+        $prompt .= "\n\n## RESPONSE GUIDELINES:\n";
+        $prompt .= "1. Be conversational, helpful, and encouraging\n";
+        $prompt .= "2. Use the actual business data provided to give specific, actionable advice\n";
+        $prompt .= "3. Include numbers and metrics from their data when relevant\n";
+        $prompt .= "4. For pricing questions, consider the Kenyan market context and competitive positioning\n";
+        $prompt .= "5. For supplier recommendations, suggest practical options available in Kenya\n";
+        $prompt .= "6. For growth advice, be specific about which products/services to focus on\n";
+        $prompt .= "7. If data is limited, acknowledge it and provide general best practices\n";
+        $prompt .= "8. Format your response clearly with bullet points or sections when appropriate\n";
+        $prompt .= "9. For cost/expense questions, analyse labour costs, inventory, and profitability\n";
+        $prompt .= "10. Always end with a practical next step or recommendation\n";
+        $prompt .= "11. Where relevant, reference Kenyan market trends and benchmarks from the enriched context\n";
 
         return $prompt;
     }
