@@ -76,6 +76,35 @@
                             </div>
                         </div>
                     </div>
+
+                    {{-- M-Pesa extras (phone + STK toggle) – only when Paystack configured --}}
+                    @php $paystackCfg = $business->getSettingsOrCreate(); @endphp
+                    @if($paystackCfg->paystack_enabled)
+                    <div class="row" id="mpesa_phone_row" style="display:none;">
+                        <div class="col-md-12">
+                            <div class="mb-2">
+                                {{-- STK Push toggle --}}
+                                <div class="form-check form-switch mb-2">
+                                    <input class="form-check-input" type="checkbox" id="use_stk_push" checked>
+                                    <label class="form-check-label" for="use_stk_push" style="color: var(--text-primary);">
+                                        <strong>Send STK Push</strong>
+                                        <span class="text-muted small"> — prompt customer's phone via Paystack</span>
+                                    </label>
+                                </div>
+                                {{-- Phone field (only needed for STK push) --}}
+                                <div id="stk_phone_area">
+                                    <label for="mpesa_phone" class="form-label" style="color: var(--text-primary);">
+                                        <i class="fas fa-mobile-alt me-1"></i>Customer Phone Number
+                                    </label>
+                                    <input type="tel" class="form-control" id="mpesa_phone"
+                                           placeholder="e.g. 0712345678"
+                                           style="border: 1px solid var(--border-color); background: var(--card-bg); color: var(--text-primary);">
+                                    <small class="text-muted">Number that will receive the STK push (07XXXXXXXX)</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    @endif
                     
                     <div class="row">
                         <div class="col-md-12">
@@ -203,6 +232,12 @@
                     <button class="btn btn-success w-100 mb-2" id="checkout_btn" disabled>
                         <i class="fas fa-check me-2"></i>Complete Sale
                     </button>
+
+                    @if($paystackCfg->paystack_enabled)
+                    <button class="btn btn-success w-100 mb-2" id="mpesa_stk_btn" style="display:none;" disabled>
+                        <i class="fas fa-mobile-alt me-2"></i>Send M-Pesa STK Push
+                    </button>
+                    @endif
                     
                     <button class="btn btn-outline-secondary w-100 mb-2" id="clear_cart_btn">
                         <i class="fas fa-trash me-2"></i>Clear Cart
@@ -891,6 +926,9 @@ window.posConfig = {
     csrfToken: document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
     currencySymbol: 'KSh ',
     businessName: '{{ $business->name ?? "Shopybook Business" }}',
+    paystackEnabled: {{ $paystackCfg->paystack_enabled ? 'true' : 'false' }},
+    paystackMpesaChargeUrl: '{{ route("payment.paystack.mpesa.charge") }}',
+    paystackStatusUrl: '{{ url("/payment/paystack/status") }}',
     routes: {
         createOrder: '{{ route("sales.create-order") }}',
         storeCustomer: '{{ route("sales.store-customer") }}',
@@ -957,4 +995,254 @@ function updatePartialPaymentDisplay() {
 
 <!-- Load our custom POS JavaScript -->
 <script src="{{ asset('js/pos.js') }}?v={{ time() }}"></script>
+
+@if($paystackCfg->paystack_enabled)
+<!-- ============================================================
+     Paystack M-Pesa STK Push — Modal
+============================================================ -->
+<div class="modal fade" id="mpesaStkModal" tabindex="-1" data-bs-backdrop="static" aria-labelledby="mpesaStkModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="mpesaStkModalLabel">
+                    <i class="fas fa-mobile-alt me-2 text-success"></i>M-Pesa STK Push
+                </h5>
+            </div>
+            <div class="modal-body text-center py-4">
+                <div id="stk_waiting">
+                    <div class="spinner-border text-success mb-3" role="status"></div>
+                    <h6 id="stk_status_text">Sending STK push to customer's phone&hellip;</h6>
+                    <p class="text-muted small mb-0" id="stk_amount_text"></p>
+                    <p class="text-muted small">Ask the customer to enter their M-Pesa PIN.</p>
+                    <p class="text-muted small">Checking status in <span id="stk_countdown">5</span>s&hellip;</p>
+                </div>
+                <div id="stk_success" style="display:none;">
+                    <i class="fas fa-check-circle fa-4x text-success mb-3"></i>
+                    <h5 class="text-success">Payment Received!</h5>
+                    <p class="text-muted small" id="stk_success_text">Completing the sale&hellip;</p>
+                </div>
+                <div id="stk_failed" style="display:none;">
+                    <i class="fas fa-times-circle fa-4x text-danger mb-3"></i>
+                    <h5 class="text-danger">Payment Failed</h5>
+                    <p class="text-muted small" id="stk_failed_text">The customer did not complete the payment.</p>
+                </div>
+            </div>
+            <div class="modal-footer justify-content-center" id="stk_modal_footer">
+                <button type="button" class="btn btn-outline-secondary btn-sm" id="stk_cancel_btn" onclick="cancelStkPush()">
+                    Cancel
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+(function () {
+    'use strict';
+
+    const cfg = window.posConfig;
+    let stkReference   = null;
+    let pollInterval   = null;
+    let pollCount      = 0;
+    const MAX_POLLS    = 18; // 18 × 5 s = 90 s timeout
+    const POLL_EVERY   = 5000; // ms
+
+    // ── Show phone row and swap buttons when M-Pesa is selected ──────────
+    (function wirePaymentMethodChange() {
+        const methodSel   = document.getElementById('payment_method');
+        const phoneRow    = document.getElementById('mpesa_phone_row');
+        const stkBtn      = document.getElementById('mpesa_stk_btn');
+        const checkoutBtn = document.getElementById('checkout_btn');
+        const stkCheckbox = document.getElementById('use_stk_push');
+        const stkPhoneArea = document.getElementById('stk_phone_area');
+
+        if (!methodSel) return;
+
+        function toggleMpesaUI() {
+            const isMpesa  = methodSel.value === 'mpesa';
+            const useStk   = isMpesa && stkCheckbox && stkCheckbox.checked;
+
+            // Show/hide the phone+toggle row
+            if (phoneRow) phoneRow.style.display = isMpesa ? 'block' : 'none';
+
+            // Show/hide the phone input area (only needed for STK)
+            if (stkPhoneArea) stkPhoneArea.style.display = useStk ? 'block' : 'none';
+
+            // Swap STK button vs Complete Sale button
+            if (stkBtn)      stkBtn.style.display      = useStk ? 'block' : 'none';
+            if (checkoutBtn) checkoutBtn.style.display = useStk ? 'none'  : 'block';
+        }
+
+        methodSel.addEventListener('change', toggleMpesaUI);
+        if (stkCheckbox) stkCheckbox.addEventListener('change', toggleMpesaUI);
+        toggleMpesaUI(); // run once on load
+    }());
+
+    // Keep STK button's disabled state in sync with the checkout button
+    const observer = new MutationObserver(function () {
+        const checkoutBtn = document.getElementById('checkout_btn');
+        const stkBtn      = document.getElementById('mpesa_stk_btn');
+        if (checkoutBtn && stkBtn) {
+            stkBtn.disabled = checkoutBtn.disabled;
+        }
+    });
+    const checkoutBtn = document.getElementById('checkout_btn');
+    if (checkoutBtn) {
+        observer.observe(checkoutBtn, { attributes: true, attributeFilter: ['disabled'] });
+    }
+
+    // ── Main STK push trigger ─────────────────────────────────────────────
+    const stkBtn = document.getElementById('mpesa_stk_btn');
+    if (stkBtn) {
+        stkBtn.addEventListener('click', initiateStk);
+    }
+
+    function initiateStk() {
+        const phone = (document.getElementById('mpesa_phone') || {}).value || '';
+        if (!phone.trim()) {
+            alert('Please enter the customer\'s M-Pesa phone number.');
+            return;
+        }
+
+        // Use partial payment amount if entered, otherwise use cart total
+        const paymentStatus = (document.getElementById('payment_status') || {}).value || 'paid';
+        const partialInput  = document.getElementById('partial_amount');
+        let amount;
+        if (paymentStatus === 'partial' && partialInput && partialInput.value) {
+            amount = parseFloat(partialInput.value) || 0;
+        } else {
+            const totalEl  = document.getElementById('total');
+            const totalTxt = totalEl ? totalEl.textContent.replace(/[^0-9.]/g, '') : '0';
+            amount = parseFloat(totalTxt) || 0;
+        }
+        if (amount <= 0) { alert('Cart is empty or partial amount is missing.'); return; }
+
+        showStkModal('Sending STK push to ' + phone + '…', amount);
+
+        fetch(cfg.paystackMpesaChargeUrl, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': cfg.csrfToken,
+                'Accept': 'application/json',
+            },
+            body: JSON.stringify({ phone: phone, amount: amount }),
+        })
+        .then(function (r) { return r.json(); })
+        .then(function (data) {
+            if (data.success) {
+                stkReference = data.reference;
+                document.getElementById('stk_status_text').textContent = data.message || 'Waiting for customer to approve…';
+                startPolling();
+            } else {
+                showStkFailed(data.error || 'Could not send STK push.');
+            }
+        })
+        .catch(function (err) {
+            showStkFailed('Network error: ' + err.message);
+        });
+    }
+
+    function startPolling() {
+        pollCount = 0;
+        let countdown = Math.floor(POLL_EVERY / 1000);
+        const countdownEl = document.getElementById('stk_countdown');
+
+        const countdownTimer = setInterval(function () {
+            countdown--;
+            if (countdownEl) countdownEl.textContent = countdown;
+            if (countdown <= 0) {
+                countdown = Math.floor(POLL_EVERY / 1000);
+            }
+        }, 1000);
+
+        pollInterval = setInterval(function () {
+            pollCount++;
+            if (pollCount > MAX_POLLS) {
+                clearInterval(pollInterval);
+                clearInterval(countdownTimer);
+                showStkFailed('Payment timed out. The customer did not respond in time.');
+                return;
+            }
+
+            fetch(cfg.paystackStatusUrl + '/' + stkReference, {
+                headers: {
+                    'X-CSRF-TOKEN': cfg.csrfToken,
+                    'Accept': 'application/json',
+                },
+            })
+            .then(function (r) { return r.json(); })
+            .then(function (data) {
+                const status = (data.status || '').toLowerCase();
+                if (status === 'success') {
+                    clearInterval(pollInterval);
+                    clearInterval(countdownTimer);
+                    onPaymentSuccess(data);
+                } else if (status === 'failed') {
+                    clearInterval(pollInterval);
+                    clearInterval(countdownTimer);
+                    showStkFailed('Customer declined or payment failed.');
+                }
+                // 'pay_offline' / 'pending' → keep polling
+            })
+            .catch(function () { /* network hiccup — retry next poll */ });
+        }, POLL_EVERY);
+    }
+
+    function onPaymentSuccess(data) {
+        document.getElementById('stk_waiting').style.display = 'none';
+        document.getElementById('stk_failed').style.display  = 'none';
+        document.getElementById('stk_success').style.display = 'block';
+        document.getElementById('stk_success_text').textContent =
+            'KSh ' + (data.amount || '') + ' received. Completing the sale…';
+        document.getElementById('stk_cancel_btn').style.display = 'none';
+
+        // Let pos.js complete the sale normally (it reads payment_method from #payment_method)
+        setTimeout(function () {
+            hideStkModal();
+            const checkoutBtn = document.getElementById('checkout_btn');
+            if (checkoutBtn) {
+                // Temporarily show it and click it so pos.js creates the order
+                checkoutBtn.style.display = 'block';
+                checkoutBtn.click();
+                checkoutBtn.style.display = 'none';
+            }
+        }, 1500);
+    }
+
+    // ── Modal helpers ─────────────────────────────────────────────────────
+    function showStkModal(statusText, amount) {
+        document.getElementById('stk_waiting').style.display = 'block';
+        document.getElementById('stk_success').style.display = 'none';
+        document.getElementById('stk_failed').style.display  = 'none';
+        document.getElementById('stk_cancel_btn').style.display = 'inline-block';
+        document.getElementById('stk_status_text').textContent = statusText;
+        document.getElementById('stk_amount_text').textContent = 'Amount: KSh ' + amount.toFixed(2);
+        document.getElementById('stk_countdown').textContent = '5';
+        const modal = new bootstrap.Modal(document.getElementById('mpesaStkModal'));
+        modal.show();
+    }
+
+    function hideStkModal() {
+        const modalEl = document.getElementById('mpesaStkModal');
+        const modal   = bootstrap.Modal.getInstance(modalEl);
+        if (modal) modal.hide();
+    }
+
+    function showStkFailed(msg) {
+        document.getElementById('stk_waiting').style.display = 'none';
+        document.getElementById('stk_success').style.display = 'none';
+        document.getElementById('stk_failed').style.display  = 'block';
+        document.getElementById('stk_failed_text').textContent = msg;
+        document.getElementById('stk_cancel_btn').textContent = 'Close';
+    }
+
+    window.cancelStkPush = function () {
+        if (pollInterval) clearInterval(pollInterval);
+        hideStkModal();
+    };
+}());
+</script>
+@endif
+
 @endsection

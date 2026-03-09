@@ -63,6 +63,11 @@ class BusinessSettings extends Model
         'show_stock_levels',
         // Additional Settings
         'custom_settings',
+        // Paystack Payment Gateway
+        'paystack_enabled',
+        'paystack_public_key',
+        'paystack_secret_key',
+        'paystack_test_mode',
     ];
 
     protected $casts = [
@@ -94,7 +99,25 @@ class BusinessSettings extends Model
         'business_hours' => 'array',
         'holidays' => 'array',
         'custom_settings' => 'array',
+        // Paystack
+        'paystack_enabled' => 'boolean',
+        'paystack_test_mode' => 'boolean',
+        'paystack_secret_key' => 'encrypted',
     ];
+
+    /**
+     * Return Paystack config for the business (secret key decrypted via cast)
+     */
+    public function paystackConfig(): array
+    {
+        return [
+            'enabled'    => (bool) $this->paystack_enabled,
+            'public_key' => $this->paystack_public_key,
+            'secret_key' => $this->paystack_secret_key,
+            'test_mode'  => (bool) $this->paystack_test_mode,
+            'base_url'   => 'https://api.paystack.co',
+        ];
+    }
 
     /**
      * Get the business that owns the settings

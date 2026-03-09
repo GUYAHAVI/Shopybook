@@ -456,6 +456,7 @@ Route::post('/orders', [SalesController::class, 'createOrder'])->name('sales.cre
         Route::put('/display', [SettingsController::class, 'updateDisplay'])->name('settings.update.display');
         Route::put('/business-hours', [SettingsController::class, 'updateBusinessHours'])->name('settings.update.business-hours');
         Route::put('/security', [SettingsController::class, 'updateSecurity'])->name('settings.update.security');
+        Route::put('/payments', [SettingsController::class, 'updatePayments'])->name('settings.update.payments');
         Route::post('/reset-defaults', [SettingsController::class, 'resetToDefaults'])->name('settings.reset-defaults');
     });
 
@@ -650,6 +651,9 @@ Route::post('/orders', [SalesController::class, 'createOrder'])->name('sales.cre
         // PayPal callbacks
         Route::get('/paypal/success', [PaymentController::class, 'paypalSuccess'])->name('payment.paypal.success');
         Route::get('/paypal/cancel', [PaymentController::class, 'paypalCancel'])->name('payment.paypal.cancel');
+        // Paystack M-Pesa STK push (POS)
+        Route::post('/paystack/mpesa/charge', [PaymentController::class, 'paystackMpesaCharge'])->name('payment.paystack.mpesa.charge')->middleware('has.business');
+        Route::get('/paystack/status/{reference}', [PaymentController::class, 'paystackChargeStatus'])->name('payment.paystack.status')->middleware('has.business')->where('reference', '[A-Za-z0-9_\-]+');
     });
 
     // Billing Routes

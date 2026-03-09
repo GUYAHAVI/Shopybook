@@ -88,6 +88,11 @@
                             </button>
                         </li>
                         <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="payments-tab" data-bs-toggle="tab" data-bs-target="#payments" type="button" role="tab">
+                                <i class="fas fa-credit-card me-2"></i>Payments
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
                             <button class="nav-link text-danger" id="danger-zone-tab" data-bs-toggle="tab" data-bs-target="#danger-zone" type="button" role="tab">
                                 <i class="fas fa-exclamation-triangle me-2"></i>Danger Zone
                             </button>
@@ -676,6 +681,87 @@
                             </form>
                         </div>
 
+                        <!-- Payments / Paystack -->
+                        <div class="tab-pane fade" id="payments" role="tabpanel">
+                            <h6 class="mb-1">Payment Gateway &mdash; Paystack (M-Pesa STK Push)</h6>
+                            <p class="text-muted small mb-4">Connect your own Paystack account so your customers can pay via M-Pesa directly from the POS. Funds go straight into your business bank account.</p>
+
+                            {{-- Setup guide --}}
+                            <div class="card border-0 bg-light mb-4">
+                                <div class="card-body py-3">
+                                    <h6 class="text-primary mb-2"><i class="fas fa-info-circle me-2"></i>How to get your API keys</h6>
+                                    <ol class="mb-0 ps-3 small text-muted">
+                                        <li>Create a free account at <a href="https://paystack.com/signup" target="_blank" rel="noopener">paystack.com/signup</a></li>
+                                        <li>Verify your business and activate your account</li>
+                                        <li>Navigate to <strong>Settings &rarr; API Keys &amp; Webhooks</strong></li>
+                                        <li>Copy your <strong>Public Key</strong> and <strong>Secret Key</strong></li>
+                                        <li>Paste them below and save &mdash; then test with a small amount in Test Mode first</li>
+                                    </ol>
+                                </div>
+                            </div>
+
+                            <form action="{{ route('settings.update.payments') }}" method="POST">
+                                @csrf
+                                @method('PUT')
+
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <div class="form-check form-switch">
+                                            <input class="form-check-input" type="checkbox" id="paystack_enabled" name="paystack_enabled" value="1"
+                                                   {{ $settings->paystack_enabled ? 'checked' : '' }}>
+                                            <label class="form-check-label" for="paystack_enabled">
+                                                <strong>Enable Paystack Payments</strong>
+                                                <p class="text-xs text-muted mb-0">Allow M-Pesa STK push from the POS</p>
+                                            </label>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <div class="form-check form-switch">
+                                            <input class="form-check-input" type="checkbox" id="paystack_test_mode" name="paystack_test_mode" value="1"
+                                                   {{ $settings->paystack_test_mode ? 'checked' : '' }}>
+                                            <label class="form-check-label" for="paystack_test_mode">
+                                                <strong>Test Mode</strong>
+                                                <p class="text-xs text-muted mb-0">Use Paystack test keys (no real money moved)</p>
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label">Public Key</label>
+                                        <input type="text" class="form-control" name="paystack_public_key"
+                                               placeholder="pk_test_xxxxxxxxxxxxxxxxxxxx"
+                                               value="{{ $settings->paystack_public_key }}">
+                                        <small class="text-muted">Starts with <code>pk_test_</code> (test) or <code>pk_live_</code> (live)</small>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label">Secret Key</label>
+                                        <div class="input-group">
+                                            <input type="password" class="form-control" name="paystack_secret_key"
+                                                   id="paystack_secret_key_input"
+                                                   placeholder="{{ $settings->paystack_secret_key ? '••••••••••••••• (saved — leave blank to keep)' : 'sk_test_xxxxxxxxxxxxxxxxxxxx' }}">
+                                            <button type="button" class="btn btn-outline-secondary" onclick="toggleSecretKey()" title="Show / hide">
+                                                <i class="fas fa-eye" id="toggleSecretKeyIcon"></i>
+                                            </button>
+                                        </div>
+                                        <small class="text-muted">Starts with <code>sk_test_</code> or <code>sk_live_</code> &mdash; never share this</small>
+                                    </div>
+                                </div>
+
+                                <div class="alert alert-warning mt-1">
+                                    <i class="fas fa-lock me-2"></i>
+                                    <strong>Security:</strong> Your Secret Key is encrypted before storage and never displayed in full. Only submit a new value when rotating keys.
+                                </div>
+
+                                <div class="mt-3">
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="fas fa-save me-2"></i>Save Payment Settings
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+
                         <!-- Danger Zone -->
                         <div class="tab-pane fade" id="danger-zone" role="tabpanel">
                             <div class="alert alert-danger">
@@ -1094,6 +1180,26 @@ document.addEventListener('DOMContentLoaded', function() {
                 selectedPlanInput.value = plan;
             });
         });
+    }
+});
+
+function toggleSecretKey() {
+    const input = document.getElementById('paystack_secret_key_input');
+    const icon  = document.getElementById('toggleSecretKeyIcon');
+    if (input.type === 'password') {
+        input.type = 'text';
+        icon.classList.replace('fa-eye', 'fa-eye-slash');
+    } else {
+        input.type = 'password';
+        icon.classList.replace('fa-eye-slash', 'fa-eye');
+    }
+}
+
+// Activate the Payments tab when the URL hash is #payments
+document.addEventListener('DOMContentLoaded', function () {
+    if (window.location.hash === '#payments') {
+        const tab = document.getElementById('payments-tab');
+        if (tab) { tab.click(); }
     }
 });
 </script>

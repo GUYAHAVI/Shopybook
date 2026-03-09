@@ -220,6 +220,32 @@ class SettingsController extends Controller
     }
 
     /**
+     * Update Paystack payment gateway settings
+     */
+    public function updatePayments(Request $request)
+    {
+        $validated = $request->validate([
+            'paystack_enabled'    => 'boolean',
+            'paystack_public_key' => 'nullable|string|max:100',
+            'paystack_secret_key' => 'nullable|string|max:255',
+            'paystack_test_mode'  => 'boolean',
+        ]);
+
+        $business = auth()->user()->business;
+        $settings = $business->getSettingsOrCreate();
+
+        // Never overwrite an existing secret key with an empty string
+        if (empty($validated['paystack_secret_key'])) {
+            unset($validated['paystack_secret_key']);
+        }
+
+        $settings->update($validated);
+
+        return redirect()->route('settings.index', ['#payments'])
+            ->with('success', 'Payment settings saved successfully!');
+    }
+
+    /**
      * Reset settings to default
      */
     public function resetToDefaults(Request $request)
