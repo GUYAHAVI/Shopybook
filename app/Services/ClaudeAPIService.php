@@ -1835,9 +1835,10 @@ Return ONLY the enhanced prompt, no explanations or additional text.";
             list($width, $height) = explode('x', $size);
 
             // Use Pollinations.AI - free, no API key required
-            // &negative= suppresses unwanted features; &enhance=true lets the model auto-improve the prompt; &seed for variety
+            // Cap negative prompt to avoid URLs exceeding server limits (some cPanel setups reject URLs > 2000 chars)
+            $encodedNegativeCapped = substr($encodedNegative, 0, 400);
             $seed     = rand(1, 999999);
-            $imageUrl = "https://image.pollinations.ai/prompt/{$encodedPrompt}?width={$width}&height={$height}&nologo=true&model=flux&enhance=true&negative={$encodedNegative}&seed={$seed}";
+            $imageUrl = "https://image.pollinations.ai/prompt/{$encodedPrompt}?width={$width}&height={$height}&nologo=true&model=flux&enhance=true&negative={$encodedNegativeCapped}&seed={$seed}";
             
             Log::info('Generating AI image via Pollinations.AI', [
                 'prompt' => substr($prompt, 0, 100),
@@ -1847,12 +1848,12 @@ Return ONLY the enhanced prompt, no explanations or additional text.";
             ]);
             
             // Try to download and store the image with retry logic
-            $maxRetries = 2;
+            $maxRetries = 3;
             $downloadResult = null;
             
             for ($attempt = 1; $attempt <= $maxRetries; $attempt++) {
                 try {
-                    Log::info("Download attempt {$attempt}/{$maxRetries}");
+                    Log::info("Download attempt {$attempt}/{$maxRetries}", ['url_length' => strlen($imageUrl)]);
                     $downloadResult = $this->downloadAndStoreImage($imageUrl, $businessName);
                     
                     if ($downloadResult) {
@@ -1860,15 +1861,16 @@ Return ONLY the enhanced prompt, no explanations or additional text.";
                     }
                     
                     if ($attempt < $maxRetries) {
-                        Log::warning("Attempt {$attempt} failed, retrying...");
-                        sleep(2); // Wait 2 seconds before retry
+                        $delay = $attempt * 5; // 5s, 10s between retries
+                        Log::warning("Attempt {$attempt} failed, retrying in {$delay}s...");
+                        sleep($delay);
                     }
                 } catch (\Exception $e) {
                     Log::error("Download attempt {$attempt} exception: " . $e->getMessage());
                     if ($attempt === $maxRetries) {
                         throw $e;
                     }
-                    sleep(2);
+                    sleep($attempt * 5);
                 }
             }
             
@@ -1955,6 +1957,9 @@ Return ONLY the enhanced prompt, no explanations or additional text.";
      */
     private function downloadAndStoreImage($imageUrl, $businessName, $subDirectory = 'generated-images')
     {
+        // Remove PHP execution time limit for this method — cPanel default (30–60s) can kill long image downloads
+        @set_time_limit(0);
+
         try {
             // Create storage directory if it doesn't exist
             $directory = storage_path('app/public/marketing/' . $subDirectory);
@@ -1968,96 +1973,132 @@ Return ONLY the enhanced prompt, no explanations or additional text.";
             $relativePath = 'marketing/' . $subDirectory . '/' . $filename;
 
             Log::info('Downloading AI generated image', [
-                'source_url' => substr($imageUrl, 0, 100),
-                'target_path' => $filePath,
-                'subdirectory' => $subDirectory
+                'url_length'   => strlen($imageUrl),
+                'source_url'   => substr($imageUrl, 0, 150),
+                'target_path'  => $filePath,
+                'subdirectory' => $subDirectory,
             ]);
 
-            // Download the image with longer timeout and follow redirects
-            $response = Http::timeout(120)
-                ->withOptions([
-                    'verify' => false, // Skip SSL verification if needed
-                    'allow_redirects' => ['max' => 5], // Follow redirects
-                ])
-                ->get($imageUrl);
-            
-            // Check if request was successful
-            if (!$response->successful()) {
-                Log::error('Failed to download image: HTTP error', [
-                    'status' => $response->status(),
-                    'url' => substr($imageUrl, 0, 100)
+            // --- Method 1: Laravel Http (Guzzle/cURL) ---
+            $imageContent = null;
+            try {
+                $response = Http::timeout(180)
+                    ->withOptions([
+                        'verify'          => false,
+                        'allow_redirects' => ['max' => 10],
+                        'connect_timeout' => 30,
+                    ])
+                    ->get($imageUrl);
+
+                if ($response->successful()) {
+                    $imageContent = $response->body();
+                    Log::info('Http facade download succeeded', ['status' => $response->status(), 'bytes' => strlen($imageContent ?? '')]);
+                } else {
+                    Log::warning('Http facade got non-2xx response', [
+                        'status'   => $response->status(),
+                        'body'     => substr($response->body(), 0, 300),
+                        'url'      => substr($imageUrl, 0, 150),
+                    ]);
+                }
+            } catch (\Exception $httpEx) {
+                Log::warning('Http facade failed, will try file_get_contents fallback', [
+                    'error' => $httpEx->getMessage(),
+                    'url'   => substr($imageUrl, 0, 150),
                 ]);
-                return null;
             }
-            
-            $imageContent = $response->body();
-            
-            // Validate that we have content
+
+            // --- Method 2: file_get_contents fallback (works on many cPanel setups) ---
             if (!$imageContent || strlen($imageContent) < 100) {
-                Log::warning('Failed to download image: empty or too small content', [
-                    'size' => strlen($imageContent ?? ''),
-                    'url' => substr($imageUrl, 0, 100)
-                ]);
+                Log::info('Attempting file_get_contents fallback');
+                try {
+                    $ctx = stream_context_create([
+                        'http' => [
+                            'timeout'        => 180,
+                            'follow_location' => 1,
+                            'max_redirects'  => 10,
+                            'user_agent'     => 'Mozilla/5.0 (compatible; Shopybook/1.0)',
+                        ],
+                        'ssl' => [
+                            'verify_peer'      => false,
+                            'verify_peer_name' => false,
+                        ],
+                    ]);
+                    $fetched = @file_get_contents($imageUrl, false, $ctx);
+                    if ($fetched && strlen($fetched) > 100) {
+                        $imageContent = $fetched;
+                        Log::info('file_get_contents fallback succeeded', ['bytes' => strlen($imageContent)]);
+                    } else {
+                        Log::warning('file_get_contents fallback returned empty/small content', [
+                            'bytes' => strlen($fetched ?? ''),
+                            'url'   => substr($imageUrl, 0, 150),
+                        ]);
+                    }
+                } catch (\Exception $fgcEx) {
+                    Log::warning('file_get_contents fallback failed', ['error' => $fgcEx->getMessage()]);
+                }
+            }
+
+            if (!$imageContent || strlen($imageContent) < 100) {
+                Log::error('Both download methods failed', ['url' => substr($imageUrl, 0, 150)]);
                 return null;
             }
-            
+
             // Check if response is HTML (error page) instead of image
             if (stripos($imageContent, '<!DOCTYPE') === 0 || stripos($imageContent, '<html') === 0) {
                 Log::error('Downloaded content is HTML error page, not an image', [
                     'content_preview' => substr($imageContent, 0, 300),
-                    'url' => substr($imageUrl, 0, 100)
+                    'url' => substr($imageUrl, 0, 150),
                 ]);
                 return null;
             }
-            
+
             // Validate that it's actually an image by checking magic bytes
-            $finfo = new \finfo(FILEINFO_MIME_TYPE);
+            $finfo    = new \finfo(FILEINFO_MIME_TYPE);
             $mimeType = $finfo->buffer($imageContent);
-            
+
             if (!in_array($mimeType, ['image/png', 'image/jpeg', 'image/jpg', 'image/webp', 'image/gif'])) {
                 Log::error('Downloaded content is not a valid image', [
-                    'mime_type' => $mimeType,
+                    'mime_type'       => $mimeType,
                     'content_preview' => substr($imageContent, 0, 200),
-                    'url' => substr($imageUrl, 0, 100)
+                    'url'             => substr($imageUrl, 0, 150),
                 ]);
                 return null;
             }
-            
+
             // Save the image
             file_put_contents($filePath, $imageContent);
-            
+
             // Verify the file was written correctly
             if (!file_exists($filePath) || filesize($filePath) === 0) {
                 Log::error('Failed to write image file', [
-                    'path' => $filePath,
+                    'path'   => $filePath,
                     'exists' => file_exists($filePath),
-                    'size' => file_exists($filePath) ? filesize($filePath) : 0
+                    'size'   => file_exists($filePath) ? filesize($filePath) : 0,
                 ]);
                 return null;
             }
-            
-            Log::info('AI image downloaded successfully', [
-                'filename' => $filename,
-                'size' => strlen($imageContent),
-                'mime_type' => $mimeType,
-                'path' => $filePath,
-                'subdirectory' => $subDirectory
+
+            Log::info('AI image downloaded and stored successfully', [
+                'filename'     => $filename,
+                'size'         => strlen($imageContent),
+                'mime_type'    => $mimeType,
+                'path'         => $filePath,
+                'subdirectory' => $subDirectory,
             ]);
-            
-            // Return array with both URLs
+
             return [
-                'public_url' => asset('storage/' . $relativePath),
-                'local_path' => $relativePath,
+                'public_url'    => asset('storage/' . $relativePath),
+                'local_path'    => $relativePath,
                 'relative_path' => $relativePath,
-                'filename' => $filename
+                'filename'      => $filename,
             ];
 
         } catch (\Exception $e) {
             Log::error('Failed to download and store image', [
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
-                'url' => substr($imageUrl, 0, 100),
-                'subdirectory' => $subDirectory
+                'error'        => $e->getMessage(),
+                'trace'        => substr($e->getTraceAsString(), 0, 500),
+                'url'          => substr($imageUrl, 0, 150),
+                'subdirectory' => $subDirectory,
             ]);
             return null;
         }
