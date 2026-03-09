@@ -47,8 +47,10 @@ class WebsiteBuilderController extends Controller
             return redirect()->route('website-configurator.step1');
         }
 
-        // Website exists — go straight to the editor preview
-        return redirect()->route('website.builder.preview');
+        // Load pages eagerly for the dashboard
+        $website->load('pages');
+
+        return view('website-builder.dashboard', compact('website', 'business'));
     }
 
     /**

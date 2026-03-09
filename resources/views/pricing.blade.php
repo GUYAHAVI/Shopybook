@@ -687,8 +687,8 @@ h1, h2, h3, h4, h5, h6,
                         <td class="text-center"><i class="fas fa-check check-icon"></i></td>
                     </tr>
                     <tr>
-                        <td class="feature-label ps-4">Custom domain support</td>
-                        <td class="text-center"><i class="fas fa-times cross-icon"></i></td>
+                        <td class="feature-label ps-4">Free subdomain (yourname.shopybook.com)</td>
+                        <td class="text-center"><i class="fas fa-check check-icon"></i></td>
                         <td class="text-center"><i class="fas fa-check check-icon"></i></td>
                         <td class="text-center"><i class="fas fa-check check-icon"></i></td>
                     </tr>
@@ -845,7 +845,7 @@ h1, h2, h3, h4, h5, h6,
                         <i class="fas fa-plus faq-icon"></i>
                     </button>
                     <div class="faq-answer">
-                        On Business Pro and Enterprise you get access to our AI-powered website builder with 8 professionally designed themes, auto-generated content from your business data, SEO optimization, mobile-responsive design, and custom domain support.
+                        On Business Pro and Enterprise you get access to our AI-powered website builder with 8 professionally designed themes, auto-generated content from your business data, SEO optimization, mobile-responsive design, and a free subdomain (yourbusiness.shopybook.com).
                     </div>
                 </div>
 

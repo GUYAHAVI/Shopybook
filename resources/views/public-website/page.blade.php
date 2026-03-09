@@ -529,7 +529,97 @@
         .product-card .product-body { padding: 20px; }
         .product-card .product-name { font-weight: 700; font-size: 1rem; margin-bottom: 6px; color: var(--text); }
         .product-price { font-size: 1.3rem; font-weight: 800; color: var(--primary); }
-
+        .add-to-cart-btn { width: 100%; margin-top: 12px; background: var(--primary); color: #fff;
+            border: none; border-radius: 8px; padding: 10px 14px; font-weight: 600; font-size: 0.88rem;
+            cursor: pointer; transition: background 0.15s; display: flex; align-items: center;
+            justify-content: center; gap: 6px; }
+        .add-to-cart-btn:hover { filter: brightness(1.1); }
+        /* ── CART FAB ─────────────────────────────── */
+        .cart-fab { position: fixed; bottom: 28px; right: 28px; z-index: 900;
+            width: 60px; height: 60px; border-radius: 50%; background: var(--primary);
+            color: #fff; border: none; cursor: pointer;
+            box-shadow: 0 4px 24px rgba(0,0,0,0.28);
+            display: flex; align-items: center; justify-content: center; font-size: 1.5rem;
+            transition: transform 0.2s, box-shadow 0.2s; }
+        .cart-fab:hover { transform: scale(1.08); box-shadow: 0 6px 32px rgba(0,0,0,0.35); }
+        .cart-fab-badge { position: absolute; top: -3px; right: -3px; background: #f43f5e;
+            color: #fff; border-radius: 50%; width: 22px; height: 22px; font-size: 0.7rem;
+            font-weight: 700; display: none; align-items: center; justify-content: center; border: 2px solid #fff; }
+        .cart-fab-badge.show { display: flex; }
+        /* ── CART OVERLAY & DRAWER ───────────────── */
+        .cart-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 1040;
+            opacity: 0; pointer-events: none; transition: opacity 0.3s; }
+        .cart-overlay.open { opacity: 1; pointer-events: all; }
+        .cart-drawer { position: fixed; top: 0; right: 0; width: min(420px, 100vw); height: 100vh;
+            background: #fff; z-index: 1050; transform: translateX(110%);
+            transition: transform 0.35s cubic-bezier(0.4,0,0.2,1);
+            display: flex; flex-direction: column; box-shadow: -4px 0 40px rgba(0,0,0,0.18); }
+        .cart-drawer.open { transform: translateX(0); }
+        .cart-drawer-hdr { padding: 18px 22px; border-bottom: 1px solid #e9ecef;
+            display: flex; align-items: center; justify-content: space-between; }
+        .cart-drawer-hdr h5 { margin: 0; font-weight: 700; font-size: 1.05rem; }
+        .cart-close-btn { background: none; border: none; font-size: 1.6rem; cursor: pointer;
+            color: #9ca3af; line-height: 1; padding: 0 4px; transition: color 0.15s; }
+        .cart-close-btn:hover { color: #374151; }
+        .cart-items-list { flex: 1; overflow-y: auto; padding: 12px 20px; }
+        .cart-empty-msg { text-align: center; padding: 60px 20px; color: #9ca3af; }
+        .cart-empty-msg i { font-size: 3rem; opacity: 0.4; display: block; margin-bottom: 10px; }
+        .cart-item { display: flex; align-items: flex-start; gap: 12px;
+            padding: 13px 0; border-bottom: 1px solid #f3f4f6; }
+        .cart-item-thumb { width: 54px; height: 54px; border-radius: 8px; object-fit: cover;
+            background: #f3f4f6; flex-shrink: 0;
+            display: flex; align-items: center; justify-content: center; overflow: hidden; }
+        .cart-item-thumb img { width: 100%; height: 100%; object-fit: cover; }
+        .cart-item-info { flex: 1; min-width: 0; }
+        .cart-item-name { font-weight: 600; font-size: 0.9rem; color: #1e293b;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .cart-item-sub { font-size: 0.82rem; color: #6c757d; margin-top: 2px; }
+        .cart-qty-ctrl { display: flex; align-items: center; gap: 8px; margin-top: 7px; }
+        .cart-qty-btn { width: 26px; height: 26px; border-radius: 50%;
+            border: 1.5px solid #d1d5db; background: #fff; cursor: pointer;
+            font-size: 1rem; line-height: 1; display: flex; align-items: center;
+            justify-content: center; color: #374151; transition: background 0.15s; }
+        .cart-qty-btn:hover { background: #f0f0f0; }
+        .cart-qty-n { font-weight: 700; font-size: 0.9rem; min-width: 20px; text-align: center; }
+        .cart-item-del { background: none; border: none; color: #f87171; font-size: 1rem;
+            cursor: pointer; padding: 4px; flex-shrink: 0; margin-top: 2px; }
+        .cart-footer { padding: 18px 22px; border-top: 1px solid #e9ecef; }
+        .cart-total-row { display: flex; justify-content: space-between;
+            font-weight: 700; font-size: 1.05rem; margin-bottom: 14px; }
+        /* ── ORDER MODAL ─────────────────────────── */
+        .order-modal-wrap { position: fixed; inset: 0; background: rgba(0,0,0,0.55);
+            z-index: 1060; display: none; align-items: center; justify-content: center; padding: 16px; }
+        .order-modal-wrap.open { display: flex; }
+        .order-modal { background: #fff; border-radius: 16px; width: min(490px, 100%);
+            max-height: 92vh; overflow-y: auto; padding: 28px 30px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.28); }
+        .order-modal h4 { font-weight: 700; margin-bottom: 4px; font-size: 1.2rem; }
+        .order-note-box { background: #fffbeb; border: 1px solid #fde68a; border-radius: 8px;
+            padding: 10px 14px; font-size: 0.82rem; color: #92400e; margin: 14px 0 18px; }
+        .order-summary-box { background: #f8fafc; border-radius: 8px;
+            padding: 10px 14px; margin-bottom: 18px; }
+        .order-summary-row { display: flex; justify-content: space-between;
+            font-size: 0.87rem; padding: 3px 0; border-bottom: 1px solid #e9ecef; }
+        .order-summary-row:last-child { border: none; font-weight: 700; padding-top: 7px; }
+        .order-form-group { margin-bottom: 13px; }
+        .order-form-group label { font-size: 0.84rem; font-weight: 600;
+            color: #374151; margin-bottom: 4px; display: block; }
+        .order-form-group input, .order-form-group textarea {
+            width: 100%; padding: 9px 13px; border: 1.5px solid #d1d5db;
+            border-radius: 8px; font-size: 0.91rem; transition: border-color 0.15s;
+            outline: none; font-family: inherit; box-sizing: border-box; }
+        .order-form-group input:focus, .order-form-group textarea:focus { border-color: var(--primary); }
+        .order-submit-btn { width: 100%; padding: 12px; background: var(--primary); color: #fff;
+            border: none; border-radius: 10px; font-weight: 700; font-size: 0.95rem;
+            cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 7px;
+            transition: filter 0.15s; }
+        .order-submit-btn:hover:not(:disabled) { filter: brightness(1.1); }
+        .order-submit-btn:disabled { opacity: 0.7; cursor: not-allowed; }
+        .order-cancel-btn { width: 100%; margin-top: 10px; padding: 11px; background: none;
+            border: 1.5px solid #d1d5db; border-radius: 10px; font-weight: 600;
+            font-size: 0.9rem; color: #6c757d; cursor: pointer; }
+        .order-cancel-btn:hover { background: #f9fafb; }
+        .order-err { color: #dc3545; font-size: 0.84rem; margin-bottom: 10px; display: none; }
         /* ── TESTIMONIALS ────────────────────────── */
         .testimonials-section { background: var(--light-bg); }
         .testimonial-card {
@@ -1255,9 +1345,14 @@
     {{-- ════════ PRODUCTS ════════ --}}
     @elseif($section->type === 'products' && $products->count())
     @php
-        $previewCount = $content['max_products'] ?? 4;
+        // null means "show all" (used on the dedicated products page)
+        $maxProducts   = $content['max_products'] ?? null;
+        $previewCount  = ($maxProducts && $maxProducts > 0) ? (int)$maxProducts : null;
+        $displayProducts = $previewCount ? $products->take($previewCount) : $products;
+
         $productsPage = $menuPages->firstWhere('slug', 'products');
-        $productsPageUrl = $productsPage
+        $onProductsPage = isset($page) && $page->slug === 'products';
+        $productsPageUrl = (!$onProductsPage && $productsPage)
             ? route('public.website.page', [$website->subdomain, $productsPage->slug])
             : null;
     @endphp
@@ -1272,9 +1367,13 @@
                 @endif
             </div>
             <div class="row g-4">
-                @foreach($products->take($previewCount) as $product)
+                @foreach($displayProducts as $product)
                 <div class="col-6 col-md-4 col-lg-3">
-                    <div class="product-card">
+                    <div class="product-card"
+                         data-id="{{ $product->id }}"
+                         data-name="{{ addslashes($product->name) }}"
+                         data-price="{{ $product->price }}"
+                         data-image="{{ $product->image ? asset('storage/' . $product->image) : '' }}">
                         @if($product->image)
                         <img src="{{ asset('storage/' . $product->image) }}"
                              alt="{{ $product->name }}" class="product-img">
@@ -1288,17 +1387,27 @@
                             @if($content['show_price'] ?? true)
                             <div class="product-price">KSh {{ number_format($product->price, 0) }}</div>
                             @endif
+                            <button class="add-to-cart-btn"
+                                @if($isPreview)
+                                    onclick="alert('Cart preview only — customers can add items here.')"
+                                    style="opacity:0.6;"
+                                    title="Preview mode: cart is active for real visitors"
+                                @else
+                                    onclick="wsAddToCart(this.closest('[data-id]'))"
+                                @endif>
+                                <i class="fas fa-cart-plus"></i> Add to Cart
+                            </button>
                         </div>
                     </div>
                 </div>
                 @endforeach
             </div>
-            @if($products->count() > $previewCount || $productsPageUrl)
+            @if($productsPageUrl)
             <div class="text-center mt-5">
-                <a href="{{ $productsPageUrl ?? '#products' }}"
+                <a href="{{ $productsPageUrl }}"
                    class="btn-brand-primary" style="padding:14px 40px;font-size:1rem;">
                     <i class="fas fa-th me-2"></i>View All Products
-                    @if($products->count() > $previewCount)
+                    @if($previewCount && $products->count() > $previewCount)
                     <span class="ms-2 badge" style="background:rgba(255,255,255,0.2);color:#fff;border-radius:50px;padding:3px 10px;font-size:0.8rem;">
                         {{ $products->count() - $previewCount }}+ more
                     </span>
@@ -2301,6 +2410,268 @@ document.addEventListener('click', function(e) {
     if (e.target.closest && e.target.closest('.seb')) return; // section edit buttons
     _closePanel();
 });
+</script>
+@endif
+
+{{-- ══════ STOREFRONT CART (public pages only) ══════ --}}
+@if(!$isPreview && $products->count())
+<!-- Cart floating button -->
+<button class="cart-fab" id="wsCartFab" onclick="wsToggleCart()" aria-label="Cart" style="display:none;">
+    <i class="fas fa-shopping-cart"></i>
+    <span class="cart-fab-badge" id="wsCartBadge">0</span>
+</button>
+
+<!-- Drawer overlay -->
+<div class="cart-overlay" id="wsCartOverlay" onclick="wsToggleCart()"></div>
+
+<!-- Cart drawer -->
+<div class="cart-drawer" id="wsCartDrawer">
+    <div class="cart-drawer-hdr">
+        <h5><i class="fas fa-shopping-bag me-2"></i>Your Cart</h5>
+        <button class="cart-close-btn" onclick="wsToggleCart()">&times;</button>
+    </div>
+    <div class="cart-items-list" id="wsCartList">
+        <div class="cart-empty-msg" id="wsCartEmpty">
+            <i class="fas fa-shopping-cart"></i>
+            <p style="font-weight:600;margin-bottom:4px;">Your cart is empty</p>
+            <p style="font-size:0.84rem;">Add products to get started.</p>
+        </div>
+    </div>
+    <div class="cart-footer" id="wsCartFooter" style="display:none;">
+        <div class="cart-total-row">
+            <span>Total</span>
+            <span id="wsCartTotal">KSh 0</span>
+        </div>
+        <button class="add-to-cart-btn" onclick="wsOpenOrderForm()" style="margin-top:0;">
+            <i class="fas fa-check-circle"></i> Place Order
+        </button>
+    </div>
+</div>
+
+<!-- Order form modal -->
+<div class="order-modal-wrap" id="wsOrderModal">
+    <div class="order-modal">
+        <h4>Complete Your Order</h4>
+        <p style="color:#6c757d;font-size:0.87rem;margin-bottom:0;">
+            No payment needed now — the business owner will contact you to arrange delivery and payment.
+        </p>
+        <div class="order-note-box">
+            <i class="fas fa-info-circle me-1"></i>
+            <strong>Free to order.</strong> You only pay when you and the seller agree on delivery details.
+        </div>
+
+        <div class="order-summary-box" id="wsOrderSummary"></div>
+
+        <div id="wsOrderFormBody">
+            <div class="order-form-group">
+                <label>Your Name <span style="color:#dc3545;">*</span></label>
+                <input type="text" id="wsOName" placeholder="Full name">
+            </div>
+            <div class="order-form-group">
+                <label>Phone Number <span style="color:#dc3545;">*</span></label>
+                <input type="tel" id="wsOPhone" placeholder="e.g. 0712 345 678">
+            </div>
+            <div class="order-form-group">
+                <label>Email <span style="color:#6c757d;font-weight:400;">(optional)</span></label>
+                <input type="email" id="wsOEmail" placeholder="your@email.com">
+            </div>
+            <div class="order-form-group">
+                <label>Delivery Address <span style="color:#6c757d;font-weight:400;">(optional)</span></label>
+                <input type="text" id="wsOAddress" placeholder="Where should we deliver?">
+            </div>
+            <div class="order-form-group">
+                <label>Notes <span style="color:#6c757d;font-weight:400;">(optional)</span></label>
+                <textarea id="wsONotes" rows="2" placeholder="Any special requests..."></textarea>
+            </div>
+            <div class="order-err" id="wsOError"></div>
+            <button class="order-submit-btn" id="wsOSubmitBtn" onclick="wsSubmitOrder()">
+                <i class="fas fa-paper-plane"></i> Place Order
+            </button>
+            <button class="order-cancel-btn" onclick="wsCloseOrderModal()">Cancel</button>
+        </div>
+
+        <div id="wsOrderSuccess" style="display:none;text-align:center;padding:10px 0 6px;">
+            <div style="font-size:3.5rem;margin-bottom:10px;">✅</div>
+            <h5 style="color:#16a34a;font-weight:700;">Order Sent!</h5>
+            <p style="color:#6c757d;font-size:0.9rem;margin-bottom:20px;">
+                Your order has been received. The business owner will reach out to confirm delivery and payment.
+            </p>
+            <button class="order-submit-btn" onclick="wsCloseOrderModal(true)">
+                <i class="fas fa-check"></i> Done
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+// ══ WEBSITE STOREFRONT CART ═══════════════════════════════════════════
+var _wsCart = [];
+var _wsOrderUrl = "{{ $orderUrl }}";
+
+function wsAddToCart(card) {
+    var id    = parseInt(card.dataset.id);
+    var name  = card.dataset.name;
+    var price = parseFloat(card.dataset.price);
+    var image = card.dataset.image || '';
+    var existing = _wsCart.find(function(i) { return i.id === id; });
+    if (existing) {
+        existing.qty++;
+    } else {
+        _wsCart.push({ id: id, name: name, price: price, image: image, qty: 1 });
+    }
+    wsRenderCart();
+    wsOpenCart();
+}
+
+function wsRenderCart() {
+    var list   = document.getElementById('wsCartList');
+    var empty  = document.getElementById('wsCartEmpty');
+    var footer = document.getElementById('wsCartFooter');
+    var badge  = document.getElementById('wsCartBadge');
+    var fab    = document.getElementById('wsCartFab');
+
+    var totalQty   = _wsCart.reduce(function(s, i) { return s + i.qty; }, 0);
+    var totalPrice = _wsCart.reduce(function(s, i) { return s + i.price * i.qty; }, 0);
+
+    // Badge & FAB
+    if (totalQty > 0) {
+        badge.textContent = totalQty;
+        badge.classList.add('show');
+        fab.style.display = '';
+    } else {
+        badge.classList.remove('show');
+    }
+    document.getElementById('wsCartTotal').textContent = 'KSh ' + totalPrice.toLocaleString();
+
+    if (_wsCart.length === 0) {
+        list.innerHTML = '';
+        list.appendChild(empty);
+        empty.style.display = '';
+        footer.style.display = 'none';
+        return;
+    }
+
+    empty.style.display = 'none';
+    footer.style.display = '';
+
+    var html = '';
+    _wsCart.forEach(function(item, idx) {
+        var thumbHtml = item.image
+            ? '<div class="cart-item-thumb"><img src="' + item.image + '" alt="' + item.name + '"></div>'
+            : '<div class="cart-item-thumb"><i class="fas fa-box-open" style="color:#b0b8c1;font-size:1.3rem;"></i></div>';
+        html += '<div class="cart-item">'
+            + thumbHtml
+            + '<div class="cart-item-info">'
+            + '<div class="cart-item-name">' + item.name + '</div>'
+            + '<div class="cart-item-sub">KSh ' + item.price.toLocaleString() + ' each</div>'
+            + '<div class="cart-qty-ctrl">'
+            + '<button class="cart-qty-btn" onclick="wsQty(' + idx + ',-1)">&#8722;</button>'
+            + '<span class="cart-qty-n">' + item.qty + '</span>'
+            + '<button class="cart-qty-btn" onclick="wsQty(' + idx + ',1)">&#43;</button>'
+            + '</div></div>'
+            + '<button class="cart-item-del" onclick="wsRemove(' + idx + ')" title="Remove"><i class="fas fa-trash-alt"></i></button>'
+            + '</div>';
+    });
+    list.innerHTML = html;
+    list.appendChild(empty);
+}
+
+function wsQty(idx, delta) {
+    _wsCart[idx].qty += delta;
+    if (_wsCart[idx].qty < 1) _wsCart.splice(idx, 1);
+    wsRenderCart();
+}
+
+function wsRemove(idx) {
+    _wsCart.splice(idx, 1);
+    wsRenderCart();
+}
+
+function wsOpenCart() {
+    document.getElementById('wsCartDrawer').classList.add('open');
+    document.getElementById('wsCartOverlay').classList.add('open');
+    document.body.style.overflow = 'hidden';
+}
+
+function wsToggleCart() {
+    var open = document.getElementById('wsCartDrawer').classList.toggle('open');
+    document.getElementById('wsCartOverlay').classList.toggle('open');
+    document.body.style.overflow = open ? 'hidden' : '';
+}
+
+function wsOpenOrderForm() {
+    if (_wsCart.length === 0) return;
+    var total = _wsCart.reduce(function(s, i) { return s + i.price * i.qty; }, 0);
+    var html = '';
+    _wsCart.forEach(function(item) {
+        html += '<div class="order-summary-row"><span>' + item.name + ' &times; ' + item.qty + '</span>'
+            + '<span>KSh ' + (item.price * item.qty).toLocaleString() + '</span></div>';
+    });
+    html += '<div class="order-summary-row"><span>Total</span><span>KSh ' + total.toLocaleString() + '</span></div>';
+    document.getElementById('wsOrderSummary').innerHTML = html;
+    document.getElementById('wsOrderFormBody').style.display = '';
+    document.getElementById('wsOrderSuccess').style.display = 'none';
+    document.getElementById('wsOError').style.display = 'none';
+    document.getElementById('wsOError').textContent = '';
+    document.getElementById('wsOrderModal').classList.add('open');
+}
+
+function wsCloseOrderModal(clearCart) {
+    document.getElementById('wsOrderModal').classList.remove('open');
+    if (clearCart) {
+        _wsCart = [];
+        wsRenderCart();
+        document.getElementById('wsCartDrawer').classList.remove('open');
+        document.getElementById('wsCartOverlay').classList.remove('open');
+        document.body.style.overflow = '';
+    }
+}
+
+function wsSubmitOrder() {
+    var name  = document.getElementById('wsOName').value.trim();
+    var phone = document.getElementById('wsOPhone').value.trim();
+    var email = document.getElementById('wsOEmail').value.trim();
+    var addr  = document.getElementById('wsOAddress').value.trim();
+    var notes = document.getElementById('wsONotes').value.trim();
+    var errEl = document.getElementById('wsOError');
+    errEl.style.display = 'none';
+
+    if (!name)  { errEl.textContent = 'Please enter your name.';         errEl.style.display = ''; return; }
+    if (!phone) { errEl.textContent = 'Please enter your phone number.'; errEl.style.display = ''; return; }
+
+    var btn = document.getElementById('wsOSubmitBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="img-spinner me-2"></span>Sending order\u2026';
+
+    var items = _wsCart.map(function(i) { return { id: i.id, qty: i.qty }; });
+
+    fetch(_wsOrderUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
+        body: JSON.stringify({ name: name, phone: phone, email: email || null,
+                               address: addr || null, notes: notes || null, items: items })
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-paper-plane"></i> Place Order';
+        if (data.success) {
+            document.getElementById('wsOrderFormBody').style.display = 'none';
+            document.getElementById('wsOrderSuccess').style.display = '';
+        } else {
+            errEl.textContent = data.message || 'Something went wrong. Please try again.';
+            errEl.style.display = '';
+        }
+    })
+    .catch(function() {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-paper-plane"></i> Place Order';
+        errEl.textContent = 'Network error. Please check your connection and try again.';
+        errEl.style.display = '';
+    });
+}
+
+wsRenderCart();
 </script>
 @endif
 </body>

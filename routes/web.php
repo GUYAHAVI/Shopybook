@@ -59,7 +59,7 @@ Route::get('/pricing', function () {
     return view('pricing');
 })->name('pricing');
 
-// Public website viewer (no subdomain needed - quick access)
+// Public website viewer (path-based - quick access)
 use App\Http\Controllers\PublicWebsiteController;
 Route::get('/site/{subdomain}', [PublicWebsiteController::class, 'homepage'])
     ->name('public.website.direct');
@@ -67,6 +67,20 @@ Route::get('/site/{subdomain}/{slug}', [PublicWebsiteController::class, 'page'])
     ->name('public.website.direct.page');
 Route::post('/site/{subdomain}/contact', [PublicWebsiteController::class, 'submitContact'])
     ->name('public.website.contact');
+Route::post('/site/{subdomain}/order', [PublicWebsiteController::class, 'placeOrder'])
+    ->name('public.website.order');
+
+// Public website viewer (subdomain-based - *.shopybook.com)
+Route::domain('{subdomain}.' . env('APP_DOMAIN', 'shopybook.com'))->group(function () {
+    Route::get('/', [PublicWebsiteController::class, 'homepage'])
+        ->name('public.website.subdomain');
+    Route::get('/{slug}', [PublicWebsiteController::class, 'page'])
+        ->name('public.website.subdomain.page');
+    Route::post('/contact', [PublicWebsiteController::class, 'submitContact'])
+        ->name('public.website.subdomain.contact');
+    Route::post('/order', [PublicWebsiteController::class, 'placeOrder'])
+        ->name('public.website.subdomain.order');
+});
 
 Route::post('/orders', [OrderController::class, 'store'])->name('orders.store');
 Route::post('/service-bookings/public', [ServiceBookingController::class, 'storePublic'])->name('service-bookings.store-public');

@@ -209,7 +209,47 @@
             </div>
 
             <!-- Single Product for Public Orders -->
-            @if($product)
+            @php
+                $cartItems = null;
+                $customerNote = null;
+                if ($order->notes) {
+                    $decoded = json_decode($order->notes, true);
+                    $cartItems    = $decoded['cart_items'] ?? null;
+                    $customerNote = $decoded['customer_note'] ?? null;
+                }
+            @endphp
+
+            @if($cartItems && count($cartItems) > 0)
+            <h3>📦 Ordered Items</h3>
+            <table class="products-table">
+                <thead>
+                    <tr>
+                        <th>Product</th>
+                        <th>Qty</th>
+                        <th>Unit Price</th>
+                        <th>Total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach($cartItems as $item)
+                    <tr>
+                        <td>{{ $item['name'] }}</td>
+                        <td>{{ $item['qty'] }}</td>
+                        <td>KSh {{ number_format($item['price'], 2) }}</td>
+                        <td>KSh {{ number_format($item['total'], 2) }}</td>
+                    </tr>
+                    @endforeach
+                </tbody>
+            </table>
+            <div class="total-amount">
+                <h3>Total Amount: KSh {{ number_format($order->total_price, 2) }}</h3>
+            </div>
+            @if($customerNote)
+            <div style="margin-top:16px;padding:12px 16px;background:#f8f9fa;border-radius:8px;">
+                <strong>Customer Note:</strong> {{ $customerNote }}
+            </div>
+            @endif
+            @elseif($product)
             <h3>📦 Ordered Product</h3>
             <table class="products-table">
                 <thead>

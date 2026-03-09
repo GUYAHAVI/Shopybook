@@ -787,8 +787,8 @@ input.form-control::placeholder, textarea.form-control::placeholder {
                         <div class="uscontent">
                             <h3>Point of Sale System</h3>
                             <p>
-                                Full-featured POS with cart management, barcode scanning, multiple payment methods 
-                                (Cash, M-Pesa, Card, Bank), dynamic product conversions, receipt printing & order history.
+                                Full-featured POS with cart management, multiple payment methods 
+                                (Cash & M-Pesa), dynamic product conversions, receipt printing & order history.
                             </p>
                         </div>
                     </div>
@@ -852,7 +852,7 @@ input.form-control::placeholder, textarea.form-control::placeholder {
                             <h3>AI Website Builder</h3>
                             <p>
                                 Create professional websites with AI-powered theme recommendations, auto-generated content, 
-                                8 beautiful themes, drag & drop sections, SEO optimization, and custom domain support.
+                                8 beautiful themes, drag & drop sections, SEO optimization, and free subdomain included.
                             </p>
                         </div>
                     </div>
@@ -899,7 +899,7 @@ input.form-control::placeholder, textarea.form-control::placeholder {
                         <div class="uscontent">
                             <h3>Payment Integration</h3>
                             <p>
-                                Accept payments via M-Pesa, Card, Cash, and Bank Transfer. Track all transactions, 
+                                Accept payments via M-Pesa and Cash. Track all transactions, 
                                 generate receipts automatically, and manage payment history.
                             </p>
                         </div>

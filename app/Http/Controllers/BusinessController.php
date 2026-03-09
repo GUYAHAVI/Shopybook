@@ -611,6 +611,12 @@ class BusinessController extends Controller
             return redirect()->route('businesses')->with('error', 'Business not found or is not currently active.');
         }
         
+        // If the business has a published website, send the visitor there directly
+        $website = $business->website;
+        if ($website && $website->is_published) {
+            return redirect($website->url);
+        }
+
         // Get services and products for this business
         $services = $business->services()->get() ?? collect();
         $products = $business->products()->get() ?? collect();
