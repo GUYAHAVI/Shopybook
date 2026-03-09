@@ -1393,53 +1393,112 @@ document.addEventListener('DOMContentLoaded', function() {
 
 <!-- AI Logo Generation Modal -->
 <div id="logoGeneratorModal" class="modal fade" tabindex="-1" style="display: none;">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content" style="border: 2px solid #13e8e9; border-radius: 15px;">
-            <div class="modal-header" style="background: linear-gradient(135deg, #020258, #13e8e9); color: white; border-radius: 13px 13px 0 0;">
-                <h5 class="modal-title"><i class="fas fa-magic"></i> Generate Business Logo with AI</h5>
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content" style="border: 2px solid #13e8e9; border-radius: 15px; overflow: hidden;">
+            <div class="modal-header" style="background: linear-gradient(135deg, #020258, #13e8e9); color: white; border-radius: 0;">
+                <div>
+                    <h5 class="modal-title mb-0"><i class="fas fa-magic me-2"></i>AI Logo Generator</h5>
+                    <small style="opacity:.8;">Your business info &amp; products are used automatically to craft the perfect logo</small>
+                </div>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
-            <div class="modal-body" style="padding: 2rem;">
-                <p class="text-muted mb-3">Choose a logo style and let AI create a unique logo for your business.</p>
-                
+            <div class="modal-body p-4">
+
+                {{-- STEP 1: Style --}}
+                <div class="mb-4">
+                    <label class="form-label fw-semibold mb-2"><i class="fas fa-shapes me-1 text-primary"></i> Logo Style</label>
+                    <div class="row g-2" id="logoStyleCards">
+                        @foreach([
+                            ['modern',    'fas fa-vector-square',  'Modern',    'Clean & geometric'],
+                            ['classic',   'fas fa-landmark',       'Classic',   'Timeless & elegant'],
+                            ['minimal',   'fas fa-circle',         'Minimal',   'Simple & bold'],
+                            ['bold',      'fas fa-bold',           'Bold',      'Strong & impactful'],
+                            ['playful',   'fas fa-smile',          'Playful',   'Fun & friendly'],
+                            ['corporate', 'fas fa-briefcase',      'Corporate', 'Formal & trustworthy'],
+                            ['luxury',    'fas fa-crown',          'Luxury',    'Premium & refined'],
+                            ['tech',      'fas fa-microchip',      'Tech',      'Futuristic & sharp'],
+                        ] as [$val, $icon, $label, $sub])
+                        <div class="col-6 col-sm-3">
+                            <div class="logo-style-card {{ $val === 'modern' ? 'selected' : '' }}"
+                                 data-style="{{ $val }}"
+                                 onclick="selectLogoStyle(this)"
+                                 style="cursor:pointer;border:2px solid {{ $val === 'modern' ? '#020258' : '#dee2e6' }};border-radius:10px;padding:12px 8px;text-align:center;transition:all .2s;background:{{ $val === 'modern' ? '#f0f0ff' : '#fff' }};">
+                                <i class="{{ $icon }} fa-lg mb-1" style="color:{{ $val === 'modern' ? '#020258' : '#6c757d' }};"></i>
+                                <div class="fw-semibold small">{{ $label }}</div>
+                                <div class="text-muted" style="font-size:.72rem;">{{ $sub }}</div>
+                            </div>
+                        </div>
+                        @endforeach
+                    </div>
+                    <input type="hidden" id="logoStyleValue" value="modern">
+                </div>
+
+                {{-- STEP 2: Color Palette --}}
+                <div class="mb-4">
+                    <label class="form-label fw-semibold mb-2"><i class="fas fa-palette me-1 text-primary"></i> Color Palette</label>
+                    <div class="row g-2" id="logoPaletteCards">
+                        @foreach([
+                            ['ocean_blue',    '#1a4f8a', '#4fb3e3', 'Ocean Blue',    'Trust & Reliability'],
+                            ['forest_green',  '#1a6b3a', '#5ec987', 'Forest Green',  'Growth & Nature'],
+                            ['royal_purple',  '#6b21a8', '#c084fc', 'Royal Purple',  'Luxury & Creativity'],
+                            ['sunset_red',    '#c0392b', '#f39c12', 'Sunset',        'Energy & Passion'],
+                            ['gold_black',    '#f59e0b', '#1f2937', 'Gold & Black',  'Premium Excellence'],
+                            ['mint_fresh',    '#10b981', '#d1fae5', 'Mint Fresh',    'Fresh & Modern'],
+                            ['midnight_navy', '#1e3a8a', '#93c5fd', 'Midnight Navy', 'Power & Authority'],
+                            ['rose_gold',     '#e11d48', '#fecdd3', 'Rose Gold',     'Elegant & Stylish'],
+                            ['earth_tone',    '#92400e', '#fde68a', 'Earth Tones',   'Organic & Warm'],
+                            ['monochrome',    '#1f2937', '#e5e7eb', 'Monochrome',    'Bold & Classic'],
+                        ] as [$id, $c1, $c2, $name, $desc])
+                        <div class="col-6 col-sm-4 col-lg-2" style="min-width:115px;">
+                            <div class="logo-palette-card"
+                                 data-palette="{{ $id }}"
+                                 onclick="selectLogoPalette(this)"
+                                 style="cursor:pointer;border:2px solid #dee2e6;border-radius:10px;padding:8px 6px;text-align:center;transition:all .2s;">
+                                <div style="display:flex;gap:3px;justify-content:center;margin-bottom:5px;">
+                                    <div style="width:22px;height:22px;border-radius:50%;background:{{ $c1 }};border:1px solid rgba(0,0,0,.1);"></div>
+                                    <div style="width:22px;height:22px;border-radius:50%;background:{{ $c2 }};border:1px solid rgba(0,0,0,.1);"></div>
+                                </div>
+                                <div class="fw-semibold" style="font-size:.75rem;line-height:1.2;">{{ $name }}</div>
+                                <div class="text-muted" style="font-size:.67rem;">{{ $desc }}</div>
+                            </div>
+                        </div>
+                        @endforeach
+                    </div>
+                    <input type="hidden" id="logoPaletteValue" value="">
+                </div>
+
+                {{-- Optional tagline --}}
                 <div class="mb-3">
-                    <label for="logoTagline" class="form-label"><i class="fas fa-tag"></i> Business Tagline (Optional)</label>
+                    <label for="logoTagline" class="form-label fw-semibold"><i class="fas fa-tag me-1 text-primary"></i> Tagline <span class="text-muted fw-normal">(optional)</span></label>
                     <input type="text" id="logoTagline" class="form-control" placeholder="e.g., Quality You Trust" maxlength="50">
-                    <div class="form-text">Leave empty to auto-generate from your business description</div>
+                    <div class="form-text">Leave empty to auto-generate one from your business description.</div>
                 </div>
-                
-                <div class="mb-3">
-                    <label for="logoStyle" class="form-label"><i class="fas fa-palette"></i> Logo Style</label>
-                    <select id="logoStyle" class="form-select">
-                        <option value="modern">Modern - Clean and contemporary</option>
-                        <option value="classic">Classic - Timeless and elegant</option>
-                        <option value="minimal">Minimal - Simple and essential</option>
-                        <option value="bold">Bold - Strong and vibrant</option>
-                        <option value="playful">Playful - Fun and creative</option>
-                        <option value="corporate">Corporate - Professional and formal</option>
-                    </select>
+
+                {{-- Status / Preview --}}
+                <div id="generationStatus" class="alert alert-info d-none">
+                    <i class="fas fa-spinner fa-spin me-2"></i><span id="statusMessage">Generating your logo…</span>
                 </div>
-                
-                <div id="generationStatus" class="alert alert-info" style="display: none;">
-                    <i class="fas fa-spinner fa-spin"></i> <span id="statusMessage">Generating your logo...</span>
-                </div>
-                
-                <div id="generatedLogoContainer" style="display: none; text-align: center; margin-top: 20px;">
-                    <img id="generatedLogoPreview" src="" alt="Generated Logo" style="max-width: 300px; max-height: 300px; border-radius: 8px; border: 2px solid #e5e7eb; background: #f9fafb; padding: 20px;" />
-                    <div class="mt-3">
-                        <button type="button" class="btn btn-sm btn-outline-primary" onclick="regenerateLogoFromModal()">
-                            <i class="fas fa-redo"></i> Regenerate
+
+                <div id="generatedLogoContainer" class="d-none text-center mt-3">
+                    <div style="background:#f8f9fa;border:2px dashed #dee2e6;border-radius:12px;padding:20px;display:inline-block;min-width:200px;">
+                        <img id="generatedLogoPreview" src="" alt="Generated Logo"
+                             style="max-width:260px;max-height:260px;width:auto;height:auto;border-radius:8px;" />
+                    </div>
+                    <div class="mt-3 d-flex gap-2 justify-content-center flex-wrap">
+                        <button type="button" class="btn btn-outline-secondary btn-sm" onclick="regenerateLogoFromModal()">
+                            <i class="fas fa-redo me-1"></i> Regenerate
                         </button>
-                        <button type="button" class="btn btn-sm btn-success" onclick="saveGeneratedLogo()">
-                            <i class="fas fa-check"></i> Use This Logo
+                        <button type="button" class="btn btn-success btn-sm" onclick="saveGeneratedLogo()">
+                            <i class="fas fa-check me-1"></i> Use This Logo
                         </button>
                     </div>
                 </div>
+
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
                 <button type="button" id="generateLogoModalBtn" class="btn btn-primary" onclick="generateLogoFromModal()">
-                    <i class="fas fa-magic"></i> Generate Logo
+                    <i class="fas fa-magic me-1"></i> Generate Logo
                 </button>
             </div>
         </div>
@@ -1455,29 +1514,53 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 function openLogoGenerator() {
+    document.getElementById('generatedLogoContainer').classList.add('d-none');
+    document.getElementById('generationStatus').classList.add('d-none');
+    document.getElementById('generationStatus').className = 'alert alert-info d-none';
     logoGeneratorModal.show();
-    document.getElementById('generatedLogoContainer').style.display = 'none';
-    document.getElementById('generationStatus').style.display = 'none';
+}
+
+function selectLogoStyle(el) {
+    document.querySelectorAll('.logo-style-card').forEach(c => {
+        c.style.border    = '2px solid #dee2e6';
+        c.style.background = '#fff';
+        c.querySelector('i').style.color = '#6c757d';
+    });
+    el.style.border    = '2px solid #020258';
+    el.style.background = '#f0f0ff';
+    el.querySelector('i').style.color = '#020258';
+    document.getElementById('logoStyleValue').value = el.dataset.style;
+}
+
+function selectLogoPalette(el) {
+    document.querySelectorAll('.logo-palette-card').forEach(c => {
+        c.style.border = '2px solid #dee2e6';
+        c.style.background = '#fff';
+    });
+    el.style.border = '2px solid #020258';
+    el.style.background = '#f0f0ff';
+    document.getElementById('logoPaletteValue').value = el.dataset.palette;
 }
 
 async function generateLogoFromModal() {
-    const style = document.getElementById('logoStyle').value;
-    const tagline = document.getElementById('logoTagline').value.trim();
-    const statusDiv = document.getElementById('generationStatus');
-    const statusMessage = document.getElementById('statusMessage');
-    const generateBtn = document.getElementById('generateLogoModalBtn');
+    const style        = document.getElementById('logoStyleValue').value;
+    const colorPalette = document.getElementById('logoPaletteValue').value;
+    const tagline      = document.getElementById('logoTagline').value.trim();
+    const statusDiv    = document.getElementById('generationStatus');
+    const statusMsg    = document.getElementById('statusMessage');
+    const generateBtn  = document.getElementById('generateLogoModalBtn');
     const logoContainer = document.getElementById('generatedLogoContainer');
-    
-    statusDiv.style.display = 'block';
-    statusMessage.textContent = 'Generating your logo with business name and tagline... This may take 15-30 seconds.';
+
+    statusDiv.className = 'alert alert-info';
+    statusMsg.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Crafting your expert logo… This may take 20–40 seconds.';
     generateBtn.disabled = true;
-    logoContainer.style.display = 'none';
-    
+    logoContainer.classList.add('d-none');
+
     try {
-        const businessName = {!! json_encode(Auth::user()->business->name ?? '') !!};
+        const businessName        = {!! json_encode(Auth::user()->business->name ?? '') !!};
         const businessDescription = {!! json_encode(Auth::user()->business->description ?? '') !!};
-        const businessType = {!! json_encode(Auth::user()->business->business_type ?? '') !!};
-        
+        const businessType        = {!! json_encode(Auth::user()->business->business_type ?? '') !!};
+
         const response = await fetch('{{ route("business.generate-logo") }}', {
             method: 'POST',
             headers: {
@@ -1487,70 +1570,33 @@ async function generateLogoFromModal() {
                 'X-Requested-With': 'XMLHttpRequest'
             },
             body: JSON.stringify({
-                business_name: businessName,
-                business_description: businessDescription || 'A professional ' + businessType + ' business providing quality services',
-                business_type: businessType,
-                logo_style: style,
-                tagline: tagline || null
+                business_name:        businessName,
+                business_description: businessDescription || 'A professional ' + businessType + ' business.',
+                business_type:        businessType,
+                logo_style:           style,
+                tagline:              tagline || null,
+                color_palette:        colorPalette || null,
             }),
             credentials: 'same-origin'
         });
-        
-        // Check for redirect (authentication failure)
-        if (response.redirected) {
-            console.error('❌ REQUEST REDIRECTED TO:', response.url);
-            throw new Error('Your session has expired. Please refresh the page and log in again.');
-        }
-        
-        // Check if response is ok before parsing
-        if (!response.ok) {
-            const errorText = await response.text();
-            console.error('❌ SERVER ERROR:', response.status, errorText.substring(0, 500));
-            throw new Error(`Server error (${response.status}). Please try again or contact support.`);
-        }
-        
-        // Get response text first to debug
-        const responseText = await response.text();
-        console.log('=== LOGO GENERATION RESPONSE DEBUG ===');
-        console.log('Response length:', responseText.length);
-        console.log('First 500 chars:', responseText.substring(0, 500));
-        console.log('Last 200 chars:', responseText.substring(Math.max(0, responseText.length - 200)));
-        console.log('Is HTML?', responseText.trim().startsWith('<!DOCTYPE') || responseText.trim().startsWith('<html'));
-        console.log('======================================');
-        
-        let data;
-        try {
-            data = JSON.parse(responseText);
-            console.log('✓ JSON parsed successfully:', data);
-        } catch (parseError) {
-            console.error('✗ JSON PARSE ERROR:', parseError.message);
-            console.error('Full response text:', responseText);
-            
-            // Try to identify the issue
-            if (responseText.trim().startsWith('<!DOCTYPE') || responseText.trim().startsWith('<html')) {
-                throw new Error('Server returned HTML instead of JSON. Check server logs for errors.');
-            } else if (responseText.trim() === '') {
-                throw new Error('Server returned empty response. Check server logs.');
-            } else if (!responseText.trim().startsWith('{')) {
-                throw new Error(`Server response doesn't start with JSON. Starts with: "${responseText.substring(0, 50)}"`);
-            } else {
-                throw new Error('Invalid JSON format from server. Check console for details.');
-            }
-        }
-        
+
+        if (response.redirected) throw new Error('Session expired. Please refresh the page.');
+        if (!response.ok) { const t = await response.text(); throw new Error(`Server error (${response.status}).`); }
+
+        const data = await response.json();
+
         if (data.success) {
-            statusDiv.style.display = 'none';
+            statusDiv.className = 'alert alert-info d-none';
             document.getElementById('generatedLogoPreview').src = data.logo_url;
             generatedLogoPath = data.logo_path;
-            logoContainer.style.display = 'block';
+            logoContainer.classList.remove('d-none');
         } else {
             statusDiv.className = 'alert alert-danger';
-            statusMessage.innerHTML = '<i class="fas fa-exclamation-triangle"></i> ' + (data.message || 'Failed to generate logo');
+            statusMsg.innerHTML = '<i class="fas fa-exclamation-triangle me-2"></i>' + (data.message || 'Failed to generate logo');
         }
     } catch (error) {
-        console.error('Logo generation error:', error);
         statusDiv.className = 'alert alert-danger';
-        statusMessage.textContent = 'Error: ' + error.message;
+        statusMsg.textContent = 'Error: ' + error.message;
     } finally {
         generateBtn.disabled = false;
     }
@@ -1561,46 +1607,37 @@ function regenerateLogoFromModal() {
 }
 
 async function saveGeneratedLogo() {
-    if (!generatedLogoPath) {
-        alert('No logo generated yet');
-        return;
-    }
-    
+    if (!generatedLogoPath) { alert('No logo generated yet'); return; }
+
     const statusDiv = document.getElementById('generationStatus');
-    const statusMessage = document.getElementById('statusMessage');
-    
-    statusDiv.style.display = 'block';
+    const statusMsg = document.getElementById('statusMessage');
+
     statusDiv.className = 'alert alert-info';
-    statusMessage.textContent = 'Saving logo to your business profile...';
-    
+    statusMsg.textContent = 'Saving logo to your business profile…';
+
     try {
         const formData = new FormData();
         formData.append('_token', document.querySelector('meta[name="csrf-token"]').content);
         formData.append('_method', 'PUT');
         formData.append('generated_logo_path', generatedLogoPath);
-        formData.append('name', {!! json_encode(Auth::user()->business->name ?? '') !!});
+        formData.append('name',          {!! json_encode(Auth::user()->business->name ?? '') !!});
         formData.append('business_type', {!! json_encode(Auth::user()->business->business_type ?? '') !!});
-        formData.append('phone', {!! json_encode(Auth::user()->business->phone ?? '') !!});
-        formData.append('address', {!! json_encode(Auth::user()->business->address ?? '') !!});
-        formData.append('city', {!! json_encode(Auth::user()->business->city ?? '') !!});
-        
-        const response = await fetch('{{ route("business.update") }}', {
-            method: 'POST',
-            body: formData
-        });
-        
+        formData.append('phone',         {!! json_encode(Auth::user()->business->phone ?? '') !!});
+        formData.append('address',       {!! json_encode(Auth::user()->business->address ?? '') !!});
+        formData.append('city',          {!! json_encode(Auth::user()->business->city ?? '') !!});
+
+        const response = await fetch('{{ route("business.update") }}', { method: 'POST', body: formData });
+
         if (response.ok) {
             statusDiv.className = 'alert alert-success';
-            statusMessage.innerHTML = '<i class="fas fa-check"></i> Logo saved successfully! Refreshing page...';
-            setTimeout(() => {
-                window.location.reload();
-            }, 1500);
+            statusMsg.innerHTML = '<i class="fas fa-check me-2"></i>Logo saved! Refreshing…';
+            setTimeout(() => window.location.reload(), 1500);
         } else {
             throw new Error('Failed to save logo');
         }
     } catch (error) {
         statusDiv.className = 'alert alert-danger';
-        statusMessage.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Error saving logo: ' + error.message;
+        statusMsg.innerHTML = '<i class="fas fa-exclamation-triangle me-2"></i>Error saving logo: ' + error.message;
     }
 }
 

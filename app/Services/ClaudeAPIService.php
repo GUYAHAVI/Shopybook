@@ -2225,31 +2225,148 @@ Return ONLY the enhanced prompt, no explanations or additional text.";
      * @return array Array containing public_url and local_path of the generated logo
      * @throws \Exception If logo generation fails
      */
-    public function generateBusinessLogo($businessName, $businessDescription, $businessType = 'retail', $style = 'modern', $tagline = null)
+    public function generateBusinessLogo($businessName, $businessDescription, $businessType = 'retail', $style = 'modern', $tagline = null, $colorPalette = null, $products = [])
     {
         try {
-            Log::info('Starting business logo generation', [
-                'business_name' => $businessName,
-                'business_type' => $businessType,
-                'style' => $style,
-                'has_tagline' => !empty($tagline)
+            Log::info('Starting expert business logo generation', [
+                'business_name'  => $businessName,
+                'business_type'  => $businessType,
+                'style'          => $style,
+                'color_palette'  => $colorPalette,
+                'product_count'  => count($products),
+                'has_tagline'    => !empty($tagline),
             ]);
 
-            // Generate tagline from description if not provided
-            if (empty($tagline) && !empty($businessDescription)) {
-                $tagline = $this->generateTaglineFromDescription($businessDescription, $businessType);
-                Log::info('Generated tagline from description', ['tagline' => $tagline]);
+            // Build expert prompt from all available business context
+            $prompt = $this->buildExpertLogoPrompt(
+                $businessName, $businessDescription, $businessType,
+                $style, $tagline, $colorPalette, $products
+            );
+
+            // Negative prompt specifically tuned for logo quality
+            $negativePrompt = 'blurry, low quality, pixelated, photo-realistic background, people, faces, hands, buildings, cluttered, messy, multiple logos, watermark, text errors, distorted symbols, raster artifacts, bad typography, cheap, amateur, gradients that clip, noisy texture, stock photo, realistic photograph, dark cluttered background, drop shadow on background';
+
+            $encodedPrompt   = rawurlencode($prompt);
+            $encodedNegative = rawurlencode($negativePrompt);
+            $seed = rand(1, 999999);
+
+            $url = "https://image.pollinations.ai/prompt/{$encodedPrompt}?width=512&height=512&nologo=true&model=flux&enhance=true&negative={$encodedNegative}&seed={$seed}";
+
+            Log::info('Expert logo prompt built', ['prompt' => substr($prompt, 0, 250), 'url_length' => strlen($url)]);
+
+            // Attempt Pollinations AI (2 tries)
+            for ($attempt = 1; $attempt <= 2; $attempt++) {
+                $result = $this->downloadAndStoreImage($url, $businessName, 'logos');
+                if ($result) {
+                    Log::info('Expert logo generated via Pollinations', ['attempt' => $attempt]);
+                    return $result;
+                }
+                if ($attempt < 2) {
+                    Log::warning("Logo attempt {$attempt} failed, retrying...");
+                    sleep(3);
+                    // Use a new seed on retry for a different result
+                    $url = str_replace("seed={$seed}", 'seed=' . rand(1, 999999), $url);
+                }
             }
 
-            // Generate logo with business name and tagline
+            // Fallback: generate tagline then produce GD text logo
+            Log::warning('Pollinations failed for logo, falling back to local GD logo');
+            if (empty($tagline) && !empty($businessDescription)) {
+                $tagline = $this->generateTaglineFromDescription($businessDescription, $businessType);
+            }
             return $this->generateLocalLogoWithText($businessName, $tagline, $businessType, $style);
 
         } catch (\Exception $e) {
-            Log::error('Business Logo Generation Error: ' . $e->getMessage(), [
-                'business_name' => $businessName
-            ]);
+            Log::error('Business Logo Generation Error: ' . $e->getMessage(), ['business_name' => $businessName]);
             throw $e;
         }
+    }
+
+    /**
+     * Build a rich, expert-level logo generation prompt from all available business context.
+     */
+    private function buildExpertLogoPrompt($businessName, $businessDescription, $businessType, $style, $tagline, $colorPalette, $products)
+    {
+        // Style descriptors — each drives the visual language of the mark
+        $styleDescs = [
+            'modern'    => 'modern minimalist flat design, clean geometric shapes, straight lines, contemporary feel',
+            'classic'   => 'classic elegant timeless design, refined serif-inspired shapes, traditional and prestigious',
+            'minimal'   => 'ultra-minimal single stripped-down mark, extreme whitespace, one simple icon',
+            'bold'      => 'bold strong impactful design, thick geometric forms, high contrast, powerful presence',
+            'playful'   => 'friendly rounded playful design, dynamic curves, approachable and energetic',
+            'corporate' => 'corporate professional structured design, authoritative formal composition, blue-chip feel',
+            'luxury'    => 'luxury premium high-end design, refined elegant geometry, upscale sophisticated',
+            'tech'      => 'cutting-edge tech design, sharp angular shapes, futuristic digital, innovative',
+        ];
+        $styleDesc = $styleDescs[$style] ?? $styleDescs['modern'];
+
+        // Color palette descriptions fed into the prompt
+        $paletteDescs = [
+            'ocean_blue'    => 'deep navy blue and electric cyan color palette, trustworthy cool tones',
+            'forest_green'  => 'deep forest green and bright lime accent color palette, natural growth tones',
+            'royal_purple'  => 'royal purple and soft violet color palette, premium creative tones',
+            'sunset_red'    => 'bold crimson red and warm amber-orange color palette, energetic passionate tones',
+            'gold_black'    => 'rich gold and deep charcoal black color palette, luxury excellence tones',
+            'mint_fresh'    => 'emerald green and clean mint-white color palette, fresh modern tones',
+            'midnight_navy' => 'midnight navy and silver-grey color palette, powerful authoritative tones',
+            'rose_gold'     => 'rose gold and soft blush pink color palette, elegant stylish feminine tones',
+            'earth_tone'    => 'warm terracotta and cream earth tones, organic natural warm palette',
+            'monochrome'    => 'bold monochrome black and white, high contrast classic palette',
+        ];
+        $colorDesc = isset($paletteDescs[$colorPalette]) ? ', ' . $paletteDescs[$colorPalette] : ', professional brand colors';
+
+        // Business-type icon hints to guide the mark
+        $typeIcons = [
+            'retail'        => 'a minimalist shopping bag or geometric store-front mark',
+            'restaurant'    => 'an elegant fork and plate or stylized chef hat mark',
+            'salon'         => 'a clean scissors or abstract flower mark',
+            'tech'          => 'a sharp circuit node or angular pixel mark',
+            'health'        => 'a clean leaf or abstract cross mark',
+            'education'     => 'an open book or graduation cap silhouette mark',
+            'finance'       => 'a rising chart arrow or geometric coin mark',
+            'real_estate'   => 'an abstract minimal house outline mark',
+            'automotive'    => 'a stylized wheel or key silhouette mark',
+            'fashion'       => 'a minimalist hanger or diamond silhouette mark',
+            'sports'        => 'a dynamic swoosh or star burst mark',
+            'grocery'       => 'a clean fruit or woven-basket mark',
+            'electronics'   => 'a lightning bolt or microchip mark',
+            'beauty'        => 'a lotus flower or abstract petal mark',
+            'wholesale'     => 'a stacked box or abstract block mark',
+            'online'        => 'a globe outline or cursor mark',
+            'service'       => 'a shield or abstract wrench mark',
+            'other'         => 'a clean abstract geometric mark',
+            'other_product' => 'a versatile abstract geometric mark',
+            'hybrid'        => 'a modern abstract multi-faceted mark',
+        ];
+        $iconHint = $typeIcons[$businessType] ?? 'a clean abstract professional mark';
+
+        // Products context — only if available
+        $productContext = '';
+        if (!empty($products)) {
+            $names = array_filter(array_slice(
+                array_map(fn($p) => is_string($p) ? trim($p) : trim($p['name'] ?? ''), $products), 0, 4
+            ));
+            if (!empty($names)) {
+                $productContext = ' The business is known for: ' . implode(', ', $names) . '.';
+            }
+        }
+
+        // Business description — trim to a short essence
+        $descContext = '';
+        if (!empty($businessDescription) && strlen($businessDescription) > 20) {
+            $descContext = ' Brand essence: ' . substr(trim($businessDescription), 0, 130) . '.';
+        }
+
+        // Assemble the full expert prompt
+        $prompt  = "Expert vector logo design for \"{$businessName}\", a professional {$businessType} brand.";
+        $prompt .= " {$styleDesc}.";
+        $prompt .= " Centered mark featuring {$iconHint}.";
+        $prompt .= $colorDesc . '.';
+        $prompt .= $descContext;
+        $prompt .= $productContext;
+        $prompt .= ' Isolated on pure white background, single centred symbol, vector-clean sharp edges, balanced and scalable, high-end professional branding identity, suitable for business cards and signage.';
+
+        return $prompt;
     }
 
     /**

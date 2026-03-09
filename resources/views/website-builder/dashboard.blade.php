@@ -207,7 +207,7 @@
                         </div>
                         <div class="stat-card">
                             <div class="stat-value" style="color: var(--info-color); font-size:.95rem;">
-                                Jeriah Modern
+                                {{ $website->theme->name ?? 'Jeriah Modern' }}
                             </div>
                             <div class="stat-label">Template</div>
                         </div>

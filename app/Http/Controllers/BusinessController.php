@@ -685,28 +685,49 @@ class BusinessController extends Controller
     public function generateLogo(Request $request)
     {
         $request->validate([
-            'business_name' => 'required|string|max:255',
+            'business_name'        => 'required|string|max:255',
             'business_description' => 'nullable|string',
-            'business_type' => 'required|string',
-            'logo_style' => 'nullable|string|in:modern,classic,minimal,bold,playful,corporate',
-            'tagline' => 'nullable|string|max:50',
+            'business_type'        => 'required|string',
+            'logo_style'           => 'nullable|string|in:modern,classic,minimal,bold,playful,corporate,luxury,tech',
+            'tagline'              => 'nullable|string|max:50',
+            'color_palette'        => 'nullable|string|in:ocean_blue,forest_green,royal_purple,sunset_red,gold_black,mint_fresh,midnight_navy,rose_gold,earth_tone,monochrome',
         ]);
 
         try {
-            $style = $request->logo_style ?? 'modern';
-            $tagline = $request->tagline;
-            
+            $style        = $request->logo_style ?? 'modern';
+            $tagline      = $request->tagline;
+            $colorPalette = $request->color_palette;
+
             // Ensure description meets minimum requirements
             $description = $request->business_description;
             if (empty($description) || strlen($description) < 10) {
                 $description = 'A professional ' . $request->business_type . ' business providing quality services and products to our valued customers.';
             }
-            
+
+            // Load the business's top products to enrich the logo prompt
+            $topProducts = [];
+            try {
+                $business = Auth::user()->business;
+                if ($business) {
+                    $topProducts = $business->products()
+                        ->select('name')
+                        ->orderBy('created_at', 'desc')
+                        ->limit(5)
+                        ->get()
+                        ->pluck('name')
+                        ->toArray();
+                }
+            } catch (\Exception $e) {
+                Log::warning('Could not load products for logo context: ' . $e->getMessage());
+            }
+
             Log::info('Logo generation requested', [
                 'business_name' => $request->business_name,
                 'business_type' => $request->business_type,
-                'style' => $style,
-                'has_tagline' => !empty($tagline)
+                'style'         => $style,
+                'color_palette' => $colorPalette,
+                'product_count' => count($topProducts),
+                'has_tagline'   => !empty($tagline),
             ]);
 
             $logoResult = $this->claudeService->generateBusinessLogo(
@@ -714,7 +735,9 @@ class BusinessController extends Controller
                 $description,
                 $request->business_type,
                 $style,
-                $tagline
+                $tagline,
+                $colorPalette,
+                $topProducts
             );
 
             if ($logoResult && isset($logoResult['public_url'])) {
