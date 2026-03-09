@@ -1873,6 +1873,11 @@ Return ONLY the enhanced prompt, no explanations or additional text.";
                         if ($attempt < $maxRetries) {
                             sleep($delay);
                         }
+                    } elseif ($e->getCode() >= 500) {
+                        // Pollinations server-side failure (500, 503, etc.) — retrying same URL is pointless
+                        // Break out immediately and let the Lexica/Unsplash fallbacks handle it
+                        Log::warning("Pollinations returned server error {$e->getCode()}, skipping remaining retries and going to fallback");
+                        break;
                     } else {
                         Log::error("Download attempt {$attempt} runtime error: " . $e->getMessage());
                         if ($attempt === $maxRetries) throw $e;
@@ -1887,10 +1892,15 @@ Return ONLY the enhanced prompt, no explanations or additional text.";
                 }
             }
             
-            // If Pollinations failed after all retries, try Lexica.art as a fallback
+            // Fallback chain when Pollinations fails
             if (!$downloadResult) {
-                Log::warning('Pollinations failed after all retries, trying Lexica.art fallback', ['prompt' => substr($prompt, 0, 100)]);
+                Log::warning('Pollinations failed, trying Lexica.art fallback', ['prompt' => substr($prompt, 0, 100)]);
                 $downloadResult = $this->fetchLexicaImage($prompt, $businessName, $width, $height);
+            }
+
+            if (!$downloadResult) {
+                Log::warning('Lexica.art failed, trying Unsplash Source fallback', ['prompt' => substr($prompt, 0, 100)]);
+                $downloadResult = $this->fetchUnsplashImage($prompt, $businessName, $width, $height);
             }
             
             if ($downloadResult) {
@@ -2035,6 +2045,63 @@ Return ONLY the enhanced prompt, no explanations or additional text.";
     }
 
     /**
+     * Fallback image source: Unsplash Source — free, no auth, keyword-based, returns a real high-quality photo.
+     * Uses the source.unsplash.com redirect API which resolves to a CDN image URL.
+     */
+    private function fetchUnsplashImage(string $prompt, string $businessName, int $width = 1200, int $height = 600): ?array
+    {
+        try {
+            // Extract the most meaningful 3-4 keywords for the Unsplash query
+            $words       = preg_split('/[\s,]+/', $prompt);
+            $keywords    = implode(',', array_slice($words, 0, 4));
+            $unsplashUrl = "https://source.unsplash.com/{$width}x{$height}/?" . rawurlencode($keywords);
+
+            Log::info('Trying Unsplash Source fallback', ['keywords' => $keywords, 'url' => $unsplashUrl]);
+
+            // source.unsplash.com redirects to the actual CDN image — follow the redirect
+            $response = Http::timeout(30)
+                ->withOptions([
+                    'verify'          => false,
+                    'allow_redirects' => ['max' => 5],
+                ])
+                ->get($unsplashUrl);
+
+            if ($response->successful()) {
+                $imageContent = $response->body();
+                if ($imageContent && strlen($imageContent) > 100) {
+                    $finfo    = new \finfo(FILEINFO_MIME_TYPE);
+                    $mimeType = $finfo->buffer($imageContent);
+                    if (in_array($mimeType, ['image/png', 'image/jpeg', 'image/jpg', 'image/webp'])) {
+                        // Save directly without going through downloadAndStoreImage to avoid recursion
+                        $directory = storage_path('app/public/marketing/generated-images');
+                        if (!file_exists($directory)) {
+                            mkdir($directory, 0755, true);
+                        }
+                        $filename     = 'unsplash-' . Str::slug($businessName) . '-' . time() . '-' . uniqid() . '.jpg';
+                        $filePath     = $directory . '/' . $filename;
+                        $relativePath = 'marketing/generated-images/' . $filename;
+                        file_put_contents($filePath, $imageContent);
+                        Log::info('Unsplash Source fallback succeeded', ['filename' => $filename, 'bytes' => strlen($imageContent)]);
+                        return [
+                            'public_url'    => asset('storage/' . $relativePath),
+                            'local_path'    => $relativePath,
+                            'relative_path' => $relativePath,
+                            'filename'      => $filename,
+                        ];
+                    }
+                }
+            }
+
+            Log::warning('Unsplash Source returned invalid content', ['status' => $response->status()]);
+            return null;
+
+        } catch (\Exception $e) {
+            Log::warning('Unsplash Source fallback failed', ['error' => $e->getMessage()]);
+            return null;
+        }
+    }
+
+    /**
      * Download and store image locally
      * Returns array with both public_url and local_path
      */
@@ -2082,31 +2149,37 @@ Return ONLY the enhanced prompt, no explanations or additional text.";
                         'body' => substr($response->body(), 0, 300),
                         'url'  => substr($imageUrl, 0, 150),
                     ]);
-                    throw new \RuntimeException('Pollinations rate limited: queue full for this IP', 429);
-                } else {
-                    Log::warning('Http facade got non-2xx response', [
-                        'status'   => $response->status(),
-                        'body'     => substr($response->body(), 0, 300),
-                        'url'      => substr($imageUrl, 0, 150),
+                    throw new \RuntimeException('Pollinations rate limited: queue full', 429);
+                } elseif ($response->status() >= 400) {
+                    // Definitive server error — re-requesting same URL with file_get_contents is pointless
+                    // and wastes 90s waiting for Pollinations to process and fail again
+                    Log::warning('Pollinations server error, skipping to fallback', [
+                        'status' => $response->status(),
+                        'body'   => substr($response->body(), 0, 300),
+                        'url'    => substr($imageUrl, 0, 150),
                     ]);
+                    throw new \RuntimeException('Pollinations server error: ' . $response->status(), $response->status());
                 }
             } catch (\RuntimeException $httpEx) {
-                // Re-throw rate-limit exceptions so the retry loop can handle them intelligently
-                if ($httpEx->getCode() === 429) {
+                // Re-throw 429 (rate limit) and 4xx/5xx (server errors) to be handled by the retry loop
+                if ($httpEx->getCode() >= 400) {
                     throw $httpEx;
                 }
-                Log::warning('Http facade failed, will try file_get_contents fallback', [
+                Log::warning('Http facade connection failed, will try file_get_contents fallback', [
                     'error' => $httpEx->getMessage(),
                     'url'   => substr($imageUrl, 0, 150),
                 ]);
             } catch (\Exception $httpEx) {
-                Log::warning('Http facade failed, will try file_get_contents fallback', [
+                // Connection-level failure (timeout, DNS, SSL) — file_get_contents may still work
+                Log::warning('Http facade connection failed, will try file_get_contents fallback', [
                     'error' => $httpEx->getMessage(),
                     'url'   => substr($imageUrl, 0, 150),
                 ]);
             }
 
-            // --- Method 2: file_get_contents fallback (works on many cPanel setups) ---
+            // --- Method 2: file_get_contents fallback ---
+            // Only runs when Http threw a connection error (not when Pollinations returned 4xx/5xx,
+            // since re-requesting the same broken URL would waste 90 seconds)
             if (!$imageContent || strlen($imageContent) < 100) {
                 Log::info('Attempting file_get_contents fallback');
                 try {
