@@ -9,6 +9,8 @@ use App\Models\Product;
 use App\Mail\NewServiceBookingMail;
 use App\Mail\NewOrderMail;
 use App\Mail\LowStockAlertMail;
+use App\Mail\TestimonialReceivedMail;
+use App\Models\Testimonial;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Cache;
@@ -298,6 +300,44 @@ class NotificationService
                 throw $e;
             }
             return null;
+        }
+    }
+
+    // ── Testimonial ───────────────────────────────────────────────────────
+
+    /**
+     * Notify the business owner about a new testimonial (in-app + email).
+     */
+    public function notifyNewTestimonial(Testimonial $testimonial, $business): void
+    {
+        try {
+            $stars = str_repeat('★', $testimonial->rating) . str_repeat('☆', 5 - $testimonial->rating);
+
+            Notification::create([
+                'business_id' => $business->id,
+                'type'        => 'testimonial',
+                'title'       => 'New Customer Review',
+                'message'     => "{$testimonial->name} left a {$testimonial->rating}-star review: \"{$testimonial->quote}\"",
+                'data'        => [
+                    'testimonial_id' => $testimonial->id,
+                    'reviewer_name'  => $testimonial->name,
+                    'rating'         => $testimonial->rating,
+                    'stars'          => $stars,
+                    'manage_url'     => route('testimonials.owner.index'),
+                ],
+                'icon'  => 'fas fa-star',
+                'color' => 'warning',
+            ]);
+
+            if ($business->user && $business->user->email) {
+                Mail::to($business->user->email)
+                    ->send(new TestimonialReceivedMail($testimonial, $business));
+            }
+        } catch (\Exception $e) {
+            Log::error('Failed to send testimonial notification', [
+                'testimonial_id' => $testimonial->id,
+                'error'          => $e->getMessage(),
+            ]);
         }
     }
 

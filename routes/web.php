@@ -59,8 +59,8 @@ Route::get('/pricing', function () {
     return view('pricing');
 })->name('pricing');
 
-// Public website viewer (path-based - quick access)
 use App\Http\Controllers\PublicWebsiteController;
+use App\Http\Controllers\TestimonialController;
 Route::get('/site/{subdomain}', [PublicWebsiteController::class, 'homepage'])
     ->name('public.website.direct');
 Route::get('/site/{subdomain}/{slug}', [PublicWebsiteController::class, 'page'])
@@ -69,6 +69,12 @@ Route::post('/site/{subdomain}/contact', [PublicWebsiteController::class, 'submi
     ->name('public.website.contact');
 Route::post('/site/{subdomain}/order', [PublicWebsiteController::class, 'placeOrder'])
     ->name('public.website.order');
+Route::post('/site/{subdomain}/testimonial', [TestimonialController::class, 'submitBusiness'])
+    ->name('public.website.testimonial');
+
+// Public platform testimonial submission
+Route::post('/testimonials', [TestimonialController::class, 'submitPlatform'])
+    ->name('testimonials.submit');
 
 // Public website viewer (subdomain-based - *.shopybook.com)
 Route::domain('{subdomain}.' . env('APP_DOMAIN', 'shopybook.com'))->group(function () {
@@ -80,6 +86,8 @@ Route::domain('{subdomain}.' . env('APP_DOMAIN', 'shopybook.com'))->group(functi
         ->name('public.website.subdomain.contact');
     Route::post('/order', [PublicWebsiteController::class, 'placeOrder'])
         ->name('public.website.subdomain.order');
+    Route::post('/testimonial', [TestimonialController::class, 'submitBusiness'])
+        ->name('public.website.subdomain.testimonial');
 });
 
 Route::post('/orders', [OrderController::class, 'store'])->name('orders.store');
@@ -789,6 +797,23 @@ Route::post('/auth/facebook/deauthorize', [SocialMediaController::class, 'facebo
 Route::get('/auth/facebook/data-deletion', function () {
     return redirect()->route('data-deletion');
 })->name('facebook.data-deletion');
+
+// Admin routes
+Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
+    Route::get('/testimonials', [TestimonialController::class, 'adminIndex'])->name('testimonials.index');
+    Route::post('/testimonials/{testimonial}/approve', [TestimonialController::class, 'approve'])->name('testimonials.approve');
+    Route::delete('/testimonials/{testimonial}', [TestimonialController::class, 'destroy'])->name('testimonials.destroy');
+});
+
+// Owner testimonial management routes
+Route::middleware(['auth', 'has.business'])->prefix('testimonials')->name('testimonials.owner.')->group(function () {
+    Route::get('/',                                [TestimonialController::class, 'ownerIndex'])->name('index');
+    Route::patch('/{testimonial}/approve',         [TestimonialController::class, 'ownerApprove'])->name('approve');
+    Route::patch('/{testimonial}/reject',          [TestimonialController::class, 'ownerReject'])->name('reject');
+    Route::delete('/{testimonial}',                [TestimonialController::class, 'ownerDelete'])->name('delete');
+    Route::patch('/{id}/restore',                  [TestimonialController::class, 'ownerRestore'])->name('restore');
+    Route::delete('/{id}/force-delete',            [TestimonialController::class, 'ownerForceDelete'])->name('force-delete');
+});
 
 
 

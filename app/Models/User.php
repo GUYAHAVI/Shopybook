@@ -23,7 +23,13 @@ class User extends Authenticatable implements MustVerifyEmail
         'name',
         'email',
         'password',
+        'is_admin',
     ];
+
+    public function isAdmin(): bool
+    {
+        return (bool) $this->is_admin;
+    }
 
     /**
      * The attributes that should be hidden for serialization.
@@ -44,7 +50,8 @@ class User extends Authenticatable implements MustVerifyEmail
     {
         return [
             'email_verified_at' => 'datetime',
-            'password' => 'hashed',
+            'password'          => 'hashed',
+            'is_admin'          => 'boolean',
         ];
     }
 

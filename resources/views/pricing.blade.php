@@ -436,7 +436,7 @@ h1, h2, h3, h4, h5, h6,
                             <li><i class="fas fa-check"></i> <strong>Unlimited</strong> products &amp; services</li>
                             <li><i class="fas fa-check"></i> Advanced inventory management</li>
                             <li><i class="fas fa-check"></i> Unlimited customers &amp; CRM</li>
-                            <li><i class="fas fa-check"></i> Full-featured POS + barcode scanner</li>
+                            <li><i class="fas fa-check"></i> Full-featured POS</li>
                             <li><i class="fas fa-check"></i> Staff management (up to 10) + commissions</li>
                             <li><i class="fas fa-check"></i> Service booking system</li>
                             <li><i class="fas fa-check"></i> AI website builder (8 themes)</li>
@@ -480,10 +480,9 @@ h1, h2, h3, h4, h5, h6,
                             <li><i class="fas fa-check"></i> Multi-location support</li>
                             <li><i class="fas fa-check"></i> Unlimited staff accounts</li>
                             <li><i class="fas fa-check"></i> Advanced user permissions &amp; roles</li>
-                            <li><i class="fas fa-check"></i> Custom integrations &amp; API access</li>
+                            <li><i class="fas fa-check"></i> Custom integrations</li>
                             <li><i class="fas fa-check"></i> Dedicated account manager</li>
                             <li><i class="fas fa-check"></i> Custom onboarding &amp; training</li>
-                            <li><i class="fas fa-check"></i> White-label website option</li>
                             <li><i class="fas fa-check"></i> SLA &amp; uptime guarantee</li>
                             <li><i class="fas fa-check"></i> OCR bulk product import</li>
                         </ul>
@@ -620,12 +619,7 @@ h1, h2, h3, h4, h5, h6,
                         <td class="text-center">Full-featured</td>
                         <td class="text-center">Full-featured</td>
                     </tr>
-                    <tr>
-                        <td class="feature-label ps-4">Barcode scanning</td>
-                        <td class="text-center"><i class="fas fa-times cross-icon"></i></td>
-                        <td class="text-center"><i class="fas fa-check check-icon"></i></td>
-                        <td class="text-center"><i class="fas fa-check check-icon"></i></td>
-                    </tr>
+
                     <tr>
                         <td class="feature-label ps-4">M-Pesa STK Push</td>
                         <td class="text-center"><i class="fas fa-check check-icon"></i></td>
@@ -704,12 +698,7 @@ h1, h2, h3, h4, h5, h6,
                         <td class="text-center"><i class="fas fa-check check-icon"></i></td>
                         <td class="text-center"><i class="fas fa-check check-icon"></i></td>
                     </tr>
-                    <tr>
-                        <td class="feature-label ps-4">White-label website</td>
-                        <td class="text-center"><i class="fas fa-times cross-icon"></i></td>
-                        <td class="text-center"><i class="fas fa-times cross-icon"></i></td>
-                        <td class="text-center"><i class="fas fa-check check-icon"></i></td>
-                    </tr>
+
 
                     {{-- Marketing --}}
                     <tr><td colspan="4" style="background:rgba(19,232,233,0.08) !important; color:#13e8e9 !important; font-weight:700; padding:10px 20px; font-size:.85rem; text-transform:uppercase; letter-spacing:1px;">Marketing</td></tr>

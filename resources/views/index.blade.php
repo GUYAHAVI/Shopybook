@@ -1000,32 +1000,51 @@ input.form-control::placeholder, textarea.form-control::placeholder {
                 <p class="lead">Real success stories from Shopybook users across Kenya</p>
             </div>
 
+            @php
+            $hardcodedTestimonials = [
+                ['name' => 'James Mwangi', 'role' => 'Electronics Store, Nairobi', 'quote' => 'Shopybook transformed my retail business. The M-Pesa integration and inventory management have increased my efficiency by 300%. I can now focus on growing instead of tracking stock manually.', 'rating' => 5, 'avatar' => 'https://randomuser.me/api/portraits/men/32.jpg'],
+                ['name' => 'Wanjiku Kamau', 'role' => 'Beauty Salon, Mombasa', 'quote' => 'Managing my salon services and staff commissions was a nightmare before Shopybook. Now everything is automated and my staff love the transparent commission tracking.', 'rating' => 5, 'avatar' => 'https://randomuser.me/api/portraits/women/45.jpg'],
+                ['name' => 'Peter Ochieng',  'role' => 'Hardware Store, Kisumu',  'quote' => 'The local payment methods make Shopybook perfect for our market. Our customers love paying with M-Pesa, and we get instant confirmations.', 'rating' => 5, 'avatar' => 'https://randomuser.me/api/portraits/men/28.jpg'],
+            ];
+            $showTestimonials = ($platformTestimonials->count() >= 3) ? $platformTestimonials : collect($hardcodedTestimonials);
+            @endphp
+
             <div class="row g-4">
             <div id="testimonialsCarousel" class="carousel slide" data-bs-ride="carousel" data-bs-interval="5000">
                 <div class="carousel-inner">
-                    <!-- Testimonial 1 -->
-                    <div class="carousel-item active">
+                    @foreach($showTestimonials as $idx => $t)
+                    @php
+                        $isModel = $t instanceof \App\Models\Testimonial;
+                        $tName   = $isModel ? $t->name   : $t['name'];
+                        $tRole   = $isModel ? $t->role   : $t['role'];
+                        $tQuote  = $isModel ? $t->quote  : $t['quote'];
+                        $tRating = $isModel ? $t->rating : $t['rating'];
+                        $tAvatar = $isModel ? null : ($t['avatar'] ?? null);
+                    @endphp
+                    <div class="carousel-item {{ $idx === 0 ? 'active' : '' }}">
                         <div class="row justify-content-center">
                             <div class="col-md-8">
                                 <div class="card testimonial-card h-100">
                                     <div class="card-body text-center">
                                         <div class="mb-3 text-warning">
-                                            <i class="fas fa-star"></i>
-                                            <i class="fas fa-star"></i>
-                                            <i class="fas fa-star"></i>
-                                            <i class="fas fa-star"></i>
-                                            <i class="fas fa-star"></i>
+                                            @for($s = 1; $s <= 5; $s++)
+                                                <i class="fas fa-star{{ $s > $tRating ? '-o' : '' }}"></i>
+                                            @endfor
                                         </div>
                                         <p class="card-text testimonial-text">
-                                            "Shopybook transformed my retail business. The M-Pesa integration and inventory management 
-                                            have increased my efficiency by 300%. I can now focus on growing instead of tracking stock manually."
+                                            "{{ $tQuote }}"
                                         </p>
                                         <div class="d-flex align-items-center justify-content-center mt-3">
-                                            <img src="https://randomuser.me/api/portraits/men/32.jpg" class="rounded-circle me-3"
-                                                width="50" alt="James Mwangi" />
+                                            @if($tAvatar)
+                                            <img src="{{ $tAvatar }}" class="rounded-circle me-3" width="50" alt="{{ $tName }}" />
+                                            @else
+                                            <div class="rounded-circle me-3 d-flex align-items-center justify-content-center bg-primary text-white" style="width:50px;height:50px;flex-shrink:0;font-weight:700;font-size:1.1rem;">
+                                                {{ strtoupper(substr($tName, 0, 1)) }}
+                                            </div>
+                                            @endif
                                             <div>
-                                                <h6 class="mb-0 testimonial-name">James Mwangi</h6>
-                                                <small class="text-muted">Electronics Store, Nairobi</small>
+                                                <h6 class="mb-0 testimonial-name">{{ $tName }}</h6>
+                                                <small class="text-muted">{{ $tRole }}</small>
                                             </div>
                                         </div>
                                     </div>
@@ -1033,68 +1052,7 @@ input.form-control::placeholder, textarea.form-control::placeholder {
                             </div>
                         </div>
                     </div>
-
-                    <!-- Testimonial 2 -->
-                    <div class="carousel-item">
-                        <div class="row justify-content-center">
-                            <div class="col-md-8">
-                                <div class="card testimonial-card h-100">
-                                    <div class="card-body text-center">
-                                        <div class="mb-3 text-warning">
-                                            <i class="fas fa-star"></i>
-                                            <i class="fas fa-star"></i>
-                                            <i class="fas fa-star"></i>
-                                            <i class="fas fa-star"></i>
-                                            <i class="fas fa-star"></i>
-                                        </div>
-                                        <p class="card-text testimonial-text">
-                                            "Managing my salon services and staff commissions was a nightmare before Shopybook. 
-                                            Now everything is automated and my staff love the transparent commission tracking."
-                                        </p>
-                                        <div class="d-flex align-items-center justify-content-center mt-3">
-                                            <img src="https://randomuser.me/api/portraits/women/45.jpg" class="rounded-circle me-3"
-                                                width="50" alt="Wanjiku Kamau" />
-                                            <div>
-                                                <h6 class="mb-0 testimonial-name">Wanjiku Kamau</h6>
-                                                <small class="text-muted">Beauty Salon, Mombasa</small>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Testimonial 3 -->
-                    <div class="carousel-item">
-                        <div class="row justify-content-center">
-                            <div class="col-md-8">
-                                <div class="card testimonial-card h-100">
-                                    <div class="card-body text-center">
-                                        <div class="mb-3 text-warning">
-                                            <i class="fas fa-star"></i>
-                                            <i class="fas fa-star"></i>
-                                            <i class="fas fa-star"></i>
-                                            <i class="fas fa-star"></i>
-                                            <i class="fas fa-star"></i>
-                                        </div>
-                                        <p class="card-text testimonial-text">
-                                            "The multi-language support and local payment methods make Shopybook perfect for our market. 
-                                            Our customers love paying with M-Pesa, and we get instant confirmations."
-                                        </p>
-                                        <div class="d-flex align-items-center justify-content-center mt-3">
-                                            <img src="https://randomuser.me/api/portraits/men/28.jpg" class="rounded-circle me-3"
-                                                width="50" alt="Peter Ochieng" />
-                                            <div>
-                                                <h6 class="mb-0 testimonial-name">Peter Ochieng</h6>
-                                                <small class="text-muted">Hardware Store, Kisumu</small>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                    @endforeach
                 </div>
 
                 <!-- Carousel Controls -->
@@ -1109,14 +1067,73 @@ input.form-control::placeholder, textarea.form-control::placeholder {
 
                 <!-- Carousel Indicators -->
                 <div class="carousel-indicators">
-                    <button type="button" data-bs-target="#testimonialsCarousel" data-bs-slide-to="0" class="active" aria-current="true" aria-label="Slide 1"></button>
-                    <button type="button" data-bs-target="#testimonialsCarousel" data-bs-slide-to="1" aria-label="Slide 2"></button>
-                    <button type="button" data-bs-target="#testimonialsCarousel" data-bs-slide-to="2" aria-label="Slide 3"></button>
+                    @foreach($showTestimonials as $idx => $t)
+                    <button type="button" data-bs-target="#testimonialsCarousel" data-bs-slide-to="{{ $idx }}"
+                        {{ $idx === 0 ? 'class="active" aria-current="true"' : '' }} aria-label="Slide {{ $idx + 1 }}"></button>
+                    @endforeach
                 </div>
             </div>
             </div>
+
+            <!-- Leave a Review Button -->
+            <div class="text-center mt-4">
+                <button class="btn btn-outline-light btn-sm" data-bs-toggle="modal" data-bs-target="#platformReviewModal">
+                    <i class="fas fa-pen me-1"></i> Share Your Experience
+                </button>
+            </div>
         </div>
     </section>
+
+    <!-- Platform Review Submission Modal -->
+    <div class="modal fade" id="platformReviewModal" tabindex="-1" aria-labelledby="platformReviewLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="platformReviewLabel"><i class="fas fa-star text-warning me-2"></i>Share Your Experience</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <!-- Success panel (shown after AJAX submit) -->
+                <div id="platformReviewSuccess" class="modal-body text-center py-5" style="display:none;">
+                    <i class="fas fa-check-circle text-success fa-3x mb-3"></i>
+                    <h5 class="mb-2">Thank you!</h5>
+                    <p class="text-muted mb-4">Your review has been submitted and will appear after approval.</p>
+                    <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Close</button>
+                </div>
+                <!-- Form panel -->
+                <form id="platformReviewForm" action="{{ route('testimonials.submit') }}" method="POST" novalidate>
+                    @csrf
+                    <div class="modal-body">
+                        <div id="platformReviewError" class="alert alert-danger d-none"></div>
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Your Name <span class="text-danger">*</span></label>
+                            <input type="text" name="name" class="form-control" placeholder="e.g. Mary Njoroge" maxlength="100" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Business / Role <span class="text-muted">(optional)</span></label>
+                            <input type="text" name="role" class="form-control" placeholder="e.g. Boutique Owner, Nairobi" maxlength="100">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Your Review <span class="text-danger">*</span></label>
+                            <textarea name="quote" class="form-control" rows="4" minlength="20" maxlength="1000" placeholder="Tell us how Shopybook helped your business..." required></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Rating</label>
+                            <div id="starRating" class="d-flex gap-2 fs-4">
+                                @for($i = 1; $i <= 5; $i++)
+                                <i class="fas fa-star text-warning star-pick" data-val="{{ $i }}" style="cursor:pointer;" title="{{ $i }} star{{ $i > 1 ? 's' : '' }}"></i>
+                                @endfor
+                            </div>
+                            <input type="hidden" name="rating" id="ratingInput" value="5">
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" id="platformReviewBtn" class="btn btn-primary">Submit Review</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
 
     <!-- Pricing Section -->
     <section id="signup" class="py-5 position-relative">
@@ -1164,7 +1181,6 @@ input.form-control::placeholder, textarea.form-control::placeholder {
                             <div class="price mb-4">
                                 <span class="currency">KSh</span>
                                 <span class="amount">500</span>
-                                <span class="amount">500</span>
                                 <span class="period">/month</span>
                             </div>
                             <ul class="list-unstyled pricing-list mb-4 text-start">
@@ -1188,7 +1204,6 @@ input.form-control::placeholder, textarea.form-control::placeholder {
                             <h3 class="card-title">Enterprise</h3>
                             <div class="price mb-4">
                                 <span class="currency">KSh</span>
-                                <span class="amount">1,000</span>
                                 <span class="amount">1,000</span>
                                 <span class="period">/month</span>
                             </div>
@@ -1701,5 +1716,80 @@ function connectImagesWithLines() {
  
     <!-- Shopybook Customer Support Chatbot -->
     @include('components.chatbot')
+
+<script>
+// Star rating picker + AJAX submit for platform review modal
+document.addEventListener('DOMContentLoaded', function () {
+    var stars  = document.querySelectorAll('#starRating .star-pick');
+    var input  = document.getElementById('ratingInput');
+    var form   = document.getElementById('platformReviewForm');
+    var btn    = document.getElementById('platformReviewBtn');
+    var errDiv = document.getElementById('platformReviewError');
+    var successPanel = document.getElementById('platformReviewSuccess');
+    var modal  = document.getElementById('platformReviewModal');
+
+    // ── Star rating ──────────────────────────────────────────
+    function highlight(val) {
+        stars.forEach(function(s) {
+            s.style.opacity = s.dataset.val <= val ? '1' : '0.3';
+        });
+    }
+    if (stars.length && input) {
+        highlight(5);
+        stars.forEach(function(s) {
+            s.addEventListener('click', function() { input.value = s.dataset.val; highlight(s.dataset.val); });
+            s.addEventListener('mouseenter', function() { highlight(s.dataset.val); });
+        });
+        document.getElementById('starRating').addEventListener('mouseleave', function() { highlight(input.value); });
+    }
+
+    // ── AJAX submit ──────────────────────────────────────────
+    if (form) {
+        form.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            errDiv.classList.add('d-none');
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1" role="status"></span>Submitting…';
+
+            try {
+                var resp = await fetch(form.action, {
+                    method: 'POST',
+                    headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' },
+                    body: new FormData(form),
+                });
+
+                if (resp.ok) {
+                    form.style.display = 'none';
+                    successPanel.style.display = 'block';
+                } else {
+                    var data = await resp.json();
+                    var msg = data.message
+                        || (data.errors ? Object.values(data.errors).flat().join(' ') : 'Something went wrong.');
+                    errDiv.textContent = msg;
+                    errDiv.classList.remove('d-none');
+                    btn.disabled = false;
+                    btn.textContent = 'Submit Review';
+                }
+            } catch (err) {
+                errDiv.textContent = 'Network error. Please try again.';
+                errDiv.classList.remove('d-none');
+                btn.disabled = false;
+                btn.textContent = 'Submit Review';
+            }
+        });
+    }
+
+    // ── Reset on modal close ──────────────────────────────────
+    if (modal) {
+        modal.addEventListener('hidden.bs.modal', function() {
+            if (form) { form.style.display = ''; form.reset(); }
+            if (successPanel) successPanel.style.display = 'none';
+            if (errDiv) errDiv.classList.add('d-none');
+            if (btn) { btn.disabled = false; btn.textContent = 'Submit Review'; }
+            if (input) { input.value = 5; highlight(5); }
+        });
+    }
+});
+</script>
 
 @endsection

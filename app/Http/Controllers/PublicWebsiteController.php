@@ -6,6 +6,7 @@ use App\Models\Website;
 use App\Models\WebsitePage;
 use App\Models\Product;
 use App\Models\Order;
+use App\Models\Testimonial;
 use App\Services\NotificationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -70,13 +71,21 @@ class PublicWebsiteController extends Controller
 
             $orderUrl = $this->resolveOrderUrl($request, $website);
 
+            $businessTestimonials = Testimonial::approved()
+                ->forBusiness($website->business_id)
+                ->latest()->get();
+
+            $testimonialUrl = $this->resolveTestimonialUrl($request, $website);
+
             return view('public-website.page', [
-                'website' => $website,
-                'page' => $page,
-                'menuPages' => $menuPages,
-                'products' => $products,
-                'isPreview' => $isPreview,
-                'orderUrl' => $orderUrl,
+                'website'              => $website,
+                'page'                 => $page,
+                'menuPages'            => $menuPages,
+                'products'             => $products,
+                'isPreview'            => $isPreview,
+                'orderUrl'             => $orderUrl,
+                'businessTestimonials' => $businessTestimonials,
+                'testimonialUrl'       => $isPreview ? null : $testimonialUrl,
             ]);
 
         } catch (\Exception $e) {
@@ -149,13 +158,21 @@ class PublicWebsiteController extends Controller
 
             $orderUrl = $this->resolveOrderUrl($request, $website);
 
+            $businessTestimonials = Testimonial::approved()
+                ->forBusiness($website->business_id)
+                ->latest()->get();
+
+            $testimonialUrl = $this->resolveTestimonialUrl($request, $website);
+
             return view('public-website.page', [
-                'website' => $website,
-                'page' => $page,
-                'menuPages' => $menuPages,
-                'products' => $products,
-                'isPreview' => $isPreview,
-                'orderUrl' => $orderUrl,
+                'website'              => $website,
+                'page'                 => $page,
+                'menuPages'            => $menuPages,
+                'products'             => $products,
+                'isPreview'            => $isPreview,
+                'orderUrl'             => $orderUrl,
+                'businessTestimonials' => $businessTestimonials,
+                'testimonialUrl'       => $isPreview ? null : $testimonialUrl,
             ]);
 
         } catch (\Exception $e) {
@@ -207,6 +224,16 @@ class PublicWebsiteController extends Controller
             return url('/order');
         }
         return route('public.website.order', $website->subdomain);
+    }
+
+    private function resolveTestimonialUrl(Request $request, Website $website): string
+    {
+        $host = $request->getHost();
+        $appDomain = env('APP_DOMAIN', 'shopybook.com');
+        if (Str::endsWith($host, '.' . $appDomain)) {
+            return url('/testimonial');
+        }
+        return route('public.website.testimonial', $website->subdomain);
     }
 
     /**

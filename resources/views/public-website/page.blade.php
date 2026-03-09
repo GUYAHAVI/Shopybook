@@ -1299,6 +1299,13 @@
 
     {{-- ════════ TESTIMONIALS ════════ --}}
     @elseif($section->type === 'testimonials')
+    @php
+        // Use DB-approved testimonials if >= 3, otherwise fall back to content items from builder
+        $hardcodedItems    = $content['items'] ?? [];
+        $dbTestimonials    = $businessTestimonials ?? collect();
+        $useDb             = $dbTestimonials->count() >= 3;
+        $displayItems      = $useDb ? $dbTestimonials : collect($hardcodedItems);
+    @endphp
     <section class="testimonials-section section-pad" id="testimonials">
         <div class="container">
             <div class="text-center mb-5">
@@ -1306,26 +1313,164 @@
                 <div class="section-divider mx-auto"></div>
                 <h2 class="section-title">{{ $content['heading'] ?? 'What Our Clients Say' }}</h2>
             </div>
-            @if(isset($content['items']) && is_array($content['items']))
+            @if($displayItems->count())
             <div class="row g-4">
-                @foreach($content['items'] as $testimonial)
+                @foreach($displayItems as $t)
+                @php
+                    $isModel = $t instanceof \App\Models\Testimonial;
+                    $tName   = $isModel ? $t->name   : ($t['name']   ?? 'Client');
+                    $tRole   = $isModel ? $t->role   : ($t['role']   ?? $t['position'] ?? null);
+                    $tQuote  = $isModel ? $t->quote  : ($t['quote']  ?? $t['text'] ?? '');
+                    $tRating = $isModel ? $t->rating : 5;
+                @endphp
                 <div class="col-12 col-md-6 col-lg-4">
                     <div class="testimonial-card">
                         <div class="stars">
-                            @for($s=0; $s<5; $s++) <i class="fas fa-star"></i> @endfor
+                            @for($s = 1; $s <= 5; $s++)
+                                <i class="fas fa-star{{ $s > $tRating ? ' text-muted' : '' }}"></i>
+                            @endfor
                         </div>
-                        <p class="quote">"{{ $testimonial['quote'] ?? $testimonial['text'] ?? '' }}"</p>
-                        <div class="author">{{ $testimonial['name'] ?? 'Client' }}</div>
-                        @if(isset($testimonial['role']) || isset($testimonial['position']))
-                        <div class="role">{{ $testimonial['role'] ?? $testimonial['position'] ?? '' }}</div>
+                        <p class="quote">"{{ $tQuote }}"</p>
+                        <div class="author">{{ $tName }}</div>
+                        @if($tRole)
+                        <div class="role">{{ $tRole }}</div>
                         @endif
                     </div>
                 </div>
                 @endforeach
             </div>
             @endif
+            @if(!$isPreview && isset($testimonialUrl))
+            <div class="text-center mt-4">
+                <button class="btn btn-outline-secondary btn-sm" data-bs-toggle="modal" data-bs-target="#businessReviewModal">
+                    <i class="fas fa-pen me-1"></i> Leave a Review
+                </button>
+            </div>
+            @endif
         </div>
     </section>
+
+    {{-- Business Review Modal (rendered once, outside the section loop via @once) --}}
+    @once
+    @if(!$isPreview && isset($testimonialUrl))
+    <div class="modal fade" id="businessReviewModal" tabindex="-1" aria-labelledby="businessReviewLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="businessReviewLabel"><i class="fas fa-star text-warning me-2"></i>Leave a Review</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <!-- Success panel (shown after AJAX submit) -->
+                <div id="wsReviewSuccess" class="modal-body text-center py-5" style="display:none;">
+                    <i class="fas fa-check-circle text-success fa-3x mb-3"></i>
+                    <h5 class="mb-2">Thank you!</h5>
+                    <p class="text-muted mb-4">Your review has been submitted and will appear after approval.</p>
+                    <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Close</button>
+                </div>
+                <!-- Form panel -->
+                <form id="businessReviewForm" action="{{ $testimonialUrl }}" method="POST" novalidate>
+                    @csrf
+                    <div class="modal-body">
+                        <div id="wsReviewError" class="alert alert-danger d-none"></div>
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Your Name <span class="text-danger">*</span></label>
+                            <input type="text" name="name" class="form-control" placeholder="e.g. Mary Njoroge" maxlength="100" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Role / Location <span class="text-muted">(optional)</span></label>
+                            <input type="text" name="role" class="form-control" placeholder="e.g. Loyal Customer" maxlength="100">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Your Review <span class="text-danger">*</span></label>
+                            <textarea name="quote" class="form-control" rows="4" minlength="20" maxlength="1000" placeholder="Share your experience..." required></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Rating</label>
+                            <div id="wsStarRating" class="d-flex gap-2 fs-4">
+                                @for($i = 1; $i <= 5; $i++)
+                                <i class="fas fa-star text-warning ws-star-pick" data-val="{{ $i }}" style="cursor:pointer;"></i>
+                                @endfor
+                            </div>
+                            <input type="hidden" name="rating" id="wsRatingInput" value="5">
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" id="wsReviewBtn" class="btn btn-primary">Submit Review</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <script>
+    (function(){
+        var stars   = document.querySelectorAll('#wsStarRating .ws-star-pick');
+        var inp     = document.getElementById('wsRatingInput');
+        var form    = document.getElementById('businessReviewForm');
+        var btn     = document.getElementById('wsReviewBtn');
+        var errDiv  = document.getElementById('wsReviewError');
+        var success = document.getElementById('wsReviewSuccess');
+        var modal   = document.getElementById('businessReviewModal');
+
+        // ── Star rating ─────────────────────────────────────
+        function hl(v){ stars.forEach(function(s){ s.style.opacity = s.dataset.val <= v ? '1' : '0.3'; }); }
+        if (stars.length && inp) {
+            hl(5);
+            stars.forEach(function(s){
+                s.addEventListener('click', function(){ inp.value = s.dataset.val; hl(s.dataset.val); });
+                s.addEventListener('mouseenter', function(){ hl(s.dataset.val); });
+            });
+            document.getElementById('wsStarRating').addEventListener('mouseleave', function(){ hl(inp.value); });
+        }
+
+        // ── AJAX submit ──────────────────────────────────────
+        if (form) {
+            form.addEventListener('submit', async function(e){
+                e.preventDefault();
+                errDiv.classList.add('d-none');
+                btn.disabled = true;
+                btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1" role="status"></span>Submitting…';
+                try {
+                    var resp = await fetch(form.action, {
+                        method: 'POST',
+                        headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' },
+                        body: new FormData(form),
+                    });
+                    if (resp.ok) {
+                        form.style.display = 'none';
+                        success.style.display = 'block';
+                    } else {
+                        var data = await resp.json();
+                        var msg = data.message
+                            || (data.errors ? Object.values(data.errors).flat().join(' ') : 'Something went wrong.');
+                        errDiv.textContent = msg;
+                        errDiv.classList.remove('d-none');
+                        btn.disabled = false;
+                        btn.textContent = 'Submit Review';
+                    }
+                } catch(err) {
+                    errDiv.textContent = 'Network error. Please try again.';
+                    errDiv.classList.remove('d-none');
+                    btn.disabled = false;
+                    btn.textContent = 'Submit Review';
+                }
+            });
+        }
+
+        // ── Reset on modal close ─────────────────────────────
+        if (modal) {
+            modal.addEventListener('hidden.bs.modal', function(){
+                if (form) { form.style.display = ''; form.reset(); }
+                if (success) success.style.display = 'none';
+                if (errDiv) errDiv.classList.add('d-none');
+                if (btn) { btn.disabled = false; btn.textContent = 'Submit Review'; }
+                if (inp) { inp.value = 5; hl(5); }
+            });
+        }
+    })();
+    </script>
+    @endif
+    @endonce
 
     {{-- ════════ CTA ════════ --}}
     @elseif($section->type === 'cta')

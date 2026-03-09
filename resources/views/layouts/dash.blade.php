@@ -1823,6 +1823,14 @@
                 <div class="app-tile-icon" style="background:#6366f1;"><i class="fas fa-globe"></i></div>
                 <span class="app-tile-label">Website Builder</span>
             </a>
+            <a href="{{ route('testimonials.owner.index') }}" class="app-tile {{ request()->routeIs('testimonials.owner.*') ? 'active' : '' }}" data-label="Reviews">
+                <div class="app-tile-icon" style="background:#f59e0b;"><i class="fas fa-star"></i></div>
+                <span class="app-tile-label">Reviews</span>
+                @php $pendingReviews = \App\Models\Testimonial::forBusiness(auth()->user()->business?->id ?? '')->pending()->count(); @endphp
+                @if($pendingReviews > 0)
+                    <span class="badge bg-danger" style="position:absolute; top:-4px; right:-4px; font-size:.65rem; padding:2px 5px; border-radius:10px;">{{ $pendingReviews }}</span>
+                @endif
+            </a>
             @endif
             @if($__can('marketing'))
             <a href="{{ route('marketing.social-media') }}" class="app-tile {{ request()->routeIs('marketing.*') ? 'active' : '' }}" data-label="Marketing">
