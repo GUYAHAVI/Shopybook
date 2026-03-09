@@ -1599,6 +1599,7 @@ var _publishUrl     = '{{ route("website.builder.publish") }}';
 var _customizeUrl   = '{{ route("website.builder.customize") }}';
 var _genContentUrl  = '{{ route("website.builder.ai.generate-content") }}';
 var _uploadLogoUrl  = '{{ route("website.builder.upload-logo") }}';
+var _genLogoUrl     = '{{ route("website.builder.ai.generate-logo") }}';
 
 // Current colours / fonts (from PHP rendering context)
 var _colors = {
@@ -1966,6 +1967,7 @@ function _renderLogoTab() {
     document.getElementById('epTitle').textContent = '🖼️ Logo';
     var navLogo = document.getElementById('siteLogoImg');
     var html = '<div id="epMsg" class="ep-msg"></div>';
+    // Current logo preview
     if (navLogo && navLogo.src && !navLogo.src.endsWith('undefined')) {
         html += '<div style="text-align:center;margin-bottom:14px;">';
         html += '<img src="' + navLogo.src + '" id="epLogoPreview" class="ep-logo-preview">';
@@ -1975,14 +1977,76 @@ function _renderLogoTab() {
         html += '<span style="font-size:2.2rem;">🏢</span><br><span style="color:#94a3b8;font-size:0.8rem;margin-top:6px;display:block;">No logo yet</span>';
         html += '</div>';
     }
+    // Upload section
     html += '<label class="ep-logo-drop" onclick="document.getElementById(\'logoFileInput\').click()">';
     html += '<svg width="28" height="28" fill="none" stroke="#94a3b8" stroke-width="1.5" viewBox="0 0 24 24"><path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1M8 12l4-4 4 4M12 8v8"/></svg>';
-    html += '<div style="margin-top:8px;font-size:0.82rem;color:#64748b;font-weight:600;">Click to upload new logo</div>';
+    html += '<div style="margin-top:8px;font-size:0.82rem;color:#64748b;font-weight:600;">Click to upload logo</div>';
     html += '<div style="font-size:0.7rem;color:#94a3b8;margin-top:3px;">PNG, JPG, SVG — max 5 MB</div>';
     html += '</label>';
     html += '<input type="file" id="logoFileInput" accept="image/*" style="display:none;" onchange="_uploadLogo(this)">';
-    html += '<p class="ep-note">Your logo appears in the navbar and footer. For best results, use a transparent PNG.</p>';
+    // Divider
+    html += '<div style="display:flex;align-items:center;gap:8px;margin:14px 0 12px;">';
+    html += '<div style="flex:1;height:1px;background:#e2e8f0;"></div>';
+    html += '<span style="font-size:0.72rem;color:#94a3b8;white-space:nowrap;">or generate with AI</span>';
+    html += '<div style="flex:1;height:1px;background:#e2e8f0;"></div>';
+    html += '</div>';
+    // AI generation section
+    html += '<div style="background:linear-gradient(135deg,#f0f4ff 0%,#faf5ff 100%);border-radius:10px;padding:14px;border:1px solid #e0e7ff;margin-bottom:12px;">';
+    html += '<div style="font-size:0.8rem;font-weight:700;color:#4338ca;margin-bottom:8px;">✨ AI Logo Generator</div>';
+    html += '<textarea id="logoPromptInput" rows="3" placeholder="Describe your logo idea...&#10;e.g. \"Modern tech logo with circuit board motif in blue\"" style="width:100%;border:1.5px solid #c7d2fe;border-radius:7px;padding:8px 10px;font-size:0.8rem;color:#334155;background:#fff;resize:vertical;outline:none;"></textarea>';
+    html += '<button id="btnGenLogo" onclick="_generateLogo()" style="width:100%;margin-top:8px;padding:9px;background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;border:none;border-radius:7px;font-size:0.83rem;font-weight:700;cursor:pointer;">✨ Generate Logo</button>';
+    html += '</div>';
+    html += '<p class="ep-note">Your logo appears in the navbar and footer. For best results, use a transparent PNG or regenerate until you find one you like.</p>';
     document.getElementById('epBody').innerHTML = html;
+}
+
+function _generateLogo() {
+    var prompt = (document.getElementById('logoPromptInput') || {}).value || '';
+    var btn = document.getElementById('btnGenLogo');
+    if (btn) { btn.disabled = true; btn.textContent = '⏳ Generating…'; }
+    _setStatus('saving');
+    _showMsg('Generating AI logo — this may take ~20 seconds…', 'info');
+    fetch(_genLogoUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': _csrf, 'Accept': 'application/json' },
+        body: JSON.stringify({ prompt: prompt })
+    })
+    .then(function(r){ return r.json(); })
+    .then(function(data) {
+        if (btn) { btn.disabled = false; btn.textContent = '✨ Generate Logo'; }
+        if (data.success && data.logo_url) {
+            _applyNewLogo(data.logo_url);
+            _setStatus('saved');
+            _showMsg('✓ Logo generated!', 'success');
+            _toast('success', '✨ Logo Generated!', 'Your new AI logo is live. Regenerate anytime to try a different style.');
+        } else {
+            _showMsg('Generation failed: ' + (data.error || 'Unknown error'), 'error');
+            _setStatus('');
+        }
+    })
+    .catch(function() {
+        if (btn) { btn.disabled = false; btn.textContent = '✨ Generate Logo'; }
+        _showMsg('Network error. Please try again.', 'error');
+        _setStatus('');
+    });
+}
+
+function _applyNewLogo(url) {
+    var navLogo = document.getElementById('siteLogoImg');
+    if (navLogo) {
+        navLogo.src = url;
+    } else {
+        var brand = document.querySelector('.navbar-brand-text');
+        if (brand) {
+            var img = document.createElement('img');
+            img.id = 'siteLogoImg'; img.src = url; img.alt = '';
+            img.style.cssText = 'height:46px;object-fit:contain;';
+            brand.parentNode.insertBefore(img, brand);
+        }
+    }
+    var prev = document.getElementById('epLogoPreview');
+    if (prev) prev.src = url;
+    else _renderLogoTab();
 }
 
 function _uploadLogo(input) {
@@ -2000,24 +2064,7 @@ function _uploadLogo(input) {
     .then(function(r){ return r.json(); })
     .then(function(data) {
         if (data.success && data.logo_url) {
-            var navLogo = document.getElementById('siteLogoImg');
-            if (navLogo) {
-                navLogo.src = data.logo_url;
-            } else {
-                // Create the logo element in the navbar
-                var brand = document.querySelector('.navbar-brand-text');
-                if (brand) {
-                    var img = document.createElement('img');
-                    img.id = 'siteLogoImg';
-                    img.src = data.logo_url;
-                    img.alt = '';
-                    img.style.cssText = 'height:46px;object-fit:contain;';
-                    brand.parentNode.insertBefore(img, brand);
-                }
-            }
-            var prev = document.getElementById('epLogoPreview');
-            if (prev) prev.src = data.logo_url;
-            else _renderLogoTab();
+            _applyNewLogo(data.logo_url);
             _setStatus('saved');
             _showMsg('✓ Logo updated!', 'success');
         } else {

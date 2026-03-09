@@ -837,6 +837,7 @@ Route::middleware(['auth', 'has.business', 'permission:website'])->prefix('websi
     Route::post('/ai/generate-section-image', [WebsiteBuilderController::class, 'generateSectionImage'])->name('ai.generate-section-image');
     Route::post('/sections/{section}/upload-image', [WebsiteBuilderController::class, 'uploadSectionImage'])->name('sections.upload-image');
     Route::post('/upload-logo', [WebsiteBuilderController::class, 'uploadLogo'])->name('upload-logo');
+    Route::post('/ai/generate-logo', [WebsiteBuilderController::class, 'generateLogo'])->name('ai.generate-logo');
     
     // Enterprise AI Feature: Auto-build complete website
     Route::post('/ai/auto-build', [WebsiteBuilderController::class, 'autoBuildWebsite'])->name('ai.auto-build');

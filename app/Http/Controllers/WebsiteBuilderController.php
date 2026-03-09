@@ -962,6 +962,54 @@ class WebsiteBuilderController extends Controller
     }
 
     /**
+     * AI-generate a logo using Pollinations.AI and save it as the website logo
+     */
+    public function generateLogo(Request $request)
+    {
+        $request->validate(['prompt' => 'nullable|string|max:400']);
+
+        $business = Auth::user()->business;
+        $website  = $business ? $business->website : null;
+
+        if (!$website) {
+            return response()->json(['error' => 'Website not found'], 404);
+        }
+
+        $prompt = $request->input('prompt');
+        if (!$prompt) {
+            $prompt = "minimalist professional logo for {$business->name}, {$business->business_type} company";
+        }
+
+        // Logo-specific prompt additions for clean, transparent-friendly output
+        $logoPrompt = $prompt . ', logo design, clean vector style, white background, high contrast, simple iconic mark, no text unless it is the company name';
+
+        try {
+            $imageData = $this->claudeAPIService->generateMarketingImage(
+                $logoPrompt,
+                'minimalist',
+                '500x500',
+                $business->name,
+                $business->business_type ?? 'general'
+            );
+
+            if (!$imageData || !isset($imageData['public_url'])) {
+                return response()->json(['error' => 'Logo generation failed. Please try again.'], 500);
+            }
+
+            $website->update(['logo_path' => $imageData['relative_path']]);
+
+            return response()->json([
+                'success'  => true,
+                'logo_url' => $imageData['public_url'],
+            ]);
+
+        } catch (\Exception $e) {
+            \Log::error('Logo generation failed', ['error' => $e->getMessage()]);
+            return response()->json(['error' => 'Logo generation failed: ' . $e->getMessage()], 500);
+        }
+    }
+
+    /**
      * Upload website logo
      */
     public function uploadLogo(Request $request)
