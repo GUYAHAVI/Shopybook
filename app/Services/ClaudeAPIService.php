@@ -10,12 +10,14 @@ class ClaudeAPIService
 {
     protected $apiKey;
     protected $baseUrl = 'https://api.anthropic.com/v1/messages';
-    protected $model = 'claude-sonnet-4-20250514';
+    protected $model = 'claude-haiku-4-5-20251001';
+    protected $premiumModel = 'claude-sonnet-4-6';
 
     public function __construct()
     {
         $this->apiKey = config('services.claude.api_key', env('CLAUDE_API_KEY'));
         $this->model = config('services.claude.model', $this->model);
+        $this->premiumModel = config('services.claude.premium_model', $this->premiumModel);
         
         if (empty($this->apiKey)) {
             Log::warning('Claude API key is not configured');
@@ -1132,7 +1134,7 @@ class ClaudeAPIService
                 'anthropic-version' => '2023-06-01',
                 'Content-Type' => 'application/json',
             ])->timeout(40)->post($this->baseUrl, [
-                'model' => $this->model,
+                'model' => $this->premiumModel,
                 'max_tokens' => 2048,
                 'temperature' => 0.7,
                 'messages' => [['role' => 'user', 'content' => $prompt]]
@@ -1224,7 +1226,7 @@ class ClaudeAPIService
                 'anthropic-version' => '2023-06-01',
                 'Content-Type' => 'application/json',
             ])->timeout(60)->post($this->baseUrl, [
-                'model' => $this->model,
+                'model' => $this->premiumModel,
                 'max_tokens' => 3000,
                 'temperature' => 0.7,
                 'messages' => [['role' => 'user', 'content' => $prompt]]
@@ -1417,7 +1419,7 @@ class ClaudeAPIService
                         'anthropic-version' => '2023-06-01',
                         'Content-Type' => 'application/json',
                     ])->timeout(120)->post($this->baseUrl, [
-                        'model' => $this->model,
+                        'model' => $this->premiumModel,
                         'max_tokens' => 8192, // Increased from 4096 to accommodate full website structure
                         'temperature' => 0.7,
                         'messages' => [['role' => 'user', 'content' => $prompt]]
