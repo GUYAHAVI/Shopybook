@@ -67,7 +67,7 @@ class SubscriptionController extends Controller
         }
         
         // TEST MODE: Using small amounts for testing
-        $amount = $plan === 'enterprise' ? 10 : 5; // KES: 10 for Enterprise, 5 for Premium
+        $amount = $plan === 'enterprise' ? 1000 : 500 ; // KES: 1000 for Enterprise, 500 for Premium
 
         try {
             // Initialize Paystack M-Pesa charge

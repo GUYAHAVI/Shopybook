@@ -15,6 +15,7 @@ class ClaudeAPIService
     public function __construct()
     {
         $this->apiKey = config('services.claude.api_key', env('CLAUDE_API_KEY'));
+        $this->model = config('services.claude.model', $this->model);
         
         if (empty($this->apiKey)) {
             Log::warning('Claude API key is not configured');

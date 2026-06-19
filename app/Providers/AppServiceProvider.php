@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\URL;
 
@@ -29,6 +30,8 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot()
     {
+        $this->configureAssetUrlForProjectRoot();
+
         // Force URL scheme and root URL from config
         if (config('app.env') === 'production') {
             URL::forceScheme('https');
@@ -56,5 +59,26 @@ class AppServiceProvider extends ServiceProvider
                 return $service->translate($key, $context, $parameters);
             }
         }
+    }
+
+    /**
+     * When cPanel uses the project root as the web root (root index.php + .htaccess),
+     * asset() must point at /public/css, /public/img, etc.
+     */
+    protected function configureAssetUrlForProjectRoot(): void
+    {
+        if (env('ASSET_URL') || $this->app->runningInConsole()) {
+            return;
+        }
+
+        $script = str_replace('\\', '/', $_SERVER['SCRIPT_FILENAME'] ?? '');
+
+        if (! str_ends_with($script, '/index.php') || str_ends_with($script, '/public/index.php')) {
+            return;
+        }
+
+        $assetRoot = rtrim((string) config('app.url'), '/').'/public';
+        Config::set('app.asset_url', $assetRoot);
+        Config::set('filesystems.disks.public.url', $assetRoot.'/storage');
     }
 }

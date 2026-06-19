@@ -56,6 +56,19 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Asset URL
+    |--------------------------------------------------------------------------
+    |
+    | Used by the asset() helper. When the web root is the project folder
+    | (not public/), set ASSET_URL=https://yourdomain.com/public on the server.
+    | Leave null to auto-detect from the front controller path.
+    |
+    */
+
+    'asset_url' => env('ASSET_URL'),
+
+    /*
+    |--------------------------------------------------------------------------
     | Application Timezone
     |--------------------------------------------------------------------------
     |

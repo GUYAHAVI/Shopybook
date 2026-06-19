@@ -403,8 +403,8 @@ class ReportsController extends Controller
             
         // Service revenue
         $serviceRevenue = ServiceBooking::where('business_id', $business->id)
-            ->where('status', 'completed')
-            ->whereBetween('booking_date', [$start, $end])
+            ->where('payment_status', 'paid')
+            ->whereBetween('service_date', [$start, $end])
             ->sum('final_amount');
             
         $totalRevenue = $productRevenue + $serviceRevenue;

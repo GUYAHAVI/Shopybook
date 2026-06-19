@@ -50,7 +50,17 @@ use App\Http\Controllers\TeamController;
 
 // Debug routes removed for security
 
-Route::get('/',[IndexController::class,'index'])->name('index');
+Route::get('/', function (Request $request) {
+    $host = $request->getHost();
+    if (preg_match('/^([^.]+)\.shopybook\.com$/i', $host, $matches)
+        && !in_array(strtolower($host), ['shopybook.com', 'www.shopybook.com'], true)) {
+        return app(\App\Http\Controllers\PublicWebsiteController::class)
+            ->homepage($request, $matches[1]);
+    }
+
+    return app(IndexController::class)->index($request);
+})->name('index');
+
 Route::get('/businesses', [BusinessController::class, 'index'])->name('businesses');
 Route::get('/docs', function () {
     return view('docs.index');

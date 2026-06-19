@@ -19,7 +19,14 @@ class PublicWebsiteController extends Controller
      */
     public function homepage(Request $request, $subdomain)
     {
+        $website = null; // defensive: ensure variable exists for logging/diagnostics
         try {
+            Log::info('Subdomain homepage hit', [
+                'host' => $request->getHost(),
+                'path' => $request->path(),
+                'subdomain' => $subdomain,
+                'website_id' => optional($website)->id,
+            ]);
             $website = Website::where('subdomain', $subdomain)
                 ->with(['business', 'theme'])
                 ->firstOrFail();
