@@ -45,7 +45,7 @@ class ChatbotController extends Controller
             Log::info('[Chatbot] System prompt length: ' . strlen($systemPrompt));
 
             $requestPayload = [
-                'model' => 'claude-sonnet-4-20250514',
+                'model' => config('services.claude.model', 'claude-opus-4-5'),
                 'max_tokens' => 1024,
                 'system' => $systemPrompt,
                 'messages' => [
