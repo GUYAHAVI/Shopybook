@@ -359,7 +359,7 @@ class AICommunicationController extends Controller
                 ];
             }
         } catch (\Exception $e) {
-            // Suppliers table might not exist
+            Log::debug('Could not load suppliers data', ['error' => $e->getMessage()]);
         }
 
         // Costs & Expenses calculation
@@ -372,7 +372,7 @@ class AICommunicationController extends Controller
         try {
             $returns = $business->getTotalReturnsAttribute() ?? 0;
         } catch (\Exception $e) {
-            // Returns might not be available
+            Log::debug('Could not load returns data', ['error' => $e->getMessage()]);
         }
 
         $data['costs_expenses'] = [

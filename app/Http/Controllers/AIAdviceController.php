@@ -91,10 +91,11 @@ class AIAdviceController extends Controller
             if ($success) {
                 return response()->json(['success' => true]);
             } else {
-                return response()->json(['success' => false, 'message' => 'Failed to mark as read']);
+                return response()->json(['success' => false, 'message' => 'Failed to mark as read'], 404);
             }
         } catch (\Exception $e) {
-            return response()->json(['success' => false, 'message' => $e->getMessage()]);
+            \Log::error('Error marking advice as read', ['advice_id' => $adviceId, 'error' => $e->getMessage()]);
+            return response()->json(['success' => false, 'message' => 'An error occurred'], 500);
         }
     }
 
@@ -118,6 +119,10 @@ class AIAdviceController extends Controller
 
             return $performance[0] ?? null;
         } catch (\Exception $e) {
+            \Log::error('Failed to get business performance data', [
+                'business_id' => $businessId,
+                'error' => $e->getMessage(),
+            ]);
             return null;
         }
     }
@@ -135,10 +140,11 @@ class AIAdviceController extends Controller
                 'insights' => $insights
             ]);
         } catch (\Exception $e) {
+            \Log::error('Error getting competitor insights', ['business_id' => $business->id, 'error' => $e->getMessage()]);
             return response()->json([
                 'success' => false,
-                'message' => $e->getMessage()
-            ]);
+                'message' => 'Failed to load competitor insights'
+            ], 500);
         }
     }
 
@@ -155,10 +161,11 @@ class AIAdviceController extends Controller
                 'topics' => $topics
             ]);
         } catch (\Exception $e) {
+            \Log::error('Error getting trending topics', ['business_id' => $business->id, 'error' => $e->getMessage()]);
             return response()->json([
                 'success' => false,
-                'message' => $e->getMessage()
-            ]);
+                'message' => 'Failed to load trending topics'
+            ], 500);
         }
     }
 
@@ -175,10 +182,11 @@ class AIAdviceController extends Controller
                 'count' => $count
             ]);
         } catch (\Exception $e) {
+            \Log::error('Error getting unread advice count', ['business_id' => $business->id, 'error' => $e->getMessage()]);
             return response()->json([
                 'success' => false,
-                'message' => $e->getMessage()
-            ]);
+                'message' => 'Failed to get unread count'
+            ], 500);
         }
     }
 
@@ -193,10 +201,11 @@ class AIAdviceController extends Controller
             if ($success) {
                 return response()->json(['success' => true, 'message' => 'Automated learning system started']);
             } else {
-                return response()->json(['success' => false, 'message' => 'Failed to start automated system']);
+                return response()->json(['success' => false, 'message' => 'Failed to start automated system'], 500);
             }
         } catch (\Exception $e) {
-            return response()->json(['success' => false, 'message' => $e->getMessage()]);
+            \Log::error('Error starting automated learning system', ['error' => $e->getMessage()]);
+            return response()->json(['success' => false, 'message' => 'An error occurred while starting the system'], 500);
         }
     }
 
@@ -217,13 +226,14 @@ class AIAdviceController extends Controller
                 return response()->json([
                     'success' => false,
                     'message' => 'Failed to generate advice'
-                ]);
+                ], 500);
             }
         } catch (\Exception $e) {
+            \Log::error('Error generating performance advice', ['business_id' => $business->id, 'error' => $e->getMessage()]);
             return response()->json([
                 'success' => false,
-                'message' => $e->getMessage()
-            ]);
+                'message' => 'An error occurred while generating advice'
+            ], 500);
         }
     }
 }

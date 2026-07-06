@@ -61,8 +61,6 @@ class WebsiteBuilderController extends Controller
         $business = Auth::user()->business;
 
         return view('website-builder.setup', compact('business'));
-
-        return view('website-builder.setup', compact('themes', 'business'));
     }
 
     /**

@@ -346,7 +346,11 @@ class ProductsController extends Controller
             $notificationService = new \App\Services\NotificationService();
             $notificationService->checkAndNotifyLowStock($product);
         } catch (\Exception $e) {
-            \Log::error('Failed to check low stock after manual update: ' . $e->getMessage());
+            \Log::error('Failed to check low stock after manual update', [
+                'product_id' => $product->id,
+                'product_name' => $product->name,
+                'error' => $e->getMessage(),
+            ]);
         }
 
         return response()->json([

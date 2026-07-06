@@ -109,7 +109,10 @@ class OrderController extends Controller
                 $notificationService->notifyNewOrder($order);
             } catch (\Exception $e) {
                 // Log error but don't fail the order creation
-                Log::error('Failed to send order notifications: ' . $e->getMessage());
+                Log::error('Failed to send order notifications', [
+                    'order_id' => $order->id,
+                    'error' => $e->getMessage(),
+                ]);
             }
 
             return response()->json([

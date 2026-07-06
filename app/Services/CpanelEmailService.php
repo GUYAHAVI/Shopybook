@@ -67,6 +67,10 @@ class CpanelEmailService
 
             return $response->successful();
         } catch (\Exception $e) {
+            Log::warning('cPanel connection test failed', [
+                'error' => $e->getMessage(),
+                'cpanel_url' => $this->cpanelUrl,
+            ]);
             return false;
         }
     }

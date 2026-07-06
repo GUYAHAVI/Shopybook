@@ -101,7 +101,12 @@ class GoogleContactsService
                 'errors' => $errors,
             ];
         } catch (\Exception $e) {
-            Log::error('Google contacts import error: ' . $e->getMessage());
+            Log::error('Google contacts import failed', [
+                'business_id' => $businessId,
+                'contact_group_id' => $contactGroupId,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
             return [
                 'success' => false,
                 'error' => $e->getMessage(),

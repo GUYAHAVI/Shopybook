@@ -337,7 +337,9 @@ class NotificationService
             Log::error('Failed to send testimonial notification', [
                 'testimonial_id' => $testimonial->id,
                 'error'          => $e->getMessage(),
+                'trace'          => $e->getTraceAsString(),
             ]);
+            throw $e;
         }
     }
 

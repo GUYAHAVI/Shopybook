@@ -335,7 +335,11 @@ class SalesController extends Controller
                     $notificationService = new \App\Services\NotificationService();
                     $notificationService->checkAndNotifyLowStock($product);
                 } catch (\Exception $e) {
-                    \Log::error('Failed to check low stock: ' . $e->getMessage());
+                    \Log::error('Failed to check low stock', [
+                        'product_id' => $product->id,
+                        'product_name' => $product->name,
+                        'error' => $e->getMessage(),
+                    ]);
                 }
             }
             
@@ -348,7 +352,10 @@ class SalesController extends Controller
                 $notificationService->notifyNewOrder($order);
             } catch (\Exception $e) {
                 // Log error but don't fail the order creation
-                \Log::error('Failed to send order notifications: ' . $e->getMessage());
+                \Log::error('Failed to send order notifications', [
+                    'order_id' => $order->id,
+                    'error' => $e->getMessage(),
+                ]);
             }
             
             DB::commit();

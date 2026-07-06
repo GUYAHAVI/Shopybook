@@ -113,6 +113,11 @@ class BillingController extends Controller
 
             if ($response->successful()) {
                 $data = $response->json();
+                if (empty($data['access_token'])) {
+                    Log::error('Daraja access token missing from successful response', [
+                        'response' => $response->body(),
+                    ]);
+                }
                 return $data['access_token'] ?? null;
             }
 
@@ -124,7 +129,8 @@ class BillingController extends Controller
             return null;
         } catch (\Exception $e) {
             Log::error('Exception getting Daraja access token', [
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
             ]);
             return null;
         }
