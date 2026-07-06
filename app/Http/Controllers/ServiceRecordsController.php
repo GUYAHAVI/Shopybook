@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Concerns\ResolvesCurrentBusiness;
+
 use App\Models\ServiceRecord;
 use App\Models\ServiceItem;
 use App\Models\Service;
@@ -13,14 +15,16 @@ use Illuminate\Support\Facades\DB;
 
 class ServiceRecordsController extends Controller
 {
+    use ResolvesCurrentBusiness;
+
     /**
      * Display a listing of service records
      */
     public function index()
     {
-        $business = Auth::user()->business;
+        $business = $this->currentBusiness();
         if (!$business) {
-            return redirect()->route('business.choose-type');
+            return $this->redirectToBusinessSetup();
         }
 
         $serviceRecords = ServiceRecord::where('business_id', $business->id)
@@ -36,9 +40,9 @@ class ServiceRecordsController extends Controller
      */
     public function create()
     {
-        $business = Auth::user()->business;
+        $business = $this->currentBusiness();
         if (!$business) {
-            return redirect()->route('business.choose-type');
+            return $this->redirectToBusinessSetup();
         }
 
         $services = Service::where('business_id', $business->id)->get();
@@ -53,9 +57,9 @@ class ServiceRecordsController extends Controller
      */
     public function store(Request $request)
     {
-        $business = Auth::user()->business;
+        $business = $this->currentBusiness();
         if (!$business) {
-            return redirect()->route('business.choose-type');
+            return $this->redirectToBusinessSetup();
         }
 
         $request->validate([
@@ -112,7 +116,7 @@ class ServiceRecordsController extends Controller
     {
         $this->authorize('update', $serviceRecord);
         
-        $business = Auth::user()->business;
+        $business = $this->currentBusiness();
         $services = Service::where('business_id', $business->id)->get();
         $staff = Staff::where('business_id', $business->id)->get();
         $customers = Customer::where('business_id', $business->id)->get();

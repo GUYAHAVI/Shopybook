@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Concerns\ResolvesCurrentBusiness;
+
 use App\Models\Supplier;
 use App\Models\StockReceipt;
 use Illuminate\Http\Request;
@@ -9,14 +11,16 @@ use Illuminate\Support\Facades\Auth;
 
 class SupplierController extends Controller
 {
+    use ResolvesCurrentBusiness;
+
     /**
      * Display a listing of the resource.
      */
     public function index()
     {
-        $business = Auth::user()->business;
+        $business = $this->currentBusiness();
         if (!$business) {
-            return redirect()->route('business.choose-type');
+            return $this->redirectToBusinessSetup();
         }
 
         $suppliers = Supplier::where('business_id', $business->id)
@@ -41,9 +45,9 @@ class SupplierController extends Controller
      */
     public function create()
     {
-        $business = Auth::user()->business;
+        $business = $this->currentBusiness();
         if (!$business) {
-            return redirect()->route('business.choose-type');
+            return $this->redirectToBusinessSetup();
         }
 
         return view('suppliers.create');
@@ -54,9 +58,9 @@ class SupplierController extends Controller
      */
     public function store(Request $request)
     {
-        $business = Auth::user()->business;
+        $business = $this->currentBusiness();
         if (!$business) {
-            return redirect()->route('business.choose-type');
+            return $this->redirectToBusinessSetup();
         }
 
         $validated = $request->validate([

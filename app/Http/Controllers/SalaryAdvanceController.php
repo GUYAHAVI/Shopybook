@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Concerns\ResolvesCurrentBusiness;
+
 use App\Models\SalaryAdvance;
 use App\Models\Staff;
 use Illuminate\Http\Request;
@@ -11,14 +13,16 @@ use Illuminate\Support\Facades\Hash;
 
 class SalaryAdvanceController extends Controller
 {
+    use ResolvesCurrentBusiness;
+
     /**
      * Display a listing of the resource.
      */
     public function index()
     {
-        $business = Auth::user()->business;
+        $business = $this->currentBusiness();
         if (!$business) {
-            return redirect()->route('business.choose-type');
+            return $this->redirectToBusinessSetup();
         }
 
         $salaryAdvances = SalaryAdvance::with(['staff', 'approvedBy'])
@@ -34,9 +38,9 @@ class SalaryAdvanceController extends Controller
      */
     public function create()
     {
-        $business = Auth::user()->business;
+        $business = $this->currentBusiness();
         if (!$business) {
-            return redirect()->route('business.choose-type');
+            return $this->redirectToBusinessSetup();
         }
 
         $staff = Staff::where('business_id', $business->id)
@@ -52,9 +56,9 @@ class SalaryAdvanceController extends Controller
      */
     public function store(Request $request)
     {
-        $business = Auth::user()->business;
+        $business = $this->currentBusiness();
         if (!$business) {
-            return redirect()->route('business.choose-type');
+            return $this->redirectToBusinessSetup();
         }
 
         $request->validate([
@@ -106,10 +110,7 @@ class SalaryAdvanceController extends Controller
      */
     public function show(SalaryAdvance $salaryAdvance)
     {
-        $business = Auth::user()->business;
-        if (!$business || $salaryAdvance->business_id !== $business->id) {
-            abort(404);
-        }
+        $business = $this->ensureBusinessOwns($salaryAdvance);
 
         $salaryAdvance->load(['staff', 'approvedBy']);
         
@@ -121,10 +122,7 @@ class SalaryAdvanceController extends Controller
      */
     public function approve(SalaryAdvance $salaryAdvance, Request $request)
     {
-        $business = Auth::user()->business;
-        if (!$business || $salaryAdvance->business_id !== $business->id) {
-            abort(404);
-        }
+        $business = $this->ensureBusinessOwns($salaryAdvance);
 
         if ($salaryAdvance->status !== 'pending') {
             return back()->withErrors(['error' => 'Only pending advances can be approved.']);
@@ -148,10 +146,7 @@ class SalaryAdvanceController extends Controller
      */
     public function markAsPaid(SalaryAdvance $salaryAdvance, Request $request)
     {
-        $business = Auth::user()->business;
-        if (!$business || $salaryAdvance->business_id !== $business->id) {
-            abort(404);
-        }
+        $business = $this->ensureBusinessOwns($salaryAdvance);
 
         if ($salaryAdvance->status !== 'approved') {
             return back()->withErrors(['error' => 'Only approved advances can be marked as paid.']);
@@ -175,10 +170,7 @@ class SalaryAdvanceController extends Controller
      */
     public function cancel(SalaryAdvance $salaryAdvance, Request $request)
     {
-        $business = Auth::user()->business;
-        if (!$business || $salaryAdvance->business_id !== $business->id) {
-            abort(404);
-        }
+        $business = $this->ensureBusinessOwns($salaryAdvance);
 
         if (!in_array($salaryAdvance->status, ['pending', 'approved'])) {
             return back()->withErrors(['error' => 'Only pending or approved advances can be cancelled.']);
@@ -202,9 +194,9 @@ class SalaryAdvanceController extends Controller
      */
     public function staffSummary()
     {
-        $business = Auth::user()->business;
+        $business = $this->currentBusiness();
         if (!$business) {
-            return redirect()->route('business.choose-type');
+            return $this->redirectToBusinessSetup();
         }
 
         $staff = Staff::with([
@@ -226,10 +218,7 @@ class SalaryAdvanceController extends Controller
      */
     public function destroy(SalaryAdvance $salaryAdvance, Request $request)
     {
-        $business = Auth::user()->business;
-        if (!$business || $salaryAdvance->business_id !== $business->id) {
-            abort(404);
-        }
+        $business = $this->ensureBusinessOwns($salaryAdvance);
 
         if ($salaryAdvance->status === 'paid') {
             return back()->withErrors(['error' => 'Cannot delete paid advances.']);
