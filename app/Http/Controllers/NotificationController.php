@@ -2,12 +2,15 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Concerns\ResolvesCurrentBusiness;
 use Illuminate\Http\Request;
 use App\Services\NotificationService;
 use Illuminate\Support\Facades\Auth;
 
 class NotificationController extends Controller
 {
+    use ResolvesCurrentBusiness;
+
     protected $notificationService;
 
     public function __construct(NotificationService $notificationService)
@@ -21,9 +24,9 @@ class NotificationController extends Controller
     public function index(Request $request)
     {
         try {
-            $business = Auth::user()->business;
+            $business = $this->currentBusiness();
             if (!$business) {
-                return response()->json(['error' => 'No business found'], 404);
+                return $this->businessNotFoundJson();
             }
 
             $limit = $request->get('limit', 10);
@@ -54,7 +57,7 @@ class NotificationController extends Controller
     public function unreadCount()
     {
         try {
-            $business = Auth::user()->business;
+            $business = $this->currentBusiness();
             if (!$business) {
                 return response()->json(['count' => 0]);
             }
@@ -79,9 +82,9 @@ class NotificationController extends Controller
     public function markAsRead($id)
     {
         try {
-            $business = Auth::user()->business;
+            $business = $this->currentBusiness();
             if (!$business) {
-                return response()->json(['error' => 'No business found'], 404);
+                return $this->businessNotFoundJson();
             }
 
             $notification = $this->notificationService->markAsRead($id, $business->id);
@@ -103,11 +106,10 @@ class NotificationController extends Controller
      */
     public function markAllAsRead()
     {
-        try {
-            $business = Auth::user()->business;
-            if (!$business) {
-                return response()->json(['error' => 'No business found'], 404);
-            }
+        $business = $this->currentBusiness();
+        if (!$business) {
+            return $this->businessNotFoundJson();
+        }
 
             $updatedCount = $this->notificationService->markAllAsRead($business->id);
             

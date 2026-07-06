@@ -813,6 +813,9 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('/testimonials', [TestimonialController::class, 'adminIndex'])->name('testimonials.index');
     Route::post('/testimonials/{testimonial}/approve', [TestimonialController::class, 'approve'])->name('testimonials.approve');
     Route::delete('/testimonials/{testimonial}', [TestimonialController::class, 'destroy'])->name('testimonials.destroy');
+
+    Route::get('/analytics', [\App\Http\Controllers\Admin\AnalyticsDashboardController::class, 'index'])->name('analytics.index');
+    Route::get('/analytics/users/{user}', [\App\Http\Controllers\Admin\AnalyticsDashboardController::class, 'user'])->name('analytics.user');
 });
 
 // Owner testimonial management routes

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Concerns\ResolvesCurrentBusiness;
 use App\Models\ServiceBooking;
 use App\Models\ServiceItem;
 use App\Models\Service;
@@ -18,14 +19,16 @@ use Carbon\Carbon;
 
 class ServiceBookingController extends Controller
 {
+    use ResolvesCurrentBusiness;
+
     /**
      * Display a listing of service bookings
      */
     public function index()
     {
-        $business = Auth::user()->business;
+        $business = $this->currentBusiness();
         if (!$business) {
-            return redirect()->route('business.choose-type');
+            return $this->redirectToBusinessSetup();
         }
 
         $serviceBookings = ServiceBooking::where('business_id', $business->id)
@@ -41,9 +44,9 @@ class ServiceBookingController extends Controller
      */
     public function create()
     {
-        $business = Auth::user()->business;
+        $business = $this->currentBusiness();
         if (!$business) {
-            return redirect()->route('business.choose-type');
+            return $this->redirectToBusinessSetup();
         }
 
         $services = Service::where('business_id', $business->id)->get();
@@ -58,9 +61,9 @@ class ServiceBookingController extends Controller
      */
     public function store(Request $request)
     {
-        $business = Auth::user()->business;
+        $business = $this->currentBusiness();
         if (!$business) {
-            return redirect()->route('business.choose-type');
+            return $this->redirectToBusinessSetup();
         }
 
         $request->validate([
@@ -184,7 +187,7 @@ class ServiceBookingController extends Controller
     {
         $this->authorize('update', $serviceBooking);
         
-        $business = Auth::user()->business;
+        $business = $this->currentBusiness();
         $services = Service::where('business_id', $business->id)->get();
         $staff = Staff::where('business_id', $business->id)->get();
         $customers = Customer::where('business_id', $business->id)->get();
@@ -464,7 +467,7 @@ class ServiceBookingController extends Controller
             $serviceItem = ServiceItem::findOrFail($request->service_item_id);
             
             // Check if the service item belongs to the current business
-            $business = Auth::user()->business;
+            $business = $this->currentBusiness();
             if ($serviceItem->serviceBooking->business_id !== $business->id) {
                 return response()->json([
                     'success' => false,
@@ -507,9 +510,9 @@ class ServiceBookingController extends Controller
      */
     public function bulkCreate()
     {
-        $business = Auth::user()->business;
+        $business = $this->currentBusiness();
         if (!$business) {
-            return redirect()->route('business.choose-type');
+            return $this->redirectToBusinessSetup();
         }
 
         $services = Service::where('business_id', $business->id)->get();
@@ -524,9 +527,9 @@ class ServiceBookingController extends Controller
      */
     public function bulkStore(Request $request)
     {
-        $business = Auth::user()->business;
+        $business = $this->currentBusiness();
         if (!$business) {
-            return redirect()->route('business.choose-type');
+            return $this->redirectToBusinessSetup();
         }
 
         $request->validate([
@@ -659,7 +662,7 @@ class ServiceBookingController extends Controller
      */
     public function dailyReport(Request $request)
     {
-        $business = Auth::user()->business;
+        $business = $this->currentBusiness();
         if (!$business) {
             return response()->json(['success' => false, 'message' => 'Business not found'], 404);
         }
@@ -780,7 +783,7 @@ class ServiceBookingController extends Controller
      */
     public function exportPDF(Request $request)
     {
-        $business = Auth::user()->business;
+        $business = $this->currentBusiness();
         if (!$business) {
             return redirect()->back()->with('error', 'Business not found');
         }
@@ -808,7 +811,7 @@ class ServiceBookingController extends Controller
      */
     public function exportExcel(Request $request)
     {
-        $business = Auth::user()->business;
+        $business = $this->currentBusiness();
         if (!$business) {
             return redirect()->back()->with('error', 'Business not found');
         }
