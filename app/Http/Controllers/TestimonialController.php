@@ -73,7 +73,14 @@ class TestimonialController extends Controller
         ]);
 
         // Notify the business owner (in-app + email)
-        $this->notificationService->notifyNewTestimonial($testimonial, $website->business);
+        try {
+            $this->notificationService->notifyNewTestimonial($testimonial, $website->business);
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Failed to send testimonial notification', [
+                'testimonial_id' => $testimonial->id,
+                'error' => $e->getMessage(),
+            ]);
+        }
 
         if ($request->expectsJson()) {
             return response()->json(['success' => true]);

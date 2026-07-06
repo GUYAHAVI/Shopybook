@@ -389,17 +389,19 @@ class SubscriptionController extends Controller
         } catch (\Exception $e) {
             Log::error('Error verifying payment with Paystack', [
                 'reference' => $reference,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
             ]);
 
-            // Return current database status on error
+            // Return current database status on error, but signal the verification failure
             return response()->json([
                 'status' => $payment->status,
                 'plan' => $payment->plan,
                 'amount' => $payment->amount,
                 'reference' => $payment->checkout_request_id,
                 'result_desc' => $payment->result_desc,
-                'updated_at' => $payment->updated_at
+                'updated_at' => $payment->updated_at,
+                'verification_error' => 'Could not verify with payment provider. Showing last known status.',
             ]);
         }
     }

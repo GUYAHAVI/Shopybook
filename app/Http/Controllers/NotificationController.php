@@ -86,13 +86,15 @@ class NotificationController extends Controller
 
             $notification = $this->notificationService->markAsRead($id, $business->id);
             return response()->json(['success' => true, 'notification' => $notification]);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return response()->json(['error' => 'Notification not found'], 404);
         } catch (\Exception $e) {
             \Log::error('Error marking notification as read', [
                 'notification_id' => $id,
                 'error' => $e->getMessage()
             ]);
             
-            return response()->json(['error' => 'Notification not found'], 404);
+            return response()->json(['error' => 'Failed to update notification'], 500);
         }
     }
 
@@ -101,16 +103,24 @@ class NotificationController extends Controller
      */
     public function markAllAsRead()
     {
-        $business = Auth::user()->business;
-        if (!$business) {
-            return response()->json(['error' => 'No business found'], 404);
-        }
+        try {
+            $business = Auth::user()->business;
+            if (!$business) {
+                return response()->json(['error' => 'No business found'], 404);
+            }
 
-        $updatedCount = $this->notificationService->markAllAsRead($business->id);
-        
-        return response()->json([
-            'success' => true,
-            'updated_count' => $updatedCount
-        ]);
+            $updatedCount = $this->notificationService->markAllAsRead($business->id);
+            
+            return response()->json([
+                'success' => true,
+                'updated_count' => $updatedCount
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('Error marking all notifications as read', [
+                'error' => $e->getMessage()
+            ]);
+            
+            return response()->json(['error' => 'Failed to update notifications'], 500);
+        }
     }
 }

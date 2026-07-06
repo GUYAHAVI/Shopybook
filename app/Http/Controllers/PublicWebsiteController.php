@@ -11,6 +11,7 @@ use App\Services\NotificationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 
 class PublicWebsiteController extends Controller
 {
@@ -95,12 +96,15 @@ class PublicWebsiteController extends Controller
                 'testimonialUrl'       => $isPreview ? null : $testimonialUrl,
             ]);
 
+        } catch (ModelNotFoundException $e) {
+            abort(404);
         } catch (\Exception $e) {
             Log::error('Public website error', [
                 'subdomain' => $subdomain,
                 'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
             ]);
-            abort(404);
+            abort(500, 'An error occurred while loading this page.');
         }
     }
 
@@ -182,13 +186,16 @@ class PublicWebsiteController extends Controller
                 'testimonialUrl'       => $isPreview ? null : $testimonialUrl,
             ]);
 
+        } catch (ModelNotFoundException $e) {
+            abort(404);
         } catch (\Exception $e) {
             Log::error('Public website page error', [
                 'subdomain' => $subdomain,
                 'slug' => $slug,
                 'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
             ]);
-            abort(404);
+            abort(500, 'An error occurred while loading this page.');
         }
     }
 
@@ -310,7 +317,10 @@ class PublicWebsiteController extends Controller
         try {
             (new NotificationService())->notifyNewOrder($order);
         } catch (\Exception $e) {
-            Log::error('Failed to send website order notifications: ' . $e->getMessage());
+            Log::error('Failed to send website order notifications', [
+                'order_id' => $order->id,
+                'error' => $e->getMessage(),
+            ]);
         }
 
         return response()->json([

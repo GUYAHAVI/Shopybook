@@ -37,8 +37,12 @@ class OCRService
 
             return null;
         } catch (\Exception $e) {
-            Log::error('OCR processing failed: ' . $e->getMessage());
-            return null;
+            Log::error('OCR processing failed', [
+                'image_path' => $imagePath,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+            throw $e;
         }
     }
 
