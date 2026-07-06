@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Concerns\ResolvesCurrentBusiness;
 use App\Models\Service;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -11,6 +12,8 @@ use App\Services\ClaudeAPIService;
 
 class ServiceController extends Controller
 {
+    use ResolvesCurrentBusiness;
+
     protected $claudeService;
 
     public function __construct(ClaudeAPIService $claudeService)
@@ -21,7 +24,7 @@ class ServiceController extends Controller
     {
         $user = Auth::user();
         if (!$user->business) {
-            return redirect()->route('business.choose-type')
+            return $this->redirectToBusinessSetup()
                 ->with('error', 'Please set up your business first.');
         }
         
@@ -33,7 +36,7 @@ class ServiceController extends Controller
     {
         $user = Auth::user();
         if (!$user->business) {
-            return redirect()->route('business.choose-type')
+            return $this->redirectToBusinessSetup()
                 ->with('error', 'Please set up your business first.');
         }
         

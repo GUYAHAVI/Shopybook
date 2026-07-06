@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Concerns\ResolvesCurrentBusiness;
+
 use App\Models\Service;
 use App\Models\Business;
 use Illuminate\Http\Request;
@@ -9,11 +11,13 @@ use Illuminate\Support\Facades\Auth;
 
 class ServicesController extends Controller
 {
+    use ResolvesCurrentBusiness;
+
     public function index()
     {
-        $business = Auth::user()->business;
+        $business = $this->currentBusiness();
         if (!$business) {
-            return redirect()->route('business.choose-type');
+            return $this->redirectToBusinessSetup();
         }
 
         $services = Service::where('business_id', $business->id)
@@ -25,9 +29,9 @@ class ServicesController extends Controller
 
     public function create()
     {
-        $business = Auth::user()->business;
+        $business = $this->currentBusiness();
         if (!$business) {
-            return redirect()->route('business.choose-type');
+            return $this->redirectToBusinessSetup();
         }
 
         // Get existing services for bundling options
@@ -38,9 +42,9 @@ class ServicesController extends Controller
 
     public function store(Request $request)
     {
-        $business = Auth::user()->business;
+        $business = $this->currentBusiness();
         if (!$business) {
-            return redirect()->route('business.choose-type');
+            return $this->redirectToBusinessSetup();
         }
 
         $validated = $request->validate([

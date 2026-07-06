@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Concerns\ResolvesCurrentBusiness;
 use App\Models\Staff;
 use App\Models\Business;
 use Illuminate\Http\Request;
@@ -10,11 +11,13 @@ use Illuminate\Support\Facades\Hash;
 
 class StaffController extends Controller
 {
+    use ResolvesCurrentBusiness;
+
     public function index()
     {
-        $business = Auth::user()->business;
+        $business = $this->currentBusiness();
         if (!$business) {
-            return redirect()->route('business.choose-type');
+            return $this->redirectToBusinessSetup();
         }
 
         $staff = Staff::where('business_id', $business->id)
@@ -26,9 +29,9 @@ class StaffController extends Controller
 
     public function create()
     {
-        $business = Auth::user()->business;
+        $business = $this->currentBusiness();
         if (!$business) {
-            return redirect()->route('business.choose-type');
+            return $this->redirectToBusinessSetup();
         }
 
         return view('staff.create');
@@ -36,9 +39,9 @@ class StaffController extends Controller
 
     public function store(Request $request)
     {
-        $business = Auth::user()->business;
+        $business = $this->currentBusiness();
         if (!$business) {
-            return redirect()->route('business.choose-type');
+            return $this->redirectToBusinessSetup();
         }
 
         $validated = $request->validate([
@@ -91,7 +94,7 @@ class StaffController extends Controller
 
     public function destroy(Staff $staff, Request $request)
     {
-        $business = Auth::user()->business;
+        $business = $this->currentBusiness();
         
         // Check if the staff belongs to the user's business
         if ($staff->business->id !== $business->id) {
@@ -117,9 +120,9 @@ class StaffController extends Controller
 
     public function commissionReports(Request $request)
     {
-        $business = Auth::user()->business;
+        $business = $this->currentBusiness();
         if (!$business) {
-            return redirect()->route('business.choose-type');
+            return $this->redirectToBusinessSetup();
         }
 
         $startDate = $request->get('start_date', now()->startOfMonth()->format('Y-m-d'));
@@ -157,9 +160,9 @@ class StaffController extends Controller
 
     public function salaryCalculations(Request $request)
     {
-        $business = Auth::user()->business;
+        $business = $this->currentBusiness();
         if (!$business) {
-            return redirect()->route('business.choose-type');
+            return $this->redirectToBusinessSetup();
         }
 
         $selectedMonth = $request->get('month', now()->format('Y-m'));
@@ -229,9 +232,9 @@ class StaffController extends Controller
 
     public function salaryDetails(Request $request, $staff)
     {
-        $business = Auth::user()->business;
+        $business = $this->currentBusiness();
         if (!$business) {
-            return redirect()->route('business.choose-type');
+            return $this->redirectToBusinessSetup();
         }
 
         // $staff is already the Staff model instance from route model binding
