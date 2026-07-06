@@ -140,7 +140,7 @@ class OrderController extends Controller
             
             return response()->json([
                 'success' => false,
-                'message' => 'Error placing order: ' . $e->getMessage()
+                'message' => 'An unexpected error occurred while placing your order. Please try again.'
             ], 500);
         }
     }

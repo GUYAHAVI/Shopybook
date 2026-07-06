@@ -27,8 +27,8 @@ class ChatbotController extends Controller
             $userMessage = $request->input('message');
             Log::info('[Chatbot] User message', ['message' => $userMessage]);
 
-            // Get Claude API key from environment
-            $apiKey = env('CLAUDE_API_KEY');
+            // Get Claude API key from config
+            $apiKey = config('services.claude.api_key');
             
             if (!$apiKey) {
                 Log::error('[Chatbot] Claude API key not configured');
@@ -97,7 +97,7 @@ class ChatbotController extends Controller
 
                 return response()->json([
                     'success' => false,
-                    'message' => 'Failed to get response from chat service. Status: ' . $response->status()
+                    'message' => 'Failed to get response from chat service. Please try again.'
                 ], 500);
             }
 
@@ -122,7 +122,7 @@ class ChatbotController extends Controller
             
             return response()->json([
                 'success' => false,
-                'message' => 'An error occurred processing your message. Error: ' . $e->getMessage()
+                'message' => 'An error occurred processing your message. Please try again.'
             ], 500);
         }
     }

@@ -372,8 +372,8 @@ class SalesController extends Controller
             DB::rollback();
             return response()->json([
                 'success' => false,
-                'message' => $e->getMessage()
-            ], 400);
+                'message' => 'An unexpected error occurred while creating the order. Please try again.'
+            ], 500);
         }
     }
 
@@ -507,7 +507,7 @@ class SalesController extends Controller
                 \Log::error('Error updating order status: ' . $e->getMessage());
                 return response()->json([
                     'success' => false,
-                    'message' => 'Failed to update order status: ' . $e->getMessage()
+                    'message' => 'Failed to update order status. Please try again.'
                 ], 500);
             }
         } else {
@@ -565,7 +565,7 @@ class SalesController extends Controller
             
         } catch (\Exception $e) {
             \Log::error('Failed to generate invoice: ' . $e->getMessage());
-            return back()->with('error', 'Failed to generate invoice: ' . $e->getMessage());
+            return back()->with('error', 'Failed to generate invoice. Please try again.');
         }
     }
 
@@ -1226,7 +1226,7 @@ class SalesController extends Controller
             
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to record payment: ' . $e->getMessage(),
+                'message' => 'Failed to record payment. Please try again.',
             ], 500);
         }
     }

@@ -50,7 +50,7 @@ class ContinuousKnowledgeController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Error starting continuous learning system: ' . $e->getMessage()
+                'message' => 'Error starting continuous learning system. Please try again.'
             ], 500);
         }
     }
@@ -77,7 +77,7 @@ class ContinuousKnowledgeController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Error stopping continuous learning system: ' . $e->getMessage()
+                'message' => 'Error stopping continuous learning system. Please try again.'
             ], 500);
         }
     }

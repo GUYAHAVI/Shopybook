@@ -142,7 +142,7 @@ class MarketingPostController extends Controller
             ]);
             return response()->json([
                 'success' => false,
-                'message' => 'An error occurred: ' . $e->getMessage()
+                'message' => 'An unexpected error occurred. Please try again.'
             ], 500);
         }
 
@@ -171,7 +171,7 @@ class MarketingPostController extends Controller
                 ]);
                 return response()->json([
                     'success' => false,
-                    'message' => 'Failed to upload media file: ' . $e->getMessage()
+                    'message' => 'Failed to upload media file. Please try again.'
                 ], 500);
             }
         } elseif ($validatedData['media_type'] === 'generate' && $validatedData['generated_video_url']) {
@@ -291,7 +291,7 @@ class MarketingPostController extends Controller
             
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to create post: ' . $e->getMessage()
+                'message' => 'Failed to create post. Please try again.'
             ], 500);
         }
     }
@@ -873,7 +873,7 @@ class MarketingPostController extends Controller
             
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to generate image: ' . $e->getMessage(),
+                'message' => 'Failed to generate image. Please try again.',
             ], 500);
         }
     }
