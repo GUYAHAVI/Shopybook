@@ -100,16 +100,16 @@ Route::domain('{subdomain}.' . env('APP_DOMAIN', 'shopybook.com'))->group(functi
         ->name('public.website.subdomain.testimonial');
 });
 
-Route::post('/orders', [OrderController::class, 'store'])->name('orders.store');
-Route::post('/service-bookings/public', [ServiceBookingController::class, 'storePublic'])->name('service-bookings.store-public');
+Route::post('/orders', [OrderController::class, 'store'])->middleware('throttle:30,1')->name('orders.store');
+Route::post('/service-bookings/public', [ServiceBookingController::class, 'storePublic'])->middleware('throttle:30,1')->name('service-bookings.store-public');
 
 // Contact Form Route
 use App\Http\Controllers\ContactFormController;
-Route::post('/contact', [ContactFormController::class, 'submit'])->name('contact.submit');
+Route::post('/contact', [ContactFormController::class, 'submit'])->middleware('throttle:5,1')->name('contact.submit');
 
 // Chatbot Route
 use App\Http\Controllers\ChatbotController;
-Route::post('/chatbot/message', [ChatbotController::class, 'message'])->name('chatbot.message');
+Route::post('/chatbot/message', [ChatbotController::class, 'message'])->middleware('throttle:10,1')->name('chatbot.message');
 
 // Language Switch Route
 Route::get('/language/{language}', function ($language) {
@@ -274,7 +274,7 @@ Route::get('/pwa/install-guide', function () {
 // PWA Debug Route
 Route::get('/pwa/debug', function () {
     return view('pwa.debug');
-})->name('pwa.debug');
+})->name('pwa.debug')->middleware('auth');
 
 // Notifications Routes
 Route::prefix('notifications')->name('notifications.')->middleware(['auth', 'has.business'])->group(function () {

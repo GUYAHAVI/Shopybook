@@ -89,7 +89,7 @@ class EnhancedBusinessAnalysisController extends Controller
             } catch (\Exception $fallbackError) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'AI analysis failed: ' . $e->getMessage()
+                    'message' => 'AI analysis is temporarily unavailable. Please try again.'
                 ], 500);
             }
         }
@@ -125,7 +125,7 @@ class EnhancedBusinessAnalysisController extends Controller
             Log::error("Financial analysis failed: " . $e->getMessage());
             return response()->json([
                 'success' => false,
-                'message' => 'Financial analysis failed: ' . $e->getMessage()
+                'message' => 'Financial analysis is temporarily unavailable. Please try again.'
             ], 500);
         }
     }
@@ -158,7 +158,7 @@ class EnhancedBusinessAnalysisController extends Controller
             Log::error("Operational analysis failed: " . $e->getMessage());
             return response()->json([
                 'success' => false,
-                'message' => 'Operational analysis failed: ' . $e->getMessage()
+                'message' => 'Operational analysis is temporarily unavailable. Please try again.'
             ], 500);
         }
     }
@@ -197,7 +197,7 @@ class EnhancedBusinessAnalysisController extends Controller
             Log::error("Growth analysis failed: " . $e->getMessage());
             return response()->json([
                 'success' => false,
-                'message' => 'Growth analysis failed: ' . $e->getMessage()
+                'message' => 'Growth analysis is temporarily unavailable. Please try again.'
             ], 500);
         }
     }
@@ -248,7 +248,7 @@ class EnhancedBusinessAnalysisController extends Controller
             Log::error("Benchmark comparison failed: " . $e->getMessage());
             return response()->json([
                 'success' => false,
-                'message' => 'Benchmark comparison failed: ' . $e->getMessage()
+                'message' => 'Benchmark comparison is temporarily unavailable. Please try again.'
             ], 500);
         }
     }
@@ -281,7 +281,7 @@ class EnhancedBusinessAnalysisController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Report generation failed: ' . $e->getMessage()
+                'message' => 'Report generation is temporarily unavailable. Please try again.'
             ], 500);
         }
     }
