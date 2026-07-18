@@ -111,6 +111,7 @@ class NotificationController extends Controller
             return $this->businessNotFoundJson();
         }
 
+        try {
             $updatedCount = $this->notificationService->markAllAsRead($business->id);
             
             return response()->json([

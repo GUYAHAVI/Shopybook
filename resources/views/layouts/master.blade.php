@@ -214,6 +214,38 @@
 
 <body>
 
+    {{-- Tracking consent banner (Kenya DPA compliance) --}}
+    @if(!isset($_COOKIE['tracking_consent']))
+    <div id="tracking-consent-banner" class="fixed-bottom bg-dark text-white p-3" style="z-index: 9999;">
+        <div class="container">
+            <div class="d-flex flex-column flex-md-row align-items-center justify-content-between gap-2">
+                <div class="small">
+                    <i class="fas fa-cookie-bite me-1"></i>
+                    We use analytics to improve your experience. We collect page visits, usage patterns, and performance metrics.
+                    See our <a href="{{ route('privacy-policy') }}" class="text-warning text-decoration-none">Privacy Policy</a> for details.
+                </div>
+                <div class="d-flex gap-2 flex-shrink-0">
+                    <button id="consent-accept" class="btn btn-sm btn-success">Accept</button>
+                    <button id="consent-decline" class="btn btn-sm btn-outline-light">Decline</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        (function() {
+            var banner = document.getElementById('tracking-consent-banner');
+            document.getElementById('consent-accept').addEventListener('click', function() {
+                document.cookie = 'tracking_consent=accepted; max-age=31536000; path=/; samesite=lax';
+                banner.style.display = 'none';
+            });
+            document.getElementById('consent-decline').addEventListener('click', function() {
+                document.cookie = 'tracking_consent=declined; max-age=31536000; path=/; samesite=lax';
+                banner.style.display = 'none';
+            });
+        })();
+    </script>
+    @endif
+
     <header>
         <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
             <div class="container">

@@ -65,6 +65,12 @@ class TrackPageVisit
             return false;
         }
 
+        // Respect tracking consent (Kenya DPA compliance)
+        $consent = $request->cookie('tracking_consent');
+        if ($consent !== 'accepted') {
+            return false;
+        }
+
         foreach ($this->excludedPrefixes as $prefix) {
             if ($request->is($prefix) || $request->is($prefix . '/*')) {
                 return false;

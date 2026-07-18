@@ -24,7 +24,6 @@ use App\Http\Controllers\InventoryController;
 use App\Http\Controllers\CommissionPayoutController;
 use App\Http\Controllers\SupplierController;
 use App\Http\Controllers\OrderController;
-
 use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\BrandController;
@@ -816,6 +815,37 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
 
     Route::get('/analytics', [\App\Http\Controllers\Admin\AnalyticsDashboardController::class, 'index'])->name('analytics.index');
     Route::get('/analytics/users/{user}', [\App\Http\Controllers\Admin\AnalyticsDashboardController::class, 'user'])->name('analytics.user');
+
+    // Super Admin Dashboard
+    Route::get('/dashboard', [\App\Http\Controllers\Admin\SuperAdminController::class, 'dashboard'])->name('dashboard');
+
+    // Businesses management
+    Route::get('/businesses', [\App\Http\Controllers\Admin\SuperAdminController::class, 'businesses'])->name('businesses.index');
+    Route::get('/businesses/{business}', [\App\Http\Controllers\Admin\SuperAdminController::class, 'showBusiness'])->name('businesses.show');
+
+    // Users management
+    Route::get('/users', [\App\Http\Controllers\Admin\SuperAdminController::class, 'users'])->name('users.index');
+    Route::get('/users/{user}', [\App\Http\Controllers\Admin\SuperAdminController::class, 'showUser'])->name('users.show');
+    Route::post('/users/{user}/toggle-admin', [\App\Http\Controllers\Admin\SuperAdminController::class, 'toggleAdmin'])->name('users.toggle-admin');
+    Route::delete('/users/{user}', [\App\Http\Controllers\Admin\SuperAdminController::class, 'deleteUser'])->name('users.destroy');
+
+    // Dormant users
+    Route::get('/dormant-users', [\App\Http\Controllers\Admin\SuperAdminController::class, 'dormantUsers'])->name('users.dormant');
+    Route::post('/dormant-users/delete', [\App\Http\Controllers\Admin\SuperAdminController::class, 'deleteDormantUsers'])->name('users.dormant.delete');
+
+    // Subscriptions
+    Route::get('/subscriptions', [\App\Http\Controllers\Admin\SuperAdminController::class, 'subscriptions'])->name('subscriptions.index');
+    Route::post('/businesses/{business}/extend-subscription', [\App\Http\Controllers\Admin\SuperAdminController::class, 'extendSubscription'])->name('businesses.extend-subscription');
+
+    // Usage analytics
+    Route::get('/usage', [\App\Http\Controllers\Admin\SuperAdminController::class, 'usageAnalytics'])->name('usage.index');
+
+    // AI behavior analysis
+    Route::get('/ai-analysis', [\App\Http\Controllers\Admin\SuperAdminController::class, 'aiAnalysis'])->name('ai-analysis.index');
+
+    // Website builder management
+    Route::get('/website-builder', [\App\Http\Controllers\Admin\SuperAdminController::class, 'websiteBuilder'])->name('website-builder.index');
+
 });
 
 // Owner testimonial management routes
