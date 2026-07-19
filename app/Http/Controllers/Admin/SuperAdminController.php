@@ -49,11 +49,46 @@ class SuperAdminController extends Controller
             ->limit(20)
             ->get();
 
+        // Online users (active sessions in last 30 minutes)
+        $onlineUsers = DB::table('sessions')
+            ->join('users', 'sessions.user_id', '=', 'users.id')
+            ->where('sessions.last_activity', '>', now()->subMinutes(30)->timestamp)
+            ->select('users.id', 'users.name', 'users.email', 'sessions.ip_address', 'sessions.last_activity')
+            ->orderByDesc('sessions.last_activity')
+            ->limit(15)
+            ->get();
+
+        $onlineCount = $onlineUsers->count();
+
+        // Recent logins (first page visit per user in last 7 days = proxy for login)
+        $recentLogins = PageVisit::whereNotNull('user_id')
+            ->where('created_at', '>=', Carbon::now()->subDays(7))
+            ->select('user_id', DB::raw('MIN(created_at) as first_visit'), DB::raw('MAX(created_at) as last_seen'), DB::raw('COUNT(*) as visit_count'))
+            ->groupBy('user_id')
+            ->orderByDesc('last_seen')
+            ->limit(10)
+            ->get()
+            ->map(function ($row) {
+                $user = User::find($row->user_id);
+                $row->user_name = $user?->name ?? 'Unknown';
+                $row->user_email = $user?->email ?? 'Unknown';
+                return $row;
+            });
+
+        // Daily login counts for last 30 days (based on distinct users with page visits per day)
+        $dailyLogins = PageVisit::whereNotNull('user_id')
+            ->where('created_at', '>=', Carbon::now()->subDays(30))
+            ->selectRaw('DATE(created_at) as date, COUNT(DISTINCT user_id) as unique_users, COUNT(*) as total_visits')
+            ->groupByRaw('DATE(created_at)')
+            ->orderByRaw('DATE(created_at)')
+            ->get();
+
         return view('admin.dashboard', compact(
             'totalUsers', 'totalBusinesses', 'activeBusinesses', 'totalWebsites',
             'planDistribution', 'trialBusinesses', 'expiredTrials',
             'recentUsers', 'recentBusinesses', 'activeToday',
-            'newUsersThisWeek', 'newBusinessesThisWeek', 'recentActivity'
+            'newUsersThisWeek', 'newBusinessesThisWeek', 'recentActivity',
+            'onlineUsers', 'onlineCount', 'recentLogins', 'dailyLogins'
         ));
     }
 

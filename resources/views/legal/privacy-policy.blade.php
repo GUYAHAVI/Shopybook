@@ -79,7 +79,7 @@
                             <li>Performance metrics</li>
                             <li>Page visits including route names, duration, and session identifiers</li>
                         </ul>
-                        <p class="text-body">This data is used to monitor platform performance, identify popular and underutilized features, and improve user experience. Page visit tracking is activated upon your consent via our tracking consent banner.</p>
+                        <p class="text-body">This data is used to monitor platform performance, identify popular and underutilized features, and improve user experience. For <strong>authenticated users</strong>, we track usage under legitimate interest to provide and improve our services. For <strong>anonymous visitors</strong>, page visit tracking is activated only upon your consent via our tracking consent banner.</p>
 
                         <h3 class="h6 fw-bold text-dark mt-4">1.4 AI-Powered Analytics</h3>
                         <p class="text-body">We use AI (Claude by Anthropic) to analyze aggregated, anonymized usage patterns to identify usability issues and improve the platform. Specifically:</p>

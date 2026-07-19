@@ -65,10 +65,13 @@ class TrackPageVisit
             return false;
         }
 
-        // Respect tracking consent (Kenya DPA compliance)
-        $consent = $request->cookie('tracking_consent');
-        if ($consent !== 'accepted') {
-            return false;
+        // Respect tracking consent for anonymous visitors (Kenya DPA compliance)
+        // Authenticated users are tracked under legitimate interest for platform improvement
+        if (!auth()->check()) {
+            $consent = $request->cookie('tracking_consent');
+            if ($consent !== 'accepted') {
+                return false;
+            }
         }
 
         foreach ($this->excludedPrefixes as $prefix) {

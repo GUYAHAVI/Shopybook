@@ -55,19 +55,21 @@
             </div>
         </div>
         <div class="col-6 col-lg-3">
-            <div class="card shadow-sm h-100 text-decoration-none text-dark" style="cursor:pointer" onclick="window.location='{{ route('admin.subscriptions.index') }}'">
+            <div class="card shadow-sm h-100">
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
-                            <div class="text-muted small">Active Trials</div>
-                            <div class="fs-3 fw-bold {{ $expiredTrials > 0 ? 'text-warning' : '' }}">{{ number_format($trialBusinesses) }}</div>
-                            @if($expiredTrials > 0)
-                            <div class="small text-danger">{{ $expiredTrials }} expired</div>
-                            @else
-                            <div class="small text-muted">None expired</div>
-                            @endif
+                            <div class="text-muted small">Online Now</div>
+                            <div class="fs-3 fw-bold {{ $onlineCount > 0 ? 'text-success' : 'text-muted' }}">
+                                @if($onlineCount > 0)
+                                    <span class="badge bg-success rounded-pill">{{ $onlineCount }}</span>
+                                @else
+                                    0
+                                @endif
+                            </div>
+                            <div class="small text-muted">Active sessions (30 min)</div>
                         </div>
-                        <i class="fas fa-clock fa-2x text-warning opacity-50"></i>
+                        <i class="fas fa-circle fa-2x {{ $onlineCount > 0 ? 'text-success' : 'text-muted' }} opacity-50"></i>
                     </div>
                 </div>
             </div>
@@ -195,6 +197,85 @@
         </div>
     </div>
 
+    {{-- Login activity chart --}}
+    <div class="row g-3 mb-4">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header"><i class="fas fa-sign-in-alt me-2"></i>User Login Activity (Last 30 Days)</div>
+                <div class="card-body">
+                    <canvas id="loginTrendChart" height="80"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {{-- Online users & Recent logins --}}
+    <div class="row g-3 mb-4">
+        <div class="col-lg-6">
+            <div class="card shadow-sm h-100">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <span><i class="fas fa-circle text-success me-2" style="font-size: 10px;"></i>Online Now</span>
+                    <span class="badge bg-success rounded-pill">{{ $onlineCount }} active</span>
+                </div>
+                <div class="card-body p-0">
+                    <div class="list-group list-group-flush" style="max-height: 350px; overflow-y: auto;">
+                        @forelse($onlineUsers as $session)
+                            <div class="list-group-item small">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <i class="fas fa-circle text-success me-2" style="font-size: 8px;"></i>
+                                        <strong>{{ $session->name }}</strong>
+                                        <div class="text-muted" style="font-size: 11px;">{{ $session->email }} &middot; {{ $session->ip_address }}</div>
+                                    </div>
+                                    <span class="text-muted" style="font-size: 11px;">
+                                        {{ \Carbon\Carbon::createFromTimestamp($session->last_activity)->diffForHumans() }}
+                                    </span>
+                                </div>
+                            </div>
+                        @empty
+                            <div class="list-group-item text-muted text-center py-4">
+                                <i class="fas fa-user-slash fa-2x mb-2 d-block"></i>
+                                No users currently online
+                            </div>
+                        @endforelse
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-6">
+            <div class="card shadow-sm h-100">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <span><i class="fas fa-history me-2"></i>Recent Logins (7 days)</span>
+                </div>
+                <div class="card-body p-0">
+                    <div class="list-group list-group-flush" style="max-height: 350px; overflow-y: auto;">
+                        @forelse($recentLogins as $login)
+                            <div class="list-group-item small">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <strong>{{ $login->user_name }}</strong>
+                                        <div class="text-muted" style="font-size: 11px;">
+                                            {{ $login->user_email }} &middot; {{ $login->visit_count }} visits
+                                        </div>
+                                    </div>
+                                    <div class="text-end">
+                                        <div class="text-muted" style="font-size: 11px;">Last seen {{ \Carbon\Carbon::parse($login->last_seen)->diffForHumans() }}</div>
+                                        <div class="text-muted" style="font-size: 10px;">First {{ \Carbon\Carbon::parse($login->first_visit)->diffForHumans() }}</div>
+                                    </div>
+                                </div>
+                            </div>
+                        @empty
+                            <div class="list-group-item text-muted text-center py-4">
+                                <i class="fas fa-user-slash fa-2x mb-2 d-block"></i>
+                                No recent logins recorded
+                            </div>
+                        @endforelse
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     {{-- Recent activity --}}
     <div class="row g-3">
         <div class="col-lg-6">
@@ -252,4 +333,52 @@
         </div>
     </div>
 </div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script>
+@php
+    $loginDates = $dailyLogins->pluck('date')->map(function($d) { return \Carbon\Carbon::parse($d)->format('M j'); });
+    $loginUsers = $dailyLogins->pluck('unique_users');
+    $loginVisits = $dailyLogins->pluck('total_visits');
+@endphp
+new Chart(document.getElementById('loginTrendChart'), {
+    type: 'line',
+    data: {
+        labels: @json($loginDates),
+        datasets: [
+            {
+                label: 'Unique Users',
+                data: @json($loginUsers),
+                borderColor: '#198754',
+                backgroundColor: 'rgba(25, 135, 84, 0.1)',
+                fill: true,
+                tension: 0.3,
+                pointRadius: 3,
+                pointBackgroundColor: '#198754',
+            },
+            {
+                label: 'Total Visits',
+                data: @json($loginVisits),
+                borderColor: '#0d6efd',
+                backgroundColor: 'rgba(13, 110, 253, 0.05)',
+                fill: false,
+                tension: 0.3,
+                pointRadius: 2,
+                borderDash: [5, 5],
+            }
+        ]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: true,
+        scales: {
+            y: { beginAtZero: true, ticks: { precision: 0 } },
+            x: { ticks: { maxRotation: 45, autoSkip: true, maxTicksLimit: 15 } }
+        },
+        plugins: {
+            legend: { position: 'top' },
+        }
+    }
+});
+</script>
 @endsection
