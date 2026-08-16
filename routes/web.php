@@ -310,7 +310,9 @@ Route::prefix('team')->name('team.')->middleware(['auth', 'has.business'])->grou
         Route::get('/bulk-import', [ProductsController::class, 'bulkImport'])->name('products.bulk-import');
         Route::post('/bulk-import/process', [ProductsController::class, 'processBulkImport'])->name('products.bulk-import.process');
         Route::get('/bulk-import/template', [ProductsController::class, 'downloadTemplate'])->name('products.bulk-import.template');
-        
+        Route::get('/bulk-import/template-excel', [ProductsController::class, 'downloadExcelTemplate'])->name('products.bulk-import.template-excel');
+        Route::post('/bulk-import/manual', [ProductsController::class, 'processManualEntry'])->name('products.bulk-import.manual');
+
         // OCR Routes
         Route::post('/ocr/preview', [ProductsController::class, 'previewOCRResults'])->name('products.ocr.preview');
         Route::post('/ocr/process', [ProductsController::class, 'processOCRImages'])->name('products.ocr.process');

@@ -420,6 +420,59 @@ class ProductsController extends Controller
         return Excel::download(new \App\Exports\ProductTemplateExport($headers, $sampleData), 'products_template.xlsx');
     }
 
+    /**
+     * Save products entered manually (mobile-friendly bulk entry)
+     */
+    public function processManualEntry(Request $request)
+    {
+        $businessId = auth()->user()->business->id;
+
+        $request->validate([
+            'products' => 'required|array|min:1',
+            'products.*.name' => 'required|string|max:255',
+            'products.*.description' => 'nullable|string',
+            'products.*.price' => 'required|numeric|min:0',
+            'products.*.cost_price' => 'nullable|numeric|min:0',
+            'products.*.stock_quantity' => 'required|integer|min:0',
+            'products.*.sku' => [
+                'nullable',
+                'string',
+                'max:100',
+                Rule::unique('products', 'sku')->where('business_id', $businessId)
+            ],
+            'products.*.category' => 'nullable|string|max:100',
+            'products.*.brand' => 'nullable|string|max:100',
+        ]);
+
+        $skus = collect($request->products)->pluck('sku')->filter()->all();
+        if (count($skus) !== count(array_unique($skus))) {
+            return back()->with('error', 'Duplicate SKUs found in your entries. Please make each SKU unique.')->withInput();
+        }
+
+        $created = 0;
+        $errors = [];
+
+        foreach ($request->products as $index => $data) {
+            try {
+                $product = new Product($data);
+                $product->business_id = $businessId;
+                $product->is_active = true;
+                $product->is_featured = false;
+                $product->save();
+                $created++;
+            } catch (\Exception $e) {
+                \Log::error('Manual product import error', ['row' => $index, 'error' => $e->getMessage()]);
+                $errors[] = 'Row ' . ($index + 1) . ' failed: ' . $e->getMessage();
+            }
+        }
+
+        if (count($errors) > 0) {
+            return back()->with('warning', "Saved {$created} products. " . count($errors) . " had errors: " . implode(', ', array_slice($errors, 0, 3)))->withInput();
+        }
+
+        return redirect()->route('products.index')->with('success', "{$created} products saved successfully!");
+    }
+
     public function exportInventory()
     {
         $products = auth()->user()->business->products()

@@ -241,7 +241,7 @@ class SuperAdminController extends Controller
         ]);
 
         $plan = $validated['plan'];
-        $days = $validated['days'];
+        $days = (int) $validated['days'];
 
         if ($plan === 'free') {
             $business->update([

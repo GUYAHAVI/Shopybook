@@ -35,6 +35,11 @@
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="manual-tab" data-bs-toggle="tab" data-bs-target="#manual-import" type="button" role="tab">
+                        <i class="fas fa-mobile-alt me-2"></i>Mobile Entry
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
                     <button class="nav-link" id="ocr-tab" data-bs-toggle="tab" data-bs-target="#ocr-import" type="button" role="tab">
                         <i class="fas fa-camera me-2"></i>Image OCR
                     </button>
@@ -87,6 +92,76 @@
                                     </button>
                                     <button type="submit" class="btn btn-primary">
                                         <i class="fas fa-upload me-2"></i>Import Products
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Mobile Manual Entry Tab -->
+                <div class="tab-pane fade" id="manual-import" role="tabpanel">
+                    <div class="card shadow">
+                        <div class="card-header py-3">
+                            <h6 class="m-0 font-weight-bold text-primary">Enter Products on Your Phone</h6>
+                        </div>
+                        <div class="card-body">
+                            <form id="manualForm" action="{{ route('products.bulk-import.manual') }}" method="POST">
+                                @csrf
+
+                                <p class="text-muted">Tap <strong>Add Product</strong>, fill in the details, then tap <strong>Save All</strong>. Works great on mobile.</p>
+
+                                <div id="productRows">
+                                    <div class="product-row border rounded p-3 mb-3 bg-light" data-index="0">
+                                        <div class="d-flex justify-content-between align-items-center mb-2">
+                                            <h6 class="m-0 font-weight-bold text-primary">Product 1</h6>
+                                            <button type="button" class="btn btn-sm btn-outline-danger remove-row" style="display: none;">
+                                                <i class="fas fa-trash me-1"></i>Remove
+                                            </button>
+                                        </div>
+                                        <div class="row g-2">
+                                            <div class="col-12 mb-2">
+                                                <label class="form-label">Product Name *</label>
+                                                <input type="text" class="form-control form-control-lg" name="products[0][name]" required>
+                                            </div>
+                                            <div class="col-6 col-md-3 mb-2">
+                                                <label class="form-label">Price *</label>
+                                                <input type="number" step="0.01" min="0" class="form-control form-control-lg" name="products[0][price]" required>
+                                            </div>
+                                            <div class="col-6 col-md-3 mb-2">
+                                                <label class="form-label">Stock *</label>
+                                                <input type="number" min="0" class="form-control form-control-lg" name="products[0][stock_quantity]" required>
+                                            </div>
+                                            <div class="col-6 col-md-3 mb-2">
+                                                <label class="form-label">Cost Price</label>
+                                                <input type="number" step="0.01" min="0" class="form-control form-control-lg" name="products[0][cost_price]">
+                                            </div>
+                                            <div class="col-6 col-md-3 mb-2">
+                                                <label class="form-label">SKU</label>
+                                                <input type="text" class="form-control form-control-lg" name="products[0][sku]">
+                                            </div>
+                                            <div class="col-6 mb-2">
+                                                <label class="form-label">Category</label>
+                                                <input type="text" class="form-control" name="products[0][category]">
+                                            </div>
+                                            <div class="col-6 mb-2">
+                                                <label class="form-label">Brand</label>
+                                                <input type="text" class="form-control" name="products[0][brand]">
+                                            </div>
+                                            <div class="col-12">
+                                                <label class="form-label">Description</label>
+                                                <textarea class="form-control" rows="2" name="products[0][description]"></textarea>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="d-flex justify-content-between align-items-center mt-3">
+                                    <button type="button" id="addRow" class="btn btn-outline-primary">
+                                        <i class="fas fa-plus me-2"></i>Add Product
+                                    </button>
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="fas fa-save me-2"></i>Save All Products
                                     </button>
                                 </div>
                             </form>
@@ -164,9 +239,12 @@
                     </h6>
                 </div>
                 <div class="card-body">
-                    <p class="text-muted">Download our CSV template to ensure your data is formatted correctly.</p>
-                    <a href="{{ route('products.bulk-import.template') }}" class="btn btn-success w-100">
+                    <p class="text-muted">Download a template to fill in on your computer or phone.</p>
+                    <a href="{{ route('products.bulk-import.template') }}" class="btn btn-success w-100 mb-2">
                         <i class="fas fa-file-csv me-2"></i>Download CSV Template
+                    </a>
+                    <a href="{{ route('products.bulk-import.template-excel') }}" class="btn btn-success w-100">
+                        <i class="fas fa-file-excel me-2"></i>Download Excel Template
                     </a>
                 </div>
             </div>
@@ -477,6 +555,38 @@ document.addEventListener('DOMContentLoaded', function() {
             container.appendChild(div);
         });
     }
+
+    // Mobile Manual Entry: add / remove product rows
+    const productRows = document.getElementById('productRows');
+    const addRowBtn = document.getElementById('addRow');
+
+    function updateRowIndexes() {
+        const rows = productRows.querySelectorAll('.product-row');
+        rows.forEach((row, index) => {
+            row.dataset.index = index;
+            row.querySelector('h6').textContent = `Product ${index + 1}`;
+            row.querySelectorAll('input, textarea').forEach(input => {
+                const name = input.name.replace(/products\[\d+\]/, `products[${index}]`);
+                input.name = name;
+            });
+            const removeBtn = row.querySelector('.remove-row');
+            removeBtn.style.display = rows.length > 1 ? 'inline-block' : 'none';
+            removeBtn.onclick = () => {
+                row.remove();
+                updateRowIndexes();
+            }
+        });
+    }
+
+    addRowBtn.addEventListener('click', function() {
+        const firstRow = productRows.querySelector('.product-row');
+        const newRow = firstRow.cloneNode(true);
+        newRow.querySelectorAll('input, textarea').forEach(input => input.value = '');
+        productRows.appendChild(newRow);
+        updateRowIndexes();
+    });
+
+    updateRowIndexes();
 });
 </script>
 @endsection 
