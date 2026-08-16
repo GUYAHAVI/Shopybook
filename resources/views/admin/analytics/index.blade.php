@@ -275,7 +275,7 @@
                 {
                     label: 'Active Users',
                     data: dauData.map(d => d.users),
-                    borderColor: '#4F46E5',
+                    borderColor: '#7b2e2e',
                     backgroundColor: 'rgba(79,70,229,0.1)',
                     fill: true,
                     tension: 0.3,

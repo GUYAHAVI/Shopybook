@@ -262,7 +262,7 @@
 .cost-icon {
     width: 48px;
     height: 48px;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #7b2e2e 0%, #ff511a 100%);
     border-radius: 12px;
     display: flex;
     align-items: center;

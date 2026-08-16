@@ -5,7 +5,7 @@
 
 {{-- Subscription Upgrade Banner for Non-Enterprise Users --}}
 @if(Auth::user()->business && !Auth::user()->business->isEnterprise())
-    <div class="alert alert-dismissible fade show mb-4" role="alert" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none; border-radius: 12px; box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);">
+    <div class="alert alert-dismissible fade show mb-4" role="alert" style="background: linear-gradient(135deg, #7b2e2e 0%, #ff511a 100%); border: none; border-radius: 12px; box-shadow: 0 8px 20px rgba(123, 46, 46, 0.3);">
         <div class="row align-items-center">
             <div class="col-md-9">
                 <div class="d-flex align-items-center">
@@ -133,7 +133,7 @@
 @if(auth()->user()->business && !auth()->user()->business->website)
 <div class="row mb-4">
     <div class="col-12">
-        <div class="alert quick-start-banner" style="background: linear-gradient(135deg, #4F46E5, #7C3AED); border: none; border-radius: 15px; box-shadow: 0 10px 25px -5px rgba(79, 70, 229, 0.3);">
+        <div class="alert quick-start-banner" style="background: linear-gradient(135deg, #7b2e2e, #ff511a); border: none; border-radius: 15px; box-shadow: 0 10px 25px -5px rgba(123, 46, 46, 0.3);">
             <div class="row align-items-center">
                 <div class="col-md-8">
                     <h4 class="text-white mb-2">
@@ -165,7 +165,7 @@
 @if(auth()->user()->business && auth()->user()->business->products()->count() == 0)
 <div class="row mb-4">
     <div class="col-12">
-        <div class="alert alert-info quick-start-banner" style="background: linear-gradient(135deg, #17a2b8, #138496); border: none; border-radius: 15px;">
+        <div class="alert alert-info quick-start-banner" style="background: linear-gradient(135deg, #ff511a, #e8450f); border: none; border-radius: 15px;">
             <div class="row align-items-center">
                 <div class="col-md-8">
                     <h4 class="text-white mb-2">
@@ -536,6 +536,40 @@
 <style>
 .charts-section {
     margin-top: 1rem;
+}
+
+/* Jeriah KPI card icon styling */
+.kpi-header i {
+    color: var(--primary-light);
+    font-size: 1.25rem;
+}
+
+.kpi-value {
+    font-family: 'Playfair', serif;
+}
+
+.chart-title {
+    font-family: 'Playfair', serif;
+    color: var(--primary-color);
+}
+
+.overview-value {
+    font-family: 'Playfair', serif;
+}
+
+.metric-title, .action-title, .performance-title {
+    font-family: 'Playfair', serif;
+    color: var(--primary-color);
+}
+
+/* Jeriah overview icon - solid maroon with orange accent */
+.overview-icon {
+    background: var(--primary-color) !important;
+    border-radius: 50% !important;
+}
+
+.customer-avatar .avatar-circle {
+    background: var(--primary-color) !important;
 }
 
 .customer-list {
@@ -972,12 +1006,12 @@ document.addEventListener('DOMContentLoaded', function() {
     // Get current theme
     const isDarkMode = document.body.getAttribute('data-theme') === 'dark';
     
-    // Common chart colors
+    // Common chart colors - Jeriah palette
     const chartColors = {
-        primary: '#020258',
-        secondary: '#13e8e9',
-        success: '#28a745',
-        info: '#17a2b8',
+        primary: '#7b2e2e',
+        secondary: '#ff511a',
+        success: '#43ba7f',
+        info: '#ff511a',
         warning: '#ffc107',
         purple: '#6f42c1',
         orange: '#fd7e14',
@@ -990,17 +1024,17 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Array of vibrant colors for products
     const productColors = [
-        '#28a745', // Green
-        '#17a2b8', // Cyan
-        '#ffc107', // Yellow
+        '#43ba7f', // Green
+        '#ff511a', // Orange
+        '#7b2e2e', // Maroon
         '#6f42c1', // Purple
         '#fd7e14', // Orange
         '#e83e8c', // Pink
         '#dc3545', // Red
         '#6610f2', // Indigo
         '#20c997', // Teal
-        '#020258', // Primary Blue
-        '#13e8e9', // Secondary
+        '#ffc107', // Yellow
+        '#17a2b8', // Cyan
         '#198754'  // Success variant
     ];
     
@@ -1224,19 +1258,19 @@ document.addEventListener('DOMContentLoaded', function() {
 }
 
 .product-card {
-    border-left: 4px solid #28a745;
+    border-left: 4px solid #43ba7f;
 }
 
 .service-card {
-    border-left: 4px solid #17a2b8;
+    border-left: 4px solid #ff511a;
 }
 
 .revenue-card {
-    border-left: 4px solid #ffc107;
+    border-left: 4px solid #7b2e2e;
 }
 
 .customer-card {
-    border-left: 4px solid #6f42c1;
+    border-left: 4px solid #ff511a;
 }
 
 .metric-card {
@@ -1294,11 +1328,11 @@ document.addEventListener('DOMContentLoaded', function() {
 }
 
 .product-action {
-    border-left: 4px solid #28a745;
+    border-left: 4px solid #43ba7f;
 }
 
 .service-action {
-    border-left: 4px solid #17a2b8;
+    border-left: 4px solid #ff511a;
 }
 
 .performance-card {
@@ -1394,8 +1428,8 @@ document.addEventListener('DOMContentLoaded', function() {
 <!-- AI Logo Generation Modal -->
 <div id="logoGeneratorModal" class="modal fade" tabindex="-1" style="display: none;">
     <div class="modal-dialog modal-dialog-centered modal-lg">
-        <div class="modal-content" style="border: 2px solid #13e8e9; border-radius: 15px; overflow: hidden;">
-            <div class="modal-header" style="background: linear-gradient(135deg, #020258, #13e8e9); color: white; border-radius: 0;">
+        <div class="modal-content" style="border: 2px solid #ff511a; border-radius: 15px; overflow: hidden;">
+            <div class="modal-header" style="background: linear-gradient(135deg, #7b2e2e, #ff511a); color: white; border-radius: 0;">
                 <div>
                     <h5 class="modal-title mb-0"><i class="fas fa-magic me-2"></i>AI Logo Generator</h5>
                     <small style="opacity:.8;">Your business info &amp; products are used automatically to craft the perfect logo</small>
@@ -1422,8 +1456,8 @@ document.addEventListener('DOMContentLoaded', function() {
                             <div class="logo-style-card {{ $val === 'modern' ? 'selected' : '' }}"
                                  data-style="{{ $val }}"
                                  onclick="selectLogoStyle(this)"
-                                 style="cursor:pointer;border:2px solid {{ $val === 'modern' ? '#020258' : '#dee2e6' }};border-radius:10px;padding:12px 8px;text-align:center;transition:all .2s;background:{{ $val === 'modern' ? '#f0f0ff' : '#fff' }};">
-                                <i class="{{ $icon }} fa-lg mb-1" style="color:{{ $val === 'modern' ? '#020258' : '#6c757d' }};"></i>
+                                 style="cursor:pointer;border:2px solid {{ $val === 'modern' ? '#7b2e2e' : '#dee2e6' }};border-radius:10px;padding:12px 8px;text-align:center;transition:all .2s;background:{{ $val === 'modern' ? '#f0f0ff' : '#fff' }};">
+                                <i class="{{ $icon }} fa-lg mb-1" style="color:{{ $val === 'modern' ? '#7b2e2e' : '#6c757d' }};"></i>
                                 <div class="fw-semibold small">{{ $label }}</div>
                                 <div class="text-muted" style="font-size:.72rem;">{{ $sub }}</div>
                             </div>
@@ -1526,9 +1560,9 @@ function selectLogoStyle(el) {
         c.style.background = '#fff';
         c.querySelector('i').style.color = '#6c757d';
     });
-    el.style.border    = '2px solid #020258';
+    el.style.border    = '2px solid #7b2e2e';
     el.style.background = '#f0f0ff';
-    el.querySelector('i').style.color = '#020258';
+    el.querySelector('i').style.color = '#7b2e2e';
     document.getElementById('logoStyleValue').value = el.dataset.style;
 }
 
@@ -1537,7 +1571,7 @@ function selectLogoPalette(el) {
         c.style.border = '2px solid #dee2e6';
         c.style.background = '#fff';
     });
-    el.style.border = '2px solid #020258';
+    el.style.border = '2px solid #7b2e2e';
     el.style.background = '#f0f0ff';
     document.getElementById('logoPaletteValue').value = el.dataset.palette;
 }
@@ -1680,7 +1714,7 @@ document.addEventListener('DOMContentLoaded', function() {
     <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content" style="border: none; border-radius: 16px; overflow: hidden; box-shadow: 0 20px 60px rgba(0,0,0,0.3);">
             <!-- Header with gradient -->
-            <div class="modal-header" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none; padding: 2rem; position: relative; overflow: hidden;">
+            <div class="modal-header" style="background: linear-gradient(135deg, #7b2e2e 0%, #ff511a 100%); border: none; padding: 2rem; position: relative; overflow: hidden;">
                 <!-- Decorative elements -->
                 <div style="position: absolute; top: -50px; right: -50px; width: 200px; height: 200px; background: rgba(255,255,255,0.1); border-radius: 50%;"></div>
                 <div style="position: absolute; bottom: -30px; left: -30px; width: 150px; height: 150px; background: rgba(255,255,255,0.08); border-radius: 50%;"></div>
@@ -1728,7 +1762,7 @@ document.addEventListener('DOMContentLoaded', function() {
                                     </div>
                                     <h5 class="mb-2">Premium Plan</h5>
                                     <h3 class="mb-1">
-                                        <span style="font-size: 2rem; font-weight: 700; color: #667eea;">KSH 5</span>
+                                        <span style="font-size: 2rem; font-weight: 700; color: #7b2e2e;">KSH 5</span>
                                         <span class="text-muted">/month</span>
                                     </h3>
                                     <p class="text-muted small mb-3">Perfect for growing businesses</p>
@@ -1853,7 +1887,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 
                 // Highlight selected card
                 if (plan === 'premium') {
-                    this.style.borderColor = '#667eea';
+                    this.style.borderColor = '#7b2e2e';
                     this.style.boxShadow = '0 4px 16px rgba(102, 126, 234, 0.3)';
                 } else {
                     this.style.borderColor = '#10b981';

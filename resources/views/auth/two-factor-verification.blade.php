@@ -8,7 +8,7 @@
                 <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-cyan-100 mb-4">
                     <i class="fas fa-shield-alt text-cyan-600 text-xl"></i>
                 </div>
-                <h2 class="text-2xl font-bold" style="color:#020258;">Security Verification Required</h2>
+                <h2 class="text-2xl font-bold" style="color:#7b2e2e;">Security Verification Required</h2>
                 <p class="text-gray-600 mt-2">{{ $actionName }}</p>
             </div>
 
@@ -219,24 +219,24 @@ function showStatus(message, type) {
 <style>
 .form-control {
     background: #f8f9fa !important;
-    color: #020258 !important;
-    border: 2px solid #13e8e9 !important;
+    color: #7b2e2e !important;
+    border: 2px solid #ff511a !important;
     margin-bottom: 1rem !important;
     width: 100%;
 }
 .form-control:focus {
-    border-color: #020258 !important;
+    border-color: #7b2e2e !important;
     box-shadow: 0 0 0 3px rgba(19, 232, 233, 0.1) !important;
 }
 .btn-primary {
-    background: #020258 !important;
+    background: #7b2e2e !important;
     color: #fff !important;
-    border: 2px solid #13e8e9 !important;
+    border: 2px solid #ff511a !important;
 }
 .btn-primary:hover {
-    background: #13e8e9 !important;
-    color: #020258 !important;
-    border: 2px solid #020258 !important;
+    background: #ff511a !important;
+    color: #7b2e2e !important;
+    border: 2px solid #7b2e2e !important;
 }
 .btn-outline-secondary {
     border: 2px solid #6c757d !important;

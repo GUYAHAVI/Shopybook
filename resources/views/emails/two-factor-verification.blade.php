@@ -24,29 +24,29 @@
             text-align: center;
             margin-bottom: 30px;
             padding-bottom: 20px;
-            border-bottom: 2px solid #13e8e9;
+            border-bottom: 2px solid #ff511a;
         }
         .logo {
             font-size: 24px;
             font-weight: bold;
-            color: #020258;
+            color: #7b2e2e;
             margin-bottom: 10px;
         }
         .verification-code {
             background-color: #f8f9fa;
-            border: 2px solid #13e8e9;
+            border: 2px solid #ff511a;
             border-radius: 8px;
             padding: 20px;
             text-align: center;
             margin: 20px 0;
             font-size: 32px;
             font-weight: bold;
-            color: #020258;
+            color: #7b2e2e;
             letter-spacing: 5px;
         }
         .action-details {
             background-color: #e8f4f8;
-            border-left: 4px solid #13e8e9;
+            border-left: 4px solid #ff511a;
             padding: 15px;
             margin: 20px 0;
         }
@@ -67,7 +67,7 @@
         }
         .btn {
             display: inline-block;
-            background-color: #020258;
+            background-color: #7b2e2e;
             color: #ffffff;
             padding: 12px 24px;
             text-decoration: none;

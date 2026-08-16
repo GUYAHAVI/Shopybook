@@ -5,7 +5,7 @@
 @section('content')
 <style>
     .app-store-header {
-        background: linear-gradient(135deg, #020258, #13e8e9);
+        background: linear-gradient(135deg, #7b2e2e, #ff511a);
         color: white;
         padding: 3rem 0;
         margin: -2rem -2rem 2rem -2rem;
@@ -26,7 +26,7 @@
     .app-card:hover {
         transform: translateY(-4px);
         box-shadow: 0 12px 24px rgba(0, 0, 0, 0.1);
-        border-color: #020258;
+        border-color: #7b2e2e;
     }
     
     .app-card.enabled {
@@ -54,7 +54,7 @@
     .app-icon {
         width: 64px;
         height: 64px;
-        background: linear-gradient(135deg, #020258, #13e8e9);
+        background: linear-gradient(135deg, #7b2e2e, #ff511a);
         border-radius: 16px;
         display: flex;
         align-items: center;

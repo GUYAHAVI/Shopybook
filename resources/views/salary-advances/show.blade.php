@@ -5,7 +5,7 @@
     <div class="row">
         <div class="col-12">
             <div class="d-flex justify-content-between align-items-center mb-4">
-                <h2 class="fw-bold" style="color:#020258;">Salary Advance Details</h2>
+                <h2 class="fw-bold" style="color:#7b2e2e;">Salary Advance Details</h2>
                 <div>
                     <a href="{{ route('salary-advances.index') }}" class="btn btn-outline-secondary">
                         <i class="fas fa-arrow-left me-1"></i> Back to List

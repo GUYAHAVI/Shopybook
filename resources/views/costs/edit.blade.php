@@ -4,7 +4,7 @@
     <div class="row justify-content-center">
         <div class="col-md-8">
             <div class="card p-4">
-                <h2 class="fw-bold mb-4" style="color:#020258;">Edit Cost</h2>
+                <h2 class="fw-bold mb-4" style="color:#7b2e2e;">Edit Cost</h2>
                 <form method="POST" action="{{ route('costs.update', $cost) }}">
                     @csrf
                     @method('PUT')

@@ -158,7 +158,7 @@
             <div class="card shadow mb-4">
                 <div class="card-header py-3 d-flex justify-content-between align-items-center">
                     <h6 class="m-0 font-weight-bold text-primary">Company/Organization Customers</h6>
-                    <span class="badge" style="background-color: #020258;">{{ $organizations->total() }}</span>
+                    <span class="badge" style="background-color: #7b2e2e;">{{ $organizations->total() }}</span>
                 </div>
                 <div class="card-body p-0">
                     <!-- Desktop Table -->
@@ -179,7 +179,7 @@
                                         <td>
                                             <div class="d-flex align-items-center">
                                                 <div class="avatar-sm me-3">
-                                                    <div class="avatar-initial rounded-circle" style="background-color: #13e8e9; color: #020258;">
+                                                    <div class="avatar-initial rounded-circle" style="background-color: #ff511a; color: #7b2e2e;">
                                                         <i class="fas fa-building"></i>
                                                     </div>
                                                 </div>
@@ -211,7 +211,7 @@
                                         <td colspan="5" class="text-center text-muted py-4">
                                             <i class="fas fa-building fa-2x mb-3 text-muted"></i>
                                             <p>No company/organization customers found.</p>
-                                            <a href="{{ route('sales.organization-customers.create') }}" class="btn btn-sm" style="background-color: #020258; border-color: #020258; color: white;">
+                                            <a href="{{ route('sales.organization-customers.create') }}" class="btn btn-sm" style="background-color: #7b2e2e; border-color: #7b2e2e; color: white;">
                                                 <i class="fas fa-plus me-2"></i>Add First Organization
                                             </a>
                                         </td>
@@ -228,7 +228,7 @@
                                 <div class="customer-header">
                                     <div class="d-flex align-items-center">
                                         <div class="avatar-sm me-3">
-                                            <div class="avatar-initial rounded-circle" style="background-color: #13e8e9; color: #020258;">
+                                            <div class="avatar-initial rounded-circle" style="background-color: #ff511a; color: #7b2e2e;">
                                                 <i class="fas fa-building"></i>
                                             </div>
                                         </div>
@@ -263,7 +263,7 @@
                             <div class="text-center text-muted py-4">
                                 <i class="fas fa-building fa-2x mb-3 text-muted"></i>
                                 <p>No company/organization customers found.</p>
-                                <a href="{{ route('sales.organization-customers.create') }}" class="btn btn-sm" style="background-color: #020258; border-color: #020258; color: white;">
+                                <a href="{{ route('sales.organization-customers.create') }}" class="btn btn-sm" style="background-color: #7b2e2e; border-color: #7b2e2e; color: white;">
                                     <i class="fas fa-plus me-2"></i>Add First Organization
                                 </a>
                             </div>

@@ -158,14 +158,14 @@
 }
 
 .record-type-card:hover {
-    border-color: #4F46E5;
+    border-color: #7b2e2e;
     box-shadow: 0 4px 12px rgba(79, 70, 229, 0.1);
     transform: translateY(-2px);
 }
 
 .record-type-card.active {
-    border-color: #4F46E5;
-    background: linear-gradient(135deg, #4F46E5 0%, #7C3AED 100%);
+    border-color: #7b2e2e;
+    background: linear-gradient(135deg, #7b2e2e 0%, #ff511a 100%);
     color: white;
 }
 
@@ -178,7 +178,7 @@
 }
 
 .record-icon {
-    color: #4F46E5;
+    color: #7b2e2e;
     margin-bottom: 1rem;
 }
 

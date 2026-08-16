@@ -412,31 +412,31 @@
 
 body, .container-fluid, .card, .main-content, .content {
     background: #fff !important;
-    color: #020258 !important;
+    color: #7b2e2e !important;
 }
 .btn-primary {
-    background: #020258 !important;
+    background: #7b2e2e !important;
     color: #fff !important;
-    border: 2px solid #13e8e9 !important;
+    border: 2px solid #ff511a !important;
 }
 .btn-primary:hover {
-    background: #13e8e9 !important;
-    color: #020258 !important;
-    border: 2px solid #020258 !important;
+    background: #ff511a !important;
+    color: #7b2e2e !important;
+    border: 2px solid #7b2e2e !important;
 }
 .form-control {
     background: #f8f9fa !important;
-    color: #020258 !important;
-    border: 2px solid #13e8e9 !important;
+    color: #7b2e2e !important;
+    border: 2px solid #ff511a !important;
 }
 .form-control:focus {
-    border-color: #020258 !important;
+    border-color: #7b2e2e !important;
     box-shadow: 0 0 0 3px rgba(19, 232, 233, 0.1) !important;
 }
 .card-header {
     background: #f8f9fa !important;
-    color: #020258 !important;
-    border-bottom: 1px solid #13e8e9 !important;
+    color: #7b2e2e !important;
+    border-bottom: 1px solid #ff511a !important;
 }
 </style>
 
@@ -504,7 +504,7 @@ body, .container-fluid, .card, .main-content, .content {
                 </label>
                 <textarea id="businessDescription" name="description" placeholder="Describe your business, products, or services..." style="min-height: 120px;">{{ old('description') }}</textarea>
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 8px;">
-                    <button type="button" id="enhanceDescriptionBtn" class="btn btn-sm" style="background: #13e8e9; color: #020258; border: none; padding: 8px 16px; border-radius: 6px; font-size: 13px; font-weight: 500; display: flex; align-items: center; gap: 6px; transition: all 0.3s;">
+                    <button type="button" id="enhanceDescriptionBtn" class="btn btn-sm" style="background: #ff511a; color: #7b2e2e; border: none; padding: 8px 16px; border-radius: 6px; font-size: 13px; font-weight: 500; display: flex; align-items: center; gap: 6px; transition: all 0.3s;">
                         <i class="fas fa-magic"></i>
                         <span>Enhance with AI</span>
                     </button>
@@ -938,8 +938,8 @@ document.addEventListener('DOMContentLoaded', function() {
         // Hover effect for enhance button
         enhanceBtn.addEventListener('mouseenter', function() {
             if (!this.disabled) {
-                this.style.background = '#020258';
-                this.style.color = '#13e8e9';
+                this.style.background = '#7b2e2e';
+                this.style.color = '#ff511a';
                 this.style.transform = 'translateY(-1px)';
                 this.style.boxShadow = '0 4px 6px rgba(0, 0, 0, 0.1)';
             }
@@ -947,8 +947,8 @@ document.addEventListener('DOMContentLoaded', function() {
         
         enhanceBtn.addEventListener('mouseleave', function() {
             if (!this.disabled) {
-                this.style.background = '#13e8e9';
-                this.style.color = '#020258';
+                this.style.background = '#ff511a';
+                this.style.color = '#7b2e2e';
                 this.style.transform = 'translateY(0)';
                 this.style.boxShadow = 'none';
             }

@@ -7,20 +7,20 @@
     <style>
         body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f8f9fa; }
         .email-container { background: white; border-radius: 8px; padding: 30px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-        .header { text-align: center; border-bottom: 2px solid #13e8e9; padding-bottom: 20px; margin-bottom: 30px; }
-        .header h1 { color: #020258; margin: 0; font-size: 24px; }
-        .business-name { color: #13e8e9; font-size: 18px; margin-top: 5px; }
-        .review-box { background: #f0fbfb; border-left: 4px solid #13e8e9; border-radius: 4px; padding: 20px; margin: 20px 0; }
-        .reviewer-name { font-weight: bold; font-size: 16px; color: #020258; margin-bottom: 4px; }
+        .header { text-align: center; border-bottom: 2px solid #ff511a; padding-bottom: 20px; margin-bottom: 30px; }
+        .header h1 { color: #7b2e2e; margin: 0; font-size: 24px; }
+        .business-name { color: #ff511a; font-size: 18px; margin-top: 5px; }
+        .review-box { background: #f0fbfb; border-left: 4px solid #ff511a; border-radius: 4px; padding: 20px; margin: 20px 0; }
+        .reviewer-name { font-weight: bold; font-size: 16px; color: #7b2e2e; margin-bottom: 4px; }
         .reviewer-role { color: #888; font-size: 13px; margin-bottom: 12px; }
         .stars { color: #f59e0b; font-size: 20px; letter-spacing: 2px; margin-bottom: 12px; }
         .quote { color: #444; font-style: italic; font-size: 15px; }
         .action-section { text-align: center; margin: 30px 0; }
         .action-section p { color: #666; margin-bottom: 16px; font-size: 14px; }
         .btn { display: inline-block; padding: 12px 28px; border-radius: 6px; text-decoration: none; font-weight: bold; font-size: 15px; margin: 0 8px; }
-        .btn-approve { background: #13e8e9; color: #020258; }
+        .btn-approve { background: #ff511a; color: #7b2e2e; }
         .btn-reject  { background: #f1f1f1; color: #555; border: 1px solid #ccc; }
-        .btn-manage  { background: #020258; color: white; margin-top: 12px; display: inline-block; }
+        .btn-manage  { background: #7b2e2e; color: white; margin-top: 12px; display: inline-block; }
         .footer { text-align: center; font-size: 12px; color: #aaa; margin-top: 30px; border-top: 1px solid #eee; padding-top: 16px; }
     </style>
 </head>

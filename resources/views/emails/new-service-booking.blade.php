@@ -22,17 +22,17 @@
         }
         .header {
             text-align: center;
-            border-bottom: 2px solid #13e8e9;
+            border-bottom: 2px solid #ff511a;
             padding-bottom: 20px;
             margin-bottom: 30px;
         }
         .header h1 {
-            color: #020258;
+            color: #7b2e2e;
             margin: 0;
             font-size: 24px;
         }
         .business-name {
-            color: #13e8e9;
+            color: #ff511a;
             font-size: 18px;
             margin-top: 5px;
         }
@@ -43,9 +43,9 @@
             margin-bottom: 20px;
         }
         .booking-info h3 {
-            color: #020258;
+            color: #7b2e2e;
             margin-top: 0;
-            border-bottom: 1px solid #13e8e9;
+            border-bottom: 1px solid #ff511a;
             padding-bottom: 10px;
         }
         .info-row {
@@ -60,7 +60,7 @@
         }
         .label {
             font-weight: bold;
-            color: #020258;
+            color: #7b2e2e;
         }
         .value {
             color: #666;
@@ -77,12 +77,12 @@
             border-bottom: 1px solid #ddd;
         }
         .services-table th {
-            background-color: #13e8e9;
-            color: #020258;
+            background-color: #ff511a;
+            color: #7b2e2e;
             font-weight: bold;
         }
         .total-amount {
-            background: #020258;
+            background: #7b2e2e;
             color: white;
             padding: 15px;
             border-radius: 6px;
@@ -103,8 +103,8 @@
         }
         .cta-button {
             display: inline-block;
-            background: #13e8e9;
-            color: #020258;
+            background: #ff511a;
+            color: #7b2e2e;
             padding: 12px 25px;
             text-decoration: none;
             border-radius: 6px;

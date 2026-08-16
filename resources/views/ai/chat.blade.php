@@ -198,7 +198,7 @@
 }
 
 .insight-card {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #7b2e2e 0%, #ff511a 100%);
     color: white;
     border-radius: 10px;
     padding: 15px;

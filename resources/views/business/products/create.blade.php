@@ -56,7 +56,7 @@
                             <textarea id="productDescription" name="description" class="form-control @error('description') is-invalid @enderror" rows="4" 
                                       placeholder="Enter product description..." style="min-height: 100px;">{{ old('description') }}</textarea>
                             <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 8px;">
-                                <button type="button" id="enhanceProductDescriptionBtn" class="btn btn-sm" style="background: #13e8e9; color: #020258; border: none; padding: 8px 16px; border-radius: 6px; font-size: 13px; font-weight: 500; display: flex; align-items: center; gap: 6px; transition: all 0.3s;">
+                                <button type="button" id="enhanceProductDescriptionBtn" class="btn btn-sm" style="background: #ff511a; color: #7b2e2e; border: none; padding: 8px 16px; border-radius: 6px; font-size: 13px; font-weight: 500; display: flex; align-items: center; gap: 6px; transition: all 0.3s;">
                                     <i class="fas fa-magic"></i>
                                     <span>Enhance with AI</span>
                                 </button>
@@ -579,8 +579,8 @@ document.addEventListener('DOMContentLoaded', function() {
         // Hover effect for enhance button
         enhanceProductBtn.addEventListener('mouseenter', function() {
             if (!this.disabled) {
-                this.style.background = '#020258';
-                this.style.color = '#13e8e9';
+                this.style.background = '#7b2e2e';
+                this.style.color = '#ff511a';
                 this.style.transform = 'translateY(-1px)';
                 this.style.boxShadow = '0 4px 6px rgba(0, 0, 0, 0.1)';
             }
@@ -588,8 +588,8 @@ document.addEventListener('DOMContentLoaded', function() {
         
         enhanceProductBtn.addEventListener('mouseleave', function() {
             if (!this.disabled) {
-                this.style.background = '#13e8e9';
-                this.style.color = '#020258';
+                this.style.background = '#ff511a';
+                this.style.color = '#7b2e2e';
                 this.style.transform = 'translateY(0)';
                 this.style.boxShadow = 'none';
             }

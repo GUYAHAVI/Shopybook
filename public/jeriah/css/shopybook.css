@@ -1,0 +1,1466 @@
+/* ==========================================================================
+   Shopybook overrides on top of the Jeriah design system.
+   Only additions/fixes — the Jeriah look & feel is preserved.
+   ========================================================================== */
+
+/* ── Fixed header ──
+   navbar.css hardcodes body{padding-top:120px}, which doesn't match our actual
+   header height and leaves a grey gap above the hero. We keep position:fixed
+   (sticky is unusable here because templatemo sets overflow-x:hidden on
+   html/body, which breaks it) and set the body offset from JS to the measured
+   header height instead. */
+/* Sensible default so content isn't hidden before the JS measurement runs;
+   the script then replaces this with the header's exact height. */
+body {
+    padding-top: 112px;
+}
+
+@media (max-width: 991.98px) {
+    body {
+        padding-top: 104px;
+    }
+}
+
+@media (max-width: 767.98px) {
+    body {
+        padding-top: 130px;
+    }
+}
+
+.jeriah-header {
+    position: fixed !important;
+    top: 0;
+    left: 0;
+    right: 0;
+    width: 100%;
+    z-index: 1030;
+    transition: box-shadow 0.3s ease;
+}
+
+/* Shrink the header slightly once the page is scrolled */
+.jeriah-header.header-sticky {
+    box-shadow: 0 2px 15px rgba(0, 0, 0, 0.25);
+}
+
+.jeriah-header.header-sticky .header-topbar {
+    display: none;
+}
+
+.jeriah-header.header-sticky .header-main {
+    padding: 8px 0;
+}
+
+.jeriah-header.header-sticky .navbar-brand img {
+    height: 36px;
+}
+
+.jeriah-header.header-sticky .navbar-brand .brand-text {
+    font-size: 1.35rem;
+}
+
+/* Keep in-page anchors from landing underneath the fixed header */
+html {
+    scroll-behavior: smooth;
+}
+
+section[id],
+div[id] {
+    scroll-margin-top: 90px;
+}
+
+/* Mobile menu can overflow a short viewport once the header is fixed */
+@media (max-width: 991.98px) {
+    .jeriah-header .navbar-collapse {
+        max-height: calc(100vh - 120px);
+        overflow-y: auto;
+    }
+}
+
+/* ── Brand in navbar ── */
+.navbar-brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.navbar-brand img {
+    width: auto !important;
+    height: 45px;
+}
+
+.navbar-brand .brand-text {
+    font-family: "Playfair", serif;
+    font-size: 1.6rem;
+    font-weight: 700;
+    color: #fff;
+    letter-spacing: 1px;
+}
+
+.navbar-brand:hover .brand-text {
+    color: #ff511a;
+}
+
+/* ── Hero ── */
+.hero-section {
+    padding: 4rem 0 4rem;
+}
+
+.hero-section h1 {
+    font-size: 3.4rem !important;
+    line-height: 1.1 !important;
+    text-transform: uppercase;
+    color: #fff;
+    padding: 1.5rem 0;
+}
+
+.hero-section p {
+    color: rgba(255, 255, 255, 0.92);
+    font-size: 1.05rem;
+    line-height: 28px;
+}
+
+.hero-section .starsicons p {
+    color: #fff;
+}
+
+/* Hero dashboard preview card */
+.hero-card {
+    background: rgba(255, 255, 255, 0.07);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    border-radius: 1rem;
+    padding: 2rem;
+    box-shadow: 0 0 30px rgba(0, 0, 0, 0.3);
+}
+
+.hero-card h5 {
+    color: #fff;
+    font-size: 1.05rem;
+    margin-bottom: 0;
+}
+
+.hero-card small {
+    color: rgba(255, 255, 255, 0.75);
+}
+
+.hero-card .hero-stat {
+    font-family: "Playfair", serif;
+    font-size: 1.6rem;
+    font-weight: 700;
+    color: #ff511a;
+    line-height: 1.2;
+}
+
+.hero-card .hero-icon {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: #ff511a;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.hero-card .hero-icon i {
+    color: #fff;
+    font-size: 1.3rem;
+}
+
+.hero-card hr {
+    border-color: rgba(255, 255, 255, 0.2);
+}
+
+/* ── Section spacing helpers ── */
+.sb-section {
+    padding: 3.5rem 0;
+}
+
+.sb-section-light {
+    background-color: #f7f7f7;
+}
+
+.sb-section-gray {
+    background-color: #c7c6c6;
+}
+
+.sb-section-maroon {
+    background-color: #7b2e2e;
+    color: #fff;
+}
+
+.sb-section-maroon h2 {
+    color: #ff511a;
+}
+
+.sb-section-maroon p {
+    color: rgba(255, 255, 255, 0.9);
+}
+
+/* ── Section headings (matches .about-us h4 / h2 treatment) ── */
+.sb-eyebrow {
+    display: inline-block;
+    font-size: 1.2rem;
+    font-weight: 700;
+    background-color: #7b2e2e;
+    color: #ff511a;
+    margin-bottom: 1rem;
+    padding: 0.5rem 1rem;
+}
+
+.sb-heading {
+    font-family: "Playfair", serif;
+    font-size: 3rem !important;
+    font-weight: 400;
+    color: #ff511a;
+    margin-bottom: 1rem;
+}
+
+.sb-subheading {
+    color: #333;
+    font-size: 1rem;
+    max-width: 700px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+/* ── Service boxes: make them behave with our icon+text ── */
+.service-box {
+    height: auto !important;
+    min-height: 100px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.3s;
+}
+
+.service-box:hover {
+    transform: translateY(-4px);
+}
+
+.service-box h5 {
+    color: #fff;
+    font-size: 1rem;
+    margin: 0;
+    line-height: 1.4 !important;
+}
+
+.service-box i {
+    color: #ff511a;
+}
+
+/* ── Count boxes ── */
+.count-box {
+    text-align: center;
+    line-height: 1.5 !important;
+    padding: 1.5rem 1rem;
+}
+
+.count-box h3 {
+    font-family: "Playfair", serif;
+    font-size: 2.4rem;
+    font-weight: 700;
+    color: #ff511a;
+    margin-bottom: 0.25rem;
+    line-height: 1.2;
+}
+
+.count-box p {
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 0.9rem;
+    margin-bottom: 0;
+}
+
+/* ── Offer cards (icon variant, no background photo needed) ── */
+.offercard {
+    background: #fff;
+    line-height: 1.6 !important;
+    overflow: hidden;
+    transition: transform 0.3s, box-shadow 0.3s;
+}
+
+.offercard:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.18);
+}
+
+.offercard .offercard-head {
+    background-color: #7b2e2e;
+    padding: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+}
+
+.offercard .offercard-head i {
+    font-size: 2rem;
+    color: #ff511a;
+}
+
+.offercard .offercard-head span {
+    color: #fff;
+    font-size: 1.1rem;
+    font-weight: 500;
+    font-family: "Poppins", sans-serif;
+}
+
+.offercard .offercardtxt {
+    padding: 1.5rem;
+    border-bottom: #7b2e2e 2px solid;
+}
+
+.offercard .offercardtxt h3 {
+    font-size: 1.5rem;
+    color: #7b2e2e;
+    padding: 0;
+    margin-bottom: 0.75rem;
+}
+
+.offercard .offercardtxt p {
+    font-size: 0.95rem;
+    color: #444;
+    padding: 0;
+    line-height: 26px;
+    margin-bottom: 0;
+}
+
+/* ── SEO-style split panel ── */
+.seotxt {
+    line-height: 1.7 !important;
+}
+
+.seotxt p {
+    line-height: 26px;
+    color: #333;
+}
+
+.seotxt ul li {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.6rem;
+}
+
+.seotxt ul li i {
+    color: #43ba7f;
+    margin-top: 0.3rem;
+}
+
+.seo-panel {
+    background-color: #7b2e2e;
+    color: #fff;
+    padding: 2.5rem;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.seo-panel h2 {
+    color: #ff511a;
+    font-size: 2rem;
+    margin-bottom: 1rem;
+}
+
+.seo-panel p {
+    color: rgba(255, 255, 255, 0.9);
+    line-height: 26px;
+}
+
+/* ── Pricing cards ── */
+.sb-pricing-card {
+    background: #fff;
+    border-radius: 1rem;
+    padding: 2rem;
+    height: 100%;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+    transition: transform 0.3s, box-shadow 0.3s;
+    display: flex;
+    flex-direction: column;
+}
+
+.sb-pricing-card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.18);
+}
+
+.sb-pricing-card.featured {
+    border: 2px solid #ff511a;
+}
+
+.sb-pricing-card h3 {
+    font-family: "Playfair", serif;
+    font-size: 1.5rem;
+    color: #7b2e2e;
+    margin-bottom: 0.25rem;
+}
+
+.sb-pricing-card .plan-desc {
+    color: #777;
+    font-size: 0.9rem;
+    margin-bottom: 1.25rem;
+}
+
+.sb-pricing-card .price {
+    font-family: "Playfair", serif;
+    font-size: 2.8rem;
+    font-weight: 700;
+    color: #7b2e2e;
+    line-height: 1;
+}
+
+.sb-pricing-card .price-currency {
+    font-size: 1.1rem;
+    vertical-align: super;
+    font-weight: 700;
+    color: #ff511a;
+}
+
+.sb-pricing-card .price-period {
+    color: #777;
+    font-size: 0.95rem;
+}
+
+.sb-pricing-card ul li {
+    color: #444;
+    margin-bottom: 0.65rem;
+    font-size: 0.95rem;
+    display: flex;
+    align-items: flex-start;
+    gap: 0.6rem;
+}
+
+.sb-pricing-card ul li i {
+    color: #43ba7f;
+    margin-top: 0.3rem;
+}
+
+.sb-pricing-card ul li i.fa-times {
+    color: #ccc;
+}
+
+.badge-popular {
+    background: #ff511a;
+    color: #fff;
+    border-radius: 4px;
+    padding: 4px 12px;
+    font-size: 0.72rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    display: inline-block;
+    margin-bottom: 0.75rem;
+}
+
+/* ── Testimonials ── */
+.sb-testimonial {
+    background: #fff;
+    border-radius: 1rem;
+    padding: 2rem;
+    height: 100%;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+}
+
+.sb-testimonial p {
+    color: #444;
+    font-style: italic;
+    line-height: 26px;
+}
+
+.sb-testimonial .stars {
+    color: #ff511a;
+}
+
+.sb-testimonial .name {
+    font-family: "Playfair", serif;
+    color: #7b2e2e;
+    font-weight: 700;
+    margin-bottom: 0;
+}
+
+.sb-testimonial .role {
+    color: #777;
+    font-size: 0.85rem;
+    margin-bottom: 0;
+}
+
+/* ── Orange strip band ── */
+.sb-strip {
+    background-color: #ff511a;
+    padding: 1.25rem 0;
+}
+
+.sb-strip .strip-item {
+    color: #fff;
+    font-weight: 500;
+    font-size: 0.95rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.sb-strip .strip-item i {
+    font-size: 1.2rem;
+    color: #fff;
+}
+
+/* ── CTA ── */
+.sb-cta {
+    background-color: #7b2e2e;
+    border-radius: 1rem;
+    padding: 3.5rem 3rem;
+    text-align: center;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+}
+
+.sb-cta h2 {
+    font-family: "Playfair", serif;
+    color: #ff511a;
+    font-size: 2.5rem;
+    margin-bottom: 1rem;
+}
+
+.sb-cta p {
+    color: rgba(255, 255, 255, 0.9);
+    margin-bottom: 1.75rem;
+}
+
+/* ── Buttons: keep Jeriah look, fix width utility ── */
+.btn1,
+.btnb {
+    text-align: center;
+}
+
+.btn-block-j {
+    display: block !important;
+    width: 100%;
+}
+
+/* ── Images inside content shouldn't stretch weirdly ── */
+.sb-section img,
+footer img {
+    max-width: 100%;
+    height: auto;
+}
+
+/* ── Business cards (businesses page) ── */
+.sb-business-card {
+    background: #fff;
+    border-radius: 1rem;
+    overflow: hidden;
+    height: 100%;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+    transition: transform 0.3s, box-shadow 0.3s;
+}
+
+.sb-business-card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.18);
+}
+
+.sb-business-card .card-head {
+    background-color: #7b2e2e;
+    padding: 1.25rem 1.5rem;
+    color: #fff;
+}
+
+.sb-business-card .card-head h3 {
+    color: #fff;
+    font-size: 1.25rem;
+    margin-bottom: 0.25rem;
+}
+
+.sb-business-card .card-head span {
+    color: #ff511a;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.sb-business-card .card-body-j {
+    padding: 1.5rem;
+}
+
+.sb-business-card .card-body-j p {
+    color: #444;
+    font-size: 0.95rem;
+    line-height: 26px;
+}
+
+/* ── Filter pills ── */
+.sb-filter {
+    display: inline-block;
+    padding: 10px 22px;
+    border-radius: 5px;
+    font-size: 14px;
+    font-weight: 500;
+    background: #fff;
+    color: #7b2e2e;
+    border: 1px solid #7b2e2e;
+    transition: all 0.3s;
+}
+
+.sb-filter:hover,
+.sb-filter.active {
+    background: #7b2e2e;
+    color: #fff;
+}
+
+/* ── Forms on public pages ── */
+.sb-form-card {
+    background: #fff;
+    border-radius: 1rem;
+    padding: 2rem;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+}
+
+.sb-form-card label {
+    color: #7b2e2e;
+    font-weight: 500;
+    font-size: 0.9rem;
+    margin-bottom: 0.35rem;
+}
+
+.sb-form-card .form-control,
+.sb-form-card .form-select {
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    padding: 0.65rem 0.9rem;
+    font-size: 0.95rem;
+}
+
+.sb-form-card .form-control:focus,
+.sb-form-card .form-select:focus {
+    border-color: #ff511a;
+    box-shadow: 0 0 0 0.2rem rgba(255, 81, 26, 0.15);
+}
+
+/* ── FAQ ── */
+.sb-faq-item {
+    background: #fff;
+    border-radius: 8px;
+    margin-bottom: 12px;
+    overflow: hidden;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.08);
+}
+
+.sb-faq-q {
+    width: 100%;
+    text-align: left;
+    background: #fff;
+    border: none;
+    padding: 16px 20px;
+    font-weight: 600;
+    color: #7b2e2e;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 1rem;
+}
+
+.sb-faq-q i {
+    color: #ff511a;
+    transition: transform 0.3s;
+    flex-shrink: 0;
+}
+
+.sb-faq-q.open i {
+    transform: rotate(45deg);
+}
+
+.sb-faq-a {
+    display: none;
+    padding: 0 20px 18px;
+    color: #555;
+    font-size: 0.95rem;
+    line-height: 26px;
+}
+
+.sb-faq-a.open {
+    display: block;
+}
+
+/* ── Comparison table ── */
+.sb-table {
+    background: #fff;
+    border-radius: 1rem;
+    overflow: hidden;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+}
+
+.sb-table thead th {
+    background: #7b2e2e;
+    color: #fff;
+    font-weight: 600;
+    padding: 16px;
+    border: none;
+    font-family: "Poppins", sans-serif;
+}
+
+.sb-table tbody td {
+    padding: 14px 16px;
+    color: #444;
+    vertical-align: middle;
+    border-color: #eee;
+}
+
+.sb-table tbody tr:nth-child(even) td {
+    background: #faf8f7;
+}
+
+.sb-table .check,
+.sb-table .sb-check {
+    color: #43ba7f;
+}
+
+.sb-table .cross,
+.sb-table .sb-cross {
+    color: #ccc;
+}
+
+/* ── Business cards (businesses page) ── */
+.sb-business-card {
+    background: #fff;
+    border-radius: 1rem;
+    overflow: hidden;
+    height: 100%;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+    transition: transform 0.3s, box-shadow 0.3s;
+}
+
+.sb-business-card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.18);
+}
+
+.sb-business-card .card-img-wrap {
+    height: 200px;
+    overflow: hidden;
+    background: #f0eeec;
+}
+
+.sb-business-card .card-img-j {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.5s;
+}
+
+.sb-business-card:hover .card-img-j {
+    transform: scale(1.08);
+}
+
+.sb-business-card .card-body-j h3 {
+    font-family: "Playfair", serif;
+    font-size: 1.25rem;
+    color: #7b2e2e;
+    margin-bottom: 0.5rem;
+}
+
+.sb-business-card .card-body-j p {
+    color: #444;
+    font-size: 0.9rem;
+    line-height: 1.6;
+    margin-bottom: 0;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.sb-card-location {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: #777;
+    font-size: 0.85rem;
+    margin-bottom: 0.75rem;
+}
+
+.sb-card-location i {
+    color: #ff511a;
+}
+
+.sb-card-badge {
+    background: #7b2e2e;
+    color: #fff;
+    padding: 0.35rem 0.9rem;
+    border-radius: 20px;
+    font-size: 0.72rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.sb-type-header {
+    font-family: "Playfair", serif;
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: #7b2e2e;
+    margin-bottom: 1.5rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 3px solid #ff511a;
+}
+
+.sb-type-header i {
+    color: #ff511a;
+    margin-right: 0.5rem;
+}
+
+.sb-sort-controls {
+    background: #fff;
+    border-radius: 8px;
+    padding: 1rem 1.25rem;
+    box-shadow: 0 0 8px rgba(0, 0, 0, 0.08);
+}
+
+.sb-sort-btn {
+    background: #7b2e2e;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    padding: 0.5rem 1.25rem;
+    font-weight: 500;
+    font-size: 0.9rem;
+}
+
+.sb-sort-btn:hover,
+.sb-sort-btn:focus {
+    background: #652424;
+    color: #fff;
+}
+
+.sb-empty {
+    background: #fff;
+    border-radius: 1rem;
+    padding: 3rem 2rem;
+    text-align: center;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    margin: 2rem 0;
+}
+
+.sb-empty h4 {
+    color: #7b2e2e;
+    font-family: "Playfair", serif;
+    font-weight: 700;
+    margin-bottom: 1rem;
+}
+
+.sb-empty p {
+    color: #555;
+    font-size: 1.05rem;
+}
+
+/* ── Business show page ── */
+.sb-business-logo {
+    width: 140px;
+    height: 140px;
+    object-fit: cover;
+    border-radius: 50%;
+    border: 4px solid #ff511a;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
+}
+
+.sb-contact-info p {
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 0.95rem;
+}
+
+.sb-contact-info i {
+    color: #ff511a;
+}
+
+.sb-product-card {
+    background: #fff;
+    border-radius: 1rem;
+    overflow: hidden;
+    height: 100%;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+    transition: transform 0.3s, box-shadow 0.3s;
+    display: flex;
+    flex-direction: column;
+}
+
+.sb-product-card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.18);
+}
+
+.sb-product-img {
+    width: 100%;
+    height: 200px;
+    object-fit: cover;
+    display: block;
+}
+
+.sb-product-img-icon {
+    background: #7b2e2e;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.sb-product-img-icon i {
+    color: #ff511a;
+}
+
+.sb-product-body {
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+}
+
+.sb-product-body h5 {
+    font-family: "Playfair", serif;
+    color: #7b2e2e;
+    font-size: 1.2rem;
+    margin-bottom: 0.5rem;
+}
+
+.sb-product-body p {
+    color: #555;
+    font-size: 0.9rem;
+    line-height: 1.6;
+    margin-bottom: 1rem;
+    flex-grow: 1;
+}
+
+.sb-price {
+    font-family: "Playfair", serif;
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #ff511a;
+}
+
+.sb-badge {
+    background: #7b2e2e;
+    color: #fff;
+    padding: 0.3rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.72rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.sb-badge-success {
+    background: #43ba7f;
+}
+
+.sb-badge-danger {
+    background: #dc3545;
+}
+
+/* ── Modals (Jeriah styled) ── */
+.sb-modal-content {
+    border: none;
+    border-radius: 1rem;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.25);
+}
+
+.sb-modal-header {
+    background: #7b2e2e;
+    color: #fff;
+    border-radius: 1rem 1rem 0 0;
+    border: none;
+}
+
+.sb-modal-header .modal-title {
+    color: #fff;
+    font-family: "Playfair", serif;
+}
+
+.sb-modal-footer {
+    border: none;
+    padding-top: 0;
+}
+
+.sb-modal-content .form-label {
+    color: #7b2e2e;
+    font-weight: 500;
+    font-size: 0.9rem;
+}
+
+.sb-modal-content .form-control {
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    padding: 0.6rem 0.9rem;
+}
+
+.sb-modal-content .form-control:focus {
+    border-color: #ff511a;
+    box-shadow: 0 0 0 0.2rem rgba(255, 81, 26, 0.15);
+}
+
+/* ── Docs page ── */
+.sb-docs-sidebar {
+    background: #fff;
+    border: 1px solid #e0ded9;
+    border-radius: 1rem;
+    padding: 1.5rem;
+    position: sticky;
+    top: 110px;
+    max-height: calc(100vh - 130px);
+    overflow-y: auto;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.08);
+}
+
+.sb-docs-sidebar h5 {
+    font-family: "Playfair", serif;
+    color: #7b2e2e;
+    font-size: 1.1rem;
+}
+
+.sb-docs-nav {
+    display: block;
+    padding: 10px 16px;
+    color: #444;
+    text-decoration: none;
+    border-radius: 6px;
+    transition: all 0.3s;
+    margin-bottom: 4px;
+    border-left: 3px solid transparent;
+    font-size: 0.9rem;
+}
+
+.sb-docs-nav:hover,
+.sb-docs-nav.active {
+    background: rgba(255, 81, 26, 0.08);
+    border-left-color: #ff511a;
+    color: #ff511a;
+    padding-left: 22px;
+}
+
+.sb-docs-nav i {
+    margin-right: 10px;
+    width: 20px;
+}
+
+.sb-docs-content {
+    background: #fff;
+    border: 1px solid #e0ded9;
+    border-radius: 1rem;
+    padding: 2.5rem;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.08);
+}
+
+.sb-docs-section {
+    margin-bottom: 3rem;
+    scroll-margin-top: 110px;
+}
+
+.sb-docs-h2 {
+    font-family: "Playfair", serif;
+    color: #7b2e2e;
+    font-size: 1.8rem;
+    margin-bottom: 1.25rem;
+}
+
+.sb-docs-h2 i {
+    color: #ff511a;
+}
+
+.sb-docs-content h4 {
+    font-family: "Playfair", serif;
+    color: #7b2e2e;
+    font-size: 1.25rem;
+}
+
+.sb-docs-content h5 {
+    font-family: "Poppins", sans-serif;
+    color: #7b2e2e;
+    font-size: 1.05rem;
+    font-weight: 600;
+}
+
+.sb-docs-content p,
+.sb-docs-content li {
+    color: #444;
+    line-height: 1.7;
+}
+
+.sb-step-card {
+    background: #faf8f7;
+    border: 1px solid #e0ded9;
+    border-radius: 10px;
+    padding: 1.5rem;
+    margin-bottom: 1rem;
+    transition: all 0.3s;
+}
+
+.sb-step-card:hover {
+    border-color: #ff511a;
+    box-shadow: 0 4px 15px rgba(255, 81, 26, 0.1);
+}
+
+.sb-step-number {
+    width: 36px;
+    height: 36px;
+    background: #ff511a;
+    color: #fff;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 16px;
+    margin-right: 15px;
+    flex-shrink: 0;
+}
+
+.sb-feature-badge {
+    display: inline-block;
+    background: rgba(255, 81, 26, 0.1);
+    color: #ff511a;
+    border: 1px solid #ff511a;
+    padding: 4px 14px;
+    border-radius: 20px;
+    font-size: 13px;
+    margin: 4px;
+}
+
+.sb-tip-box {
+    background: rgba(67, 186, 127, 0.08);
+    border-left: 4px solid #43ba7f;
+    padding: 1.25rem;
+    border-radius: 8px;
+    margin: 1.25rem 0;
+}
+
+.sb-tip-box i {
+    color: #43ba7f;
+    font-size: 24px;
+    margin-right: 15px;
+}
+
+.sb-docs-content code {
+    background: rgba(255, 81, 26, 0.1);
+    color: #ff511a;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-family: 'Courier New', monospace;
+}
+
+/* ── Accordion (data deletion page) ── */
+.sb-accordion-item {
+    border: 1px solid #e0ded9;
+    border-radius: 8px !important;
+    margin-bottom: 0.75rem;
+    overflow: hidden;
+}
+
+.sb-accordion-btn {
+    background: #faf8f7;
+    color: #7b2e2e;
+    font-weight: 600;
+    font-size: 0.95rem;
+    padding: 1rem 1.25rem;
+}
+
+.sb-accordion-btn:not(.collapsed) {
+    background: #7b2e2e;
+    color: #fff;
+    box-shadow: none;
+}
+
+.sb-accordion-btn:focus {
+    box-shadow: none;
+    border-color: #ff511a;
+}
+
+.sb-accordion-item .accordion-body {
+    padding: 1.25rem;
+    color: #444;
+}
+
+/* ── Timeline (data deletion page) ── */
+.sb-timeline {
+    position: relative;
+    padding-left: 30px;
+}
+
+.sb-timeline::before {
+    content: '';
+    position: absolute;
+    left: 10px;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: #e0ded9;
+}
+
+.sb-timeline-item {
+    position: relative;
+    margin-bottom: 20px;
+}
+
+.sb-timeline-marker {
+    position: absolute;
+    left: -20px;
+    top: 5px;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    border: 3px solid #fff;
+    box-shadow: 0 0 0 3px #e0ded9;
+}
+
+.sb-timeline-content {
+    margin-left: 20px;
+}
+
+.sb-timeline-content h6 {
+    font-family: "Playfair", serif;
+    color: #7b2e2e;
+    font-weight: 700;
+}
+
+.sb-timeline-content p {
+    color: #555;
+    font-size: 0.9rem;
+}
+
+/* ── Form card (deauthorize page) ── */
+.sb-form-card {
+    background: #fff;
+    border: 1px solid #e0ded9;
+    border-radius: 1rem;
+    padding: 2.5rem;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.08);
+}
+
+.sb-form-card h2 {
+    font-family: "Playfair", serif;
+    color: #7b2e2e;
+}
+
+/* ── Alerts (verify page) ── */
+.sb-alert {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 1rem 1.25rem;
+    border-radius: 8px;
+    margin-bottom: 1.5rem;
+    font-size: 0.92rem;
+}
+
+.sb-alert-success {
+    background: rgba(67, 186, 127, 0.1);
+    border: 1px solid rgba(67, 186, 127, 0.4);
+    color: #2d8a5f;
+}
+
+.sb-alert-success i {
+    color: #43ba7f;
+    font-size: 1.1rem;
+}
+
+/* ── Verify icon (verify email hero) ── */
+.sb-verify-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 90px;
+    height: 90px;
+    border-radius: 50%;
+    background: rgba(255, 81, 26, 0.18);
+    border: 2px solid #ff511a;
+    margin-bottom: 1.25rem;
+}
+
+.sb-verify-icon i {
+    font-size: 2.4rem;
+    color: #ff511a;
+}
+
+/* ── Business type options (choose-type page) ── */
+.sb-type-option {
+    display: block;
+    background: #fff;
+    border: 2px solid #e0ded9;
+    border-radius: 1rem;
+    padding: 2.25rem 1.75rem;
+    text-decoration: none;
+    color: inherit;
+    height: 100%;
+    text-align: center;
+    transition: transform 0.3s, box-shadow 0.3s, border-color 0.3s;
+    position: relative;
+    overflow: hidden;
+}
+
+.sb-type-option::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 5px;
+    background: #ff511a;
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.4s ease;
+}
+
+.sb-type-option:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
+    border-color: #ff511a;
+    text-decoration: none;
+    color: inherit;
+}
+
+.sb-type-option:hover::before {
+    transform: scaleX(1);
+}
+
+.sb-type-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    margin-bottom: 1.25rem;
+    font-size: 2rem;
+}
+
+.sb-type-product .sb-type-icon {
+    background: rgba(123, 46, 46, 0.1);
+    color: #7b2e2e;
+}
+
+.sb-type-service .sb-type-icon {
+    background: rgba(67, 186, 127, 0.12);
+    color: #43ba7f;
+}
+
+.sb-type-both .sb-type-icon {
+    background: rgba(255, 81, 26, 0.12);
+    color: #ff511a;
+}
+
+.sb-type-option h3 {
+    font-family: "Playfair", serif;
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: #7b2e2e;
+    margin-bottom: 0.75rem;
+}
+
+.sb-type-option p {
+    color: #555;
+    font-size: 0.92rem;
+    line-height: 1.6;
+    margin-bottom: 1.25rem;
+}
+
+.sb-type-cta {
+    display: inline-block;
+    color: #ff511a;
+    font-weight: 600;
+    font-size: 0.9rem;
+    border-bottom: 2px solid transparent;
+    padding-bottom: 2px;
+    transition: border-color 0.3s;
+}
+
+.sb-type-option:hover .sb-type-cta {
+    border-bottom-color: #ff511a;
+}
+
+.sb-skip-link {
+    color: #888;
+    text-decoration: none;
+    font-size: 0.92rem;
+    transition: color 0.3s;
+}
+
+.sb-skip-link:hover {
+    color: #ff511a;
+    text-decoration: underline;
+}
+
+/* ── Billing toggle (pricing page) ── */
+.billing-toggle-wrap {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    justify-content: center;
+    margin-bottom: 1rem;
+}
+
+.billing-toggle-wrap .form-check-input {
+    width: 3rem;
+    height: 1.6rem;
+    cursor: pointer;
+    background-color: rgba(255, 81, 26, 0.3);
+    border-color: #ff511a;
+}
+
+.billing-toggle-wrap .form-check-input:checked {
+    background-color: #ff511a;
+    border-color: #ff511a;
+}
+
+.billing-label {
+    color: #fff;
+    font-weight: 600;
+    font-size: 1rem;
+}
+
+.save-badge {
+    background: #ff511a;
+    color: #fff;
+    font-size: 0.7rem;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 10px;
+    vertical-align: middle;
+    margin-left: 4px;
+}
+
+/* ── Responsive ── */
+@media (max-width: 991.98px) {
+    .hero-section {
+        text-align: center;
+        padding: 3rem 0;
+    }
+    .hero-section .starsicons {
+        justify-content: center;
+    }
+    .hero-section .d-flex.gap-3 {
+        justify-content: center;
+    }
+    .seo-panel {
+        padding: 2rem;
+    }
+}
+
+@media (max-width: 767.98px) {
+    .hero-section h1 {
+        font-size: 2.1rem !important;
+    }
+    .sb-heading {
+        font-size: 2rem !important;
+    }
+    .sb-cta {
+        padding: 2.5rem 1.5rem;
+    }
+    .sb-cta h2 {
+        font-size: 1.8rem;
+    }
+    .navbar-brand .brand-text {
+        font-size: 1.3rem;
+    }
+    .navbar-brand img {
+        height: 38px;
+    }
+    .header-topbar {
+        font-size: 12px;
+    }
+    .sb-section {
+        padding: 2.5rem 0;
+    }
+}

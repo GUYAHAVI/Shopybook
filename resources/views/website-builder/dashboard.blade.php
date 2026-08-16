@@ -149,7 +149,7 @@
         <!-- AI Auto-Build Banner for Enterprise Users -->
         @if($business->isEnterprise())
         <div class="col-12">
-            <div class="card" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none; position: relative; overflow: hidden;">
+            <div class="card" style="background: linear-gradient(135deg, #7b2e2e 0%, #ff511a 100%); border: none; position: relative; overflow: hidden;">
                 <!-- Decorative Elements -->
                 <div style="position: absolute; top: -50px; right: -50px; width: 200px; height: 200px; background: rgba(255,255,255,0.1); border-radius: 50%;"></div>
                 <div style="position: absolute; bottom: -30px; left: -30px; width: 150px; height: 150px; background: rgba(255,255,255,0.08); border-radius: 50%;"></div>
@@ -233,9 +233,9 @@
             </div>
 
             <!-- AI Guidance Panel -->
-            <div class="card mb-3" style="background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%); border: 1px solid #667eea;">
-                <div class="card-header" style="background: transparent; border-bottom: 1px solid #667eea;">
-                    <h3 class="mb-0 h6" style="color: #667eea; font-weight: 600;">
+            <div class="card mb-3" style="background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%); border: 1px solid #7b2e2e;">
+                <div class="card-header" style="background: transparent; border-bottom: 1px solid #7b2e2e;">
+                    <h3 class="mb-0 h6" style="color: #7b2e2e; font-weight: 600;">
                         <i class="fas fa-robot me-2"></i>AI Website Assistant
                     </h3>
                 </div>
@@ -243,7 +243,7 @@
                     <p class="text-muted mb-3" style="font-size: 0.875rem;">
                         Get personalized guidance from Claude AI to build the perfect website for your business.
                     </p>
-                    <button onclick="loadAIGuidance()" class="btn btn-sm w-100" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+                    <button onclick="loadAIGuidance()" class="btn btn-sm w-100" style="background: linear-gradient(135deg, #7b2e2e 0%, #ff511a 100%); color: white;">
                         <i class="fas fa-magic me-2"></i>Get AI Guidance
                     </button>
                     <div id="aiGuidanceContent" class="mt-3 d-none">

@@ -1,0 +1,267 @@
+:root {
+            --primary: #7B2E2E;
+            --secondary: #FF511A;
+            --light: #FFFFFF;
+            --dark: #222222;
+            --gray: #F7F7F7;
+        }
+        
+        body {
+            font-family: 'Poppins', sans-serif;
+            margin: 0;
+            padding: 0;
+            color: var(--dark);
+            padding-top: 120px; /* To account for fixed header */
+        }
+        
+        /* Header Styles */
+        .jeriah-header {
+            background-color: var(--primary);
+            position: fixed;
+            width: 100%;
+            z-index: 1000;
+            transition: all 0.3s ease;
+        }
+        
+        .header-topbar {
+            background-color: var(--light);
+            padding: 8px 0;
+            color: var(--dark);
+            font-size: 14px;
+            border-bottom: 1px solid rgba(0,0,0,0.1);
+        }
+        
+        .header-contact-info a {
+            color: var(--dark);
+            margin-right: 20px;
+            transition: color 0.3s;
+        }
+        
+        .header-contact-info a:hover {
+            color: var(--secondary);
+            text-decoration: none;
+        }
+        
+        .header-contact-info i {
+            margin-right: 5px;
+            color: var(--primary);
+        }
+        
+        .header-social a {
+            color: var(--primary);
+            margin-left: 15px;
+            font-size: 16px;
+            transition: color 0.3s;
+        }
+        
+        .header-social a:hover {
+            color: var(--secondary);
+        }
+        
+        .header-main {
+            padding: 15px 0;
+            background-color: var(--primary);
+        }
+        
+        .navbar-brand img {
+            height: 50px;
+            transition: all 0.3s;
+        }
+        
+        .jeriah-nav .nav-item {
+            margin: 0 10px;
+            position: relative;
+        }
+        
+        .jeriah-nav .nav-link {
+            color: var(--light);
+            font-weight: 500;
+            padding: 10px 15px !important;
+            transition: all 0.3s;
+            font-size: 15px;
+            text-transform: capitalize;
+        }
+        
+        .jeriah-nav .nav-link:hover,
+        .jeriah-nav .nav-link.active {
+            color: var(--secondary);
+        }
+        
+        .jeriah-nav .nav-link.cta-btn {
+            background-color: var(--secondary);
+            color: var(--light);
+            border-radius: 4px;
+            padding: 10px 25px !important;
+            margin-left: 10px;
+        }
+        
+        .jeriah-nav .nav-link.cta-btn:hover {
+            background-color: var(--light);
+            color: var(--primary);
+        }
+        
+        /* Enhanced Dropdown Menu */
+        .dropdown-menu {
+            border: none;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.15);
+            border-radius: 0;
+            margin-top: 0;
+            padding: 20px;
+            width: 800px;
+            left: -200px !important;
+            display: none; /* Hidden by default */
+        }
+        
+        .dropdown:hover .dropdown-menu {
+            display: block; /* Show on hover */
+        }
+        
+        .dropdown-menu .row {
+            align-items: center;
+        }
+        
+        .dropdown-img-col {
+            padding-right: 20px;
+            border-right: 1px solid rgba(0,0,0,0.1);
+        }
+        
+        .dropdown-img {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            border-radius: 4px;
+        }
+        
+        .dropdown-title {
+            font-family: 'Playfair Display', serif;
+            color: var(--primary);
+            font-weight: 700;
+            margin-bottom: 15px;
+            font-size: 1.5rem;
+        }
+        
+        .dropdown-links-col {
+            padding: 0 20px;
+        }
+        
+        .dropdown-links-col h5 {
+            color: var(--primary);
+            font-weight: 600;
+            margin-bottom: 15px;
+            font-size: 1.1rem;
+            border-bottom: 1px solid var(--secondary);
+            padding-bottom: 5px;
+        }
+        
+        .dropdown-item {
+            padding: 8px 0;
+            color: var(--dark);
+            transition: all 0.3s;
+            font-size: 14px;
+            border-bottom: none;
+        }
+        
+        .dropdown-item:hover {
+            color: var(--secondary);
+            background: transparent;
+            padding-left: 5px;
+        }
+        
+        /* Mobile Menu */
+        .navbar-toggler {
+            border: none;
+            padding: 0;
+            font-size: 28px;
+            color: var(--light);
+        }
+        
+        .navbar-toggler:focus {
+            outline: none;
+            box-shadow: none;
+        }
+        
+        /* Sticky Header */
+        .header-sticky {
+            box-shadow: 0 2px 15px rgba(0, 0, 0, 0.2);
+        }
+        
+        .header-sticky .header-main {
+            padding: 10px 0;
+        }
+        
+        .header-sticky .navbar-brand img {
+            height: 40px;
+        }
+        
+        /* Responsive Adjustments */
+        @media (max-width: 1199.98px) {
+            .dropdown-menu {
+                width: 700px;
+                left: -150px !important;
+            }
+        }
+        
+        @media (max-width: 991.98px) {
+            .dropdown-menu {
+                width: 100%;
+                left: 0 !important;
+                padding: 15px;
+                position: static !important;
+            }
+            
+            .dropdown-img-col {
+                display: none;
+            }
+            
+            .navbar-collapse {
+                background-color: var(--primary);
+                padding: 20px;
+                margin-top: 15px;
+                box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            }
+            
+            .jeriah-nav .nav-item {
+                margin: 5px 0;
+            }
+            
+            .jeriah-nav .nav-link {
+                color: var(--light);
+            }
+            
+            .jeriah-nav .nav-link.cta-btn {
+                display: inline-block;
+                margin-top: 10px;
+                margin-left: 0;
+            }
+            
+            .dropdown-menu {
+                box-shadow: none;
+                background-color: rgba(255,255,255,0.9);
+            }
+            
+            /* Show dropdown when parent is clicked on mobile */
+            .dropdown-menu.show {
+                display: block;
+            }
+        }
+        
+        @media (max-width: 767.98px) {
+            body {
+                padding-top: 110px;
+            }
+            
+            .header-contact-info,
+            .header-social {
+                text-align: center;
+                justify-content: center !important;
+            }
+            
+            .header-contact-info a,
+            .header-social a {
+                margin: 0 8px;
+            }
+            
+            .dropdown-links-col {
+                padding: 0 10px;
+            }
+        }

@@ -14,8 +14,8 @@
             padding: 20px;
         }
         .header {
-            background: #020258;
-            color: #13e8e9;
+            background: #7b2e2e;
+            color: #ff511a;
             padding: 20px;
             text-align: center;
             border-radius: 8px 8px 0 0;
@@ -30,12 +30,12 @@
             margin-bottom: 20px;
             padding: 15px;
             background: white;
-            border-left: 4px solid #13e8e9;
+            border-left: 4px solid #ff511a;
             border-radius: 4px;
         }
         .field-label {
             font-weight: bold;
-            color: #020258;
+            color: #7b2e2e;
             margin-bottom: 5px;
             display: block;
         }
@@ -46,7 +46,7 @@
         .footer {
             margin-top: 30px;
             padding-top: 20px;
-            border-top: 2px solid #13e8e9;
+            border-top: 2px solid #ff511a;
             text-align: center;
             color: #666;
             font-size: 12px;
@@ -54,8 +54,8 @@
         .badge {
             display: inline-block;
             padding: 5px 10px;
-            background: #13e8e9;
-            color: #020258;
+            background: #ff511a;
+            color: #7b2e2e;
             border-radius: 4px;
             font-weight: bold;
             font-size: 12px;
@@ -66,7 +66,7 @@
 <body>
     <div class="header">
         <h1 style="margin: 0;">📧 New Contact Form Submission</h1>
-        <p style="margin: 10px 0 0 0; color: #13e8e9;">Someone is interested in Shopybook!</p>
+        <p style="margin: 10px 0 0 0; color: #ff511a;">Someone is interested in Shopybook!</p>
     </div>
     
     <div class="content">
@@ -78,7 +78,7 @@
         <div class="field">
             <span class="field-label">📧 Email:</span>
             <span class="field-value">
-                <a href="mailto:{{ $data['email'] }}" style="color: #020258; text-decoration: none;">
+                <a href="mailto:{{ $data['email'] }}" style="color: #7b2e2e; text-decoration: none;">
                     {{ $data['email'] }}
                 </a>
             </span>
@@ -87,7 +87,7 @@
         <div class="field">
             <span class="field-label">📱 Phone:</span>
             <span class="field-value">
-                <a href="tel:{{ $data['phone'] }}" style="color: #020258; text-decoration: none;">
+                <a href="tel:{{ $data['phone'] }}" style="color: #7b2e2e; text-decoration: none;">
                     {{ $data['phone'] }}
                 </a>
             </span>
@@ -116,7 +116,7 @@
         <p>This email was sent from the Shopybook contact form on {{ now()->format('F j, Y \a\t g:i A') }}</p>
         <p style="margin-top: 10px;">
             <strong>Shopybook</strong> - Transform Your Business<br>
-            <a href="https://shopybook.com" style="color: #13e8e9; text-decoration: none;">www.shopybook.com</a>
+            <a href="https://shopybook.com" style="color: #ff511a; text-decoration: none;">www.shopybook.com</a>
         </p>
     </div>
 </body>

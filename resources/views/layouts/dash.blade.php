@@ -9,12 +9,12 @@
     <link rel="icon" href="{{ asset('img/logo.png') }}" type="image/x-icon">
     
     <!-- PWA Meta Tags -->
-    <meta name="theme-color" content="#13e8e9">
+    <meta name="theme-color" content="#7b2e2e">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="apple-mobile-web-app-title" content="Shopybook">
     <meta name="mobile-web-app-capable" content="yes">
-    <meta name="msapplication-TileColor" content="#020258">
+    <meta name="msapplication-TileColor" content="#7b2e2e">
     <meta name="msapplication-tap-highlight" content="no">
     
     <!-- PWA Manifest -->
@@ -45,58 +45,59 @@
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
-    <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Google Fonts - Jeriah: Playfair + Poppins -->
+    <link href="https://fonts.googleapis.com/css2?family=Playfair:wght@400;500;600;700;800;900&family=Poppins:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     
     <style>
         :root {
-            --primary-color: #020258;
-            --primary-light: #13e8e9;
-            --primary-dark: #010138;
+            /* Jeriah color palette */
+            --primary-color: #7b2e2e;
+            --primary-light: #ff511a;
+            --primary-dark: #5a2020;
             --secondary-color: #64748b;
-            --success-color: #10b981;
+            --success-color: #43ba7f;
             --warning-color: #f59e0b;
             --danger-color: #ef4444;
-            --info-color: #13e8e9;
-            --gray-50: #f8fafc;
-            --gray-100: #f1f5f9;
-            --gray-200: #e2e8f0;
-            --gray-300: #cbd5e1;
-            --gray-400: #94a3b8;
-            --gray-500: #64748b;
-            --gray-600: #475569;
-            --gray-700: #334155;
-            --gray-800: #1e293b;
-            --gray-900: #0f172a;
+            --info-color: #ff511a;
+            --gray-50: #faf8f7;
+            --gray-100: #f7f4f3;
+            --gray-200: #e0ded9;
+            --gray-300: #d0cbc4;
+            --gray-400: #b09b9b;
+            --gray-500: #8a7d7d;
+            --gray-600: #6b5d5d;
+            --gray-700: #4a4040;
+            --gray-800: #332b2b;
+            --gray-900: #1e1818;
             --white: #ffffff;
             --black: #000000;
             
             /* Light mode colors */
-            --bg-primary: #f8fafc;
+            --bg-primary: #f7f4f3;
             --bg-secondary: #ffffff;
-            --bg-tertiary: #f1f5f9;
-            --text-primary: #1e293b;
-            --text-secondary: #475569;
-            --text-muted: #64748b;
-            --border-color: #e2e8f0;
-            --shadow-color: rgba(0, 0, 0, 0.1);
+            --bg-tertiary: #faf8f7;
+            --text-primary: #332b2b;
+            --text-secondary: #6b5d5d;
+            --text-muted: #8a7d7d;
+            --border-color: #e0ded9;
+            --shadow-color: rgba(123, 46, 46, 0.08);
             --card-bg: #ffffff;
             --sidebar-bg: #ffffff;
             --header-bg: #ffffff;
         }
         
         [data-theme="dark"] {
-            --bg-primary: #0f172a;
-            --bg-secondary: #1e293b;
-            --bg-tertiary: #334155;
-            --text-primary: #f1f5f9;
-            --text-secondary: #cbd5e1;
-            --text-muted: #94a3b8;
-            --border-color: #334155;
-            --shadow-color: rgba(0, 0, 0, 0.3);
-            --card-bg: #1e293b;
-            --sidebar-bg: #1e293b;
-            --header-bg: #1e293b;
+            --bg-primary: #1e1818;
+            --bg-secondary: #332b2b;
+            --bg-tertiary: #3d3333;
+            --text-primary: #f7f4f3;
+            --text-secondary: #d0cbc4;
+            --text-muted: #b09b9b;
+            --border-color: #4a4040;
+            --shadow-color: rgba(0, 0, 0, 0.4);
+            --card-bg: #332b2b;
+            --sidebar-bg: #2a2222;
+            --header-bg: #332b2b;
         }
         
         * {
@@ -118,7 +119,7 @@
         }
         
         body {
-            font-family: 'Inter', sans-serif;
+            font-family: 'Poppins', sans-serif;
             background-color: var(--bg-primary);
             color: var(--text-primary);
             line-height: 1.6;
@@ -147,9 +148,10 @@
         }
         
         .sidebar-brand {
+            font-family: 'Playfair', serif;
             font-size: 1.5rem;
             font-weight: 700;
-            color: var(--text-primary);
+            color: var(--primary-color);
             text-decoration: none;
             display: flex;
             align-items: center;
@@ -162,7 +164,7 @@
         }
         
         .sidebar-search {
-            padding: 1rem 1.5rem;
+            padding: 0.75rem 1.25rem;
             border-bottom: 1px solid var(--border-color);
         }
         
@@ -192,8 +194,8 @@
         
         .search-input:focus {
             outline: none;
-            border-color: var(--primary-color);
-            box-shadow: 0 0 0 3px rgba(19, 232, 233, 0.1);
+            border-color: var(--primary-light);
+            box-shadow: 0 0 0 3px rgba(255, 81, 26, 0.12);
         }
         
         .sidebar-nav {
@@ -201,39 +203,44 @@
         }
         
         .nav-section {
-            margin-bottom: 2rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .nav-section.collapsed .nav-section-content {
+            display: none;
         }
         
         .nav-section-title {
-            font-size: 0.75rem;
-            font-weight: 600;
+            font-size: 0.78rem;
+            font-weight: 700;
             color: var(--text-muted);
             text-transform: uppercase;
-            letter-spacing: 0.05em;
-            padding: 0 1.5rem 0.5rem;
-            margin-bottom: 0.5rem;
+            letter-spacing: 0.06em;
+            padding: 0.7rem 1.25rem 0.5rem;
+            margin-bottom: 0.25rem;
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: space-between;
             transition: all 0.2s ease;
+            border-radius: 0.5rem;
+            margin: 0 0.5rem;
+            user-select: none;
         }
         
         .nav-section-title:hover {
-            color: var(--text-primary);
+            color: var(--primary-color);
+            background: var(--bg-tertiary);
         }
         
         .nav-section-title i.collapse-icon {
-            font-size: 0.875rem;
-            transition: transform 0.3s ease;
+            font-size: 0.75rem;
+            transition: transform 0.2s ease;
+            color: var(--text-muted);
         }
         
         .nav-section.collapsed .collapse-icon {
             transform: rotate(-90deg);
-        }
-        
-        .nav-section.collapsed .nav-section-content {
-            display: none;
         }
         
         .nav-item {
@@ -257,14 +264,14 @@
         
         .nav-link:hover {
             background-color: var(--bg-tertiary);
-            color: var(--text-primary);
-            transform: translateX(4px);
+            color: var(--primary-color);
+            transform: translateX(3px);
         }
         
         .nav-link.active {
-            background: linear-gradient(135deg, var(--primary-color), var(--primary-light));
+            background: var(--primary-color);
             color: var(--white);
-            box-shadow: 0 4px 12px rgba(2, 2, 88, 0.3);
+            box-shadow: 0 4px 12px rgba(123, 46, 46, 0.3);
         }
         
         .nav-link .badge {
@@ -397,7 +404,7 @@
         .top-header {
             background: var(--header-bg);
             border-bottom: 1px solid var(--border-color);
-            padding: 1rem 2rem;
+            padding: 0.6rem 1.5rem;
             display: flex;
             align-items: center;
             justify-content: space-between;
@@ -408,20 +415,30 @@
             box-shadow: 0 1px 6px var(--shadow-color);
         }
         
-        .page-title {
-            font-size: 1.875rem;
-            font-weight: 700;
-            color: var(--text-primary);
-            margin: 0;
+        .top-header > div:first-child {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
         }
-
+        
         .page-breadcrumb {
             display: flex;
             align-items: center;
             gap: 0.4rem;
             font-size: 0.8rem;
             color: var(--text-secondary);
-            margin-bottom: 0.15rem;
+            margin-bottom: 0.05rem;
+            line-height: 1.2;
+        }
+        
+        .page-title {
+            font-family: 'Playfair', serif;
+            font-size: 1.6rem;
+            font-weight: 700;
+            color: var(--primary-color);
+            margin: 0;
+            line-height: 1.1;
+            padding: 0;
         }
         .page-breadcrumb a {
             color: var(--text-secondary);
@@ -489,8 +506,8 @@
         
         .search-input:focus {
             outline: none;
-            border-color: var(--primary-color);
-            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+            border-color: var(--primary-light);
+            box-shadow: 0 0 0 3px rgba(255, 81, 26, 0.12);
         }
         
         .search-icon {
@@ -1059,13 +1076,13 @@
             padding: 8px 12px;
             margin-left: 10px;
             border-radius: 8px;
-            background: rgba(255, 255, 255, 0.1);
-            color: #020258;
+            background: var(--bg-tertiary);
+            color: var(--primary-color);
             transition: all 0.3s ease;
         }
         
         .notification-bell:hover {
-            background: rgba(19, 232, 233, 0.2);
+            background: rgba(255, 81, 26, 0.12);
             transform: translateY(-1px);
         }
         
@@ -1122,21 +1139,21 @@
         
         .notifications-header h6 {
             margin: 0;
-            color: #020258;
+            color: #7b2e2e;
             font-weight: 600;
         }
         
         .btn-mark-all-read {
             background: none;
             border: none;
-            color: #13e8e9;
+            color: #ff511a;
             font-size: 12px;
             cursor: pointer;
             text-decoration: underline;
         }
         
         .btn-mark-all-read:hover {
-            color: #020258;
+            color: #7b2e2e;
         }
         
         .notifications-list {
@@ -1157,8 +1174,8 @@
         }
         
         .notification-item.unread {
-            background: #f0f9ff;
-            border-left: 3px solid #13e8e9;
+            background: rgba(255, 81, 26, 0.06);
+            border-left: 3px solid #ff511a;
         }
         
         .notification-item.unread::before {
@@ -1168,7 +1185,7 @@
             right: 20px;
             width: 8px;
             height: 8px;
-            background: #13e8e9;
+            background: #ff511a;
             border-radius: 50%;
         }
         
@@ -1194,7 +1211,7 @@
         
         .notification-icon.warning {
             background: #ffc107;
-            color: #020258;
+            color: #7b2e2e;
         }
         
         .notification-content {
@@ -1205,7 +1222,7 @@
         
         .notification-title {
             font-weight: 600;
-            color: #020258;
+            color: #7b2e2e;
             margin-bottom: 4px;
             font-size: 14px;
         }
@@ -1248,13 +1265,13 @@
         }
         
         .notifications-footer a {
-            color: #13e8e9;
+            color: #ff511a;
             text-decoration: none;
             font-size: 13px;
         }
         
         .notifications-footer a:hover {
-            color: #020258;
+            color: #7b2e2e;
         }
         
         @media (max-width: 768px) {
@@ -1507,6 +1524,83 @@
                 grid-template-columns: repeat(3,1fr);
             }
         }
+
+        /* ═══════════════════════════════════════
+           Jeriah Bootstrap overrides (global)
+        ═══════════════════════════════════════ */
+        .btn-primary {
+            background-color: #ff511a;
+            border-color: #ff511a;
+        }
+        .btn-primary:hover,
+        .btn-primary:focus {
+            background-color: #e8450f;
+            border-color: #e8450f;
+        }
+        .btn-outline-primary {
+            color: #7b2e2e;
+            border-color: #7b2e2e;
+        }
+        .btn-outline-primary:hover {
+            background-color: #7b2e2e;
+            border-color: #7b2e2e;
+        }
+        .text-primary {
+            color: #7b2e2e !important;
+        }
+        a {
+            color: #ff511a;
+        }
+        a:hover {
+            color: #e8450f;
+        }
+        .card {
+            border-color: var(--border-color);
+            border-radius: 0.75rem;
+        }
+        .card-header {
+            background-color: var(--bg-tertiary);
+            border-bottom-color: var(--border-color);
+        }
+        .bg-primary {
+            background-color: #7b2e2e !important;
+        }
+        .bg-info {
+            background-color: #ff511a !important;
+        }
+        .alert-info {
+            background-color: rgba(255, 81, 26, 0.08);
+            border-color: rgba(255, 81, 26, 0.3);
+            color: #7b2e2e;
+        }
+        .alert-info a {
+            color: #7b2e2e;
+        }
+        .form-control:focus,
+        .form-select:focus {
+            border-color: #ff511a;
+            box-shadow: 0 0 0 0.2rem rgba(255, 81, 26, 0.15);
+        }
+        .page-link {
+            color: #7b2e2e;
+        }
+        .page-item.active .page-link {
+            background-color: #7b2e2e;
+            border-color: #7b2e2e;
+        }
+        .nav-tabs .nav-link.active {
+            color: #7b2e2e;
+            border-bottom-color: #ff511a;
+        }
+        h1, h2, h3, h4, h5, h6 {
+            font-family: 'Playfair', serif;
+        }
+        .modal-header {
+            background-color: var(--bg-tertiary);
+        }
+        .modal-title {
+            color: var(--primary-color);
+        }
     </style>
 </head>
 <!-- Google tag (gtag.js) -->
@@ -1617,115 +1711,408 @@
             }
         @endphp
 
-        <nav class="sidebar-nav">
-            @if($activeApp)
-            {{-- ── Context-aware app navigation ── --}}
-            <div class="nav-item">
-                <a href="{{ route('dashboard') }}" class="nav-link nav-all-apps" onclick="toggleAppLauncher(event); return false;">
-                    <i class="fas fa-th-large"></i>
-                    <span>All Apps</span>
-                </a>
-            </div>
-            <div class="sidebar-divider"></div>
-            <div class="sidebar-nav-group-label">{{ $activeApp['label'] }}</div>
-            @foreach($activeApp['items'] as $navItem)
-                @if(empty($navItem['permission']) || $__can($navItem['permission']))
-                <div class="nav-item">
-                    <a href="{{ route($navItem['route']) }}" class="nav-link {{ $__navActive($navItem['active'] ?? $navItem['route']) ? 'active' : '' }}">
-                        <i class="fas {{ $navItem['icon'] }}"></i>
-                        <span>{{ $navItem['label'] }}</span>
-                    </a>
-                </div>
-                @endif
-            @endforeach
-            @else
-            {{-- ── Core navigation (always visible) ── --}}
-            <div class="nav-item">
+        @php
+            // Determine which sections are currently active (open) by route
+            $activeSection = null;
+            $sections = [
+                'sales'    => request()->routeIs('sales.*', 'returns.*'),
+                'products' => request()->routeIs('products.*', 'product-conversions.*', 'ocr.*'),
+                'services' => request()->routeIs('services.*', 'service-bookings.*'),
+                'staff'    => request()->routeIs('staff.*', 'salary-advances.*'),
+                'suppliers'=> request()->routeIs('suppliers.*'),
+                'finance'  => request()->routeIs('costs.*', 'tax.*'),
+                'reports'  => request()->routeIs('reports.*', 'business.analysis.*'),
+                'growth'   => request()->routeIs('marketing.*', 'website.*', 'testimonials.*'),
+                'ai'       => request()->routeIs('ai-comm.*', 'ai-content.*'),
+                'system'   => request()->routeIs('business.profile', 'business.edit', 'team.*', 'settings.*', 'pwa.*', 'apps.*'),
+                'danger'   => false,
+            ];
+            foreach ($sections as $key => $isActive) {
+                if ($isActive) { $activeSection = $key; break; }
+            }
+        @endphp
+
+        <nav class="sidebar-nav" id="sidebarNav">
+
+            {{-- Dashboard always at top --}}
+            <div class="nav-item mb-2">
                 <a href="{{ route('dashboard') }}" class="nav-link {{ request()->routeIs('dashboard') ? 'active' : '' }}">
                     <i class="fas fa-tachometer-alt"></i>
                     <span>Dashboard</span>
                 </a>
             </div>
-            @if($__can('reports'))
-            <div class="nav-item">
-                <a href="{{ route('business.analysis.index') }}" class="nav-link {{ request()->routeIs('business.analysis.*') ? 'active' : '' }}">
-                    <i class="fas fa-chart-line"></i>
-                    <span>Analytics</span>
-                </a>
-            </div>
-            @endif
-            @if($__can('pos'))
-            <div class="nav-item">
-                <a href="{{ route('sales.pos') }}" class="nav-link {{ request()->routeIs('sales.pos') ? 'active' : '' }}">
-                    <i class="fas fa-cash-register"></i>
-                    <span>Point of Sale</span>
-                    <span class="badge bg-success ms-auto" style="font-size:0.6rem;">Live</span>
-                </a>
-            </div>
-            @endif
 
             <div class="sidebar-divider"></div>
-            <div class="sidebar-nav-group-label">Business</div>
 
+            {{-- Sales --}}
+            @php $isOpen = $activeSection === 'sales'; @endphp
+            <div class="nav-section {{ $isOpen ? '' : 'collapsed' }}">
+                <div class="nav-section-title" onclick="toggleSection(this)">
+                    <span>Sales</span>
+                    <i class="fas fa-chevron-down collapse-icon"></i>
+                </div>
+                <div class="nav-section-content">
+                    @if($__can('pos'))
+                    <div class="nav-item">
+                        <a href="{{ route('sales.pos') }}" class="nav-link {{ request()->routeIs('sales.pos') ? 'active' : '' }}">
+                            <i class="fas fa-cash-register"></i>
+                            <span>Point of Sale</span>
+                            <span class="badge bg-success ms-auto" style="font-size:0.6rem;">Live</span>
+                        </a>
+                    </div>
+                    @endif
+                    @if($__can('orders'))
+                    <div class="nav-item">
+                        <a href="{{ route('sales.orders') }}" class="nav-link {{ request()->routeIs('sales.orders*') ? 'active' : '' }}">
+                            <i class="fas fa-shopping-cart"></i>
+                            <span>Orders</span>
+                        </a>
+                    </div>
+                    @endif
+                    @if($__can('customers'))
+                    <div class="nav-item">
+                        <a href="{{ route('sales.customers') }}" class="nav-link {{ request()->routeIs('sales.customers*') ? 'active' : '' }}">
+                            <i class="fas fa-users"></i>
+                            <span>Customers</span>
+                        </a>
+                    </div>
+                    <div class="nav-item">
+                        <a href="{{ route('sales.customer-debts') }}" class="nav-link {{ request()->routeIs('sales.customer-debts') ? 'active' : '' }}">
+                            <i class="fas fa-hand-holding-usd"></i>
+                            <span>Customer Debts</span>
+                        </a>
+                    </div>
+                    @endif
+                    @if($__can('suppliers'))
+                    <div class="nav-item">
+                        <a href="{{ route('sales.supplier-debts') }}" class="nav-link {{ request()->routeIs('sales.supplier-debts*') ? 'active' : '' }}">
+                            <i class="fas fa-file-invoice"></i>
+                            <span>Supplier Debts</span>
+                        </a>
+                    </div>
+                    @endif
+                    @if($__can('orders'))
+                    <div class="nav-item">
+                        <a href="{{ route('sales.credit-notes.index') }}" class="nav-link {{ request()->routeIs('sales.credit-note*') ? 'active' : '' }}">
+                            <i class="fas fa-receipt"></i>
+                            <span>Credit Notes</span>
+                        </a>
+                    </div>
+                    @endif
+                    @if($__can('returns'))
+                    <div class="nav-item">
+                        <a href="{{ route('returns.index') }}" class="nav-link {{ request()->routeIs('returns.*') ? 'active' : '' }}">
+                            <i class="fas fa-undo"></i>
+                            <span>Returns</span>
+                        </a>
+                    </div>
+                    @endif
+                </div>
+            </div>
+
+            {{-- Products --}}
+            @php $isOpen = $activeSection === 'products'; @endphp
+            <div class="nav-section {{ $isOpen ? '' : 'collapsed' }}">
+                <div class="nav-section-title" onclick="toggleSection(this)">
+                    <span>Products</span>
+                    <i class="fas fa-chevron-down collapse-icon"></i>
+                </div>
+                <div class="nav-section-content">
+                    @if($__can('products'))
+                    <div class="nav-item">
+                        <a href="{{ route('products.index') }}" class="nav-link {{ $__navActive('products.index|products.show|products.create|products.edit|products.quick-create|products.bulk-import*') ? 'active' : '' }}">
+                            <i class="fas fa-box"></i>
+                            <span>Products</span>
+                        </a>
+                    </div>
+                    <div class="nav-item">
+                        <a href="{{ route('products.inventory') }}" class="nav-link {{ request()->routeIs('products.inventory*') ? 'active' : '' }}">
+                            <i class="fas fa-warehouse"></i>
+                            <span>Inventory</span>
+                        </a>
+                    </div>
+                    <div class="nav-item">
+                        <a href="{{ route('products.receive') }}" class="nav-link {{ request()->routeIs('products.receive*') ? 'active' : '' }}">
+                            <i class="fas fa-dolly"></i>
+                            <span>Receive Stock</span>
+                        </a>
+                    </div>
+                    <div class="nav-item">
+                        <a href="{{ route('product-conversions.index') }}" class="nav-link {{ request()->routeIs('product-conversions.*') ? 'active' : '' }}">
+                            <i class="fas fa-exchange-alt"></i>
+                            <span>Conversions</span>
+                        </a>
+                    </div>
+                    <div class="nav-item">
+                        <a href="{{ route('ocr.index') }}" class="nav-link {{ request()->routeIs('ocr.*') ? 'active' : '' }}">
+                            <i class="fas fa-camera"></i>
+                            <span>OCR Scan</span>
+                        </a>
+                    </div>
+                    @endif
+                </div>
+            </div>
+
+            {{-- Services --}}
+            @php $isOpen = $activeSection === 'services'; @endphp
+            <div class="nav-section {{ $isOpen ? '' : 'collapsed' }}">
+                <div class="nav-section-title" onclick="toggleSection(this)">
+                    <span>Services</span>
+                    <i class="fas fa-chevron-down collapse-icon"></i>
+                </div>
+                <div class="nav-section-content">
+                    @if($__can('services'))
+                    <div class="nav-item">
+                        <a href="{{ route('services.index') }}" class="nav-link {{ request()->routeIs('services.*') ? 'active' : '' }}">
+                            <i class="fas fa-concierge-bell"></i>
+                            <span>Services</span>
+                        </a>
+                    </div>
+                    <div class="nav-item">
+                        <a href="{{ route('service-bookings.index') }}" class="nav-link {{ request()->routeIs('service-bookings.*') ? 'active' : '' }}">
+                            <i class="fas fa-calendar-check"></i>
+                            <span>Bookings</span>
+                        </a>
+                    </div>
+                    @endif
+                </div>
+            </div>
+
+            {{-- Staff --}}
+            @php $isOpen = $activeSection === 'staff'; @endphp
+            <div class="nav-section {{ $isOpen ? '' : 'collapsed' }}">
+                <div class="nav-section-title" onclick="toggleSection(this)">
+                    <span>Staff</span>
+                    <i class="fas fa-chevron-down collapse-icon"></i>
+                </div>
+                <div class="nav-section-content">
+                    @if($__can('staff'))
+                    <div class="nav-item">
+                        <a href="{{ route('staff.index') }}" class="nav-link {{ $__navActive('staff.index|staff.show|staff.create|staff.edit|staff.salary-details') ? 'active' : '' }}">
+                            <i class="fas fa-user-tie"></i>
+                            <span>Staff</span>
+                        </a>
+                    </div>
+                    <div class="nav-item">
+                        <a href="{{ route('salary-advances.index') }}" class="nav-link {{ request()->routeIs('salary-advances.*') ? 'active' : '' }}">
+                            <i class="fas fa-money-check-alt"></i>
+                            <span>Salary Advances</span>
+                        </a>
+                    </div>
+                    <div class="nav-item">
+                        <a href="{{ route('staff.salary-calculations') }}" class="nav-link {{ request()->routeIs('staff.salary-calculations') ? 'active' : '' }}">
+                            <i class="fas fa-calculator"></i>
+                            <span>Salary Calculations</span>
+                        </a>
+                    </div>
+                    @endif
+                </div>
+            </div>
+
+            {{-- Suppliers --}}
+            @php $isOpen = $activeSection === 'suppliers'; @endphp
+            <div class="nav-section {{ $isOpen ? '' : 'collapsed' }}">
+                <div class="nav-section-title" onclick="toggleSection(this)">
+                    <span>Suppliers</span>
+                    <i class="fas fa-chevron-down collapse-icon"></i>
+                </div>
+                <div class="nav-section-content">
+                    @if($__can('suppliers'))
+                    <div class="nav-item">
+                        <a href="{{ route('suppliers.index') }}" class="nav-link {{ request()->routeIs('suppliers.*') ? 'active' : '' }}">
+                            <i class="fas fa-truck"></i>
+                            <span>Suppliers</span>
+                        </a>
+                    </div>
+                    @endif
+                </div>
+            </div>
+
+            {{-- Finance --}}
+            @php $isOpen = $activeSection === 'finance'; @endphp
+            <div class="nav-section {{ $isOpen ? '' : 'collapsed' }}">
+                <div class="nav-section-title" onclick="toggleSection(this)">
+                    <span>Finance</span>
+                    <i class="fas fa-chevron-down collapse-icon"></i>
+                </div>
+                <div class="nav-section-content">
+                    @if($__can('expenses'))
+                    <div class="nav-item">
+                        <a href="{{ route('costs.index') }}" class="nav-link {{ request()->routeIs('costs.*') ? 'active' : '' }}">
+                            <i class="fas fa-receipt"></i>
+                            <span>Expenses</span>
+                        </a>
+                    </div>
+                    <div class="nav-item">
+                        <a href="{{ route('tax.settings') }}" class="nav-link {{ request()->routeIs('tax.settings') ? 'active' : '' }}">
+                            <i class="fas fa-file-invoice-dollar"></i>
+                            <span>Tax Settings</span>
+                        </a>
+                    </div>
+                    <div class="nav-item">
+                        <a href="{{ route('tax.reports') }}" class="nav-link {{ $__navActive('tax.reports|tax.dashboard') ? 'active' : '' }}">
+                            <i class="fas fa-chart-bar"></i>
+                            <span>Tax Reports</span>
+                        </a>
+                    </div>
+                    @endif
+                </div>
+            </div>
+
+            {{-- Reports & Analytics --}}
+            @php $isOpen = $activeSection === 'reports'; @endphp
+            <div class="nav-section {{ $isOpen ? '' : 'collapsed' }}">
+                <div class="nav-section-title" onclick="toggleSection(this)">
+                    <span>Reports & Analytics</span>
+                    <i class="fas fa-chevron-down collapse-icon"></i>
+                </div>
+                <div class="nav-section-content">
+                    @if($__can('reports'))
+                    <div class="nav-item">
+                        <a href="{{ route('business.analysis.index') }}" class="nav-link {{ request()->routeIs('business.analysis.index') ? 'active' : '' }}">
+                            <i class="fas fa-chart-line"></i>
+                            <span>Analytics</span>
+                        </a>
+                    </div>
+                    <div class="nav-item">
+                        <a href="{{ route('reports.index') }}" class="nav-link {{ request()->routeIs('reports.*') ? 'active' : '' }}">
+                            <i class="fas fa-file-alt"></i>
+                            <span>Reports</span>
+                        </a>
+                    </div>
+                    <div class="nav-item">
+                        <a href="{{ route('business.analysis.financial') }}" class="nav-link {{ request()->routeIs('business.analysis.financial') ? 'active' : '' }}">
+                            <i class="fas fa-chart-pie"></i>
+                            <span>Financials</span>
+                        </a>
+                    </div>
+                    @endif
+                </div>
+            </div>
+
+            {{-- Growth --}}
+            @php $isOpen = $activeSection === 'growth'; @endphp
+            <div class="nav-section {{ $isOpen ? '' : 'collapsed' }}">
+                <div class="nav-section-title" onclick="toggleSection(this)">
+                    <span>Growth</span>
+                    <i class="fas fa-chevron-down collapse-icon"></i>
+                </div>
+                <div class="nav-section-content">
+                    @if($__can('marketing'))
+                    <div class="nav-item">
+                        <a href="{{ route('marketing.social-media') }}" class="nav-link {{ request()->routeIs('marketing.*') ? 'active' : '' }}">
+                            <i class="fas fa-bullhorn"></i>
+                            <span>Marketing</span>
+                        </a>
+                    </div>
+                    @endif
+                    @if($__can('website'))
+                    <div class="nav-item">
+                        <a href="{{ route('website.builder.index') }}" class="nav-link {{ request()->routeIs('website.*') ? 'active' : '' }}">
+                            <i class="fas fa-globe"></i>
+                            <span>Website Builder</span>
+                        </a>
+                    </div>
+                    <div class="nav-item">
+                        <a href="{{ route('testimonials.owner.index') }}" class="nav-link {{ request()->routeIs('testimonials.owner.*') ? 'active' : '' }}">
+                            <i class="fas fa-star"></i>
+                            <span>Reviews</span>
+                        </a>
+                    </div>
+                    @endif
+                </div>
+            </div>
+
+            {{-- AI Tools --}}
+            @php $isOpen = $activeSection === 'ai'; @endphp
+            <div class="nav-section {{ $isOpen ? '' : 'collapsed' }}">
+                <div class="nav-section-title" onclick="toggleSection(this)">
+                    <span>AI Tools</span>
+                    <i class="fas fa-chevron-down collapse-icon"></i>
+                </div>
+                <div class="nav-section-content">
+                    @if($__can('ai'))
+                    <div class="nav-item">
+                        <a href="{{ route('ai-comm.chat') }}" class="nav-link {{ request()->routeIs('ai-comm.*') ? 'active' : '' }}">
+                            <i class="fas fa-robot"></i>
+                            <span>AI Assistant</span>
+                        </a>
+                    </div>
+                    <div class="nav-item">
+                        <a href="{{ route('ai-content.index') }}" class="nav-link {{ request()->routeIs('ai-content.*') ? 'active' : '' }}">
+                            <i class="fas fa-magic"></i>
+                            <span>AI Content</span>
+                        </a>
+                    </div>
+                    @endif
+                </div>
+            </div>
+
+            {{-- System --}}
+            @php $isOpen = $activeSection === 'system'; @endphp
+            <div class="nav-section {{ $isOpen ? '' : 'collapsed' }}">
+                <div class="nav-section-title" onclick="toggleSection(this)">
+                    <span>System</span>
+                    <i class="fas fa-chevron-down collapse-icon"></i>
+                </div>
+                <div class="nav-section-content">
+                    @if($__isOwner)
+                    <div class="nav-item">
+                        <a href="{{ route('business.profile') }}" class="nav-link {{ request()->routeIs('business.profile', 'business.edit') ? 'active' : '' }}">
+                            <i class="fas fa-building"></i>
+                            <span>Business Profile</span>
+                        </a>
+                    </div>
+                    <div class="nav-item">
+                        <a href="{{ route('team.index') }}" class="nav-link {{ request()->routeIs('team.*') ? 'active' : '' }}">
+                            <i class="fas fa-users-cog"></i>
+                            <span>Team & Access</span>
+                        </a>
+                    </div>
+                    @endif
+                    @if($__isOwner || $__can('settings'))
+                    <div class="nav-item">
+                        <a href="{{ route('settings.index') }}" class="nav-link {{ request()->routeIs('settings.*') ? 'active' : '' }}">
+                            <i class="fas fa-cog"></i>
+                            <span>Settings</span>
+                        </a>
+                    </div>
+                    @endif
+                    <div class="nav-item">
+                        <a href="{{ route('pwa.install-guide') }}" class="nav-link {{ request()->routeIs('pwa.*') ? 'active' : '' }}">
+                            <i class="fas fa-download"></i>
+                            <span>Install App</span>
+                            <span class="badge bg-info ms-auto" style="font-size:0.6rem;">PWA</span>
+                        </a>
+                    </div>
+                    @if($__can('settings'))
+                    <div class="nav-item">
+                        <a href="{{ route('apps.index') }}" class="nav-link {{ request()->routeIs('apps.*') ? 'active' : '' }}">
+                            <i class="fas fa-th-large"></i>
+                            <span>Manage Apps</span>
+                        </a>
+                    </div>
+                    @endif
+                </div>
+            </div>
+
+            {{-- Danger zone --}}
             @if($__isOwner)
-            <div class="nav-item">
-                <a href="{{ route('business.profile') }}" class="nav-link {{ request()->routeIs('business.profile', 'business.edit') ? 'active' : '' }}">
-                    <i class="fas fa-building"></i>
-                    <span>Business Profile</span>
-                </a>
-            </div>
-            @endif
-            @if($__can('orders'))
-            <div class="nav-item">
-                <a href="{{ route('sales.orders') }}" class="nav-link {{ request()->routeIs('sales.orders*') ? 'active' : '' }}">
-                    <i class="fas fa-shopping-cart"></i>
-                    <span>Orders</span>
-                </a>
-            </div>
-            @endif
-            @if($__can('customers'))
-            <div class="nav-item">
-                <a href="{{ route('sales.customers') }}" class="nav-link {{ request()->routeIs('sales.customers*') ? 'active' : '' }}">
-                    <i class="fas fa-users"></i>
-                    <span>Customers</span>
-                </a>
-            </div>
-            @endif
-
             <div class="sidebar-divider"></div>
-            <div class="sidebar-nav-group-label">System</div>
-
-            @if($__isOwner)
-            <div class="nav-item">
-                <a href="{{ route('team.index') }}" class="nav-link {{ request()->routeIs('team.*') ? 'active' : '' }}">
-                    <i class="fas fa-users-cog"></i>
-                    <span>Team & Access</span>
-                </a>
+            <div class="nav-section">
+                <div class="nav-section-title" onclick="toggleSection(this)">
+                    <span>Account</span>
+                    <i class="fas fa-chevron-down collapse-icon"></i>
+                </div>
+                <div class="nav-section-content">
+                    <div class="nav-item">
+                        <a href="#" onclick="initiateBusinessDeletion()" class="nav-link text-danger">
+                            <i class="fas fa-trash-alt"></i>
+                            <span>Delete Business</span>
+                        </a>
+                    </div>
+                </div>
             </div>
-            @endif
-            @if($__isOwner || $__can('settings'))
-            <div class="nav-item">
-                <a href="{{ route('settings.index') }}" class="nav-link {{ request()->routeIs('settings.*') ? 'active' : '' }}">
-                    <i class="fas fa-cog"></i>
-                    <span>Settings</span>
-                </a>
-            </div>
-            @endif
-            <div class="nav-item">
-                <a href="{{ route('pwa.install-guide') }}" class="nav-link {{ request()->routeIs('pwa.*') ? 'active' : '' }}">
-                    <i class="fas fa-download"></i>
-                    <span>Install App</span>
-                    <span class="badge bg-info ms-auto" style="font-size:0.6rem;">PWA</span>
-                </a>
-            </div>
-            @if($__isOwner)
-            <div class="nav-item">
-                <a href="#" onclick="initiateBusinessDeletion()" class="nav-link text-danger">
-                    <i class="fas fa-trash-alt"></i>
-                    <span>Delete Business</span>
-                </a>
-            </div>
-            @endif
             @endif
         </nav>
         
@@ -1871,7 +2258,7 @@
             @endif
             @if($__can('staff'))
             <a href="{{ route('staff.index') }}" class="app-tile {{ request()->routeIs('staff.*') ? 'active' : '' }}" data-label="Staff">
-                <div class="app-tile-icon" style="background:#7c3aed;"><i class="fas fa-user-tie"></i></div>
+                <div class="app-tile-icon" style="background:#ff511a;"><i class="fas fa-user-tie"></i></div>
                 <span class="app-tile-label">Staff</span>
             </a>
             @endif
@@ -1887,7 +2274,7 @@
             @endif
             @if($__can('reports'))
             <a href="{{ route('reports.index') }}" class="app-tile {{ request()->routeIs('reports.*') ? 'active' : '' }}" data-label="Reports">
-                <div class="app-tile-icon" style="background:#020258;"><i class="fas fa-file-chart-line"></i></div>
+                <div class="app-tile-icon" style="background:#7b2e2e;"><i class="fas fa-file-chart-line"></i></div>
                 <span class="app-tile-label">Reports</span>
             </a>
             <a href="{{ route('business.analysis.financial') }}" class="app-tile {{ request()->routeIs('business.analysis.financial') ? 'active' : '' }}" data-label="Financials">
@@ -1917,7 +2304,7 @@
             @endif
             @if($__can('ai'))
             <a href="{{ route('ai-comm.chat') }}" class="app-tile {{ request()->routeIs('ai-comm.*') ? 'active' : '' }}" data-label="AI Assistant">
-                <div class="app-tile-icon" style="background:#13e8e9; color:#020258;"><i class="fas fa-robot"></i></div>
+                <div class="app-tile-icon" style="background:#ff511a; color:#7b2e2e;"><i class="fas fa-robot"></i></div>
                 <span class="app-tile-label">AI Assistant</span>
             </a>
             <a href="{{ route('ai-content.index') }}" class="app-tile {{ request()->routeIs('ai-content.*') ? 'active' : '' }}" data-label="AI Content">
@@ -1927,7 +2314,7 @@
             @endif
             @if($__can('settings'))
             <a href="{{ route('apps.index') }}" class="app-tile {{ request()->routeIs('apps.*') ? 'active' : '' }}" data-label="Manage Apps">
-                <div class="app-tile-icon" style="background:linear-gradient(135deg,#020258,#13e8e9);"><i class="fas fa-th-large"></i></div>
+                <div class="app-tile-icon" style="background:linear-gradient(135deg,#7b2e2e,#ff511a);"><i class="fas fa-th-large"></i></div>
                 <span class="app-tile-label">Manage Apps</span>
             </a>
             @endif
@@ -2016,35 +2403,13 @@
             }, 5000);
         });
     </script>
-    
+
     <!-- Collapsible Sidebar Sections -->
     <script>
-        // Toggle sidebar section collapse
         function toggleSection(element) {
             const section = element.closest('.nav-section');
             section.classList.toggle('collapsed');
-            
-            // Save state to localStorage
-            const sectionTitle = element.querySelector('span').textContent;
-            const isCollapsed = section.classList.contains('collapsed');
-            localStorage.setItem(`sidebar-${sectionTitle}`, isCollapsed ? 'collapsed' : 'expanded');
         }
-        
-        // Restore collapsed states on page load
-        document.addEventListener('DOMContentLoaded', function() {
-            const sections = document.querySelectorAll('.nav-section');
-            sections.forEach(section => {
-                const titleElement = section.querySelector('.nav-section-title span');
-                if (titleElement) {
-                    const sectionTitle = titleElement.textContent;
-                    const savedState = localStorage.getItem(`sidebar-${sectionTitle}`);
-                    
-                    if (savedState === 'collapsed') {
-                        section.classList.add('collapsed');
-                    }
-                }
-            });
-        });
     </script>
     
     <!-- Business Deletion Modal -->
@@ -2141,7 +2506,7 @@
             bottom: 20px;
             right: 20px;
             z-index: 1050;
-            font-family: 'Inter', sans-serif;
+            font-family: 'Poppins', sans-serif;
         }
         
         .ai-chat-button {
@@ -2298,7 +2663,7 @@
         .ai-chat-input:focus {
             outline: none;
             border-color: var(--primary-color);
-            box-shadow: 0 0 0 2px rgba(2, 2, 88, 0.1);
+            box-shadow: 0 0 0 2px rgba(255, 81, 26, 0.12);
         }
         
         .ai-chat-send-btn {
@@ -2499,17 +2864,45 @@
         document.addEventListener('DOMContentLoaded', function() {
             const searchInput = document.getElementById('sidebarSearch');
             const navItems = document.querySelectorAll('.nav-item');
+            const navSections = document.querySelectorAll('.nav-section');
             
             if (searchInput) {
                 searchInput.addEventListener('input', function() {
-                    const searchTerm = this.value.toLowerCase();
+                    const searchTerm = this.value.toLowerCase().trim();
+                    
+                    if (searchTerm === '') {
+                        // Reset: restore original item visibility and section collapse states
+                        navItems.forEach(item => item.style.display = '');
+                        navSections.forEach(section => {
+                            section.classList.remove('search-force-open');
+                            if (section.dataset.wasCollapsed === '1') {
+                                section.classList.add('collapsed');
+                            } else {
+                                section.classList.remove('collapsed');
+                            }
+                            delete section.dataset.wasCollapsed;
+                        });
+                        return;
+                    }
+                    
+                    // First search pass: remember which sections were collapsed, then open them
+                    if (searchTerm.length === 1) {
+                        navSections.forEach(section => {
+                            section.dataset.wasCollapsed = section.classList.contains('collapsed') ? '1' : '0';
+                        });
+                    }
                     
                     navItems.forEach(item => {
                         const link = item.querySelector('.nav-link');
-                        const text = link.textContent.toLowerCase();
+                        const text = (link ? link.textContent : '').toLowerCase();
                         
                         if (text.includes(searchTerm)) {
-                            item.style.display = 'block';
+                            item.style.display = '';
+                            const parentSection = item.closest('.nav-section');
+                            if (parentSection) {
+                                parentSection.classList.remove('collapsed');
+                                parentSection.classList.add('search-force-open');
+                            }
                         } else {
                             item.style.display = 'none';
                         }

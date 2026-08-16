@@ -63,7 +63,7 @@
             top: 0;
             left: 0;
             right: 0;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #7b2e2e 0%, #ff511a 100%);
             color: white;
             text-align: center;
             padding: 12px 16px;

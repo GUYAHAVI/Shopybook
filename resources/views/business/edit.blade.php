@@ -5,9 +5,9 @@
     <div class="row justify-content-start" style="padding-left: 2rem;">
         <!-- Logo Card -->
         <div class="col-md-4 col-lg-3 mb-4">
-            <div class="card h-100" style="min-height: 220px; border: 1px solid #13e8e9;">
+            <div class="card h-100" style="min-height: 220px; border: 1px solid #ff511a;">
                 <div class="card-body text-center">
-                    <h5 class="card-title mb-3" style="color:#020258;">Business Logo</h5>
+                    <h5 class="card-title mb-3" style="color:#7b2e2e;">Business Logo</h5>
                     @if($business->logo_path)
                         <img src="{{ asset('storage/' . $business->logo_path) }}" alt="Business Logo" class="rounded-full object-cover border-4 border-cyan-200 shadow mb-2" style="width:200px; max-width:100%; height:auto;">
                     @else
@@ -24,9 +24,9 @@
         </div>
         <!-- Form Card -->
         <div class="col-md-8 col-lg-9">
-            <div class="card" style="border: 1px solid #13e8e9;">
+            <div class="card" style="border: 1px solid #ff511a;">
                 <div class="card-body p-4">
-                    <h2 class="text-2xl font-bold mb-6" style="color:#020258;">Edit Business Profile</h2>
+                    <h2 class="text-2xl font-bold mb-6" style="color:#7b2e2e;">Edit Business Profile</h2>
                     
                     <!-- Display validation errors -->
                     @if ($errors->any())
@@ -134,12 +134,12 @@
 
                     <!-- Inline OTP Modal for 2FA Verification -->
                     <div id="otpOverlay" style="display:none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1050;">
-                        <div class="otp-modal" style="max-width: 520px; margin: 10vh auto; background: #fff; border-radius: 12px; border: 1px solid #13e8e9; box-shadow: 0 10px 30px rgba(0,0,0,0.2);">
+                        <div class="otp-modal" style="max-width: 520px; margin: 10vh auto; background: #fff; border-radius: 12px; border: 1px solid #ff511a; box-shadow: 0 10px 30px rgba(0,0,0,0.2);">
                             <div style="padding: 2rem 2rem 0.5rem 2rem; text-align:center;">
                                 <div class="mx-auto" style="height:56px; width:56px; border-radius:50%; background:#e6fbfb; display:flex; align-items:center; justify-content:center; margin-bottom: 12px;">
                                     <i class="fas fa-shield-alt" style="color:#0bb; font-size: 20px;"></i>
                                 </div>
-                                <h5 style="color:#020258; font-weight:700; margin:0 0 6px 0;">Verify to Continue</h5>
+                                <h5 style="color:#7b2e2e; font-weight:700; margin:0 0 6px 0;">Verify to Continue</h5>
                                 <p class="text-muted" style="margin:0 0 10px 0;">Enter the 6-digit code sent to your email</p>
                             </div>
                             <div style="padding: 0 2rem 2rem 2rem;">
@@ -432,7 +432,7 @@ if (typeof enhanceTextarea === 'function') {
 
 .card {
     background: #fff !important;
-    border: 1px solid #13e8e9 !important;
+    border: 1px solid #ff511a !important;
     border-radius: 12px !important;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
 }
@@ -442,45 +442,45 @@ if (typeof enhanceTextarea === 'function') {
 }
 
 .card-title {
-    color: #020258 !important;
+    color: #7b2e2e !important;
     font-weight: 600 !important;
     margin-bottom: 1rem !important;
 }
 
 .form-label {
-    color: #020258 !important;
+    color: #7b2e2e !important;
     font-weight: 500 !important;
     margin-bottom: 0.5rem !important;
 }
 
 .form-control {
     background: #f8f9fa !important;
-    color: #020258 !important;
-    border: 1px solid #13e8e9 !important;
+    color: #7b2e2e !important;
+    border: 1px solid #ff511a !important;
     border-radius: 6px !important;
     padding: 0.75rem !important;
     margin-bottom: 1rem !important;
 }
 
 .form-control:focus {
-    border-color: #020258 !important;
+    border-color: #7b2e2e !important;
     box-shadow: 0 0 0 0.2rem rgba(19, 232, 233, 0.25) !important;
     background: #fff !important;
 }
 
 .btn-primary {
-    background: #020258 !important;
+    background: #7b2e2e !important;
     color: #fff !important;
-    border: 2px solid #13e8e9 !important;
+    border: 2px solid #ff511a !important;
     border-radius: 6px !important;
     font-weight: 600 !important;
     padding: 0.75rem 1.5rem !important;
 }
 
 .btn-primary:hover {
-    background: #13e8e9 !important;
-    color: #020258 !important;
-    border: 2px solid #020258 !important;
+    background: #ff511a !important;
+    color: #7b2e2e !important;
+    border: 2px solid #7b2e2e !important;
 }
 
 .btn-outline-danger {
@@ -554,8 +554,8 @@ if (typeof enhanceTextarea === 'function') {
 <!-- AI Logo Generation Modal -->
 <div id="logoGeneratorModal" class="modal fade" tabindex="-1" style="display: none;">
     <div class="modal-dialog modal-dialog-centered modal-lg">
-        <div class="modal-content" style="border: 2px solid #13e8e9; border-radius: 15px; overflow: hidden;">
-            <div class="modal-header" style="background: linear-gradient(135deg, #020258, #13e8e9); color: white; border-radius: 0;">
+        <div class="modal-content" style="border: 2px solid #ff511a; border-radius: 15px; overflow: hidden;">
+            <div class="modal-header" style="background: linear-gradient(135deg, #7b2e2e, #ff511a); color: white; border-radius: 0;">
                 <div>
                     <h5 class="modal-title mb-0"><i class="fas fa-magic me-2"></i>AI Logo Generator</h5>
                     <small style="opacity:.8;">Your business info &amp; products are used automatically to craft the perfect logo</small>
@@ -582,8 +582,8 @@ if (typeof enhanceTextarea === 'function') {
                             <div class="logo-style-card {{ $val === 'modern' ? 'selected' : '' }}"
                                  data-style="{{ $val }}"
                                  onclick="selectLogoStyle(this)"
-                                 style="cursor:pointer;border:2px solid {{ $val === 'modern' ? '#020258' : '#dee2e6' }};border-radius:10px;padding:12px 8px;text-align:center;transition:all .2s;background:{{ $val === 'modern' ? '#f0f0ff' : '#fff' }};">
-                                <i class="{{ $icon }} fa-lg mb-1" style="color:{{ $val === 'modern' ? '#020258' : '#6c757d' }};"></i>
+                                 style="cursor:pointer;border:2px solid {{ $val === 'modern' ? '#7b2e2e' : '#dee2e6' }};border-radius:10px;padding:12px 8px;text-align:center;transition:all .2s;background:{{ $val === 'modern' ? '#f0f0ff' : '#fff' }};">
+                                <i class="{{ $icon }} fa-lg mb-1" style="color:{{ $val === 'modern' ? '#7b2e2e' : '#6c757d' }};"></i>
                                 <div class="fw-semibold small">{{ $label }}</div>
                                 <div class="text-muted" style="font-size:.72rem;">{{ $sub }}</div>
                             </div>
@@ -686,9 +686,9 @@ function selectLogoStyle(el) {
         c.style.background = '#fff';
         c.querySelector('i').style.color = '#6c757d';
     });
-    el.style.border    = '2px solid #020258';
+    el.style.border    = '2px solid #7b2e2e';
     el.style.background = '#f0f0ff';
-    el.querySelector('i').style.color = '#020258';
+    el.querySelector('i').style.color = '#7b2e2e';
     document.getElementById('logoStyleValue').value = el.dataset.style;
 }
 
@@ -697,7 +697,7 @@ function selectLogoPalette(el) {
         c.style.border = '2px solid #dee2e6';
         c.style.background = '#fff';
     });
-    el.style.border = '2px solid #020258';
+    el.style.border = '2px solid #7b2e2e';
     el.style.background = '#f0f0ff';
     document.getElementById('logoPaletteValue').value = el.dataset.palette;
 }

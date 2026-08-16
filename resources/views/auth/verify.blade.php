@@ -1,85 +1,68 @@
-@extends('layouts.master')
+@extends('layouts.public')
+
+@section('title', 'Verify Your Email Address - Shopybook')
+@section('meta_description', 'Verify your email address to continue using Shopybook.')
 
 @section('content')
-<div class="container">
-    <div class="row justify-content-center">
-        <div class="col-md-8">
-            <div class="card shadow-sm">
-                <div class="card-header bg-primary text-white">
-                    <h4 class="mb-0">{{ __('Verify Your Email Address') }}</h4>
-                </div>
 
-                <div class="card-body p-4">
-                    <div class="text-center mb-4">
-                        <i class="fas fa-envelope-open text-primary" style="font-size: 3rem;"></i>
-                        <h5 class="mt-3">Email Verification Required</h5>
-                        <p class="text-muted">Please verify your email address to continue using Shopybook.</p>
-                    </div>
+{{-- ═══════════════ HERO ═══════════════ --}}
+<section class="hero-section text-light">
+    <div class="container text-center">
+        <div class="sb-verify-icon">
+            <i class="fas fa-envelope-open"></i>
+        </div>
+        <h1>Verify Your Email Address</h1>
+        <p class="mb-0">Please verify your email address to continue using Shopybook.</p>
+    </div>
+</section>
+
+{{-- ═══════════════ CONTENT ═══════════════ --}}
+<section class="sb-section sb-section-gray">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-7 col-md-9">
+                <div class="sb-form-card">
 
                     @if (session('resent'))
-                        <div class="alert alert-success d-flex align-items-center" role="alert">
-                            <i class="fas fa-check-circle me-2"></i>
-                            {{ __('A fresh verification link has been sent to your email address.') }}
+                        <div class="sb-alert sb-alert-success">
+                            <i class="fas fa-check-circle"></i>
+                            <span>A fresh verification link has been sent to your email address.</span>
                         </div>
                     @endif
 
                     @if (session('message'))
-                        <div class="alert alert-success d-flex align-items-center" role="alert">
-                            <i class="fas fa-check-circle me-2"></i>
-                            {{ session('message') }}
+                        <div class="sb-alert sb-alert-success">
+                            <i class="fas fa-check-circle"></i>
+                            <span>{{ session('message') }}</span>
                         </div>
                     @endif
 
                     <div class="text-center">
-                        <p class="mb-4">{{ __('Before proceeding, please check your email for a verification link.') }}</p>
-                        
-                        <form class="d-inline" method="POST" action="{{ route('verification.send') }}">
+                        <p class="mb-4" style="color:#555;">
+                            Before proceeding, please check your email for a verification link.
+                        </p>
+
+                        <form method="POST" action="{{ route('verification.send') }}">
                             @csrf
-                            <button type="submit" class="btn btn-primary btn-lg px-4">
-                                <i class="fas fa-paper-plane me-2"></i>{{ __('Resend Verification Email') }}
+                            <button type="submit" class="btn1" style="padding:0.8rem 2rem;">
+                                <i class="fas fa-paper-plane me-2"></i>Resend Verification Email
                             </button>
                         </form>
-                        
+
                         <div class="mt-4">
-                            <a href="{{ route('logout') }}" class="btn btn-outline-secondary">
-                                <i class="fas fa-sign-out-alt me-2"></i>{{ __('Logout') }}
-                            </a>
+                            <form method="POST" action="{{ route('logout') }}" class="d-inline">
+                                @csrf
+                                <button type="submit" class="btnb" style="padding:0.7rem 1.75rem;">
+                                    <i class="fas fa-sign-out-alt me-2"></i>Logout
+                                </button>
+                            </form>
                         </div>
                     </div>
+
                 </div>
             </div>
         </div>
     </div>
-</div>
+</section>
 
-<style>
-.card {
-    border: none;
-    border-radius: 15px;
-}
-
-.card-header {
-    border-radius: 15px 15px 0 0 !important;
-    border-bottom: none;
-}
-
-.alert {
-    border-radius: 10px;
-    border: none;
-}
-
-.alert-success {
-    background-color: #d1edff;
-    color: #0c5460;
-}
-
-.btn {
-    border-radius: 8px;
-    font-weight: 500;
-}
-
-.btn-lg {
-    padding: 12px 24px;
-}
-</style>
 @endsection

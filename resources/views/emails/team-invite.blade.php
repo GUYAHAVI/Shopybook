@@ -5,13 +5,13 @@
     <style>
         body { font-family: Arial, sans-serif; color: #333; background: #f4f4f4; margin: 0; padding: 20px; }
         .container { max-width: 560px; margin: 0 auto; background: #fff; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,.1); }
-        .header { background: #020258; color: #fff; padding: 30px; text-align: center; }
+        .header { background: #7b2e2e; color: #fff; padding: 30px; text-align: center; }
         .header h1 { margin: 0; font-size: 22px; }
         .body { padding: 30px; }
         .creds { background: #f0f4ff; border: 1px solid #d0d8ff; border-radius: 6px; padding: 16px; margin: 20px 0; }
         .creds p { margin: 6px 0; font-size: 14px; }
-        .creds strong { color: #020258; }
-        .btn { display: inline-block; background: #13e8e9; color: #020258; text-decoration: none; padding: 12px 28px; border-radius: 6px; font-weight: bold; margin-top: 16px; }
+        .creds strong { color: #7b2e2e; }
+        .btn { display: inline-block; background: #ff511a; color: #7b2e2e; text-decoration: none; padding: 12px 28px; border-radius: 6px; font-weight: bold; margin-top: 16px; }
         .footer { text-align: center; color: #999; font-size: 12px; padding: 20px; }
     </style>
 </head>

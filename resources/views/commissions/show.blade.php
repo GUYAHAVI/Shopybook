@@ -4,7 +4,7 @@
     <div class="row justify-content-center">
         <div class="col-md-8">
             <div class="card p-4">
-                <h2 class="fw-bold mb-4" style="color:#020258;">Commission Payout Details</h2>
+                <h2 class="fw-bold mb-4" style="color:#7b2e2e;">Commission Payout Details</h2>
                 <dl class="row">
                     <dt class="col-sm-4">Staff</dt>
                     <dd class="col-sm-8">{{ $commission->staff->name ?? '-' }}</dd>

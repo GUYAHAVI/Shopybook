@@ -8,11 +8,11 @@
     <title>{{ config('app.name', 'Laravel') }}</title>
 
     <!-- PWA Meta Tags -->
-    <meta name="theme-color" content="#4F46E5">
+    <meta name="theme-color" content="#7b2e2e">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="apple-mobile-web-app-title" content="Shopybook">
-    <meta name="msapplication-TileColor" content="#4F46E5">
+    <meta name="msapplication-TileColor" content="#7b2e2e">
     <meta name="msapplication-tileimage" content="/icons/icon-144x144.png">
 
     <!-- PWA Icons -->

@@ -33,7 +33,7 @@
         .logo {
             font-size: 24px;
             font-weight: 700;
-            color: #4F46E5;
+            color: #7b2e2e;
         }
         .nav-links {
             display: flex;
@@ -46,7 +46,7 @@
             font-weight: 500;
             transition: color 0.3s;
         }
-        .nav-links a:hover { color: #4F46E5; }
+        .nav-links a:hover { color: #7b2e2e; }
         
         /* Hero - Full Screen with Split Design */
         .hero {
@@ -100,7 +100,7 @@
             border: none;
         }
         .btn-primary {
-            background: #4F46E5;
+            background: #7b2e2e;
             color: white;
         }
         .btn-primary:hover {
@@ -110,11 +110,11 @@
         }
         .btn-outline {
             background: transparent;
-            color: #4F46E5;
-            border: 2px solid #4F46E5;
+            color: #7b2e2e;
+            border: 2px solid #7b2e2e;
         }
         .btn-outline:hover {
-            background: #4F46E5;
+            background: #7b2e2e;
             color: white;
         }
         
@@ -157,7 +157,7 @@
         .feature-icon {
             width: 60px;
             height: 60px;
-            background: linear-gradient(135deg, #4F46E5 0%, #7C3AED 100%);
+            background: linear-gradient(135deg, #7b2e2e 0%, #ff511a 100%);
             border-radius: 12px;
             display: flex;
             align-items: center;
@@ -236,7 +236,7 @@
         /* Stats - Full Width Banner */
         .stats {
             padding: 80px 5%;
-            background: linear-gradient(135deg, #4F46E5 0%, #7C3AED 100%);
+            background: linear-gradient(135deg, #7b2e2e 0%, #ff511a 100%);
             color: white;
         }
         .stats-grid {
@@ -272,7 +272,7 @@
             padding: 40px;
             background: #F9FAFB;
             border-radius: 16px;
-            border-left: 4px solid #4F46E5;
+            border-left: 4px solid #7b2e2e;
         }
         .testimonial-rating {
             color: #F59E0B;
@@ -374,7 +374,7 @@
             transition: color 0.3s;
         }
         .footer-links a:hover {
-            color: #4F46E5;
+            color: #7b2e2e;
         }
         .footer-bottom {
             padding-top: 30px;

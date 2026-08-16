@@ -52,6 +52,7 @@
     <link rel="shortcut icon" href="{{ asset('img/logo.png') }}" type="image/x-icon">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-SgOJa3DmI69IUzQ2PVdRZhwQ+dy64/BUtbMJw1MZ8t5HZApcHrRKUc4W0kG879m7" crossorigin="anonymous">
     <link rel="stylesheet" href="{{ asset('css/style.css')}}">
+    <link rel="stylesheet" href="{{ asset('css/marketing.css') }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
 
@@ -212,7 +213,7 @@
   gtag('config', 'G-QEHQPSK885');
 </script>
 
-<body>
+<body class="marketing-page">
 
     {{-- Tracking consent banner (Kenya DPA compliance) --}}
     @if(!isset($_COOKIE['tracking_consent']))
@@ -247,7 +248,29 @@
     @endif
 
     <header>
-        <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="header-topbar d-none d-md-block">
+            <div class="container">
+                <div class="row align-items-center">
+                    <div class="col-md-8">
+                        <div class="header-contact-info d-flex flex-wrap">
+                            <a href="tel:+254717745891"><i class="fas fa-phone-alt"></i> 0717 745 891</a>
+                            <a href="tel:+254728831972"><i class="fas fa-phone-alt"></i> 0728 831 972</a>
+                            <a href="mailto:info@shopybook.com"><i class="fas fa-envelope"></i> info@shopybook.com</a>
+                            <a href="#"><i class="fas fa-map-marker-alt"></i> Nairobi, Kenya</a>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="header-social d-flex justify-content-end">
+                            <a href="#"><i class="fab fa-facebook-f"></i></a>
+                            <a href="#"><i class="fab fa-twitter"></i></a>
+                            <a href="#"><i class="fab fa-instagram"></i></a>
+                            <a href="#"><i class="fab fa-linkedin-in"></i></a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <nav class="navbar navbar-expand-lg marketing-navbar">
             <div class="container">
                 <a class="navbar-brand" href="{{ route('index') }}" title="Shopybook - Business Management Software Kenya">
                     <img src="{{ asset('img/logo.png') }}" alt="Shopybook Logo - Business Management Platform Kenya, Inventory Management, POS System" width="30" height="30"
@@ -319,7 +342,7 @@
 
                             @if (Route::has('register'))
                                 <li class="nav-item">
-                                    <a class="nav-link" href="{{ route('register') }}">{{ __('Register') }}</a>
+                                    <a class="nav-link cta-btn" href="{{ route('register') }}">{{ __('Get Started') }}</a>
                                 </li>
                             @endif
                         @else
@@ -350,7 +373,7 @@
 
     @yield('content')
 
-    <footer class="bg-dark text-white py-4 mt-4">
+    <footer class="marketing-footer py-4 mt-4">
         <div class="container">
             <div class="row">
                 <div class="col-md-6 text-center text-md-start">

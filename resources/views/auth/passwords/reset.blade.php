@@ -143,7 +143,7 @@
 }
 
 .form-control:focus {
-    border-color: #4F46E5;
+    border-color: #7b2e2e;
     box-shadow: 0 0 0 0.2rem rgba(79, 70, 229, 0.25);
     color: #333 !important;
     background-color: #fff !important;
@@ -182,12 +182,12 @@ input[type="text"]:focus {
 }
 
 .input-group:focus-within .input-group-text {
-    border-color: #4F46E5;
+    border-color: #7b2e2e;
 }
 
 .btn-outline-secondary:hover {
-    background-color: #4F46E5;
-    border-color: #4F46E5;
+    background-color: #7b2e2e;
+    border-color: #7b2e2e;
     color: white;
 }
 

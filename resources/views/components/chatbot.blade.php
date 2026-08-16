@@ -74,7 +74,7 @@
     width: 60px;
     height: 60px;
     border-radius: 50%;
-    background: linear-gradient(135deg, #13e8e9 0%, #020258 100%);
+    background: linear-gradient(135deg, #ff511a 0%, #7b2e2e 100%);
     border: none;
     color: #fff;
     font-size: 24px;
@@ -133,7 +133,7 @@
 }
 
 .chat-header {
-    background: linear-gradient(135deg, #020258 0%, #13e8e9 100%);
+    background: linear-gradient(135deg, #7b2e2e 0%, #ff511a 100%);
     color: #fff;
     padding: 15px;
     display: flex;
@@ -225,13 +225,13 @@
 }
 
 .bot-message .message-avatar {
-    background: linear-gradient(135deg, #020258 0%, #13e8e9 100%);
+    background: linear-gradient(135deg, #7b2e2e 0%, #ff511a 100%);
     color: #fff;
 }
 
 .user-message .message-avatar {
-    background: #13e8e9;
-    color: #020258;
+    background: #ff511a;
+    color: #7b2e2e;
 }
 
 .message-content {
@@ -247,8 +247,8 @@
 }
 
 .user-message .message-content {
-    background: #13e8e9;
-    color: #020258;
+    background: #ff511a;
+    color: #7b2e2e;
     border-bottom-right-radius: 5px;
 }
 
@@ -260,7 +260,7 @@
 }
 
 .user-message .message-content p {
-    color: #020258;
+    color: #7b2e2e;
 }
 
 .bot-message .message-content p {
@@ -289,7 +289,7 @@
     width: 8px;
     height: 8px;
     border-radius: 50%;
-    background: #13e8e9;
+    background: #ff511a;
     animation: typing 1.4s infinite;
 }
 
@@ -325,7 +325,7 @@
 }
 
 .chat-input:focus {
-    border-color: #13e8e9;
+    border-color: #ff511a;
     box-shadow: 0 0 0 3px rgba(19, 232, 233, 0.1);
     outline: none;
 }
@@ -334,7 +334,7 @@
     width: 45px;
     height: 45px;
     border-radius: 50%;
-    background: linear-gradient(135deg, #13e8e9 0%, #020258 100%);
+    background: linear-gradient(135deg, #ff511a 0%, #7b2e2e 100%);
     border: none;
     color: #fff;
     display: flex;
@@ -383,12 +383,12 @@
 }
 
 .chat-messages::-webkit-scrollbar-thumb {
-    background: #13e8e9;
+    background: #ff511a;
     border-radius: 3px;
 }
 
 .chat-messages::-webkit-scrollbar-thumb:hover {
-    background: #020258;
+    background: #7b2e2e;
 }
 </style>
 
@@ -501,7 +501,7 @@ document.addEventListener('DOMContentLoaded', function() {
             .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
             .replace(/\n/g, '<br>');
         
-        content.innerHTML = `<p style="color: ${sender === 'bot' ? '#000' : '#020258'} !important;">${formattedText}</p>`;
+        content.innerHTML = `<p style="color: ${sender === 'bot' ? '#000' : '#7b2e2e'} !important;">${formattedText}</p>`;
 
         messageDiv.appendChild(avatar);
         messageDiv.appendChild(content);

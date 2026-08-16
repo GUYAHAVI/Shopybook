@@ -5,7 +5,7 @@
     <div class="row">
         <div class="col-12">
             <div class="d-flex justify-content-between align-items-center mb-4">
-                <h2 class="fw-bold" style="color:#020258;">Commission Reports</h2>
+                <h2 class="fw-bold" style="color:#7b2e2e;">Commission Reports</h2>
                 <div class="btn-group">
                     <a href="{{ route('service-bookings.create') }}" class="btn btn-primary">
                         <i class="fas fa-plus me-1"></i> New Booking
@@ -289,7 +289,7 @@
 
 .table-primary th {
     background-color: rgba(74, 92, 255, 0.1);
-    color: #020258;
+    color: #7b2e2e;
 }
 
 .avatar-circle {

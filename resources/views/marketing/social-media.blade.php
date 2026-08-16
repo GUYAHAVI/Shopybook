@@ -448,8 +448,8 @@
 
                     <!-- AI Image Prompts Section -->
                     <div id="aiImagePromptsSection" class="mb-3" style="display: none;">
-                        <div class="card" style="background: var(--bg-tertiary); border: 1px solid #13e8e9;">
-                            <div class="card-header py-2" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                        <div class="card" style="background: var(--bg-tertiary); border: 1px solid #ff511a;">
+                            <div class="card-header py-2" style="background: linear-gradient(135deg, #7b2e2e 0%, #ff511a 100%);">
                                 <h6 class="mb-0 text-white">
                                     <i class="fas fa-palette me-2"></i>AI Image Suggestions
                                 </h6>
@@ -1167,7 +1167,7 @@ function displayImagePrompts(prompts) {
         item.innerHTML = `
             <div class="flex-grow-1">
                 <h6 class="mb-1" style="color: var(--text-primary);">
-                    <i class="fas fa-sparkles me-1" style="color: #667eea;"></i>
+                    <i class="fas fa-sparkles me-1" style="color: #7b2e2e;"></i>
                     Prompt ${index + 1}
                 </h6>
                 <p class="mb-1 small" style="color: var(--text-secondary);">${prompt}</p>

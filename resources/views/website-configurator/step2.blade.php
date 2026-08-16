@@ -168,7 +168,7 @@
     }
     
     .btn-next:hover {
-        background: #7c3aed;
+        background: #ff511a;
         transform: translateY(-2px);
         box-shadow: 0 10px 25px rgba(139, 92, 246, 0.3);
     }

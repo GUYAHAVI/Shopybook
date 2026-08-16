@@ -117,7 +117,7 @@
                             {{-- Reviewer Info --}}
                             <div class="d-flex gap-3 align-items-start flex-grow-1">
                                 <div class="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0"
-                                     style="width:44px; height:44px; background: linear-gradient(135deg,#13e8e9,#020258); color:white; font-weight:bold; font-size:1.2rem;">
+                                     style="width:44px; height:44px; background: linear-gradient(135deg,#ff511a,#7b2e2e); color:white; font-weight:bold; font-size:1.2rem;">
                                     {{ strtoupper(substr($review->name, 0, 1)) }}
                                 </div>
                                 <div class="flex-grow-1">

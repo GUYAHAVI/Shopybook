@@ -22,7 +22,7 @@
             box-shadow: 0 2px 10px rgba(0,0,0,0.1);
         }
         .header {
-            background: linear-gradient(135deg, #020258, #13e8e9);
+            background: linear-gradient(135deg, #7b2e2e, #ff511a);
             color: white;
             padding: 30px 20px;
             text-align: center;
@@ -48,7 +48,7 @@
             margin: 20px 0;
         }
         .steps h3 {
-            color: #020258;
+            color: #7b2e2e;
             margin-top: 0;
         }
         .steps ol {
@@ -60,8 +60,8 @@
         }
         .button {
             display: inline-block;
-            background: #13e8e9;
-            color: #020258;
+            background: #ff511a;
+            color: #7b2e2e;
             padding: 12px 30px;
             text-decoration: none;
             border-radius: 5px;
@@ -69,8 +69,8 @@
             margin: 20px 0;
         }
         .button:hover {
-            background: #020258;
-            color: #13e8e9;
+            background: #7b2e2e;
+            color: #ff511a;
         }
         .footer {
             background: #f8f9fa;
@@ -96,7 +96,7 @@
         <div class="content">
             <div class="icon" style="text-align: center;">⚠️</div>
             
-            <h2 style="color: #020258; text-align: center;">Action Required: Re-upload Your Business Logo</h2>
+            <h2 style="color: #7b2e2e; text-align: center;">Action Required: Re-upload Your Business Logo</h2>
             
             <p>Dear {{ $ownerName }},</p>
 

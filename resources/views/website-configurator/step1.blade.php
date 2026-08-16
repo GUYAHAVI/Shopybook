@@ -130,7 +130,7 @@
     }
     
     .btn-next:hover:not(:disabled) {
-        background: #7c3aed;
+        background: #ff511a;
         transform: translateY(-2px);
         box-shadow: 0 10px 25px rgba(139, 92, 246, 0.3);
     }
@@ -189,7 +189,7 @@
     <div style="margin-bottom: 4rem;">
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem; max-width: 900px; margin: 0 auto;">
             <!-- AI Auto-Build Option -->
-            <div class="build-option-card" id="aiBuildCard" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: 3px solid #667eea; border-radius: 16px; padding: 2.5rem; text-align: center; cursor: pointer; transition: all 0.3s ease; position: relative;">
+            <div class="build-option-card" id="aiBuildCard" style="background: linear-gradient(135deg, #7b2e2e 0%, #ff511a 100%); border: 3px solid #7b2e2e; border-radius: 16px; padding: 2.5rem; text-align: center; cursor: pointer; transition: all 0.3s ease; position: relative;">
                 <div class="recommended-badge" style="position: absolute; top: -12px; right: 20px; background: #f59e0b; color: white; padding: 0.4rem 1rem; border-radius: 20px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase;">
                     ⚡ Recommended
                 </div>
@@ -328,8 +328,8 @@
 <!-- AI Auto-Build Modal -->
 <div id="aiBuildModal" class="modal fade" tabindex="-1" style="display: none;">
     <div class="modal-dialog modal-dialog-centered modal-lg">
-        <div class="modal-content" style="background: var(--dark-bg); border: 2px solid #667eea; border-radius: 16px;">
-            <div class="modal-header" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none; border-radius: 14px 14px 0 0;">
+        <div class="modal-content" style="background: var(--dark-bg); border: 2px solid #7b2e2e; border-radius: 16px;">
+            <div class="modal-header" style="background: linear-gradient(135deg, #7b2e2e 0%, #ff511a 100%); border: none; border-radius: 14px 14px 0 0;">
                 <h5 class="modal-title" style="color: white; font-weight: 700; font-size: 1.5rem;">
                     <i class="fas fa-magic me-2"></i>AI Auto-Build Your Website
                 </h5>
@@ -393,7 +393,7 @@
                             <div style="font-size: 4rem; margin-bottom: 1.5rem;">🤖</div>
                             <h5 style="color: white; font-size: 1.5rem; margin-bottom: 1rem;">AI is Building Your Website...</h5>
                             <div class="progress" style="height: 8px; background: var(--darker-bg); border-radius: 10px; margin-bottom: 1rem;">
-                                <div class="progress-bar" id="aiBuildProgressBar" style="background: linear-gradient(90deg, #667eea, #764ba2); width: 0%; transition: width 0.5s ease;"></div>
+                                <div class="progress-bar" id="aiBuildProgressBar" style="background: linear-gradient(90deg, #7b2e2e, #ff511a); width: 0%; transition: width 0.5s ease;"></div>
                             </div>
                             <p id="aiBuildStatus" style="color: #94a3b8; font-size: 1rem;">Analyzing your business...</p>
                         </div>
@@ -412,7 +412,7 @@
             <div class="modal-footer" style="border: none; padding: 1.5rem 2rem;">
                 <div id="aiBuildInitialButtons">
                     <button type="button" class="btn btn-secondary btn-lg" data-bs-dismiss="modal">Cancel</button>
-                    <button type="button" class="btn btn-lg" id="startAiBuildBtn" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none; color: white; font-weight: 600; padding: 0.75rem 2rem;">
+                    <button type="button" class="btn btn-lg" id="startAiBuildBtn" style="background: linear-gradient(135deg, #7b2e2e 0%, #ff511a 100%); border: none; color: white; font-weight: 600; padding: 0.75rem 2rem;">
                         <i class="fas fa-magic me-2"></i>Start AI Build
                     </button>
                 </div>

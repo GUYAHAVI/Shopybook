@@ -109,7 +109,7 @@
                         
                         <div id="analysisContent">
                             <div class="empty-state">
-                                <i class="fas fa-robot mb-3" style="font-size: 3rem; color: #020258;"></i>
+                                <i class="fas fa-robot mb-3" style="font-size: 3rem; color: #7b2e2e;"></i>
                                 <h5>Advanced AI Business Analysis Ready</h5>
                                 <p class="mb-3">Click "Generate Analysis" to get Claude AI-powered insights that include:</p>
                                 <ul class="text-start" style="max-width: 500px; margin: 0 auto;">

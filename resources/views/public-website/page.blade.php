@@ -777,7 +777,7 @@
         .ep-btn { width: 100%; padding: 9px; border: none; border-radius: 8px; font-size: 0.84rem; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 7px; transition: all 0.15s; margin-bottom: 8px; }
         .ep-btn-dark { background: #1e293b; color: #fff; }
         .ep-btn-dark:hover { background: #0f172a; }
-        .ep-btn-ai { background: linear-gradient(135deg,#7c3aed,#4f46e5); color: #fff; }
+        .ep-btn-ai { background: linear-gradient(135deg,#ff511a,#7b2e2e); color: #fff; }
         .ep-btn-ai:hover { opacity: 0.9; }
         .ep-btn-green { background: #16a34a; color: #fff; }
         .ep-btn-green:hover { background: #15803d; }

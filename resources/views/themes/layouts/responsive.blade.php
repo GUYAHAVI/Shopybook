@@ -42,7 +42,7 @@
     <!-- Theme Colors -->
     <style>
         :root {
-            --primary-color: {{ $colors['primary'] ?? '#4F46E5' }};
+            --primary-color: {{ $colors['primary'] ?? '#7b2e2e' }};
             --secondary-color: {{ $colors['secondary'] ?? '#10B981' }};
             --accent-color: {{ $colors['accent'] ?? '#F59E0B' }};
             --background-color: {{ $colors['background'] ?? '#FFFFFF' }};

@@ -806,7 +806,7 @@
 <div class="modal fade" id="upgradePlanModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content" style="border: none; border-radius: 16px; overflow: hidden;">
-            <div class="modal-header" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none; padding: 2rem;">
+            <div class="modal-header" style="background: linear-gradient(135deg, #7b2e2e 0%, #ff511a 100%); border: none; padding: 2rem;">
                 <div class="text-center w-100">
                     <div style="font-size: 3rem; margin-bottom: 0.5rem;">
                         <i class="fas fa-crown text-warning"></i>
@@ -831,7 +831,7 @@
                                     </div>
                                     <h5 class="mb-2">Premium Plan</h5>
                                     <h3 class="mb-1">
-                                        <span style="font-size: 2rem; font-weight: 700; color: #667eea;">KSH 5</span>
+                                        <span style="font-size: 2rem; font-weight: 700; color: #7b2e2e;">KSH 5</span>
                                         <span class="text-muted">/month</span>
                                     </h3>
                                     <p class="text-muted small mb-3">Perfect for growing businesses</p>
@@ -1168,7 +1168,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 
                 // Highlight selected card
                 if (plan === 'premium') {
-                    this.style.borderColor = '#667eea';
+                    this.style.borderColor = '#7b2e2e';
                     this.style.boxShadow = '0 4px 16px rgba(102, 126, 234, 0.3)';
                 } else {
                     this.style.borderColor = '#10b981';

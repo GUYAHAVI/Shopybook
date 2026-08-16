@@ -24,7 +24,7 @@
 .role-cashier { background: #d1fae5; color: #065f46; }
 .role-staff   { background: #ede9fe; color: #5b21b6; }
 .role-viewer  { background: #f3f4f6; color: #374151; }
-.role-owner   { background: linear-gradient(135deg,#020258,#1a1a7e); color: #fff; }
+.role-owner   { background: linear-gradient(135deg,#7b2e2e,#1a1a7e); color: #fff; }
 
 .status-dot   { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
 .status-active    { background: #10b981; }
@@ -39,7 +39,7 @@
 /* ── Stats bar ── */
 .team-stats { display: flex; gap: 16px; margin-bottom: 24px; flex-wrap: wrap; }
 .team-stat  { flex: 1; min-width: 120px; background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px; padding: 14px 18px; text-align: center; }
-.team-stat .val { font-size: 1.8rem; font-weight: 700; color: var(--primary-color,#020258); }
+.team-stat .val { font-size: 1.8rem; font-weight: 700; color: var(--primary-color,#7b2e2e); }
 .team-stat .lbl { font-size: .8rem; color: var(--text-secondary); }
 
 /* ── Activity Log ── */
@@ -50,9 +50,9 @@
 /* ── Permissions grid in modal ── */
 .perm-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 8px; }
 .perm-item { display: flex; align-items: center; gap: 8px; padding: 8px 10px; border: 1.5px solid var(--border-color); border-radius: 8px; cursor: pointer; transition: border-color .15s, background .15s; }
-.perm-item:hover { border-color: var(--primary-light,#13e8e9); background: var(--hover-bg,#f0f4ff); }
-.perm-item input[type=checkbox]:checked ~ span { color: var(--primary-color,#020258); font-weight: 600; }
-.perm-item input[type=checkbox]:checked { accent-color: var(--primary-color,#020258); }
+.perm-item:hover { border-color: var(--primary-light,#ff511a); background: var(--hover-bg,#f0f4ff); }
+.perm-item input[type=checkbox]:checked ~ span { color: var(--primary-color,#7b2e2e); font-weight: 600; }
+.perm-item input[type=checkbox]:checked { accent-color: var(--primary-color,#7b2e2e); }
 .perm-icon { width: 28px; height: 28px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: .75rem; color: #fff; flex-shrink: 0; }
 </style>
 
@@ -70,7 +70,7 @@
 {{-- ── Page Header ── --}}
 <div class="tm-header">
     <div>
-        <h2><i class="fas fa-users-cog me-2" style="color:var(--primary-light,#13e8e9)"></i>Team Management</h2>
+        <h2><i class="fas fa-users-cog me-2" style="color:var(--primary-light,#ff511a)"></i>Team Management</h2>
         <p>Manage who has access to <strong>{{ $business->name }}</strong> and what they can do</p>
     </div>
     @if($isOwner)
@@ -110,7 +110,7 @@
     {{-- Owner Card --}}
     <div class="member-card" style="border-color: rgba(2,2,88,.25); background: linear-gradient(135deg, rgba(2,2,88,.04) 0%, rgba(19,232,233,.04) 100%);">
         <div class="d-flex align-items-center gap-3 mb-3">
-            <div class="member-avatar" style="background: linear-gradient(135deg,#020258,#1a1a7e)">
+            <div class="member-avatar" style="background: linear-gradient(135deg,#7b2e2e,#1a1a7e)">
                 {{ strtoupper(substr($business->owner->name ?? auth()->user()->name, 0, 1)) }}
             </div>
             <div class="member-info">
@@ -241,7 +241,7 @@
                     <tr data-user="{{ $log->user_id }}" data-module="{{ $log->module }}">
                         <td class="ps-3">
                             <div class="d-flex align-items-center gap-2">
-                                <div class="member-avatar" style="width:28px;height:28px;font-size:.7rem;background:#020258">
+                                <div class="member-avatar" style="width:28px;height:28px;font-size:.7rem;background:#7b2e2e">
                                     {{ strtoupper(substr($log->user?->name ?? '?', 0, 1)) }}
                                 </div>
                                 <span>{{ $log->user?->name ?? 'Unknown' }}</span>

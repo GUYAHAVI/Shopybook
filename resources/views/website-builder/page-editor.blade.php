@@ -303,7 +303,7 @@
             </div>
             <div class="modal-footer" style="border-top: 1px solid var(--border-color);">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;" onclick="generateSectionWithAI()">
+                <button type="button" class="btn" style="background: linear-gradient(135deg, #7b2e2e 0%, #ff511a 100%); color: white;" onclick="generateSectionWithAI()">
                     <i class="fas fa-magic me-1"></i>Generate with AI
                 </button>
                 <button type="button" class="btn btn-primary" onclick="addSection()">

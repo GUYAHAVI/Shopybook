@@ -4,7 +4,7 @@
     <div class="row justify-content-center">
         <div class="col-md-8">
             <div class="card p-4">
-                <h2 class="fw-bold mb-4" style="color:#020258;">Cost Details</h2>
+                <h2 class="fw-bold mb-4" style="color:#7b2e2e;">Cost Details</h2>
                 <dl class="row">
                     <dt class="col-sm-4">Type</dt>
                     <dd class="col-sm-8">{{ ucfirst($cost->type) }}</dd>

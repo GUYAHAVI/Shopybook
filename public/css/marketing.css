@@ -1,0 +1,771 @@
+@import url("https://fonts.googleapis.com/css2?family=Playfair:ital,opsz,wght@0,5..1200,300..900;1,5..1200,300..900&family=Poppins:wght@100;200;300;400;500;600;700;800;900&display=swap");
+
+:root {
+    --j-primary: #7b2e2e;
+    --j-secondary: #ff511a;
+    --j-green: #43ba7f;
+    --j-light: #ffffff;
+    --j-dark: #222222;
+    --j-gray: #f7f7f7;
+    --j-body-bg: #c7c6c6;
+}
+
+/* ── Base ── */
+body.marketing-page {
+    background: var(--j-body-bg);
+    color: var(--j-dark);
+    font-family: "Poppins", sans-serif;
+    font-weight: 400;
+    font-size: 16px;
+    line-height: 1.7;
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+}
+
+body.marketing-page h1,
+body.marketing-page h2,
+body.marketing-page h3,
+body.marketing-page h4,
+body.marketing-page h5,
+body.marketing-page h6 {
+    font-family: "Playfair", serif;
+    margin-top: 0;
+    color: var(--j-primary);
+}
+
+body.marketing-page p {
+    font-size: 15px;
+    line-height: 26px;
+}
+
+body.marketing-page a {
+    text-decoration: none;
+    color: var(--j-primary);
+}
+
+body.marketing-page a:hover {
+    color: var(--j-secondary);
+}
+
+body.marketing-page ::selection {
+    background: var(--j-secondary);
+    color: #fff;
+}
+
+body.marketing-page .text-accent,
+body.marketing-page .text-primary {
+    color: var(--j-secondary) !important;
+}
+
+body.marketing-page .text-success {
+    color: var(--j-green) !important;
+}
+
+/* ── Buttons ── */
+body.marketing-page .btn1,
+body.marketing-page .btn-primary {
+    background-color: var(--j-secondary) !important;
+    color: #fff !important;
+    border: 1px solid var(--j-secondary) !important;
+    font-size: 14px;
+    padding: 10px 26px;
+    display: inline-block;
+    border-radius: 5px;
+    font-weight: 500;
+    text-transform: capitalize;
+    letter-spacing: 0.5px;
+    transition: all 0.3s;
+}
+
+body.marketing-page .btn1:hover,
+body.marketing-page .btn-primary:hover {
+    background-color: #fff !important;
+    color: var(--j-secondary) !important;
+}
+
+body.marketing-page .btnb,
+body.marketing-page .btn-outline-primary {
+    background-color: #fff !important;
+    color: var(--j-secondary) !important;
+    border: 1px solid var(--j-secondary) !important;
+    font-size: 14px;
+    padding: 10px 26px;
+    display: inline-block;
+    border-radius: 5px;
+    font-weight: 500;
+    text-transform: capitalize;
+    letter-spacing: 0.5px;
+    transition: all 0.3s;
+}
+
+body.marketing-page .btnb:hover,
+body.marketing-page .btn-outline-primary:hover {
+    background-color: var(--j-secondary) !important;
+    color: #fff !important;
+}
+
+body.marketing-page .btn-green {
+    background-color: var(--j-green) !important;
+    color: #fff !important;
+    border: 1px solid var(--j-green) !important;
+    font-size: 14px;
+    padding: 10px 26px;
+    display: inline-block;
+    border-radius: 5px;
+    font-weight: 500;
+    text-transform: capitalize;
+    letter-spacing: 0.5px;
+    transition: all 0.3s;
+}
+
+body.marketing-page .btn-green:hover {
+    opacity: 0.9;
+    color: #fff !important;
+}
+
+body.marketing-page .btn-lg {
+    padding: 12px 32px;
+    font-size: 15px;
+}
+
+/* ── Top bar ── */
+.header-topbar {
+    background-color: var(--j-light);
+    padding: 8px 0;
+    color: var(--j-dark);
+    font-size: 14px;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.header-topbar a {
+    color: var(--j-dark);
+    margin-right: 20px;
+    transition: color 0.3s;
+    font-size: 14px;
+}
+
+.header-topbar a:hover {
+    color: var(--j-secondary);
+}
+
+.header-topbar i {
+    margin-right: 5px;
+    color: var(--j-primary);
+}
+
+.header-topbar .header-social a {
+    color: var(--j-primary);
+    margin-left: 15px;
+    margin-right: 0;
+    font-size: 16px;
+}
+
+.header-topbar .header-social a:hover {
+    color: var(--j-secondary);
+}
+
+/* ── Navbar ── */
+body.marketing-page {
+    padding-top: 0 !important;
+}
+
+.marketing-navbar {
+    background-color: var(--j-primary) !important;
+    padding: 15px 0;
+    box-shadow: 0 2px 15px rgba(0, 0, 0, 0.15);
+    position: static !important;
+}
+
+.marketing-navbar .navbar-brand {
+    color: var(--j-light) !important;
+    font-family: "Playfair", serif;
+    font-weight: 700;
+    font-size: 1.5rem;
+    text-transform: capitalize;
+}
+
+.marketing-navbar .navbar-brand span {
+    color: var(--j-secondary) !important;
+}
+
+.marketing-navbar .nav-link {
+    color: var(--j-light) !important;
+    font-family: "Poppins", sans-serif;
+    font-weight: 500;
+    font-size: 15px;
+    padding: 10px 15px !important;
+    text-transform: capitalize;
+    transition: all 0.3s;
+}
+
+.marketing-navbar .nav-link:hover,
+.marketing-navbar .nav-link.active {
+    color: var(--j-secondary) !important;
+}
+
+.marketing-navbar .nav-link.cta-btn,
+.marketing-navbar .btn-reg {
+    background-color: var(--j-secondary) !important;
+    color: var(--j-light) !important;
+    border-radius: 4px;
+    padding: 10px 25px !important;
+    margin-left: 10px;
+    font-weight: 500;
+}
+
+.marketing-navbar .nav-link.cta-btn:hover,
+.marketing-navbar .btn-reg:hover {
+    background-color: var(--j-light) !important;
+    color: var(--j-primary) !important;
+}
+
+.marketing-navbar .navbar-toggler {
+    border: none;
+    padding: 0;
+    font-size: 28px;
+    color: var(--j-light);
+}
+
+.marketing-navbar .navbar-toggler:focus {
+    outline: none;
+    box-shadow: none;
+}
+
+.marketing-navbar .dropdown-menu {
+    border: none;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.15);
+    border-radius: 0;
+    margin-top: 0;
+    padding: 12px 0;
+}
+
+.marketing-navbar .dropdown-item {
+    padding: 8px 20px;
+    color: var(--j-dark);
+    font-size: 14px;
+    transition: all 0.3s;
+}
+
+.marketing-navbar .dropdown-item:hover {
+    color: var(--j-secondary);
+    background: transparent;
+    padding-left: 25px;
+}
+
+@media (max-width: 991.98px) {
+    .marketing-navbar .navbar-collapse {
+        background-color: var(--j-primary);
+        padding: 20px;
+        margin-top: 15px;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+    }
+    .marketing-navbar .nav-link.cta-btn,
+    .marketing-navbar .btn-reg {
+        display: inline-block;
+        margin-top: 10px;
+        margin-left: 0;
+    }
+}
+
+/* ── Hero ── */
+.marketing-hero {
+    background-color: var(--j-primary);
+    color: #fff;
+    padding: 4rem 0 3rem;
+    position: relative;
+    overflow: hidden;
+}
+
+.marketing-hero h1,
+body.marketing-page .marketing-hero h1 {
+    font-family: "Playfair", serif;
+    font-size: 4rem;
+    font-weight: 700;
+    line-height: 1.1;
+    color: #fff;
+    text-transform: uppercase;
+    padding: 1.5rem 0;
+}
+
+.marketing-hero p,
+.marketing-hero .lead {
+    color: rgba(255, 255, 255, 0.92);
+    font-size: 1.1rem;
+    line-height: 1.8;
+}
+
+.marketing-hero .starsicons {
+    color: var(--j-secondary);
+    font-size: 1.2rem;
+}
+
+.marketing-hero .starsicons p {
+    color: #fff;
+    font-size: 0.95rem;
+}
+
+.marketing-hero .btnb {
+    background-color: #fff !important;
+    color: var(--j-secondary) !important;
+}
+
+.hero-visual {
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 1rem;
+    padding: 2rem;
+    box-shadow: 0 0 30px rgba(0, 0, 0, 0.25);
+}
+
+.hero-visual h5 {
+    color: #fff;
+}
+
+.hero-visual .hero-stat {
+    font-family: "Playfair", serif;
+    font-size: 1.6rem;
+    font-weight: 700;
+    color: var(--j-secondary);
+    line-height: 1.2;
+}
+
+.hero-visual small {
+    color: rgba(255, 255, 255, 0.8);
+}
+
+/* ── Orange strip (technologies band) ── */
+.strip-band {
+    background-color: var(--j-secondary);
+    padding: 1.25rem 0;
+    color: #fff;
+}
+
+.strip-band .strip-item {
+    color: #fff;
+    font-weight: 500;
+    font-size: 0.95rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.strip-band .strip-item i {
+    font-size: 1.2rem;
+}
+
+/* ── Section headings ── */
+.section-eyebrow {
+    display: inline-block;
+    font-size: 1.1rem;
+    font-weight: 700;
+    background-color: var(--j-primary);
+    color: var(--j-secondary);
+    margin-bottom: 1rem;
+    padding: 0.5rem 1rem;
+    font-family: "Poppins", sans-serif;
+}
+
+.section-title {
+    font-family: "Playfair", serif;
+    font-size: 3rem;
+    font-weight: 400;
+    color: var(--j-secondary);
+    margin-bottom: 0.5rem;
+}
+
+.section-subtitle {
+    color: #4a4a4a;
+    font-size: 1rem;
+    max-width: 680px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+/* ── Section backgrounds ── */
+.section-gray {
+    background-color: var(--j-body-bg);
+    padding: 3.5rem 0;
+}
+
+.section-light {
+    background-color: var(--j-gray);
+    padding: 3.5rem 0;
+}
+
+.section-maroon {
+    background-color: var(--j-primary);
+    padding: 3.5rem 0;
+    color: #fff;
+}
+
+.section-maroon h2,
+.section-maroon .section-title {
+    color: var(--j-secondary);
+}
+
+.section-maroon p {
+    color: rgba(255, 255, 255, 0.9);
+}
+
+/* ── Service boxes (maroon pills) ── */
+.service-box {
+    background: var(--j-primary);
+    color: #eee;
+    padding: 1.5rem;
+    border-radius: 1rem;
+    margin-top: 1rem;
+    font-family: "Playfair", serif;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    min-height: 100px;
+    transition: all 0.3s;
+}
+
+.service-box:hover {
+    transform: translateY(-4px);
+}
+
+.service-box h5 {
+    color: #fff;
+    font-size: 1.05rem;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+}
+
+.service-box i {
+    color: var(--j-secondary);
+}
+
+/* ── Offer cards ── */
+.offercard {
+    background: #fff;
+    color: #000;
+    border-radius: 1rem;
+    height: 100%;
+    margin-top: 1rem;
+    overflow: hidden;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+    transition: transform 0.3s, box-shadow 0.3s;
+}
+
+.offercard:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.18);
+}
+
+.offercard-head {
+    background-color: var(--j-primary);
+    padding: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.offercard-head i {
+    font-size: 2rem;
+    color: var(--j-secondary);
+}
+
+.offercard-head span {
+    color: #fff;
+    font-size: 1.1rem;
+    font-weight: 500;
+}
+
+.offercard-body {
+    padding: 1.5rem;
+    border-bottom: var(--j-primary) 2px solid;
+}
+
+.offercard-body h3 {
+    font-family: "Playfair", serif;
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+    color: var(--j-primary);
+}
+
+.offercard-body p {
+    font-size: 0.95rem;
+    color: #444;
+    margin: 0;
+}
+
+/* ── Count boxes ── */
+.count-box {
+    background-color: var(--j-primary);
+    color: #fff;
+    padding: 1.5rem 1rem;
+    border-radius: 1rem;
+    margin-top: 1rem;
+    text-align: center;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+}
+
+.count-box .stat-number {
+    font-family: "Playfair", serif;
+    font-size: 2.4rem;
+    font-weight: 700;
+    color: var(--j-secondary);
+    line-height: 1.2;
+}
+
+.count-box .stat-label {
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 0.9rem;
+    font-weight: 400;
+}
+
+/* ── Split panel (text + maroon panel) ── */
+.split-txt {
+    background-color: #fff;
+    color: #191a20;
+    padding: 2.5rem;
+}
+
+.split-txt h2 {
+    font-family: "Playfair", serif;
+    font-size: 2rem;
+    font-weight: 700;
+    margin-bottom: 1rem;
+    color: var(--j-primary);
+}
+
+.split-txt ul li {
+    font-size: 1rem;
+    font-weight: 400;
+    margin-bottom: 0.5rem;
+    padding: 0.4rem 0;
+    color: var(--j-primary);
+    display: flex;
+    align-items: flex-start;
+    gap: 0.6rem;
+}
+
+.split-txt ul li i {
+    color: var(--j-green);
+    margin-top: 0.25rem;
+}
+
+.split-panel {
+    background-color: var(--j-primary);
+    color: #fff;
+    padding: 2.5rem;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.split-panel h5 {
+    color: #fff;
+}
+
+/* ── Pricing cards ── */
+.pricing-card-public {
+    background: #fff;
+    border-radius: 1rem;
+    padding: 2rem;
+    height: 100%;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+    transition: transform 0.3s, box-shadow 0.3s;
+    display: flex;
+    flex-direction: column;
+}
+
+.pricing-card-public:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.18);
+}
+
+.pricing-card-public.featured {
+    border: 2px solid var(--j-secondary);
+}
+
+.pricing-card-public h3 {
+    font-family: "Playfair", serif;
+    font-size: 1.4rem;
+    color: var(--j-primary);
+    margin-bottom: 0.25rem;
+}
+
+.pricing-card-public .price {
+    font-family: "Playfair", serif;
+    font-size: 2.8rem;
+    font-weight: 700;
+    color: var(--j-primary);
+    line-height: 1;
+}
+
+.pricing-card-public .price-currency {
+    font-size: 1.1rem;
+    vertical-align: super;
+    font-weight: 700;
+    color: var(--j-secondary);
+}
+
+.pricing-card-public .price-period {
+    color: #777;
+    font-size: 0.95rem;
+}
+
+.pricing-card-public ul li {
+    color: #444;
+    margin-bottom: 0.6rem;
+    font-size: 0.95rem;
+    display: flex;
+    align-items: flex-start;
+    gap: 0.6rem;
+}
+
+.pricing-card-public ul li i {
+    color: var(--j-green);
+    margin-top: 0.25rem;
+}
+
+.badge-popular {
+    background: var(--j-secondary);
+    color: #fff;
+    border-radius: 4px;
+    padding: 4px 12px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    display: inline-block;
+    margin-bottom: 0.75rem;
+}
+
+/* ── Testimonials ── */
+.testimonial-card-public {
+    background: #fff;
+    border-radius: 1rem;
+    padding: 2rem;
+    height: 100%;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+}
+
+.testimonial-card-public p {
+    color: #444;
+    font-size: 1rem;
+    font-style: italic;
+}
+
+.testimonial-card-public .name {
+    color: var(--j-primary);
+    font-family: "Playfair", serif;
+    font-weight: 700;
+    margin-bottom: 0;
+}
+
+.testimonial-card-public .role {
+    color: #777;
+    font-size: 0.85rem;
+}
+
+.testimonial-card-public .stars {
+    color: var(--j-secondary);
+}
+
+/* ── CTA ── */
+.marketing-cta {
+    background-color: var(--j-primary);
+    border-radius: 1rem;
+    padding: 3.5rem 3rem;
+    text-align: center;
+    color: #fff;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+}
+
+.marketing-cta h2,
+body.marketing-page .marketing-cta h2 {
+    font-family: "Playfair", serif;
+    color: var(--j-secondary);
+    font-size: 2.5rem;
+    margin-bottom: 1rem;
+}
+
+.marketing-cta p {
+    color: rgba(255, 255, 255, 0.9);
+}
+
+/* ── Footer ── */
+.marketing-footer {
+    background-color: var(--j-primary);
+    color: rgba(255, 255, 255, 0.85);
+    padding: 2.5rem 0;
+    border-top: none;
+}
+
+.marketing-footer h4 {
+    font-size: 1.2rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+    color: var(--j-secondary);
+}
+
+.marketing-footer i {
+    font-size: 1.5rem;
+    color: var(--j-secondary);
+    padding-right: 0.5rem;
+}
+
+.marketing-footer a,
+.marketing-footer p,
+.marketing-footer span {
+    color: rgba(255, 255, 255, 0.8);
+}
+
+.marketing-footer a:hover {
+    color: var(--j-secondary);
+}
+
+.marketing-footer .text-muted {
+    color: rgba(255, 255, 255, 0.6) !important;
+}
+
+/* ── Mobile ── */
+@media (max-width: 991.98px) {
+    .marketing-hero {
+        text-align: center;
+    }
+    .split-txt,
+    .split-panel {
+        padding: 1.75rem;
+    }
+}
+
+@media (max-width: 767.98px) {
+    .marketing-hero h1,
+    body.marketing-page .marketing-hero h1 {
+        font-size: 2.2rem;
+    }
+    .section-title {
+        font-size: 2rem;
+    }
+    .marketing-cta {
+        padding: 2.5rem 1.5rem;
+    }
+    .marketing-cta h2,
+    body.marketing-page .marketing-cta h2 {
+        font-size: 1.8rem;
+    }
+    .header-topbar {
+        text-align: center;
+    }
+    .header-topbar .header-contact-info,
+    .header-topbar .header-social {
+        justify-content: center !important;
+    }
+    .header-topbar a {
+        margin: 0 8px;
+    }
+    .service-box {
+        min-height: auto;
+    }
+}

@@ -1,4 +1,4 @@
-﻿@extends('layouts.dash')
+@extends('layouts.dash')
 
 @section('title', 'Choose Style & Fonts - Step 3')
 
@@ -61,18 +61,18 @@
     .btn-back { background:transparent;color:#94a3b8;border:2px solid #475569;border-radius:8px;padding:.85rem 2rem;font-weight:600;font-size:1rem;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:.5rem;transition:all .2s; }
     .btn-back:hover { color:#fff;border-color:#64748b; }
     .btn-next { background:var(--pp);color:#fff;border:none;border-radius:8px;padding:.85rem 2.25rem;font-weight:700;font-size:1rem;cursor:pointer;display:inline-flex;align-items:center;gap:.5rem;transition:all .2s; }
-    .btn-next:hover { background:#7c3aed;transform:translateY(-2px);box-shadow:0 10px 25px rgba(139,92,246,.35); }
+    .btn-next:hover { background:#ff511a;transform:translateY(-2px);box-shadow:0 10px 25px rgba(139,92,246,.35); }
     .tip { background:rgba(59,130,246,.1);border:1px solid rgba(59,130,246,.3);border-radius:10px;padding:1.1rem 1.25rem;margin-top:2rem;font-size:.875rem;color:#bfdbfe; }
 </style>
 
-<!-- Google Fonts preloader — updated dynamically by JS -->
+<!-- Google Fonts preloader � updated dynamically by JS -->
 <link id="gfontLink" rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&family=Open+Sans&display=swap">
 
 <div class="cfg">
 
     @if($errors->any())
     <div class="alert alert-danger">
-        <span>⚠</span>
+        <span>?</span>
         <div><strong>Please fix the errors below:</strong>
             <ul style="margin:.5rem 0 0 1.5rem;padding:0">
                 @foreach($errors->all() as $err)<li>{{ $err }}</li>@endforeach
@@ -83,9 +83,9 @@
 
     <!-- Progress -->
     <div class="prog">
-        <div class="prog-step"><div class="prog-circle done">✓</div><span class="prog-label">Type</span></div>
+        <div class="prog-step"><div class="prog-circle done">?</div><span class="prog-label">Type</span></div>
         <div class="prog-line done"></div>
-        <div class="prog-step"><div class="prog-circle done">✓</div><span class="prog-label">Details</span></div>
+        <div class="prog-step"><div class="prog-circle done">?</div><span class="prog-label">Details</span></div>
         <div class="prog-line done"></div>
         <div class="prog-step"><div class="prog-circle curr">3</div><span class="prog-label curr">Style</span></div>
         <div class="prog-line"></div>
@@ -95,13 +95,13 @@
     <!-- Header -->
     <div style="text-align:center;margin-bottom:2.5rem">
         <h1 style="font-size:2.2rem;font-weight:300;color:#fff;margin-bottom:.4rem">Choose Your Style</h1>
-        <p style="color:#94a3b8;font-size:1.05rem">Pick a color palette and fonts — your AI website will use them throughout</p>
+        <p style="color:#94a3b8;font-size:1.05rem">Pick a color palette and fonts � your AI website will use them throughout</p>
     </div>
 
     <form id="styleForm" method="POST" action="{{ route('website-configurator.step3.submit') }}">
         @csrf
 
-        <!-- ── Color Schemes ─────────────────────────────────── -->
+        <!-- -- Color Schemes ----------------------------------- -->
         <div class="sec-head">
             <svg class="sec-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01"/></svg>
             <h2 class="sec-title">Color Scheme</h2>
@@ -179,7 +179,7 @@
         <input type="hidden" name="secondary_color" id="val_secondary" value="#00acc1">
         <input type="hidden" name="accent_color"    id="val_accent"    value="#ff7043">
 
-        <!-- ── Fonts ─────────────────────────────────────────── -->
+        <!-- -- Fonts ------------------------------------------- -->
         <div class="sec-head" style="margin-top:1rem">
             <svg class="sec-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
             <h2 class="sec-title">Typography</h2>
@@ -213,7 +213,7 @@
             </div>
         </div>
 
-        <!-- ── Live Preview ───────────────────────────────────── -->
+        <!-- -- Live Preview ------------------------------------- -->
         <div class="sec-head" style="margin-top:.5rem">
             <svg class="sec-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
             <h2 class="sec-title">Live Preview</h2>
@@ -241,7 +241,7 @@
             </div>
         </div>
 
-        <!-- ── Buttons ────────────────────────────────────────── -->
+        <!-- -- Buttons ------------------------------------------ -->
         <div class="actions">
             <a href="{{ route('website-configurator.step2') }}" class="btn-back">
                 <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
@@ -254,13 +254,13 @@
         </div>
 
         <div class="tip">
-            💡 <strong>Tip:</strong> You can always update your colors and fonts from the website dashboard after the AI builds your site.
+            ?? <strong>Tip:</strong> You can always update your colors and fonts from the website dashboard after the AI builds your site.
         </div>
     </form>
 </div>
 
 <script>
-// ── Palette logic ────────────────────────────────────────────
+// -- Palette logic --------------------------------------------
 function selectPalette(id, primary, secondary, accent) {
     document.querySelectorAll('.palette-card').forEach(c => c.classList.remove('active'));
     document.getElementById('pal_' + id).checked = true;
@@ -295,7 +295,7 @@ function syncColor(key, hex) {
     }
 }
 
-// ── Font preview logic ────────────────────────────────────────
+// -- Font preview logic ----------------------------------------
 function updateFontPreview() {
     const hf = document.getElementById('heading_font').value;
     const bf = document.getElementById('body_font').value;
@@ -307,7 +307,7 @@ function updateFontPreview() {
     updatePreview(hf, bf);
 }
 
-// ── Preview refresh ───────────────────────────────────────────
+// -- Preview refresh -------------------------------------------
 function updatePreview(hf, bf) {
     hf = hf || document.getElementById('heading_font').value;
     bf = bf || document.getElementById('body_font').value;

@@ -2,7 +2,7 @@
 @section('content')
 <div class="container py-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2 class="fw-bold" style="color:#020258;">Commissions</h2>
+        <h2 class="fw-bold" style="color:#7b2e2e;">Commissions</h2>
         <a href="{{ route('commissions.create') }}" class="btn btn-primary"><i class="fas fa-plus me-1"></i> Add Payout</a>
     </div>
     @if(session('success'))
@@ -11,7 +11,7 @@
     <div class="card p-3">
         <table class="table table-hover align-middle">
             <thead>
-                <tr style="color:#020258;">
+                <tr style="color:#7b2e2e;">
                     <th>Staff</th>
                     <th>Amount</th>
                     <th>Paid At</th>
