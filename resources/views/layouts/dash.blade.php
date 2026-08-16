@@ -414,7 +414,34 @@
             color: var(--text-primary);
             margin: 0;
         }
-        
+
+        .page-breadcrumb {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            margin-bottom: 0.15rem;
+        }
+        .page-breadcrumb a {
+            color: var(--text-secondary);
+            text-decoration: none;
+        }
+        .page-breadcrumb a:hover {
+            color: var(--text-primary);
+        }
+        .page-breadcrumb .crumb-app {
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+        .page-breadcrumb .crumb-sep {
+            opacity: 0.5;
+        }
+
+        .nav-all-apps {
+            font-weight: 600;
+        }
+
         .header-nav {
             display: flex;
             align-items: center;
@@ -1567,9 +1594,51 @@
             $__perms = $__isOwner ? [] : ($__membership?->permissions ?? []);
             // $__can('module') → true for owners always; true for members if the module is granted
             $__can = fn(string $m): bool => $__isOwner || in_array($m, $__perms);
+
+            // ── Context-aware navigation (Odoo-style) ───────────────────────────────
+            // Resolve which "app" the current route belongs to so the sidebar and the
+            // topbar breadcrumb can adapt to it. See config/navigation.php.
+            $__navActive = fn(string $patterns): bool => request()->routeIs(...explode('|', $patterns));
+
+            $navApps = config('navigation.apps', []);
+            $activeAppKey = null;
+            foreach ($navApps as $__key => $__app) {
+                foreach (($__app['match'] ?? []) as $__pattern) {
+                    if (request()->routeIs($__pattern)) { $activeAppKey = $__key; break 2; }
+                }
+            }
+            $activeApp = $activeAppKey ? $navApps[$activeAppKey] : null;
+
+            $activeItemLabel = null;
+            if ($activeApp) {
+                foreach ($activeApp['items'] as $__it) {
+                    if ($__navActive($__it['active'] ?? $__it['route'])) { $activeItemLabel = $__it['label']; break; }
+                }
+            }
         @endphp
 
         <nav class="sidebar-nav">
+            @if($activeApp)
+            {{-- ── Context-aware app navigation ── --}}
+            <div class="nav-item">
+                <a href="{{ route('dashboard') }}" class="nav-link nav-all-apps" onclick="toggleAppLauncher(event); return false;">
+                    <i class="fas fa-th-large"></i>
+                    <span>All Apps</span>
+                </a>
+            </div>
+            <div class="sidebar-divider"></div>
+            <div class="sidebar-nav-group-label">{{ $activeApp['label'] }}</div>
+            @foreach($activeApp['items'] as $navItem)
+                @if(empty($navItem['permission']) || $__can($navItem['permission']))
+                <div class="nav-item">
+                    <a href="{{ route($navItem['route']) }}" class="nav-link {{ $__navActive($navItem['active'] ?? $navItem['route']) ? 'active' : '' }}">
+                        <i class="fas {{ $navItem['icon'] }}"></i>
+                        <span>{{ $navItem['label'] }}</span>
+                    </a>
+                </div>
+                @endif
+            @endforeach
+            @else
             {{-- ── Core navigation (always visible) ── --}}
             <div class="nav-item">
                 <a href="{{ route('dashboard') }}" class="nav-link {{ request()->routeIs('dashboard') ? 'active' : '' }}">
@@ -1657,6 +1726,7 @@
                 </a>
             </div>
             @endif
+            @endif
         </nav>
         
         <div class="sidebar-footer">
@@ -1682,7 +1752,14 @@
     <div class="main-content">
         <div class="top-header">
             <div>
-                <h1 class="page-title">@yield('title', 'Dashboard')</h1>
+                <nav class="page-breadcrumb" aria-label="breadcrumb">
+                    <a href="{{ route('dashboard') }}" class="crumb-home"><i class="fas fa-home"></i></a>
+                    @if($activeApp)
+                    <span class="crumb-sep">/</span>
+                    <a href="{{ route($activeApp['items'][0]['route']) }}" class="crumb-app">{{ $activeApp['label'] }}</a>
+                    @endif
+                </nav>
+                <h1 class="page-title">@yield('title', $activeItemLabel ?? ($activeApp['label'] ?? 'Dashboard'))</h1>
                 <!-- <ul class="nav-tabs">
                     <li><a href="#" class="nav-tab active">Summary</a></li>
                     <li><a href="#" class="nav-tab">Statistic</a></li>
