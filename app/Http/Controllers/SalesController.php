@@ -224,6 +224,11 @@ class SalesController extends Controller
                 $order->tax_type = $taxSettings->tax_type;
             }
             
+            // Fallback: if tax was charged but no rate is set, derive the effective rate from subtotal
+            if ($order->tax > 0 && $order->subtotal > 0 && (empty($order->tax_rate) || $order->tax_rate == 0)) {
+                $order->tax_rate = round(($order->tax / $order->subtotal) * 100, 2);
+            }
+            
             $order->save();
 
             \Log::info('Order created with ID: ' . $order->id);

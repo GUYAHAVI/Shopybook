@@ -368,8 +368,15 @@
                     <td class="amount">KSh {{ number_format($order->subtotal ?? $order->total_amount, 2) }}</td>
                 </tr>
                 @if($order->tax && $order->tax > 0)
+                @php
+                    $displayTaxRate = ($order->tax_rate && $order->tax_rate > 0)
+                        ? $order->tax_rate
+                        : (($order->subtotal > 0)
+                            ? round(($order->tax / $order->subtotal) * 100, 2)
+                            : 16);
+                @endphp
                 <tr>
-                    <td class="label">Tax ({{ $order->tax_rate ?? 16 }}%):</td>
+                    <td class="label">Tax ({{ number_format($displayTaxRate, 2) }}%):</td>
                     <td class="amount">KSh {{ number_format($order->tax, 2) }}</td>
                 </tr>
                 @endif
