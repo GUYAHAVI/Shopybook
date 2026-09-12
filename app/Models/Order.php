@@ -32,6 +32,9 @@ class Order extends Model
         'tax_rate',
         'tax_inclusive',
         'tax_type',
+        // Payment fields
+        'amount_paid',
+        'balance_due',
         // Invoice fields
         'invoice_number',
         'invoice_generated_at',
@@ -47,6 +50,8 @@ class Order extends Model
         'subtotal' => 'decimal:2',
         'tax' => 'decimal:2',
         'tax_rate' => 'decimal:2',
+        'amount_paid' => 'decimal:2',
+        'balance_due' => 'decimal:2',
         'tax_inclusive' => 'boolean',
         'is_archived' => 'boolean',
         'invoice_generated_at' => 'datetime',

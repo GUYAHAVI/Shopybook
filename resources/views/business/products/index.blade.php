@@ -9,13 +9,13 @@
             <p class="text-muted">Manage your product catalog and inventory</p>
         </div>
         <div class="d-flex gap-2">
-            <a href="{{ route('products.receive') }}" class="btn btn-info">
+            <a href="{{ route('products.receive') }}" class="btn btn-info" data-tour="products-receive">
                 <i class="fas fa-truck-loading me-2"></i>Receive Stock
             </a>
-            <a href="{{ route('products.bulk-import') }}" class="btn btn-outline-secondary">
+            <a href="{{ route('products.bulk-import') }}" class="btn btn-outline-secondary" data-tour="products-import">
                 <i class="fas fa-file-import me-2"></i>Bulk Import
             </a>
-            <div class="btn-group">
+            <div class="btn-group" data-tour="products-add">
                 <a href="{{ route('products.quick-create') }}" class="btn btn-success">
                     <i class="fas fa-bolt me-2"></i>Quick Add
                 </a>
@@ -106,7 +106,7 @@
     </div>
 
     <!-- Search and Filters -->
-    <div class="card shadow mb-4">
+    <div class="card shadow mb-4" data-tour="products-search">
         <div class="card-header py-3">
             <h6 class="m-0 font-weight-bold text-primary">Search & Filters</h6>
         </div>
@@ -149,7 +149,7 @@
     </div>
 
     <!-- Products Grid -->
-    <div class="row">
+    <div class="row" data-tour="products-grid">
         @forelse($products as $product)
         <div class="col-xl-3 col-md-6 mb-4">
             <div class="card product-card h-100 shadow-sm">

@@ -4,12 +4,14 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Services\AutomatedLearningService;
-use App\Models\Business;
 use App\Models\AIBusinessAdvice;
 use Illuminate\Support\Facades\DB;
+use App\Http\Controllers\Concerns\ResolvesCurrentBusiness;
 
 class AIAdviceController extends Controller
 {
+    use ResolvesCurrentBusiness;
+
     protected $learningService;
 
     public function __construct(AutomatedLearningService $learningService)
@@ -20,16 +22,18 @@ class AIAdviceController extends Controller
     /**
      * Show AI advice dashboard
      */
-    public function index(Business $business)
+    public function index()
     {
+        $business = $this->currentBusiness();
+
         // Get learning status
-        $learningStatus = $this->learningService->getLearningStatus($business->id);
+        $learningStatus = $this->learningService->getLearningStatus($business?->id);
         
         // Get latest advice
-        $advice = $this->learningService->getLatestAdvice($business->id, 10);
+        $advice = $this->learningService->getLatestAdvice($business?->id, 10);
         
         // Get business performance
-        $performance = $this->getBusinessPerformance($business->id);
+        $performance = $this->getBusinessPerformance($business?->id);
         
         return view('business.ai-advice', compact('business', 'learningStatus', 'advice', 'performance'));
     }
@@ -37,10 +41,11 @@ class AIAdviceController extends Controller
     /**
      * Trigger learning for a business
      */
-    public function triggerLearning(Request $request, Business $business)
+    public function triggerLearning(Request $request)
     {
         try {
-            $success = $this->learningService->startLearningForBusiness($business->id);
+            $business = $this->currentBusiness();
+            $success = $this->learningService->startLearningForBusiness($business?->id);
             
             if ($success) {
                 return redirect()->back()->with('success', 'AI learning triggered successfully. Check back in a few minutes for new insights.');
@@ -55,8 +60,10 @@ class AIAdviceController extends Controller
     /**
      * Update AI learning settings
      */
-    public function updateSettings(Request $request, Business $business)
+    public function updateSettings(Request $request)
     {
+        $business = $this->currentBusiness();
+
         $request->validate([
             'automated_learning_enabled' => 'boolean',
             'competitor_analysis_enabled' => 'boolean',
@@ -72,7 +79,7 @@ class AIAdviceController extends Controller
                 'social_media_learning_enabled' => $request->has('social_media_learning_enabled'),
             ];
 
-            $this->learningService->updateLearningSettings($business->id, $settings);
+            $this->learningService->updateLearningSettings($business?->id, $settings);
 
             return redirect()->back()->with('success', 'AI learning settings updated successfully.');
         } catch (\Exception $e) {
@@ -130,17 +137,19 @@ class AIAdviceController extends Controller
     /**
      * Get competitor insights
      */
-    public function getCompetitorInsights(Business $business)
+    public function getCompetitorInsights()
     {
+        $business = $this->currentBusiness();
+
         try {
-            $insights = $this->learningService->getCompetitorInsights($business->id);
+            $insights = $this->learningService->getCompetitorInsights($business?->id);
             
             return response()->json([
                 'success' => true,
                 'insights' => $insights
             ]);
         } catch (\Exception $e) {
-            \Log::error('Error getting competitor insights', ['business_id' => $business->id, 'error' => $e->getMessage()]);
+            \Log::error('Error getting competitor insights', ['business_id' => $business?->id, 'error' => $e->getMessage()]);
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to load competitor insights'
@@ -151,17 +160,19 @@ class AIAdviceController extends Controller
     /**
      * Get trending topics
      */
-    public function getTrendingTopics(Business $business)
+    public function getTrendingTopics()
     {
+        $business = $this->currentBusiness();
+
         try {
-            $topics = $this->learningService->getTrendingTopics($business->business_type);
+            $topics = $this->learningService->getTrendingTopics($business?->business_type);
             
             return response()->json([
                 'success' => true,
                 'topics' => $topics
             ]);
         } catch (\Exception $e) {
-            \Log::error('Error getting trending topics', ['business_id' => $business->id, 'error' => $e->getMessage()]);
+            \Log::error('Error getting trending topics', ['business_id' => $business?->id, 'error' => $e->getMessage()]);
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to load trending topics'
@@ -172,17 +183,19 @@ class AIAdviceController extends Controller
     /**
      * Get unread advice count
      */
-    public function getUnreadCount(Business $business)
+    public function getUnreadCount()
     {
+        $business = $this->currentBusiness();
+
         try {
-            $count = $this->learningService->getUnreadAdviceCount($business->id);
+            $count = $this->learningService->getUnreadAdviceCount($business?->id);
             
             return response()->json([
                 'success' => true,
                 'count' => $count
             ]);
         } catch (\Exception $e) {
-            \Log::error('Error getting unread advice count', ['business_id' => $business->id, 'error' => $e->getMessage()]);
+            \Log::error('Error getting unread advice count', ['business_id' => $business?->id, 'error' => $e->getMessage()]);
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to get unread count'
@@ -212,10 +225,12 @@ class AIAdviceController extends Controller
     /**
      * Generate performance advice
      */
-    public function generatePerformanceAdvice(Business $business)
+    public function generatePerformanceAdvice()
     {
+        $business = $this->currentBusiness();
+
         try {
-            $advice = $this->learningService->generatePerformanceAdvice($business->id);
+            $advice = $this->learningService->generatePerformanceAdvice($business?->id);
             
             if ($advice) {
                 return response()->json([
@@ -229,7 +244,7 @@ class AIAdviceController extends Controller
                 ], 500);
             }
         } catch (\Exception $e) {
-            \Log::error('Error generating performance advice', ['business_id' => $business->id, 'error' => $e->getMessage()]);
+            \Log::error('Error generating performance advice', ['business_id' => $business?->id, 'error' => $e->getMessage()]);
             return response()->json([
                 'success' => false,
                 'message' => 'An error occurred while generating advice'

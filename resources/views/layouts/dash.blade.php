@@ -1719,8 +1719,7 @@
                 'products' => request()->routeIs('products.*', 'product-conversions.*', 'ocr.*'),
                 'services' => request()->routeIs('services.*', 'service-bookings.*'),
                 'staff'    => request()->routeIs('staff.*', 'salary-advances.*'),
-                'suppliers'=> request()->routeIs('suppliers.*'),
-                'finance'  => request()->routeIs('costs.*', 'tax.*'),
+                'finance'  => request()->routeIs('costs.*', 'tax.*', 'suppliers.*'),
                 'reports'  => request()->routeIs('reports.*', 'business.analysis.*'),
                 'growth'   => request()->routeIs('marketing.*', 'website.*', 'testimonials.*'),
                 'ai'       => request()->routeIs('ai-comm.*', 'ai-content.*'),
@@ -1748,7 +1747,7 @@
             @php $isOpen = $activeSection === 'sales'; @endphp
             <div class="nav-section {{ $isOpen ? '' : 'collapsed' }}">
                 <div class="nav-section-title" onclick="toggleSection(this)">
-                    <span>Sales</span>
+                    <span>Sell</span>
                     <i class="fas fa-chevron-down collapse-icon"></i>
                 </div>
                 <div class="nav-section-content">
@@ -1814,7 +1813,7 @@
             @php $isOpen = $activeSection === 'products'; @endphp
             <div class="nav-section {{ $isOpen ? '' : 'collapsed' }}">
                 <div class="nav-section-title" onclick="toggleSection(this)">
-                    <span>Products</span>
+                    <span>Stock</span>
                     <i class="fas fa-chevron-down collapse-icon"></i>
                 </div>
                 <div class="nav-section-content">
@@ -1857,7 +1856,7 @@
             @php $isOpen = $activeSection === 'services'; @endphp
             <div class="nav-section {{ $isOpen ? '' : 'collapsed' }}">
                 <div class="nav-section-title" onclick="toggleSection(this)">
-                    <span>Services</span>
+                    <span>Book</span>
                     <i class="fas fa-chevron-down collapse-icon"></i>
                 </div>
                 <div class="nav-section-content">
@@ -1882,7 +1881,7 @@
             @php $isOpen = $activeSection === 'staff'; @endphp
             <div class="nav-section {{ $isOpen ? '' : 'collapsed' }}">
                 <div class="nav-section-title" onclick="toggleSection(this)">
-                    <span>Staff</span>
+                    <span>Team</span>
                     <i class="fas fa-chevron-down collapse-icon"></i>
                 </div>
                 <div class="nav-section-content">
@@ -1909,30 +1908,11 @@
                 </div>
             </div>
 
-            {{-- Suppliers --}}
-            @php $isOpen = $activeSection === 'suppliers'; @endphp
-            <div class="nav-section {{ $isOpen ? '' : 'collapsed' }}">
-                <div class="nav-section-title" onclick="toggleSection(this)">
-                    <span>Suppliers</span>
-                    <i class="fas fa-chevron-down collapse-icon"></i>
-                </div>
-                <div class="nav-section-content">
-                    @if($__can('suppliers'))
-                    <div class="nav-item">
-                        <a href="{{ route('suppliers.index') }}" class="nav-link {{ request()->routeIs('suppliers.*') ? 'active' : '' }}">
-                            <i class="fas fa-truck"></i>
-                            <span>Suppliers</span>
-                        </a>
-                    </div>
-                    @endif
-                </div>
-            </div>
-
-            {{-- Finance --}}
+            {{-- Money --}}
             @php $isOpen = $activeSection === 'finance'; @endphp
             <div class="nav-section {{ $isOpen ? '' : 'collapsed' }}">
                 <div class="nav-section-title" onclick="toggleSection(this)">
-                    <span>Finance</span>
+                    <span>Money</span>
                     <i class="fas fa-chevron-down collapse-icon"></i>
                 </div>
                 <div class="nav-section-content">
@@ -1956,14 +1936,23 @@
                         </a>
                     </div>
                     @endif
+
+                    @if($__can('suppliers'))
+                    <div class="nav-item">
+                        <a href="{{ route('suppliers.index') }}" class="nav-link {{ request()->routeIs('suppliers.*') ? 'active' : '' }}">
+                            <i class="fas fa-truck"></i>
+                            <span>Suppliers</span>
+                        </a>
+                    </div>
+                    @endif
                 </div>
             </div>
 
-            {{-- Reports & Analytics --}}
+            {{-- Reports --}}
             @php $isOpen = $activeSection === 'reports'; @endphp
             <div class="nav-section {{ $isOpen ? '' : 'collapsed' }}">
                 <div class="nav-section-title" onclick="toggleSection(this)">
-                    <span>Reports & Analytics</span>
+                    <span>Reports</span>
                     <i class="fas fa-chevron-down collapse-icon"></i>
                 </div>
                 <div class="nav-section-content">
@@ -1994,7 +1983,7 @@
             @php $isOpen = $activeSection === 'growth'; @endphp
             <div class="nav-section {{ $isOpen ? '' : 'collapsed' }}">
                 <div class="nav-section-title" onclick="toggleSection(this)">
-                    <span>Growth</span>
+                    <span>Grow</span>
                     <i class="fas fa-chevron-down collapse-icon"></i>
                 </div>
                 <div class="nav-section-content">
@@ -2027,7 +2016,7 @@
             @php $isOpen = $activeSection === 'ai'; @endphp
             <div class="nav-section {{ $isOpen ? '' : 'collapsed' }}">
                 <div class="nav-section-title" onclick="toggleSection(this)">
-                    <span>AI Tools</span>
+                    <span>AI</span>
                     <i class="fas fa-chevron-down collapse-icon"></i>
                 </div>
                 <div class="nav-section-content">
@@ -2052,7 +2041,7 @@
             @php $isOpen = $activeSection === 'system'; @endphp
             <div class="nav-section {{ $isOpen ? '' : 'collapsed' }}">
                 <div class="nav-section-title" onclick="toggleSection(this)">
-                    <span>System</span>
+                    <span>Settings</span>
                     <i class="fas fa-chevron-down collapse-icon"></i>
                 </div>
                 <div class="nav-section-content">
@@ -2331,6 +2320,7 @@
         <a href="{{ route('settings.index') }}"><i class="fas fa-cog"></i> Settings</a>
         <div class="divider"></div>
         <a href="{{ route('pwa.install-guide') }}"><i class="fas fa-download"></i> Install App</a>
+        <button onclick="resetPageGuides()"><i class="fas fa-compass"></i> Replay page guides</button>
         <div class="divider"></div>
         <button onclick="document.getElementById('topbar-logout-form').submit()">
             <i class="fas fa-sign-out-alt"></i> Logout
@@ -2443,6 +2433,7 @@
     </div>
 
     <!-- AI Chat Widget -->
+    @if($__can('ai'))
     <div id="ai-chat-widget" class="ai-chat-widget">
         <!-- Floating Chat Button -->
         <div id="ai-chat-button" class="ai-chat-button" onclick="toggleAIChat()">
@@ -2803,6 +2794,7 @@
             }
         }
     </style>
+    @endif
     
     <script>
         // Mobile sidebar toggle
@@ -2853,6 +2845,17 @@
         });
         document.getElementById('appLauncherPanel').addEventListener('click', e => e.stopPropagation());
         document.getElementById('topbarUserDropdown').addEventListener('click', e => e.stopPropagation());
+
+        // Replay guided tours on every page
+        function resetPageGuides() {
+            fetch('{{ route("tours.reset") }}', {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                    'Accept': 'application/json'
+                }
+            }).then(() => window.location.reload());
+        }
 
         // Business deletion function
         function initiateBusinessDeletion() {
@@ -2931,7 +2934,8 @@
                 window.updateChartsForTheme();
             }
         }
-        
+
+        @if($__can('ai'))
         // AI Chat Functions
         let aiConversationHistory = [];
         let aiUnreadCount = 0;
@@ -3174,17 +3178,20 @@
             
             // Initial check
             setTimeout(checkForNewInsights, 5000);
-            
+        });
+        @endif
+
+        document.addEventListener('DOMContentLoaded', function() {
             // Load saved theme
             const savedTheme = localStorage.getItem('theme');
             const toggle = document.getElementById('themeToggle');
-            
-            if (savedTheme === 'dark') {
+
+            if (toggle && savedTheme === 'dark') {
                 document.body.setAttribute('data-theme', 'dark');
                 toggle.classList.add('active');
             }
         });
-        
+
         // Close sidebar when clicking overlay
         document.getElementById('mobileOverlay').addEventListener('click', function() {
             toggleSidebar();
@@ -3508,7 +3515,9 @@
             setInterval(loadNotificationCount, 30000);
         });
     </script>
-    
+
+    @include('components.advisor')
+
     @stack('scripts')
 </body>
 </html>

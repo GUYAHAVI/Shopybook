@@ -4,7 +4,7 @@
 @section('content')
 <div class="container-fluid">
     <!-- Sub-navigation for Sales -->
-    <div class="sub-navigation mb-4">
+    <div class="sub-navigation mb-4" data-tour="sales-tabs">
         <div class="nav-tabs">
             <a href="{{ route('sales.customers') }}" class="nav-tab active">
                 <i class="fas fa-users me-1"></i> Customers
@@ -20,7 +20,7 @@
 
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h1 class="h3 mb-0" style="color: var(--text-primary);">Customer Management</h1>
-        <div class="d-flex gap-2 flex-wrap">
+        <div class="d-flex gap-2 flex-wrap" data-tour="customers-add">
             <a href="{{ route('sales.customers.create') }}" class="btn btn-primary">
                 <i class="fas fa-user-plus me-2"></i><span class="d-none d-sm-inline">Add Individual Customer</span><span class="d-sm-none">Add Customer</span>
             </a>
@@ -32,7 +32,7 @@
 
     <div class="row">
         <div class="col-lg-12 mb-4">
-            <div class="card shadow mb-4" style="background: var(--card-bg); border: 1px solid var(--border-color);">
+            <div class="card shadow mb-4" style="background: var(--card-bg); border: 1px solid var(--border-color);" data-tour="customers-list">
                 <div class="card-header py-3 d-flex justify-content-between align-items-center" style="background: var(--bg-tertiary); border-bottom: 1px solid var(--border-color);">
                     <h6 class="m-0 font-weight-bold" style="color: var(--text-primary);">Individual Customers</h6>
                     <span class="badge" style="background-color: var(--primary-color); color: var(--white);">{{ $customers->total() }}</span>

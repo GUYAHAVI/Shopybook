@@ -283,6 +283,12 @@ Route::prefix('notifications')->name('notifications.')->middleware(['auth', 'has
     Route::patch('/mark-all-read', [\App\Http\Controllers\NotificationController::class, 'markAllAsRead'])->name('mark-all-read');
 });
 
+// Guided page tours (advisor)
+Route::prefix('tours')->name('tours.')->middleware(['auth'])->group(function () {
+    Route::post('/complete', [\App\Http\Controllers\TourController::class, 'complete'])->name('complete');
+    Route::post('/reset', [\App\Http\Controllers\TourController::class, 'reset'])->name('reset');
+});
+
 // ── Team / RBAC Routes ──────────────────────────────────────────────────────
 Route::prefix('team')->name('team.')->middleware(['auth', 'has.business'])->group(function () {
     Route::get('/',                          [TeamController::class, 'index'])->name('index');

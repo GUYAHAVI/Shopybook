@@ -3,6 +3,16 @@
 
 @section('content')
 
+<!-- Greeting -->
+<div class="mb-4">
+    <h1 class="mb-1" style="font-family: 'Playfair Display', serif; color: #7b2e2e;">
+        Good {{ now()->hour < 12 ? 'morning' : (now()->hour < 17 ? 'afternoon' : 'evening') }}, {{ Auth::user()->first_name ?? Auth::user()->name }}
+    </h1>
+    <p class="text-muted mb-0" style="font-size: 0.95rem;">
+        Here's how {{ Auth::user()->business->name ?? 'your business' }} is doing today.
+    </p>
+</div>
+
 {{-- Subscription Upgrade Banner for Non-Enterprise Users --}}
 @if(Auth::user()->business && !Auth::user()->business->isEnterprise())
     <div class="alert alert-dismissible fade show mb-4" role="alert" style="background: linear-gradient(135deg, #7b2e2e 0%, #ff511a 100%); border: none; border-radius: 12px; box-shadow: 0 8px 20px rgba(123, 46, 46, 0.3);">
@@ -78,54 +88,63 @@
     </div>
 @endif
 
-<!-- KPI Cards -->
-<div class="kpi-grid">
+<!-- Today's numbers -->
+<div class="kpi-grid mb-4" data-tour="dash-kpis">
     <div class="kpi-card">
         <div class="kpi-header">
-            <h6 class="kpi-title">Today's Sales</h6>
-            <i class="fas fa-dollar-sign"></i>
+            <h6 class="kpi-title">Money in today</h6>
+            <i class="fas fa-coins"></i>
         </div>
-        <h2 class="kpi-value">KSh {{ number_format($todaySales ?? 0, 0) }}</h2>
-        <div class="kpi-change positive">
-            <i class="fas fa-arrow-up"></i>
-            <span>{{ $todayOrders ?? 0 }} orders</span>
-        </div>
+        @if($totalTodayRevenue > 0)
+            <h2 class="kpi-value">KSh {{ number_format($totalTodayRevenue, 0) }}</h2>
+            <div class="kpi-change neutral"><span>Total sales and services</span></div>
+        @else
+            <p class="text-muted small mb-2">No sales or bookings recorded today.</p>
+            @if($canOrders)
+            <a href="{{ route('sales.pos') }}" class="btn btn-sm btn-primary">Open till</a>
+            @endif
+        @endif
     </div>
-    
+
     <div class="kpi-card">
         <div class="kpi-header">
-            <h6 class="kpi-title">Today's Orders</h6>
-            <i class="fas fa-shopping-cart"></i>
+            <h6 class="kpi-title">Orders today</h6>
+            <i class="fas fa-shopping-bag"></i>
         </div>
-        <h2 class="kpi-value">{{ $todayOrders ?? 0 }}</h2>
-        <div class="kpi-change positive">
-            <i class="fas fa-arrow-up"></i>
-            <span>{{ $conversionRate ?? 0 }}% completed</span>
-        </div>
+        @if($totalTodayBookings > 0)
+            <h2 class="kpi-value">{{ $totalTodayBookings }}</h2>
+            <div class="kpi-change neutral"><span>Product and service orders</span></div>
+        @else
+            <p class="text-muted small mb-2">No orders yet. Add something to sell first.</p>
+            @if($canProducts)
+            <a href="{{ route('products.quick-create') }}" class="btn btn-sm btn-primary">Add product</a>
+            @endif
+        @endif
     </div>
-    
+
     <div class="kpi-card">
         <div class="kpi-header">
-            <h6 class="kpi-title">Pending Orders</h6>
+            <h6 class="kpi-title">Pending</h6>
             <i class="fas fa-clock"></i>
         </div>
-        <h2 class="kpi-value">{{ $pendingOrders ?? 0 }}</h2>
-        <div class="kpi-change neutral">
-            <i class="fas fa-minus"></i>
-            <span>Awaiting completion</span>
-        </div>
+        <h2 class="kpi-value">{{ $totalPending }}</h2>
+        <div class="kpi-change neutral"><span>Orders awaiting completion</span></div>
     </div>
-    
+
     <div class="kpi-card">
         <div class="kpi-header">
-            <h6 class="kpi-title">New Customers</h6>
+            <h6 class="kpi-title">New customers</h6>
             <i class="fas fa-users"></i>
         </div>
-        <h2 class="kpi-value">{{ $newCustomers ?? 0 }}</h2>
-        <div class="kpi-change positive">
-            <i class="fas fa-arrow-up"></i>
-            <span>Today</span>
-        </div>
+        @if($newCustomers > 0)
+            <h2 class="kpi-value">{{ $newCustomers }}</h2>
+            <div class="kpi-change neutral"><span>Added today</span></div>
+        @else
+            <p class="text-muted small mb-2">No new customers today. Add your first one.</p>
+            @if($canCustomers)
+            <a href="{{ route('sales.customers') }}" class="btn btn-sm btn-primary">Add customer</a>
+            @endif
+        @endif
     </div>
 </div>
 
@@ -189,182 +208,54 @@
 </div>
 @endif
 
-<!-- Business Overview Cards -->
-<div class="business-overview mb-4">
-    <div class="row g-4">
-        <!-- Product Metrics -->
-        <div class="col-xl-3 col-lg-6 col-md-6">
-            <div class="overview-card product-card">
-                <div class="overview-icon">
-                    <i class="fas fa-shopping-cart"></i>
-                </div>
-                <div class="overview-content">
-                    <h3 class="overview-value">{{ $todayOrders ?? 0 }}</h3>
-                    <p class="overview-label">Product Orders</p>
-                    <small class="overview-subtitle">Today</small>
-                </div>
-            </div>
-        </div>
-        
-        <!-- Service Metrics -->
-        <div class="col-xl-3 col-lg-6 col-md-6">
-            <div class="overview-card service-card">
-                <div class="overview-icon">
-                    <i class="fas fa-calendar-check"></i>
-                </div>
-                <div class="overview-content">
-                    <h3 class="overview-value">{{ $todayServiceBookings ?? 0 }}</h3>
-                    <p class="overview-label">Service Bookings</p>
-                    <small class="overview-subtitle">Today</small>
-                </div>
-            </div>
-        </div>
-        
-        <!-- Combined Revenue -->
-        <div class="col-xl-3 col-lg-6 col-md-6">
-            <div class="overview-card revenue-card">
-                <div class="overview-icon">
-                    <i class="fas fa-dollar-sign"></i>
-                </div>
-                <div class="overview-content">
-                    <h3 class="overview-value">KSh {{ number_format($totalTodayRevenue ?? 0, 0) }}</h3>
-                    <p class="overview-label">Total Revenue</p>
-                    <small class="overview-subtitle">Today</small>
-                </div>
-            </div>
-        </div>
-        
-        <!-- Customer Metrics -->
-        <div class="col-xl-3 col-lg-6 col-md-6">
-            <div class="overview-card customer-card">
-                <div class="overview-icon">
-                    <i class="fas fa-users"></i>
-                </div>
-                <div class="overview-content">
-                    <h3 class="overview-value">{{ $newCustomers ?? 0 }}</h3>
-                    <p class="overview-label">New Customers</p>
-                    <small class="overview-subtitle">Today</small>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
 
-<!-- Detailed Metrics Section -->
-<div class="detailed-metrics mb-4">
-    <div class="row g-4">
-        <!-- Product Performance -->
-        <div class="col-xl-6 col-lg-6 col-md-12">
-            <div class="metric-card">
-                <div class="metric-header">
-                    <h5 class="metric-title">
-                        <i class="fas fa-shopping-cart me-2"></i>Product Performance
-                    </h5>
-                </div>
-                <div class="metric-content">
-                    <div class="metric-row">
-                        <span class="metric-label">Revenue:</span>
-                        <span class="metric-value">KSh {{ number_format($todaySales ?? 0, 0) }}</span>
-                    </div>
-                    <div class="metric-row">
-                        <span class="metric-label">Pending Orders:</span>
-                        <span class="metric-value">{{ $pendingOrders ?? 0 }}</span>
-                    </div>
-                    <div class="metric-row">
-                        <span class="metric-label">Conversion Rate:</span>
-                        <span class="metric-value">{{ $conversionRate ?? 0 }}%</span>
-                    </div>
-                    <div class="metric-row">
-                        <span class="metric-label">Avg. Order Value:</span>
-                        <span class="metric-value">KSh {{ number_format($avgOrderValue ?? 0, 0) }}</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-        
-        <!-- Service Performance -->
-        <div class="col-xl-6 col-lg-6 col-md-12">
-            <div class="metric-card">
-                <div class="metric-header">
-                    <h5 class="metric-title">
-                        <i class="fas fa-calendar-check me-2"></i>Service Performance
-                    </h5>
-                </div>
-                <div class="metric-content">
-                    <div class="metric-row">
-                        <span class="metric-label">Revenue:</span>
-                        <span class="metric-value">KSh {{ number_format($todayServiceRevenue ?? 0, 0) }}</span>
-                    </div>
-                    <div class="metric-row">
-                        <span class="metric-label">Pending Bookings:</span>
-                        <span class="metric-value">{{ $pendingServiceBookings ?? 0 }}</span>
-                    </div>
-                    <div class="metric-row">
-                        <span class="metric-label">Conversion Rate:</span>
-                        <span class="metric-value">{{ $serviceConversionRate ?? 0 }}%</span>
-                    </div>
-                    <div class="metric-row">
-                        <span class="metric-label">Avg. Booking Value:</span>
-                        <span class="metric-value">KSh {{ number_format($avgServiceValue ?? 0, 0) }}</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
 
-<!-- Quick Actions -->
-<div class="quick-actions mb-4">
+
+
+<!-- Quick actions -->
+<div class="quick-actions mb-4" data-tour="dash-actions">
     <div class="row g-4">
-        <!-- Product Management -->
-        <div class="col-xl-6 col-lg-6 col-md-12">
-            <div class="action-card product-action">
-                <div class="action-header">
-                    <h5 class="action-title">
-                        <i class="fas fa-shopping-cart me-2"></i>Product Management
-                    </h5>
-                    <a href="{{ route('sales.orders') }}" class="btn btn-sm btn-primary">View Orders</a>
-                </div>
-                <div class="action-content">
-                    <div class="action-stat">
-                        <span class="stat-label">Pending Orders:</span>
-                        <span class="stat-value">{{ $pendingOrders ?? 0 }}</span>
-                    </div>
-                    <div class="action-stat">
-                        <span class="stat-label">Today's Revenue:</span>
-                        <span class="stat-value">KSh {{ number_format($todaySales ?? 0, 0) }}</span>
-                    </div>
-                    <div class="action-stat">
-                        <span class="stat-label">Conversion Rate:</span>
-                        <span class="stat-value">{{ $conversionRate ?? 0 }}%</span>
-                    </div>
-                </div>
+        <div class="col-xl-3 col-lg-6 col-md-6">
+            <div class="action-card text-center p-4 h-100" style="border-radius: 12px; border: 1px solid var(--border-color); background: var(--card-bg);">
+                <i class="fas fa-cash-register fa-2x mb-3" style="color: #ff511a;"></i>
+                <h6 class="mb-2">Make a sale</h6>
+                <p class="text-muted small mb-3">Record a product order at the till.</p>
+                @if($canOrders)
+                <a href="{{ route('sales.pos') }}" class="btn btn-sm btn-primary">Open till</a>
+                @endif
             </div>
         </div>
-        
-        <!-- Service Management -->
-        <div class="col-xl-6 col-lg-6 col-md-12">
-            <div class="action-card service-action">
-                <div class="action-header">
-                    <h5 class="action-title">
-                        <i class="fas fa-calendar-check me-2"></i>Service Management
-                    </h5>
-                    <a href="{{ route('service-bookings.index') }}" class="btn btn-sm btn-primary">View Bookings</a>
-                </div>
-                <div class="action-content">
-                    <div class="action-stat">
-                        <span class="stat-label">Pending Bookings:</span>
-                        <span class="stat-value">{{ $pendingServiceBookings ?? 0 }}</span>
-                    </div>
-                    <div class="action-stat">
-                        <span class="stat-label">Today's Revenue:</span>
-                        <span class="stat-value">KSh {{ number_format($todayServiceRevenue ?? 0, 0) }}</span>
-                    </div>
-                    <div class="action-stat">
-                        <span class="stat-label">Conversion Rate:</span>
-                        <span class="stat-value">{{ $serviceConversionRate ?? 0 }}%</span>
-                    </div>
-                </div>
+
+        <div class="col-xl-3 col-lg-6 col-md-6">
+            <div class="action-card text-center p-4 h-100" style="border-radius: 12px; border: 1px solid var(--border-color); background: var(--card-bg);">
+                <i class="fas fa-box fa-2x mb-3" style="color: #ff511a;"></i>
+                <h6 class="mb-2">Add a product</h6>
+                <p class="text-muted small mb-3">Build your catalog to start selling.</p>
+                @if($canProducts)
+                <a href="{{ route('products.quick-create') }}" class="btn btn-sm btn-primary">Add product</a>
+                @endif
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-lg-6 col-md-6">
+            <div class="action-card text-center p-4 h-100" style="border-radius: 12px; border: 1px solid var(--border-color); background: var(--card-bg);">
+                <i class="fas fa-user-plus fa-2x mb-3" style="color: #ff511a;"></i>
+                <h6 class="mb-2">Add a customer</h6>
+                <p class="text-muted small mb-3">Keep track of who buys from you.</p>
+                @if($canCustomers)
+                <a href="{{ route('sales.customers') }}" class="btn btn-sm btn-primary">Add customer</a>
+                @endif
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-lg-6 col-md-6">
+            <div class="action-card text-center p-4 h-100" style="border-radius: 12px; border: 1px solid var(--border-color); background: var(--card-bg);">
+                <i class="fas fa-calendar-check fa-2x mb-3" style="color: #ff511a;"></i>
+                <h6 class="mb-2">Add a service</h6>
+                <p class="text-muted small mb-3">Offer bookings customers can schedule.</p>
+                @if($canServices)
+                <a href="{{ route('services.create') }}" class="btn btn-sm btn-primary">Add service</a>
+                @endif
             </div>
         </div>
     </div>

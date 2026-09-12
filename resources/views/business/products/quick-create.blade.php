@@ -174,7 +174,7 @@
                                 <button type="button" class="btn btn-outline-secondary me-2" onclick="history.back()">
                                     <i class="fas fa-times me-2"></i>Cancel
                                 </button>
-                                <button type="submit" class="btn btn-success btn-lg">
+                                <button type="submit" class="btn btn-success btn-lg" data-tour="quick-submit">
                                     <i class="fas fa-plus me-2"></i>Add Product
                                 </button>
                             </div>

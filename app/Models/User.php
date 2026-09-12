@@ -52,7 +52,22 @@ class User extends Authenticatable implements MustVerifyEmail
             'email_verified_at' => 'datetime',
             'password'          => 'hashed',
             'is_admin'          => 'boolean',
+            'completed_tours'   => 'array',
         ];
+    }
+
+    public function hasCompletedTour(string $tour): bool
+    {
+        return in_array($tour, $this->completed_tours ?? [], true);
+    }
+
+    public function markTourCompleted(string $tour): void
+    {
+        $tours = $this->completed_tours ?? [];
+        if (!in_array($tour, $tours, true)) {
+            $tours[] = $tour;
+            $this->forceFill(['completed_tours' => $tours])->save();
+        }
     }
 
     /**

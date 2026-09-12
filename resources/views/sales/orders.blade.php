@@ -4,7 +4,7 @@
 
 <div class="container-fluid">
     <!-- Sub-navigation for Sales -->
-    <div class="sub-navigation mb-4">
+    <div class="sub-navigation mb-4" data-tour="sales-tabs">
         <div class="nav-tabs">
             <a href="{{ route('sales.customers') }}" class="nav-tab">
                 <i class="fas fa-users me-1"></i> Customers
@@ -37,7 +37,7 @@
     </div>
 
     <div class="d-sm-flex align-items-center justify-content-between mb-4">
-        <div class="filter-buttons-container">
+        <div class="filter-buttons-container" data-tour="orders-filters">
             <button type="button" class="btn btn-outline-primary filter-btn active" onclick="filterOrders('all')">
                 <i class="fas fa-list me-1"></i><span class="btn-text">All Orders</span>
             </button>
@@ -56,7 +56,7 @@
         </div>
     </div>
 
-    <div class="card shadow mb-4" style="background: var(--card-bg); border: 1px solid var(--border-color);">
+    <div class="card shadow mb-4" style="background: var(--card-bg); border: 1px solid var(--border-color);" data-tour="orders-list">
         <div class="card-header py-3" style="background: var(--bg-tertiary); border-bottom: 1px solid var(--border-color);">
             <h6 class="m-0 font-weight-bold" style="color: var(--text-primary);">Order Management</h6>
         </div>
