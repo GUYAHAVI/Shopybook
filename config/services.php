@@ -176,4 +176,8 @@ return [
         'model' => env('OPENAI_MODEL', 'gpt-4'),
     ],
 
+    'replicate' => [
+        'token' => env('REPLICATE_API_TOKEN'),
+    ],
+
 ];

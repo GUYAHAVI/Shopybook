@@ -410,6 +410,7 @@
 
             <form method="POST" action="{{ route('login') }}" id="loginForm">
                 @csrf
+                <x-honeypot />
 
                 <div class="form-group">
                     <label for="email" class="form-label">Email Address</label>

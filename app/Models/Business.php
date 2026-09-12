@@ -56,6 +56,10 @@ class Business extends BaseTenant implements TenantWithDatabase
         'linkedin_url',
         'youtube_url',
         'whatsapp_number',
+        'ai_credits',
+        'ai_credits_purchased',
+        'ai_credits_reset_at',
+        'ai_credit_log',
     ];
 
     protected $casts = [
@@ -66,6 +70,8 @@ class Business extends BaseTenant implements TenantWithDatabase
         'on_trial' => 'boolean',
         'website_enabled' => 'boolean',
         'website_created_at' => 'datetime',
+        'ai_credits_reset_at' => 'datetime',
+        'ai_credit_log' => 'array',
     ];
 
     /**
@@ -342,6 +348,88 @@ class Business extends BaseTenant implements TenantWithDatabase
     public function isEnterprise(): bool
     {
         return $this->plan === 'enterprise';
+    }
+
+    /**
+     * Monthly AI credit allowance per plan.
+     */
+    public function monthlyAiCredits(): int
+    {
+        return match ($this->plan ?? 'free') {
+            'free'      => 0,
+            'basic'     => 10,
+            'premium'   => 30,
+            'enterprise'=> 100,
+            default     => 0,
+        };
+    }
+
+    /**
+     * Total credits available = monthly + purchased.
+     */
+    public function totalAiCredits(): int
+    {
+        return ($this->ai_credits ?? 0) + ($this->ai_credits_purchased ?? 0);
+    }
+
+    /**
+     * Check if business can use premium AI generation.
+     */
+    public function canUsePremiumAi(): bool
+    {
+        return $this->isPremium() && $this->totalAiCredits() > 0;
+    }
+
+    /**
+     * Consume one AI credit (purchased first, then monthly).
+     */
+    public function consumeAiCredit(string $feature): bool
+    {
+        if ($this->totalAiCredits() <= 0) {
+            return false;
+        }
+
+        if (($this->ai_credits_purchased ?? 0) > 0) {
+            $this->decrement('ai_credits_purchased');
+        } else {
+            $this->decrement('ai_credits');
+        }
+
+        $log = $this->ai_credit_log ?? [];
+        $log[] = [
+            'feature' => $feature,
+            'at' => now()->toISOString(),
+            'remaining' => $this->totalAiCredits(),
+        ];
+        // Keep only last 100 entries
+        $log = array_slice($log, -100);
+        $this->forceFill(['ai_credit_log' => $log])->save();
+
+        return true;
+    }
+
+    /**
+     * Reset monthly AI credits if a new month has started.
+     */
+    public function resetMonthlyAiCreditsIfNeeded(): void
+    {
+        $resetAt = $this->ai_credits_reset_at;
+        $now = now();
+
+        if (!$resetAt || $resetAt->lt($now->copy()->startOfMonth())) {
+            $this->forceFill([
+                'ai_credits' => $this->monthlyAiCredits(),
+                'ai_credits_reset_at' => $now,
+            ])->save();
+        }
+    }
+
+    /**
+     * Add purchased credits.
+     */
+    public function addPurchasedCredits(int $amount): void
+    {
+        $this->increment('ai_credits_purchased', $amount);
     }
 
     /**

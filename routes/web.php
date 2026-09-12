@@ -75,14 +75,18 @@ Route::get('/site/{subdomain}', [PublicWebsiteController::class, 'homepage'])
 Route::get('/site/{subdomain}/{slug}', [PublicWebsiteController::class, 'page'])
     ->name('public.website.direct.page');
 Route::post('/site/{subdomain}/contact', [PublicWebsiteController::class, 'submitContact'])
+    ->middleware(['honeypot', 'throttle:5,1'])
     ->name('public.website.contact');
 Route::post('/site/{subdomain}/order', [PublicWebsiteController::class, 'placeOrder'])
+    ->middleware(['honeypot', 'throttle:10,1'])
     ->name('public.website.order');
 Route::post('/site/{subdomain}/testimonial', [TestimonialController::class, 'submitBusiness'])
+    ->middleware(['honeypot', 'throttle:5,1'])
     ->name('public.website.testimonial');
 
 // Public platform testimonial submission
 Route::post('/testimonials', [TestimonialController::class, 'submitPlatform'])
+    ->middleware(['honeypot', 'throttle:5,1'])
     ->name('testimonials.submit');
 
 // Public website viewer (subdomain-based - *.shopybook.com)
@@ -92,10 +96,13 @@ Route::domain('{subdomain}.' . env('APP_DOMAIN', 'shopybook.com'))->group(functi
     Route::get('/{slug}', [PublicWebsiteController::class, 'page'])
         ->name('public.website.subdomain.page');
     Route::post('/contact', [PublicWebsiteController::class, 'submitContact'])
+        ->middleware(['honeypot', 'throttle:5,1'])
         ->name('public.website.subdomain.contact');
     Route::post('/order', [PublicWebsiteController::class, 'placeOrder'])
+        ->middleware(['honeypot', 'throttle:10,1'])
         ->name('public.website.subdomain.order');
     Route::post('/testimonial', [TestimonialController::class, 'submitBusiness'])
+        ->middleware(['honeypot', 'throttle:5,1'])
         ->name('public.website.subdomain.testimonial');
 });
 
@@ -104,6 +111,7 @@ Route::post('/service-bookings/public', [ServiceBookingController::class, 'store
 
 // Contact Form Route
 use App\Http\Controllers\ContactFormController;
+use App\Http\Controllers\AICreditController;
 Route::post('/contact', [ContactFormController::class, 'submit'])->middleware('throttle:5,1')->name('contact.submit');
 
 // Chatbot Route
@@ -155,7 +163,13 @@ Route::get('/business/choose-type', [BusinessController::class, 'chooseType'])->
 Route::get('/business/create', [BusinessController::class, 'create'])->name('business.create')->middleware('auth');
 Route::post('/business/store', [BusinessController::class, 'store'])->name('business.store')->middleware('auth');
 Route::post('/business/enhance-description', [BusinessController::class, 'enhanceDescription'])->name('business.enhance-description')->middleware('auth');
-Route::post('/business/generate-logo', [BusinessController::class, 'generateLogo'])->name('business.generate-logo')->middleware('auth');
+Route::post('/business/generate-logo', [BusinessController::class, 'generateLogo'])->name('business.generate-logo')->middleware(['auth', 'throttle:10,1']);
+
+// AI Credits & in-app purchases
+Route::get('/ai-credits', [AICreditController::class, 'index'])->name('ai-credits.index')->middleware('auth');
+Route::get('/ai-credits/summary', [AICreditController::class, 'summary'])->name('ai-credits.summary')->middleware('auth');
+Route::post('/ai-credits/purchase', [AICreditController::class, 'purchase'])->name('ai-credits.purchase')->middleware(['auth', 'honeypot', 'throttle:5,1']);
+Route::get('/ai-credits/payment/callback', [AICreditController::class, 'paymentCallback'])->name('ai-credits.payment.callback')->middleware('auth');
 
 // OCR Data Capture Routes
 Route::prefix('ocr')->middleware(['auth', 'has.business', 'permission:products'])->group(function () {
@@ -197,7 +211,7 @@ Route::prefix('marketing')->middleware(['auth', 'has.business', 'permission:mark
         Route::post('/ai/enhance-content', [MarketingPostController::class, 'enhanceContent'])->name('marketing.posts.ai.enhance');
         Route::post('/ai/generate-image-prompts', [MarketingPostController::class, 'generateImagePrompts'])->name('marketing.posts.ai.image-prompts');
         Route::post('/ai/enhance-image-prompt', [MarketingPostController::class, 'enhanceImagePrompt'])->name('marketing.posts.ai.enhance-prompt');
-        Route::post('/ai/generate-image', [MarketingPostController::class, 'generateImage'])->name('marketing.posts.ai.generate-image');
+        Route::post('/ai/generate-image', [MarketingPostController::class, 'generateImage'])->name('marketing.posts.ai.generate-image')->middleware('throttle:10,1');
         Route::post('/ai/generate-video-prompts', [MarketingPostController::class, 'generateVideoPrompts'])->name('marketing.posts.ai.video-prompts');
         Route::post('/ai/enhance-video-prompt', [MarketingPostController::class, 'enhanceVideoPrompt'])->name('marketing.posts.ai.enhance-video-prompt');
     });
@@ -437,10 +451,10 @@ Route::post('/orders', [SalesController::class, 'createOrder'])->name('sales.cre
         
         // Marketing Report
         Route::get('/report', [MarketingController::class, 'marketingReport'])->name('marketing.report')->middleware('has.business');
-        
-        // Video Generation Routes
-        Route::post('/video/generate', [MarketingController::class, 'generateVideo'])->name('marketing.video.generate')->middleware('has.business');
-        Route::get('/video/styles', [MarketingController::class, 'getVideoStyles'])->name('marketing.video.styles')->middleware('has.business');
+
+        // Video Generation Routes (disabled — removed per cost/quality review)
+        // Route::post('/video/generate', [MarketingController::class, 'generateVideo'])->name('marketing.video.generate')->middleware('has.business');
+        // Route::get('/video/styles', [MarketingController::class, 'getVideoStyles'])->name('marketing.video.styles')->middleware('has.business');
         Route::post('/video/preview-prompt', [MarketingController::class, 'previewVideoPrompt'])->name('marketing.video.preview-prompt')->middleware('has.business');
         Route::delete('/video/cleanup', [MarketingController::class, 'cleanupVideos'])->name('marketing.video.cleanup')->middleware('has.business');
     });
@@ -776,7 +790,7 @@ Route::post('/orders', [SalesController::class, 'createOrder'])->name('sales.cre
     // AI Communication System Routes
     Route::prefix('ai-communication')->name('ai-comm.')->middleware(['has.business', 'permission:ai'])->group(function () {
         Route::get('/chat', [AICommunicationController::class, 'chat'])->name('chat');
-        Route::post('/process-message', [AICommunicationController::class, 'processMessage'])->name('process-message');
+        Route::post('/process-message', [AICommunicationController::class, 'processMessage'])->middleware('throttle:20,1')->name('process-message');
         Route::get('/history', [AICommunicationController::class, 'getHistory'])->name('history');
         Route::post('/clear-history', [AICommunicationController::class, 'clearHistory'])->name('clear-history');
         Route::post('/suggestions', [AICommunicationController::class, 'getSuggestions'])->name('suggestions');

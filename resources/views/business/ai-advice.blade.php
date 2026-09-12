@@ -147,6 +147,7 @@
                                 <div class="card-body">
                                     <form action="{{ route('ai-advice.ai-settings.update') }}" method="POST">
                                         @csrf
+                                        <x-honeypot />
                                         @method('PUT')
                                         
                                         <div class="row">
@@ -217,6 +218,7 @@
                                     </p>
                                     <form action="{{ route('ai-advice.ai-learning.trigger') }}" method="POST">
                                         @csrf
+                                        <x-honeypot />
                                         <button type="submit" class="btn btn-info">
                                             <i class="fas fa-sync-alt"></i>
                                             Trigger Learning Now

@@ -490,6 +490,7 @@
 
             <form method="POST" action="{{ route('register') }}" id="registerForm">
                 @csrf
+                <x-honeypot />
 
                 <div class="form-row">
                     <div class="form-group">

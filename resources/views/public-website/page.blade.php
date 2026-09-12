@@ -1370,6 +1370,7 @@
                 <!-- Form panel -->
                 <form id="businessReviewForm" action="{{ $testimonialUrl }}" method="POST" novalidate>
                     @csrf
+                    <x-honeypot />
                     <div class="modal-body">
                         <div id="wsReviewError" class="alert alert-danger d-none"></div>
                         <div class="mb-3">
@@ -1584,6 +1585,7 @@
                         @endif
                         <form action="{{ route('public.website.contact', $website->subdomain) }}" method="POST">
                             @csrf
+                            <x-honeypot />
                             <div class="row g-3">
                                 <div class="col-md-6">
                                     <input type="text" name="name" placeholder="Your Full Name" required

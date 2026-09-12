@@ -18,12 +18,14 @@ return Application::configure(basePath: dirname(__DIR__))
    ->withMiddleware(function (Middleware $middleware) {
     $middleware->web(append: [
         \App\Http\Middleware\TrackPageVisit::class,
+        \App\Http\Middleware\Honeypot::class,
     ]);
 
     $middleware->alias([
         'has.business' => \App\Http\Middleware\HasBusiness::class,
         'permission'   => \App\Http\Middleware\CheckPermission::class,
         'admin'        => \App\Http\Middleware\AdminMiddleware::class,
+        'honeypot'     => \App\Http\Middleware\Honeypot::class,
     ]);
     
     // Exclude M-Pesa and Paystack webhooks from CSRF verification

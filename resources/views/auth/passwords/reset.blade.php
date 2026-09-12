@@ -12,6 +12,7 @@
                 <div class="card-body p-4">
                     <form method="POST" action="{{ route('password.update') }}" id="passwordResetForm">
                         @csrf
+                        <x-honeypot />
                         <input type="hidden" name="token" value="{{ $token }}">
 
                         <!-- Email Field -->

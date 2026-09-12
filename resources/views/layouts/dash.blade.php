@@ -2033,6 +2033,12 @@
                             <span>AI Content</span>
                         </a>
                     </div>
+                    <div class="nav-item">
+                        <a href="{{ route('ai-credits.index') }}" class="nav-link {{ request()->routeIs('ai-credits.*') ? 'active' : '' }}">
+                            <i class="fas fa-coins"></i>
+                            <span>AI Credits</span>
+                        </a>
+                    </div>
                     @endif
                 </div>
             </div>

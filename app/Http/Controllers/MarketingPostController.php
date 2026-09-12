@@ -814,7 +814,50 @@ class MarketingPostController extends Controller
                 'size' => $request->size ?? '1024x1024',
                 'business' => $business->name
             ]);
-            
+
+            // Check if user is paid — use premium Replicate (Flux Schnell) if so
+            $usePremium = false;
+            $creditService = app(\App\Services\AICreditService::class);
+
+            if ($business->isPremium() && $creditService->canUsePremium($business, 'marketing_image_premium')) {
+                $usePremium = true;
+            }
+
+            if ($usePremium) {
+                $replicate = app(\App\Services\ReplicateImageService::class);
+                if ($replicate->isConfigured()) {
+                    $imageData = $replicate->generateMarketingImage(
+                        $request->prompt,
+                        $business->name,
+                        $request->size ?? '1024x1024'
+                    );
+
+                    if ($imageData && isset($imageData['public_url'])) {
+                        $creditService->consume($business, 'marketing_image_premium');
+                        $storagePath = storage_path('app/public/' . $imageData['relative_path']);
+
+                        if (file_exists($storagePath)) {
+                            Log::info('Premium marketing image generated via Replicate', [
+                                'public_url' => $imageData['public_url'],
+                                'file_size' => filesize($storagePath),
+                            ]);
+
+                            return response()->json([
+                                'success' => true,
+                                'image_url' => $imageData['public_url'],
+                                'local_path' => $imageData['local_path'],
+                                'relative_path' => $imageData['relative_path'],
+                                'file_size' => filesize($storagePath),
+                                'premium' => true,
+                                'credits_remaining' => $business->fresh()->totalAiCredits(),
+                            ]);
+                        }
+                    }
+                    Log::warning('Replicate marketing image failed, falling back to Pollinations');
+                }
+            }
+
+            // Free / fallback: Pollinations (existing behavior)
             $imageData = $this->claudeService->generateMarketingImage(
                 $request->prompt,
                 $request->style ?? 'realistic',

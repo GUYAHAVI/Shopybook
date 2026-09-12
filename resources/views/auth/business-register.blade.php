@@ -18,6 +18,7 @@
 
                     <form method="POST" action="{{ route('register.business') }}">
                         @csrf
+                        <x-honeypot />
 
                         <div class="mb-3">
                             <label class="form-label fw-semibold" style="color:#7b2e2e;">Business Name</label>

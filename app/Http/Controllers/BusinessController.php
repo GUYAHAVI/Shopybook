@@ -730,6 +730,58 @@ class BusinessController extends Controller
                 'has_tagline'   => !empty($tagline),
             ]);
 
+            // Check if user is paid — use premium Replicate (Flux Pro) if so
+            $business = Auth::user()->business;
+            $usePremium = false;
+
+            if ($business && $business->isPremium()) {
+                $creditService = app(\App\Services\AICreditService::class);
+                if ($creditService->canUsePremium($business, 'logo_premium')) {
+                    $usePremium = true;
+                }
+            }
+
+            if ($usePremium) {
+                // Premium: Replicate Flux Pro — high quality
+                $replicate = app(\App\Services\ReplicateImageService::class);
+                if ($replicate->isConfigured()) {
+                    // Build a high-quality prompt (reuse the Claude service's prompt builder)
+                    $prompt = $this->claudeService->buildExpertLogoPrompt(
+                        $request->business_name,
+                        $description,
+                        $request->business_type,
+                        $style,
+                        $tagline,
+                        $colorPalette,
+                        $topProducts
+                    );
+
+                    $logoResult = $replicate->generateLogo($prompt, $request->business_name);
+
+                    if ($logoResult && isset($logoResult['public_url'])) {
+                        // Consume credits
+                        $creditService->consume($business, 'logo_premium');
+
+                        Log::info('Premium logo generated via Replicate', [
+                            'business_name' => $request->business_name,
+                            'logo_url' => $logoResult['public_url'],
+                        ]);
+
+                        return response()->json([
+                            'success' => true,
+                            'logo_url' => $logoResult['public_url'],
+                            'logo_path' => $logoResult['local_path'],
+                            'premium' => true,
+                            'credits_remaining' => $business->fresh()->totalAiCredits(),
+                            'message' => 'High-quality logo generated! ' . $business->fresh()->totalAiCredits() . ' AI credits remaining.'
+                        ]);
+                    }
+                    // Fall through to Pollinations if Replicate fails
+                    Log::warning('Replicate logo failed, falling back to Pollinations');
+                }
+            }
+
+            // Free / fallback: Pollinations (existing behavior)
             $logoResult = $this->claudeService->generateBusinessLogo(
                 $request->business_name,
                 $description,

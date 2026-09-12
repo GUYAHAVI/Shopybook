@@ -2501,7 +2501,7 @@ Return ONLY the enhanced prompt, no explanations or additional text.";
     /**
      * Build a rich, expert-level logo generation prompt from all available business context.
      */
-    private function buildExpertLogoPrompt($businessName, $businessDescription, $businessType, $style, $tagline, $colorPalette, $products)
+    public function buildExpertLogoPrompt($businessName, $businessDescription, $businessType, $style, $tagline, $colorPalette, $products)
     {
         // Style descriptors — each drives the visual language of the mark
         $styleDescs = [
