@@ -19,18 +19,45 @@ class ReengagementController extends Controller
         $days = (int) $request->input('days', 30);
         $days = in_array($days, [7, 14, 30, 60, 90, 180]) ? $days : 30;
         $cutoff = Carbon::now()->subDays($days);
+        $hideContacted = $request->boolean('hide_contacted', true);
 
         // Users who have been inactive for the given period (not admins, not current user)
-        $users = User::where('is_admin', false)
+        $query = User::where('is_admin', false)
             ->where('id', '!=', auth()->id())
             ->where(function ($q) use ($cutoff) {
                 $q->whereDoesntHave('pageVisits', function ($q2) use ($cutoff) {
                     $q2->where('created_at', '>', $cutoff);
                 })->orWhereDoesntHave('pageVisits');
             })
-            ->with('business')
-            ->paginate(25)
-            ->withQueryString();
+            ->with('business');
+
+        // Optionally hide users already contacted in this period
+        if ($hideContacted) {
+            $query->where(function ($q) use ($cutoff) {
+                $q->whereNull('last_reengaged_at')->orWhere('last_reengaged_at', '<', $cutoff);
+            });
+        }
+
+        $users = $query->paginate(25)->withQueryString();
+
+        // Total counts for the header
+        $totalInactive = User::where('is_admin', false)
+            ->where('id', '!=', auth()->id())
+            ->where(function ($q) use ($cutoff) {
+                $q->whereDoesntHave('pageVisits', function ($q2) use ($cutoff) {
+                    $q2->where('created_at', '>', $cutoff);
+                })->orWhereDoesntHave('pageVisits');
+            })->count();
+
+        $alreadyContacted = User::where('is_admin', false)
+            ->where('id', '!=', auth()->id())
+            ->where(function ($q) use ($cutoff) {
+                $q->whereDoesntHave('pageVisits', function ($q2) use ($cutoff) {
+                    $q2->where('created_at', '>', $cutoff);
+                })->orWhereDoesntHave('pageVisits');
+            })
+            ->where('last_reengaged_at', '>=', $cutoff)
+            ->count();
 
         // Add last-visit info to each user
         $users->getCollection()->transform(function ($user) {
@@ -41,7 +68,36 @@ class ReengagementController extends Controller
             return $user;
         });
 
-        return view('admin.reengagement.index', compact('users', 'days'));
+        return view('admin.reengagement.index', compact('users', 'days', 'hideContacted', 'totalInactive', 'alreadyContacted'));
+    }
+
+    /**
+     * Return all user IDs matching the current filter (for "select all across pages").
+     */
+    public function allIds(Request $request)
+    {
+        $days = (int) $request->input('days', 30);
+        $days = in_array($days, [7, 14, 30, 60, 90, 180]) ? $days : 30;
+        $cutoff = Carbon::now()->subDays($days);
+        $hideContacted = $request->boolean('hide_contacted', true);
+
+        $query = User::where('is_admin', false)
+            ->where('id', '!=', auth()->id())
+            ->where(function ($q) use ($cutoff) {
+                $q->whereDoesntHave('pageVisits', function ($q2) use ($cutoff) {
+                    $q2->where('created_at', '>', $cutoff);
+                })->orWhereDoesntHave('pageVisits');
+            });
+
+        if ($hideContacted) {
+            $query->where(function ($q) use ($cutoff) {
+                $q->whereNull('last_reengaged_at')->orWhere('last_reengaged_at', '<', $cutoff);
+            });
+        }
+
+        $ids = $query->pluck('id')->toArray();
+
+        return response()->json(['user_ids' => $ids, 'count' => count($ids)]);
     }
 
     /**
@@ -71,6 +127,7 @@ class ReengagementController extends Controller
 
         try {
             Mail::to($user->email)->send(new ReengagementEmail($validated['subject'], $validated['body']));
+            $user->forceFill(['last_reengaged_at' => now()])->save();
 
             Log::info('Re-engagement email sent', [
                 'user_id' => $user->id,
@@ -93,7 +150,7 @@ class ReengagementController extends Controller
     public function draftBulk(Request $request)
     {
         $validated = $request->validate([
-            'user_ids' => 'required|array|max:25',
+            'user_ids' => 'required|array|max:100',
             'user_ids.*' => 'exists:users,id',
         ]);
 
@@ -127,7 +184,7 @@ class ReengagementController extends Controller
     public function sendBulk(Request $request)
     {
         $validated = $request->validate([
-            'emails' => 'required|array|max:25',
+            'emails' => 'required|array|max:100',
             'emails.*.user_id' => 'required|exists:users,id',
             'emails.*.subject' => 'required|string|max:200',
             'emails.*.body'    => 'required|string|max:5000',
@@ -146,6 +203,7 @@ class ReengagementController extends Controller
 
             try {
                 Mail::to($user->email)->send(new ReengagementEmail($item['subject'], $item['body']));
+                $user->forceFill(['last_reengaged_at' => now()])->save();
                 $sent++;
             } catch (\Throwable $e) {
                 Log::error("Bulk re-engagement failed for {$user->email}: " . $e->getMessage());

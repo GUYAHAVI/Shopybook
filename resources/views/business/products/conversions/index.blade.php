@@ -131,7 +131,7 @@
                         </div>
                         
                         <div class="d-flex justify-content-center">
-                            {{ $conversions->links() }}
+                            {{ $conversions->links('pagination::bootstrap-5') }}
                         </div>
                     @else
                         <div class="text-center py-5">

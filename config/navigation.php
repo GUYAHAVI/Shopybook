@@ -32,7 +32,7 @@ return [
             'items' => [
                 ['label' => 'Point of Sale', 'route' => 'sales.pos', 'icon' => 'fa-cash-register', 'active' => 'sales.pos', 'permission' => 'pos'],
                 ['label' => 'Orders', 'route' => 'sales.orders', 'icon' => 'fa-shopping-cart', 'active' => 'sales.orders*|sales.order-details|sales.archived-orders', 'permission' => 'orders'],
-                ['label' => 'Customers', 'route' => 'sales.customers', 'icon' => 'fa-users', 'active' => 'sales.customers*|sales.customer-details|sales.customers.*', 'permission' => 'customers'],
+                ['label' => 'Customers', 'route' => 'sales.customers', 'icon' => 'fa-users', 'active' => 'sales.customers*|sales.customers.*', 'permission' => 'customers'],
                 ['label' => 'Customer Debts', 'route' => 'sales.customer-debts', 'icon' => 'fa-hand-holding-usd', 'active' => 'sales.customer-debts', 'permission' => 'customers'],
                 ['label' => 'Supplier Debts', 'route' => 'sales.supplier-debts', 'icon' => 'fa-file-invoice', 'active' => 'sales.supplier-debts*', 'permission' => 'suppliers'],
                 ['label' => 'Credit Notes', 'route' => 'sales.credit-notes.index', 'icon' => 'fa-receipt', 'active' => 'sales.credit-note*', 'permission' => 'orders'],

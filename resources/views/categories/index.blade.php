@@ -155,7 +155,7 @@
 
                         @if($categories->hasPages())
                             <div class="d-flex justify-content-center mt-3">
-                                {{ $categories->links() }}
+                                {{ $categories->links('pagination::bootstrap-5') }}
                             </div>
                         @endif
                     @else
@@ -419,7 +419,7 @@
 
                         <!-- Pagination -->
                         <div class="d-flex justify-content-center">
-                            {{ $categories->appends(request()->query())->links() }}
+                            {{ $categories->appends(request()->query())->links('pagination::bootstrap-5') }}
                         </div>
                     @else
                         <div class="text-center py-5">

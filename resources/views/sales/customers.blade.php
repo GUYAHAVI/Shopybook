@@ -61,7 +61,9 @@
                                                     </div>
                                                 </div>
                                                 <div>
-                                                    <h6 class="mb-0" style="color: var(--text-primary);">{{ $customer->name }}</h6>
+                                                    <h6 class="mb-0" style="color: var(--text-primary);">
+                                                        <a href="{{ route('sales.customers.show', ['type' => 'individual', 'id' => $customer->id]) }}" class="text-decoration-none" style="color: var(--text-primary);">{{ $customer->name }}</a>
+                                                    </h6>
                                                     <small style="color: var(--text-muted);">{{ $customer->city ?? 'N/A' }}</small>
                                                 </div>
                                             </div>
@@ -272,7 +274,7 @@
                     
                     @if($organizations->hasPages())
                         <div class="card-footer">
-                            {{ $organizations->links() }}
+                            {{ $organizations->links('pagination::bootstrap-5') }}
                         </div>
                     @endif
                 </div>

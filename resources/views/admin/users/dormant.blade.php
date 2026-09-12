@@ -81,7 +81,7 @@
     </form>
 
     <div class="mt-3">
-        {{ $dormantUsers->links() }}
+        {{ $dormantUsers->links('pagination::bootstrap-5') }}
     </div>
     @else
     <div class="card shadow-sm">

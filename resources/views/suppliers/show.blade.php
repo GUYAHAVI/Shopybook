@@ -227,7 +227,7 @@
 
                     @if($purchaseHistory->hasPages())
                         <div class="mt-3">
-                            {{ $purchaseHistory->links() }}
+                            {{ $purchaseHistory->links('pagination::bootstrap-5') }}
                         </div>
                     @endif
                 </div>

@@ -10,21 +10,49 @@
         <p class="text-muted">Send a personal email from Elvis to users who have gone quiet. AI drafts a message based on each user's activity — you review and edit before sending.</p>
     </div>
 
+    {{-- Summary + filters --}}
     <div class="card mb-4">
         <div class="card-body py-3">
-            <form method="GET" class="d-flex align-items-center gap-2 flex-wrap">
-                <label class="text-muted small mb-0">Inactive for:</label>
-                <select name="days" class="form-select form-select-sm" style="width:auto" onchange="this.form.submit()">
-                    @foreach([7, 14, 30, 60, 90, 180] as $d)
-                        <option value="{{ $d }}" {{ $days === $d ? 'selected' : '' }}>{{ $d }} days</option>
-                    @endforeach
-                </select>
-                <span class="text-muted small ms-2">{{ $users->total() }} users found</span>
-            </form>
+            <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
+                <div class="d-flex align-items-center gap-3">
+                    <form method="GET" class="d-flex align-items-center gap-2 flex-wrap">
+                        <label class="text-muted small mb-0">Inactive for:</label>
+                        <select name="days" class="form-select form-select-sm" style="width:auto" onchange="this.form.submit()">
+                            @foreach([7, 14, 30, 60, 90, 180] as $d)
+                                <option value="{{ $d }}" {{ $days === $d ? 'selected' : '' }}>{{ $d }} days</option>
+                            @endforeach
+                        </select>
+                        <div class="form-check form-switch ms-2">
+                            <input class="form-check-input" type="checkbox" name="hide_contacted" value="1" id="hideContacted" {{ $hideContacted ? 'checked' : '' }} onchange="this.form.submit()">
+                            <label class="form-check-label small text-muted" for="hideContacted">Hide already contacted</label>
+                        </div>
+                        @if(!$hideContacted)
+                            <input type="hidden" name="hide_contacted" value="0">
+                        @endif
+                    </form>
+                </div>
+                <div class="d-flex gap-3 small">
+                    <span class="text-muted"><i class="fas fa-users me-1"></i>{{ $totalInactive }} inactive</span>
+                    <span class="text-success"><i class="fas fa-check-circle me-1"></i>{{ $alreadyContacted }} contacted</span>
+                    <span class="text-primary"><i class="fas fa-clock me-1"></i>{{ $users->total() }} to contact</span>
+                </div>
+            </div>
         </div>
     </div>
 
     @if($users->isNotEmpty())
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <div class="d-flex align-items-center gap-2">
+            <button class="btn btn-sm btn-outline-primary" id="select-all-btn" onclick="selectAllPage()">
+                <i class="fas fa-check-square me-1"></i>Select all on page
+            </button>
+            <button class="btn btn-sm btn-primary" id="select-all-matching-btn" onclick="selectAllMatching()">
+                <i class="fas fa-check-double me-1"></i>Select all {{ $users->total() }} users
+            </button>
+            <span class="text-muted small" id="selection-info"></span>
+        </div>
+    </div>
+
     <div class="card">
         <div class="card-body p-0">
             <div class="table-responsive">
@@ -37,12 +65,13 @@
                             <th>Last seen</th>
                             <th>Visits</th>
                             <th>Last page</th>
-                            <th width="180">Actions</th>
+                            <th>Status</th>
+                            <th width="120">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
                         @foreach($users as $user)
-                        <tr>
+                        <tr data-user-id="{{ $user->id }}">
                             <td><input type="checkbox" name="user_ids[]" value="{{ $user->id }}" class="form-check-input user-checkbox"></td>
                             <td>
                                 {{ $user->name }}
@@ -61,6 +90,15 @@
                             <td class="small">{{ $user->visit_count }}</td>
                             <td class="small text-muted">{{ $user->last_visit_page ?? '—' }}</td>
                             <td>
+                                @if($user->last_reengaged_at)
+                                    <span class="badge bg-success" title="{{ $user->last_reengaged_at->format('M j, Y g:i a') }}">
+                                        <i class="fas fa-paper-plane me-1"></i>Contacted
+                                    </span>
+                                @else
+                                    <span class="badge bg-secondary">Not contacted</span>
+                                @endif
+                            </td>
+                            <td>
                                 <button class="btn btn-sm btn-outline-primary" onclick="draftEmail({{ $user->id }}, '{{ addslashes($user->name) }}')">
                                     <i class="fas fa-magic me-1"></i>Draft
                                 </button>
@@ -73,7 +111,7 @@
         </div>
     </div>
 
-    <div class="mt-3">{{ $users->links() }}</div>
+    <div class="mt-3">{{ $users->links('pagination::bootstrap-5') }}</div>
 
     <!-- Bulk send -->
     <div class="card mt-4" id="bulk-section" style="display:none;">
@@ -87,11 +125,12 @@
             </div>
         </div>
         <div class="card-body">
-            <p class="text-muted small">Click "Generate personalized drafts" — AI will write a unique email for each user based on their activity. Review and edit each one, then send all at once.</p>
+            <p class="text-muted small">Click "Generate personalized drafts" — AI will write a unique email for each user based on their activity. Review and edit each one, then send all at once. For large batches this may take a minute.</p>
 
             <div id="bulk-loading" class="text-center py-4" style="display:none;">
                 <i class="fas fa-spinner fa-spin fa-2x text-primary mb-2"></i>
                 <p class="text-muted">Generating personalized drafts... <span id="bulk-progress">0 / 0</span></p>
+                <p class="text-muted small">This takes about 2-3 seconds per user. Please wait.</p>
             </div>
 
             <div id="bulk-drafts" style="display:none;"></div>
@@ -109,8 +148,8 @@
     <div class="card">
         <div class="card-body text-center text-muted py-5">
             <i class="fas fa-check-circle fa-3x text-success mb-3"></i>
-            <h5>No inactive users found</h5>
-            <p>All users have been active in the last {{ $days }} days.</p>
+            <h5>All caught up!</h5>
+            <p>No users left to contact in the last {{ $days }} days. @if($alreadyContacted > 0) {{ $alreadyContacted }} have already been contacted this period. @endif</p>
         </div>
     </div>
     @endif
@@ -164,41 +203,84 @@
 @push('scripts')
 <script>
 let currentUserId = null;
+let selectedUserIds = new Set();
 const draftModal = new bootstrap.Modal(document.getElementById('draftModal'));
 
 document.getElementById('select-all')?.addEventListener('change', function() {
-    document.querySelectorAll('.user-checkbox').forEach(cb => cb.checked = this.checked);
-    updateBulkSection();
+    document.querySelectorAll('.user-checkbox').forEach(cb => {
+        cb.checked = this.checked;
+        if (this.checked) selectedUserIds.add(cb.value); else selectedUserIds.delete(cb.value);
+    });
+    updateSelectionInfo();
 });
-document.querySelectorAll('.user-checkbox').forEach(cb => cb.addEventListener('change', updateBulkSection));
 
-function updateBulkSection() {
-    const checked = document.querySelectorAll('.user-checkbox:checked');
-    const section = document.getElementById('bulk-section');
-    if (checked.length > 0) {
-        section.style.display = '';
-        document.getElementById('bulk-count').textContent = checked.length;
-        // Reset to initial state
-        document.getElementById('bulk-loading').style.display = 'none';
-        document.getElementById('bulk-drafts').style.display = 'none';
-        document.getElementById('bulk-drafts').innerHTML = '';
-        document.getElementById('bulk-send-form').style.display = 'none';
-        document.getElementById('bulk-emails-container').innerHTML = '';
-        document.getElementById('generate-drafts-btn').style.display = '';
+document.querySelectorAll('.user-checkbox').forEach(cb => cb.addEventListener('change', function() {
+    if (this.checked) selectedUserIds.add(this.value); else selectedUserIds.delete(this.value);
+    updateSelectionInfo();
+}));
+
+function updateSelectionInfo() {
+    const count = selectedUserIds.size;
+    const info = document.getElementById('selection-info');
+    if (count > 0) {
+        info.textContent = count + ' selected';
+        document.getElementById('bulk-section').style.display = '';
+        document.getElementById('bulk-count').textContent = count;
     } else {
-        section.style.display = 'none';
+        info.textContent = '';
+        document.getElementById('bulk-section').style.display = 'none';
     }
+}
+
+function selectAllPage() {
+    document.querySelectorAll('.user-checkbox').forEach(cb => {
+        cb.checked = true;
+        selectedUserIds.add(cb.value);
+    });
+    document.getElementById('select-all').checked = true;
+    updateSelectionInfo();
+}
+
+function selectAllMatching() {
+    const btn = document.getElementById('select-all-matching-btn');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Loading...';
+
+    const params = new URLSearchParams(window.location.search);
+
+    fetch('{{ route("admin.reengagement.all-ids") }}?' + params, {
+        headers: { 'Accept': 'application/json' }
+    })
+    .then(r => r.json())
+    .then(data => {
+        selectedUserIds = new Set(data.user_ids.map(String));
+        document.querySelectorAll('.user-checkbox').forEach(cb => {
+            cb.checked = selectedUserIds.has(cb.value);
+        });
+        updateSelectionInfo();
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-check-double me-1"></i>Select all ' + data.count + ' users';
+    })
+    .catch(() => {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-check-double me-1"></i>Select all users';
+    });
 }
 
 function closeBulk() {
     document.getElementById('bulk-section').style.display = 'none';
+    document.getElementById('bulk-loading').style.display = 'none';
+    document.getElementById('bulk-drafts').style.display = 'none';
+    document.getElementById('bulk-drafts').innerHTML = '';
+    document.getElementById('bulk-send-form').style.display = 'none';
+    document.getElementById('bulk-emails-container').innerHTML = '';
+    document.getElementById('generate-drafts-btn').style.display = '';
 }
 
 function generateBulkDrafts() {
-    const checked = document.querySelectorAll('.user-checkbox:checked');
-    if (checked.length === 0) return;
+    const userIds = Array.from(selectedUserIds);
+    if (userIds.length === 0) return;
 
-    const userIds = Array.from(checked).map(cb => cb.value);
     const loading = document.getElementById('bulk-loading');
     const draftsDiv = document.getElementById('bulk-drafts');
     const sendForm = document.getElementById('bulk-send-form');
@@ -234,7 +316,6 @@ function generateBulkDrafts() {
         emailsContainer.innerHTML = '';
 
         data.drafts.forEach((draft, i) => {
-            // Card for each draft
             const card = document.createElement('div');
             card.className = 'border rounded p-3 mb-3';
             card.innerHTML = `
@@ -244,7 +325,7 @@ function generateBulkDrafts() {
                 </div>
                 <div class="mb-2">
                     <label class="form-label small text-muted">Subject</label>
-                    <input type="text" class="form-control form-control-sm bulk-subject" data-idx="${i}" value="${draft.subject.replace(/"/g, '"')}">
+                    <input type="text" class="form-control form-control-sm bulk-subject" data-idx="${i}" value="${(draft.subject || '').replace(/"/g, '"')}">
                 </div>
                 <div>
                     <label class="form-label small text-muted">Message</label>
@@ -253,7 +334,6 @@ function generateBulkDrafts() {
             `;
             draftsDiv.appendChild(card);
 
-            // Hidden inputs for the form
             const subjInput = document.createElement('input');
             subjInput.type = 'hidden';
             subjInput.name = `emails[${i}][user_id]`;
@@ -273,7 +353,6 @@ function generateBulkDrafts() {
             emailsContainer.appendChild(bodyField);
         });
 
-        // Sync visible fields to hidden inputs before submit
         sendForm.onsubmit = function() {
             data.drafts.forEach((draft, i) => {
                 document.querySelector(`.bulk-subject-hidden-${i}`).value = document.querySelector(`.bulk-subject[data-idx="${i}"]`).value;

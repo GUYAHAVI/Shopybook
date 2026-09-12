@@ -625,15 +625,21 @@ class SalesController extends Controller
 
     public function showCustomer(Request $request, $type, $id)
     {
+        $business = auth()->user()->business;
+
         if ($type === 'organization') {
-            $customer = OrganizationCustomer::findOrFail($id);
-            // Future: fetch organization orders if implemented
-            $orders = collect(); // Placeholder, implement if orgs can have orders
+            $customer = OrganizationCustomer::where('business_id', $business->id)->findOrFail($id);
+            $orders = collect(); // Implement if orgs can have orders
         } else {
-            $customer = Customer::findOrFail($id);
-            $orders = $customer->orders()->latest()->get();
+            $customer = Customer::where('business_id', $business->id)->findOrFail($id);
+            $orders = $customer->orders()->latest()->paginate(10);
         }
-        return view('sales.customers.show', compact('type', 'customer', 'orders'));
+
+        // Summary stats
+        $totalSpent = $orders->sum('total_amount') ?? 0;
+        $orderCount = $orders->count();
+
+        return view('sales.customers.show', compact('type', 'customer', 'orders', 'totalSpent', 'orderCount'));
     }
 
     public function storeCustomer(Request $request)

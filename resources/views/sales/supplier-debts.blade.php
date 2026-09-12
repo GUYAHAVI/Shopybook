@@ -169,7 +169,7 @@
 
             <!-- Pagination -->
             <div class="mt-4">
-                {{ $debts->appends(request()->query())->links() }}
+                {{ $debts->appends(request()->query())->links('pagination::bootstrap-5') }}
             </div>
         </div>
     </div>

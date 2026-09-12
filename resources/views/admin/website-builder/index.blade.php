@@ -106,6 +106,6 @@
         </div>
     </div>
 
-    <div class="mt-3">{{ $businesses->links() }}</div>
+    <div class="mt-3">{{ $businesses->links('pagination::bootstrap-5') }}</div>
 </div>
 @endsection

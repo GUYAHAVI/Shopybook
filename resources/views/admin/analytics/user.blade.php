@@ -109,7 +109,7 @@
             </table>
         </div>
         @if($activityLogs->hasPages())
-        <div class="card-footer bg-white">{{ $activityLogs->links() }}</div>
+        <div class="card-footer bg-white">{{ $activityLogs->links('pagination::bootstrap-5') }}</div>
         @endif
     </div>
 </div>

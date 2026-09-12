@@ -134,7 +134,7 @@
 
                         <!-- Pagination -->
                         <div class="d-flex justify-content-center">
-                            {{ $brands->appends(request()->query())->links() }}
+                            {{ $brands->appends(request()->query())->links('pagination::bootstrap-5') }}
                         </div>
                     @else
                         <div class="text-center py-5">

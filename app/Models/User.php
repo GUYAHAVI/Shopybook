@@ -53,6 +53,7 @@ class User extends Authenticatable implements MustVerifyEmail
             'password'          => 'hashed',
             'is_admin'          => 'boolean',
             'completed_tours'   => 'array',
+            'last_reengaged_at'  => 'datetime',
         ];
     }
 

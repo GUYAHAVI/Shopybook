@@ -211,7 +211,7 @@
                         <!-- Pagination -->
                         @if($transactions->hasPages())
                             <div class="d-flex justify-content-center p-3">
-                                {{ $transactions->links() }}
+                                {{ $transactions->links('pagination::bootstrap-5') }}
                             </div>
                         @endif
                     @else

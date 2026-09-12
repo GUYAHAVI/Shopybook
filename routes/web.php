@@ -381,7 +381,6 @@ Route::post('/orders', [SalesController::class, 'createOrder'])->name('sales.cre
         Route::post('/calculate-dynamic-conversion', [SalesController::class, 'calculateDynamicConversion'])->name('sales.calculate-dynamic-conversion');
         Route::get('/customers', [SalesController::class, 'customers'])->name('sales.customers');
         Route::get('/customers/create', [SalesController::class, 'createCustomer'])->name('sales.customers.create');
-        Route::get('/customers/{customer}', [SalesController::class, 'customerDetails'])->name('sales.customer-details');
         Route::get('/customers/{type}/{id}', [SalesController::class, 'showCustomer'])->name('sales.customers.show');
         Route::post('/customers', [SalesController::class, 'storeCustomer'])->name('sales.store-customer');
         Route::put('/customers/{customer}', [SalesController::class, 'updateCustomer'])->name('sales.update-customer');
@@ -856,6 +855,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
 
     // Re-engagement emails
     Route::get('/reengage', [\App\Http\Controllers\Admin\ReengagementController::class, 'index'])->name('reengagement.index');
+    Route::get('/reengage/all-ids', [\App\Http\Controllers\Admin\ReengagementController::class, 'allIds'])->name('reengagement.all-ids');
     Route::get('/reengage/{user}/draft', [\App\Http\Controllers\Admin\ReengagementController::class, 'draft'])->name('reengagement.draft');
     Route::post('/reengage/bulk-draft', [\App\Http\Controllers\Admin\ReengagementController::class, 'draftBulk'])->name('reengagement.draft-bulk');
     Route::post('/reengage/{user}/send', [\App\Http\Controllers\Admin\ReengagementController::class, 'send'])->name('reengagement.send');

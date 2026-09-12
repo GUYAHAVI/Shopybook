@@ -166,7 +166,7 @@
 
                         @if($employees->hasPages())
                             <div class="d-flex justify-content-center mt-3">
-                                {{ $employees->links() }}
+                                {{ $employees->links('pagination::bootstrap-5') }}
                             </div>
                         @endif
                     @else
@@ -415,7 +415,7 @@
 
                         <!-- Pagination -->
                         <div class="d-flex justify-content-center">
-                            {{ $employees->appends(request()->query())->links() }}
+                            {{ $employees->appends(request()->query())->links('pagination::bootstrap-5') }}
                         </div>
                     @else
                         <div class="text-center py-5">

@@ -63,7 +63,7 @@
             </tbody>
         </table>
     </div>
-    {{ $pending->links() }}
+    {{ $pending->links('pagination::bootstrap-5') }}
     @endif
 
     {{-- ── APPROVED ── --}}
@@ -101,7 +101,7 @@
             </tbody>
         </table>
     </div>
-    {{ $approved->links() }}
+    {{ $approved->links('pagination::bootstrap-5') }}
     @endif
 </div>
 @endsection

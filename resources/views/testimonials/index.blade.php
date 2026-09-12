@@ -206,7 +206,7 @@
 
         {{-- Pagination --}}
         <div class="mt-4">
-            {{ $testimonials->links() }}
+            {{ $testimonials->links('pagination::bootstrap-5') }}
         </div>
     @endif
 
