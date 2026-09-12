@@ -1,6 +1,7 @@
-@extends('layouts.master')
+@extends('layouts.admin')
 
-@section('title', 'Super Admin Dashboard - Shopybook')
+@section('title', 'Dashboard — Super Admin')
+@section('page-title', 'Dashboard')
 
 @section('content')
 <div class="container-fluid py-4">

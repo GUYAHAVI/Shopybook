@@ -79,6 +79,14 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
     /**
+     * Page visits tracked by TrackPageVisit middleware.
+     */
+    public function pageVisits()
+    {
+        return $this->hasMany(PageVisit::class);
+    }
+
+    /**
      * Get all businesses the user owns.
      */
     public function businesses()

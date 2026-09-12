@@ -1,6 +1,7 @@
-@extends('layouts.app')
+@extends('layouts.admin')
 
-@section('title', 'Admin – Testimonials')
+@section('title', 'Testimonials — Super Admin')
+@section('page-title', 'Testimonials')
 
 @section('content')
 <div class="container py-4">

@@ -1,6 +1,7 @@
-@extends('layouts.master')
+@extends('layouts.admin')
 
-@section('title', 'AI Behavior Analysis - Super Admin')
+@section('title', 'AI analysis — Super Admin')
+@section('page-title', 'AI analysis')
 
 @section('content')
 <div class="container-fluid py-4">

@@ -1,6 +1,7 @@
-@extends('layouts.master')
+@extends('layouts.admin')
 
-@section('title', $business->name . ' - Super Admin')
+@section('title', $business->name . ' — Super Admin')
+@section('page-title', $business->name)
 
 @section('content')
 <div class="container-fluid py-4">
@@ -80,7 +81,7 @@
                     <div class="d-flex justify-content-between mb-2"><span>Customers:</span><strong>{{ $business->customers->count() }}</strong></div>
                     <div class="d-flex justify-content-between mb-2"><span>Website:</span><strong>{{ $business->website ? 'Yes' : 'No' }}</strong></div>
                     @if($business->website)
-                    <a href="{{ route('public.website', $business->slug) }}" target="_blank" class="btn btn-sm btn-outline-primary mt-2"><i class="fas fa-external-link-alt me-1"></i>View Website</a>
+                    <a href="{{ route('public.website.direct', $business->slug) }}" target="_blank" class="btn btn-sm btn-outline-primary mt-2"><i class="fas fa-external-link-alt me-1"></i>View Website</a>
                     @endif
                 </div>
             </div>

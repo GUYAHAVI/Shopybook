@@ -854,6 +854,13 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     // Website builder management
     Route::get('/website-builder', [\App\Http\Controllers\Admin\SuperAdminController::class, 'websiteBuilder'])->name('website-builder.index');
 
+    // Re-engagement emails
+    Route::get('/reengage', [\App\Http\Controllers\Admin\ReengagementController::class, 'index'])->name('reengagement.index');
+    Route::get('/reengage/{user}/draft', [\App\Http\Controllers\Admin\ReengagementController::class, 'draft'])->name('reengagement.draft');
+    Route::post('/reengage/bulk-draft', [\App\Http\Controllers\Admin\ReengagementController::class, 'draftBulk'])->name('reengagement.draft-bulk');
+    Route::post('/reengage/{user}/send', [\App\Http\Controllers\Admin\ReengagementController::class, 'send'])->name('reengagement.send');
+    Route::post('/reengage/bulk-send', [\App\Http\Controllers\Admin\ReengagementController::class, 'sendBulk'])->name('reengagement.send-bulk');
+
 });
 
 // Owner testimonial management routes

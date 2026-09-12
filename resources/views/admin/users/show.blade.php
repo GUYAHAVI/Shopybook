@@ -1,6 +1,7 @@
-@extends('layouts.master')
+@extends('layouts.admin')
 
-@section('title', $user->name . ' - Super Admin')
+@section('title', $user->name . ' — Super Admin')
+@section('page-title', $user->name)
 
 @section('content')
 <div class="container-fluid py-4">

@@ -1,6 +1,7 @@
-@extends('layouts.master')
+@extends('layouts.admin')
 
-@section('title', 'Website Builder Management - Super Admin')
+@section('title', 'Websites — Super Admin')
+@section('page-title', 'Websites')
 
 @section('content')
 <div class="container-fluid py-4">
@@ -91,7 +92,7 @@
                                 <div class="btn-group btn-group-sm">
                                     <a href="{{ route('admin.businesses.show', $biz) }}" class="btn btn-outline-primary" title="View Details"><i class="fas fa-eye"></i></a>
                                     @if($biz->website)
-                                    <a href="{{ route('public.website', $biz->slug) }}" target="_blank" class="btn btn-outline-success" title="View Website"><i class="fas fa-external-link-alt"></i></a>
+                                    <a href="{{ route('public.website.direct', $biz->slug) }}" target="_blank" class="btn btn-outline-success" title="View Website"><i class="fas fa-external-link-alt"></i></a>
                                     @endif
                                 </div>
                             </td>
