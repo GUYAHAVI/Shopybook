@@ -395,7 +395,10 @@ class Business extends BaseTenant implements TenantWithDatabase
             $this->decrement('ai_credits');
         }
 
-        $log = $this->ai_credit_log ?? [];
+        $log = $this->ai_credit_log;
+        if (!is_array($log)) {
+            $log = [];
+        }
         $log[] = [
             'feature' => $feature,
             'at' => now()->toISOString(),

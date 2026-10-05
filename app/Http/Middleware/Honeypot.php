@@ -62,8 +62,8 @@ class Honeypot
         $startedAt = $request->input($this->timingField);
         if ($startedAt) {
             try {
-                $elapsed = now()->diffInSeconds(\Carbon\Carbon::parse($startedAt));
-                if ($elapsed < $this->minSeconds) {
+                $elapsed = \Carbon\Carbon::parse($startedAt)->diffInSeconds(now());
+                if ($elapsed >= 0 && $elapsed < $this->minSeconds) {
                     Log::warning('Form submitted too fast (bot?)', [
                         'ip' => $request->ip(),
                         'path' => $request->path(),
