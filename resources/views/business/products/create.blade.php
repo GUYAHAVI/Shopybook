@@ -173,27 +173,15 @@
                             </div>
                         </div>
 
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label for="measurement_unit" class="form-label">Measurement Unit *</label>
-                                <select class="form-control @error('measurement_unit') is-invalid @enderror" id="measurement_unit" name="measurement_unit" required>
-                                    <option value="">Select Unit</option>
-                                    <option value="piece" @if(old('measurement_unit')=='piece') selected @endif>Piece (pcs)</option>
-                                    <option value="kg" @if(old('measurement_unit')=='kg') selected @endif>Kilogram (kg)</option>
-                                    <option value="g" @if(old('measurement_unit')=='g') selected @endif>Gram (g)</option>
-                                    <option value="lb" @if(old('measurement_unit')=='lb') selected @endif>Pound (lb)</option>
-                                    <option value="l" @if(old('measurement_unit')=='l') selected @endif>Litre (l)</option>
-                                    <option value="ml" @if(old('measurement_unit')=='ml') selected @endif>Millilitre (ml)</option>
-                                    <option value="m" @if(old('measurement_unit')=='m') selected @endif>Metre (m)</option>
-                                    <option value="cm" @if(old('measurement_unit')=='cm') selected @endif>Centimetre (cm)</option>
-                                    <option value="mm" @if(old('measurement_unit')=='mm') selected @endif>Millimetre (mm)</option>
-                                    <option value="ft" @if(old('measurement_unit')=='ft') selected @endif>Foot (ft)</option>
-                                    <option value="in" @if(old('measurement_unit')=='in') selected @endif>Inch (in)</option>
-                                    <option value="other" @if(old('measurement_unit')=='other') selected @endif>Other</option>
-                                </select>
-                                @error('measurement_unit')
-                                    <div class="invalid-feedback">{{ $message }}</div>
-                                @enderror
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="measurement_unit" class="form-label">Measurement Unit</label>
+                                    @include('business.products.partials.unit-select', ['name' => 'measurement_unit', 'value' => null])
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                @include('business.products.partials.tax-treatment', ['value' => null])
                             </div>
                         </div>
 

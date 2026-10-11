@@ -62,6 +62,8 @@ class ProductsController extends Controller
             'category' => 'nullable|string|max:100',
             'brand' => 'nullable|string|max:100',
             'stock_quantity' => 'required|integer|min:0',
+            'measurement_unit' => ['nullable', Rule::in(array_keys(Product::UNITS))],
+            'tax_treatment' => ['nullable', Rule::in(array_keys(Product::TAX_TREATMENTS))],
             'low_stock_threshold' => 'nullable|integer|min:0',
             'weight' => 'nullable|numeric|min:0',
             'dimensions' => 'nullable|string',
@@ -71,6 +73,8 @@ class ProductsController extends Controller
         ]);
 
         $product = new Product($request->all());
+        $product->measurement_unit = $request->input('measurement_unit') ?: 'piece';
+        $product->tax_treatment = $request->input('tax_treatment') ?: null;
         $product->business_id = auth()->user()->business->id;
         
         if ($request->hasFile('images')) {
@@ -94,6 +98,8 @@ class ProductsController extends Controller
             'price' => 'required|numeric|min:0',
             'cost_price' => 'nullable|numeric|min:0',
             'stock_quantity' => 'required|integer|min:0',
+            'measurement_unit' => ['nullable', Rule::in(array_keys(Product::UNITS))],
+            'tax_treatment' => ['nullable', Rule::in(array_keys(Product::TAX_TREATMENTS))],
             'category' => 'nullable|string|max:100',
             'description' => 'nullable|string|max:1000',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
@@ -105,6 +111,8 @@ class ProductsController extends Controller
         $product->price = $request->price;
         $product->cost_price = $request->cost_price;
         $product->stock_quantity = $request->stock_quantity;
+        $product->measurement_unit = $request->input('measurement_unit') ?: 'piece';
+        $product->tax_treatment = $request->input('tax_treatment') ?: null;
         $product->category = $request->category;
         $product->description = $request->description;
         $product->is_active = true; // Default to active
@@ -166,6 +174,8 @@ class ProductsController extends Controller
             'category' => 'nullable|string|max:100',
             'brand' => 'nullable|string|max:100',
             'stock_quantity' => 'required|integer|min:0',
+            'measurement_unit' => ['nullable', Rule::in(array_keys(Product::UNITS))],
+            'tax_treatment' => ['nullable', Rule::in(array_keys(Product::TAX_TREATMENTS))],
             'low_stock_threshold' => 'nullable|integer|min:0',
             'weight' => 'nullable|numeric|min:0',
             'dimensions' => 'nullable|string',
@@ -175,6 +185,8 @@ class ProductsController extends Controller
         ]);
 
         $product->fill($request->all());
+        $product->measurement_unit = $request->input('measurement_unit') ?: ($product->measurement_unit ?: 'piece');
+        $product->tax_treatment = $request->input('tax_treatment') ?: null;
         
         if ($request->hasFile('images')) {
             // Delete old images
@@ -373,21 +385,21 @@ class ProductsController extends Controller
             // Add headers
             fputcsv($file, [
                 'name', 'description', 'price', 'cost_price', 'sku', 'barcode', 
-                'category', 'brand', 'stock_quantity', 'low_stock_threshold', 
-                'weight', 'dimensions', 'is_active', 'is_featured'
+                'category', 'brand', 'stock_quantity', 'measurement_unit', 'low_stock_threshold', 
+                'weight', 'dimensions', 'is_active', 'is_featured', 'tax_treatment'
             ]);
             
             // Add sample data
             fputcsv($file, [
                 'iPhone 13 Pro', 'Latest iPhone model with advanced features', '129999.00', '100000.00',
-                'IPH13PRO-128', '1234567890123', 'Electronics', 'Apple', '50', '10',
-                '0.2', '10x5x2 cm', '1', '0'
+                'IPH13PRO-128', '1234567890123', 'Electronics', 'Apple', '50', 'piece', '10',
+                '0.2', '10x5x2 cm', '1', '0', ''
             ]);
             
             fputcsv($file, [
-                'Nike Air Max', 'Comfortable running shoes', '15000.00', '10000.00',
-                'NIKE-AIRMAX-42', '9876543210987', 'Sports', 'Nike', '25', '5',
-                '0.5', '30x20x10 cm', '1', '1'
+                'Sugar', 'White sugar sold per kilo', '180.00', '150.00',
+                'SUGAR-KG', '', 'Groceries', '', '100', 'kg', '10',
+                '', '', '1', '0', 'inclusive'
             ]);
             
             fclose($file);
@@ -400,20 +412,20 @@ class ProductsController extends Controller
     {
         $headers = [
             'name', 'description', 'price', 'cost_price', 'sku', 'barcode', 
-            'category', 'brand', 'stock_quantity', 'low_stock_threshold', 
-            'weight', 'dimensions', 'is_active', 'is_featured'
+            'category', 'brand', 'stock_quantity', 'measurement_unit', 'low_stock_threshold', 
+            'weight', 'dimensions', 'is_active', 'is_featured', 'tax_treatment'
         ];
 
         $sampleData = [
             [
                 'iPhone 13 Pro', 'Latest iPhone model with advanced features', '129999.00', '100000.00',
-                'IPH13PRO-128', '1234567890123', 'Electronics', 'Apple', '50', '10',
-                '0.2', '10x5x2 cm', '1', '0'
+                'IPH13PRO-128', '1234567890123', 'Electronics', 'Apple', '50', 'piece', '10',
+                '0.2', '10x5x2 cm', '1', '0', ''
             ],
             [
-                'Nike Air Max', 'Comfortable running shoes', '15000.00', '10000.00',
-                'NIKE-AIRMAX-42', '9876543210987', 'Sports', 'Nike', '25', '5',
-                '0.5', '30x20x10 cm', '1', '1'
+                'Sugar', 'White sugar sold per kilo', '180.00', '150.00',
+                'SUGAR-KG', '', 'Groceries', '', '100', 'kg', '10',
+                '', '', '1', '0', 'inclusive'
             ]
         ];
 
@@ -442,6 +454,8 @@ class ProductsController extends Controller
             ],
             'products.*.category' => 'nullable|string|max:100',
             'products.*.brand' => 'nullable|string|max:100',
+            'products.*.measurement_unit' => ['nullable', Rule::in(array_keys(Product::UNITS))],
+            'products.*.tax_treatment' => ['nullable', Rule::in(array_keys(Product::TAX_TREATMENTS))],
         ]);
 
         $skus = collect($request->products)->pluck('sku')->filter()->all();
@@ -456,6 +470,8 @@ class ProductsController extends Controller
             try {
                 $product = new Product($data);
                 $product->business_id = $businessId;
+                $product->measurement_unit = $data['measurement_unit'] ?? 'piece';
+                $product->tax_treatment = $data['tax_treatment'] ?? null;
                 $product->is_active = true;
                 $product->is_featured = false;
                 $product->save();

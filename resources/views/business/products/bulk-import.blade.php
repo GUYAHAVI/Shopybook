@@ -133,6 +133,10 @@
                                                 <input type="number" min="0" class="form-control form-control-lg" name="products[0][stock_quantity]" required>
                                             </div>
                                             <div class="col-6 col-md-3 mb-2">
+                                                <label class="form-label">Unit</label>
+                                                @include('business.products.partials.unit-select', ['name' => 'products[0][measurement_unit]', 'id' => 'manual_unit_0', 'value' => null, 'size' => 'form-control-lg'])
+                                            </div>
+                                            <div class="col-6 col-md-3 mb-2">
                                                 <label class="form-label">Cost Price</label>
                                                 <input type="number" step="0.01" min="0" class="form-control form-control-lg" name="products[0][cost_price]">
                                             </div>
@@ -354,6 +358,18 @@
                                     <td>Featured status (1 or 0)</td>
                                     <td>0</td>
                                 </tr>
+                                <tr>
+                                    <td><strong>measurement_unit</strong></td>
+                                    <td><span class="badge bg-secondary">No</span></td>
+                                    <td>Unit the product is sold in: {{ implode(', ', array_keys(\App\Models\Product::UNITS)) }} (defaults to piece)</td>
+                                    <td>kg</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>tax_treatment</strong></td>
+                                    <td><span class="badge bg-secondary">No</span></td>
+                                    <td>inclusive (price includes tax), exclusive (tax added on top) or exempt. Leave blank to use the business tax setting</td>
+                                    <td>inclusive</td>
+                                </tr>
                             </tbody>
                         </table>
                     </div>
@@ -565,9 +581,10 @@ document.addEventListener('DOMContentLoaded', function() {
         rows.forEach((row, index) => {
             row.dataset.index = index;
             row.querySelector('h6').textContent = `Product ${index + 1}`;
-            row.querySelectorAll('input, textarea').forEach(input => {
+            row.querySelectorAll('input, textarea, select').forEach(input => {
                 const name = input.name.replace(/products\[\d+\]/, `products[${index}]`);
                 input.name = name;
+                if (input.id) input.id = input.id.replace(/_\d+$/, `_${index}`);
             });
             const removeBtn = row.querySelector('.remove-row');
             removeBtn.style.display = rows.length > 1 ? 'inline-block' : 'none';
@@ -582,6 +599,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const firstRow = productRows.querySelector('.product-row');
         const newRow = firstRow.cloneNode(true);
         newRow.querySelectorAll('input, textarea').forEach(input => input.value = '');
+        newRow.querySelectorAll('select').forEach(select => select.selectedIndex = 0);
         productRows.appendChild(newRow);
         updateRowIndexes();
     });

@@ -6,10 +6,47 @@
     <title>Receipt - {{ $order->order_number }}</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
+        /* ---------- 58mm thermal printer layout (print only) ---------- */
         @media print {
-            body { margin: 0; }
+            @page { size: 58mm auto; margin: 0; }
+            html, body { width: 58mm; margin: 0 !important; padding: 0 !important; background: #fff; }
+            body { font-size: 9.5px; line-height: 1.15; color: #000; }
             .no-print { display: none !important; }
+            .receipt-container {
+                width: 50mm; max-width: 50mm; margin: 0 auto; padding: 1mm 0 2mm;
+                border: 0; border-radius: 0; box-shadow: none;
+            }
+            .header { border-bottom: 1px dashed #000; padding-bottom: 1mm; margin-bottom: 1mm; }
+            .business-logo { max-width: 22mm; max-height: 12mm; margin: 0 auto 1mm; }
+            .business-name { font-size: 12px; margin-bottom: 0; color: #000; }
+            .business-tagline, .print-hide { display: none !important; }
+            .business-contact-details { margin: 0; padding: 0; border: 0; }
+            .contact-item { font-size: 8.5px; margin: 0; color: #000; }
+            .receipt-title { font-size: 10px; margin: 1mm 0 0; letter-spacing: 0; color: #000; }
+            .receipt-info, .customer-info, .conversion-details {
+                background: none !important; border: 0 !important; border-radius: 0; padding: 0 !important;
+                margin: 0 0 1mm !important; font-size: 9px;
+            }
+            .customer-info { border-top: 1px dashed #000 !important; padding-top: 1mm !important; }
+            .info-row { margin-bottom: 0; font-size: 9px; }
+            .info-label, .info-value, .item-name, .item-details, .footer, .total-row.final { color: #000; }
+            .items-section { margin: 0; border-top: 1px dashed #000; border-bottom: 1px dashed #000; padding: 1mm 0; }
+            .item { padding: 0.5mm 0; border: 0; }
+            .item-name { margin-bottom: 0; word-break: break-word; }
+            .item-details { font-size: 8.5px; margin: 0; }
+            .item-line { display: flex; justify-content: space-between; gap: 2mm; }
+            .item-line .item-details { flex: 1; }
+            .item-total { font-weight: normal; white-space: nowrap; }
+            .totals-section { border-top: 0; padding-top: 1mm; margin-top: 0; }
+            .total-row { margin-bottom: 0; font-size: 9.5px; }
+            .total-row.final { font-size: 11px; border-top: 1px solid #000; padding-top: 1mm; margin-top: 1mm; }
+            .footer { margin-top: 1.5mm; padding-top: 1mm; border-top: 1px dashed #000; font-size: 8.5px; }
+            .footer p { margin: 0; }
+            * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
         }
+        
+        .item-line { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+        .item-line .item-details { margin-bottom: 0; }
         
         body {
             font-family: 'Arial', sans-serif;
@@ -308,22 +345,28 @@
             $cartItems = $receiptData['items'];
         }
         
+        // Older receipts stored the whole cart_data object; unwrap it
+        if (isset($cartItems['cart_items']) && is_array($cartItems['cart_items'])) {
+            $cartItems = $cartItems['cart_items'];
+        }
+        
         // Get business details
         $business = auth()->user()->business;
-        
-        // Debug: Log the cart items structure
-        \Log::info('Receipt cart items:', [
-            'receipt_number' => $receipt->receipt_number,
-            'cart_items_count' => count($cartItems),
-            'cart_items' => $cartItems,
-            'receipt_data_keys' => array_keys($receiptData),
-            'has_cart_items' => isset($receiptData['cart_items']),
-            'cart_items_type' => gettype($receiptData['cart_items'] ?? 'not_set'),
-            'customer_name' => $receiptData['customer_name'] ?? 'not_set',
-            'customer_phone' => $receiptData['customer_phone'] ?? 'not_set',
-            'customer_email' => $receiptData['customer_email'] ?? 'not_set',
-            'customer_address' => $receiptData['customer_address'] ?? 'not_set'
-        ]);
+
+        // Tax display metadata (new receipts store it; fall back to the order for old ones)
+        $taxAmount = (float) ($receiptData['tax_amount'] ?? 0);
+        $taxEnabled = $receiptData['tax_enabled'] ?? ($taxAmount > 0);
+        $taxRate = (float) ($receiptData['tax_rate'] ?? ($order->tax_rate ?? 0));
+        $legacySubtotal = (float) ($receiptData['subtotal'] ?? 0);
+        if ($taxRate <= 0 && $taxAmount > 0 && $legacySubtotal > 0) {
+            // Older receipts did not store the rate; derive it
+            $taxRate = round($taxAmount / $legacySubtotal * 100, 2);
+        }
+        $taxName = $receiptData['tax_name'] ?? ($order->tax_type ?: 'Tax');
+        $taxInclusive = (bool) ($receiptData['tax_inclusive'] ?? ($order->tax_inclusive ?? false));
+        $taxRateLabel = rtrim(rtrim(number_format($taxRate, 2), '0'), '.');
+        $currency = $receiptData['currency_symbol'] ?? 'KSh ';
+        $unitOf = fn($item) => (!empty($item['unit']) && $item['unit'] !== 'piece') ? ' ' . $item['unit'] : '';
     @endphp
     
     <div class="receipt-container">
@@ -411,21 +454,19 @@
                          @endphp
                          <div class="item">
                              <div class="item-name">{{ $item['name'] }}</div>
-                             <div class="item-details">{{ $conversionDetails }}</div>
-                             <div class="item-details">Qty: {{ $item['quantity'] }} | Price: {{ $receiptData['currency_symbol'] }}{{ number_format($pricePerUnit, 2) }}/{{ $sellUnit }}</div>
-                             <div class="item-total">
-                                 <span>Total:</span>
-                                 <span>{{ $receiptData['currency_symbol'] }}{{ number_format($item['price'] * $item['quantity'], 2) }}</span>
+                             <div class="item-details print-hide">{{ $conversionDetails }}</div>
+                             <div class="item-line">
+                                 <div class="item-details">{{ $originalQuantity }} {{ $sellUnit }} × {{ $currency }}{{ number_format($pricePerUnit, 2) }}</div>
+                                 <div class="item-total">{{ $currency }}{{ number_format($item['price'] * $item['quantity'], 2) }}</div>
                              </div>
                          </div>
                     @else
                         {{-- Regular item display --}}
                         <div class="item">
                             <div class="item-name">{{ $item['name'] }}</div>
-                            <div class="item-details">Quantity: {{ $item['quantity'] }} | Unit Price: {{ $receiptData['currency_symbol'] }}{{ number_format($item['price'], 2) }}</div>
-                            <div class="item-total">
-                                <span>Total:</span>
-                                <span>{{ $receiptData['currency_symbol'] }}{{ number_format($item['price'] * $item['quantity'], 2) }}</span>
+                            <div class="item-line">
+                                <div class="item-details">{{ $item['quantity'] }}{{ $unitOf($item) }} × {{ $currency }}{{ number_format($item['price'], 2) }}</div>
+                                <div class="item-total">{{ $currency }}{{ number_format($item['price'] * $item['quantity'], 2) }}</div>
                             </div>
                         </div>
                     @endif
@@ -442,10 +483,9 @@
                     @endphp
                     <div class="item">
                         <div class="item-name">{{ $productName }}</div>
-                        <div class="item-details">Quantity: {{ $item['quantity'] ?? 1 }} | Unit Price: {{ $receiptData['currency_symbol'] }}{{ number_format($item['price'] ?? 0, 2) }}</div>
-                        <div class="item-total">
-                            <span>Total:</span>
-                            <span>{{ $receiptData['currency_symbol'] }}{{ number_format(($item['price'] ?? 0) * ($item['quantity'] ?? 1), 2) }}</span>
+                        <div class="item-line">
+                            <div class="item-details">{{ $item['quantity'] ?? 1 }}{{ $unitOf($item) }} × {{ $currency }}{{ number_format($item['price'] ?? 0, 2) }}</div>
+                            <div class="item-total">{{ $currency }}{{ number_format(($item['price'] ?? 0) * ($item['quantity'] ?? 1), 2) }}</div>
                         </div>
                     </div>
                 @endif
@@ -455,27 +495,28 @@
 
         
         <div class="totals-section">
-            <div class="total-row">
-                <span>Subtotal:</span>
-                <span>{{ $receiptData['currency_symbol'] }}{{ number_format($receiptData['subtotal'], 2) }}</span>
-            </div>
-            
-            @if($isEligibleForConversions)
+            @if($taxEnabled && !$taxInclusive)
                 <div class="total-row">
-                    <span>Tax:</span>
-                    <span>{{ $receiptData['currency_symbol'] }}{{ number_format($receiptData['tax_amount'], 2) }}</span>
+                    <span>Subtotal:</span>
+                    <span>{{ $currency }}{{ number_format($receiptData['subtotal'], 2) }}</span>
                 </div>
-            @else
                 <div class="total-row">
-                    <span>Tax (16%):</span>
-                    <span>{{ $receiptData['currency_symbol'] }}{{ number_format($receiptData['tax_amount'], 2) }}</span>
+                    <span>{{ $taxName }} ({{ $taxRateLabel }}%):</span>
+                    <span>{{ $currency }}{{ number_format($taxAmount, 2) }}</span>
                 </div>
             @endif
             
             <div class="total-row final">
                 <span>Total:</span>
-                <span>{{ $receiptData['currency_symbol'] }}{{ number_format($receiptData['total_amount'], 2) }}</span>
+                <span>{{ $currency }}{{ number_format($receiptData['total_amount'], 2) }}</span>
             </div>
+
+            @if($taxEnabled && $taxInclusive)
+                <div class="total-row">
+                    <span>Incl. {{ $taxName }} ({{ $taxRateLabel }}%):</span>
+                    <span>{{ $currency }}{{ number_format($taxAmount, 2) }}</span>
+                </div>
+            @endif
             
             @if(isset($order->amount_paid) && $order->payment_status !== 'paid')
                 <div class="total-row" style="color: #27ae60; font-weight: 600;">
@@ -509,11 +550,22 @@
         
         <div class="footer">
             <p>Thank you for your business!</p>
-            <p>For any queries, please contact us</p>
-            <p>Generated on {{ now()->format('M d, Y H:i:s') }}</p>
+            <p class="print-hide">For any queries, please contact us</p>
+            <p class="print-hide">Generated on {{ now()->format('M d, Y H:i:s') }}</p>
         </div>
     </div>
     @else
+        @php
+            $taxAmount = (float) $order->tax;
+            $taxEnabled = $taxAmount > 0;
+            $taxRate = (float) $order->tax_rate;
+            if ($taxRate <= 0 && $taxAmount > 0 && (float) $order->subtotal > 0) {
+                $taxRate = round($taxAmount / (float) $order->subtotal * 100, 2);
+            }
+            $taxRateLabel = rtrim(rtrim(number_format($taxRate, 2), '0'), '.');
+            $taxName = $order->tax_type ?: 'Tax';
+            $taxInclusive = (bool) $order->tax_inclusive;
+        @endphp
         {{-- Receipt from order data (for backward compatibility) --}}
         <div class="receipt-container">
             <div class="header">
@@ -580,36 +632,44 @@
             
             <div class="items-section">
                 @foreach($order->items as $item)
+                    @php $unit = $item->unit ?? $item->product?->measurement_unit; @endphp
                     <div class="item">
-                        <div class="item-name">{{ $item->product->name }}</div>
-                        <div class="item-details">Quantity: {{ $item->quantity }} | Unit Price: KSh {{ number_format($item->price, 2) }}</div>
-                        <div class="item-total">
-                            <span>Total:</span>
-                            <span>KSh {{ number_format($item->total, 2) }}</span>
+                        <div class="item-name">{{ $item->product->name ?? 'Product' }}</div>
+                        <div class="item-line">
+                            <div class="item-details">{{ $item->quantity }}{{ $unit && $unit !== 'piece' ? ' ' . $unit : '' }} × KSh {{ number_format($item->price, 2) }}</div>
+                            <div class="item-total">KSh {{ number_format($item->total, 2) }}</div>
                         </div>
                     </div>
                 @endforeach
             </div>
             
             <div class="totals-section">
-                <div class="total-row">
-                    <span>Subtotal:</span>
-                    <span>KSh {{ number_format($order->subtotal, 2) }}</span>
-                </div>
-                <div class="total-row">
-                    <span>Tax:</span>
-                    <span>KSh {{ number_format($order->tax, 2) }}</span>
-                </div>
+                @if($taxEnabled && !$taxInclusive)
+                    <div class="total-row">
+                        <span>Subtotal:</span>
+                        <span>KSh {{ number_format($order->subtotal, 2) }}</span>
+                    </div>
+                    <div class="total-row">
+                        <span>{{ $taxName }} ({{ $taxRateLabel }}%):</span>
+                        <span>KSh {{ number_format($order->tax, 2) }}</span>
+                    </div>
+                @endif
                 <div class="total-row final">
                     <span>Total:</span>
                     <span>KSh {{ number_format($order->total_amount, 2) }}</span>
                 </div>
+                @if($taxEnabled && $taxInclusive)
+                    <div class="total-row">
+                        <span>Incl. {{ $taxName }} ({{ $taxRateLabel }}%):</span>
+                        <span>KSh {{ number_format($order->tax, 2) }}</span>
+                    </div>
+                @endif
             </div>
             
             <div class="footer">
                 <p>Thank you for your business!</p>
-                <p>For any queries, please contact us</p>
-                <p>Generated on {{ now()->format('M d, Y H:i:s') }}</p>
+                <p class="print-hide">For any queries, please contact us</p>
+                <p class="print-hide">Generated on {{ now()->format('M d, Y H:i:s') }}</p>
             </div>
         </div>
     @endif

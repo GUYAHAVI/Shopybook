@@ -28,18 +28,21 @@ class TaxController extends Controller
     {
         $validated = $request->validate([
             'tax_enabled' => 'required|boolean',
-            'tax_type' => 'required|string|max:255',
-            'tax_rate' => 'required|numeric|min:0|max:100',
+            'tax_type' => 'required_if:tax_enabled,1|nullable|string|max:255',
+            'tax_rate' => 'required_if:tax_enabled,1|nullable|numeric|min:0|max:100',
             'tax_number' => 'nullable|string|max:255',
-            'tax_name' => 'required|string|max:255',
-            'tax_inclusive' => 'required|boolean',
-            'tax_period' => 'required|in:monthly,quarterly,annual',
-            'show_tax_on_receipt' => 'required|boolean',
-            'separate_tax_column' => 'required|boolean',
+            'tax_name' => 'required_if:tax_enabled,1|nullable|string|max:255',
+            'tax_inclusive' => 'nullable|boolean',
+            'tax_period' => 'nullable|in:monthly,quarterly,annual',
+            'show_tax_on_receipt' => 'nullable|boolean',
+            'separate_tax_column' => 'nullable|boolean',
         ]);
 
         $business = auth()->user()->business;
         $taxSettings = $business->getTaxSettingsOrCreate();
+
+        // Keep existing values for anything not submitted (e.g. hidden fields when tax is switched off)
+        $validated = array_filter($validated, fn($v) => $v !== null);
         
         $taxSettings->update($validated);
 

@@ -24,15 +24,6 @@
             Click products with <span class="badge bg-warning text-dark mx-1"><i class="fas fa-exchange-alt"></i> Convert</span> badges to sell in different units.
             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
-        
-        <div class="alert alert-success alert-dismissible fade show mb-4" role="alert">
-            <i class="fas fa-info-circle me-2"></i>
-            <strong>Special Tax Arrangement:</strong> 
-            This business operates under a flat yearly tax of KSh 5,000. No VAT is charged on individual sales.
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
-        
-
     @endif
 
     <div class="row">
@@ -153,6 +144,8 @@
                                      data-name="{{ $product->name }}"
                                      data-price="{{ $product->price }}"
                                      data-stock="{{ $product->stock_quantity }}"
+                                     data-unit="{{ $product->measurement_unit ?? 'piece' }}"
+                                     data-tax-treatment="{{ $product->tax_treatment ?? '' }}"
                                      style="background: var(--card-bg); border: 1px solid var(--border-color); cursor: pointer;"
                                      @if($isEligibleForDynamicConversions && $product->conversions()->exists())
                                      title="Click to open conversion options - Sell in different units!"
@@ -173,8 +166,8 @@
                                     </div>
                                     <div class="card-body text-center">
                                         <h6 class="card-title" style="color: var(--text-primary);">{{ $product->name }}</h6>
-                                        <p class="card-text" style="color: var(--text-secondary);">KSh {{ number_format($product->price, 2) }}</p>
-                                        <small style="color: var(--text-muted);">Stock: {{ $product->stock_quantity }}</small>
+                                        <p class="card-text" style="color: var(--text-secondary);">KSh {{ number_format($product->price, 2) }}@if($product->measurement_unit && $product->measurement_unit !== 'piece') <small>/ {{ $product->measurement_unit }}</small>@endif</p>
+                                        <small style="color: var(--text-muted);">Stock: {{ $product->stock_quantity }} {{ $product->unit_label }}</small>
                                         @if($isEligibleForDynamicConversions && $product->conversions()->exists())
                                             <div class="mt-2">
                                                 <div class="alert alert-warning alert-sm py-1 px-2 mb-0" style="font-size: 11px; border-radius: 8px;">
@@ -219,8 +212,8 @@
                         <span style="color: var(--text-primary);">Subtotal:</span>
                         <span id="subtotal" style="color: var(--text-primary);">KSh 0.00</span>
                     </div>
-                    <div class="d-flex justify-content-between mb-2">
-                        <span style="color: var(--text-primary);" id="taxLabel">Tax (16%):</span>
+                    <div class="d-flex justify-content-between mb-2" id="taxRow" @unless($taxSettings->tax_enabled) style="display:none;" @endunless>
+                        <span style="color: var(--text-primary);" id="taxLabel">{{ $taxSettings->tax_inclusive ? 'Incl. ' : '' }}{{ $taxSettings->tax_name }} ({{ rtrim(rtrim(number_format($taxSettings->tax_rate, 2), '0'), '.') }}%):</span>
                         <span id="tax" style="color: var(--text-primary);">KSh 0.00</span>
                     </div>
                     <hr style="border-color: var(--border-color);">
@@ -926,6 +919,12 @@ window.posConfig = {
     csrfToken: document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
     currencySymbol: 'KSh ',
     businessName: '{{ $business->name ?? "Shopybook Business" }}',
+    tax: {
+        enabled: {{ $taxSettings->tax_enabled ? 'true' : 'false' }},
+        rate: {{ (float) $taxSettings->tax_rate }},
+        name: @json($taxSettings->tax_name ?: 'Tax'),
+        inclusive: {{ $taxSettings->tax_inclusive ? 'true' : 'false' }}
+    },
     paystackEnabled: {{ $paystackCfg->paystack_enabled ? 'true' : 'false' }},
     paystackMpesaChargeUrl: '{{ route("payment.paystack.mpesa.charge") }}',
     paystackStatusUrl: '{{ url("/payment/paystack/status") }}',

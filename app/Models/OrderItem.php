@@ -12,6 +12,9 @@ class OrderItem extends Model
         'quantity',
         'price',
         'total',
+        'tax_amount',
+        'tax_treatment',
+        'unit',
         'sell_unit',
         'material_type',
         'original_quantity',
@@ -24,6 +27,7 @@ class OrderItem extends Model
     protected $casts = [
         'price' => 'decimal:2',
         'total' => 'decimal:2',
+        'tax_amount' => 'decimal:2',
         'original_quantity' => 'decimal:4',
         'converted_quantity' => 'decimal:4',
         'price_per_unit' => 'decimal:2',

@@ -10,18 +10,45 @@ class Product extends Model
 {
     use HasFactory;
 
+    public const UNITS = [
+        'piece' => 'Piece (pcs)',
+        'kg' => 'Kilogram (kg)',
+        'g' => 'Gram (g)',
+        'lb' => 'Pound (lb)',
+        'l' => 'Litre (l)',
+        'ml' => 'Millilitre (ml)',
+        'm' => 'Metre (m)',
+        'cm' => 'Centimetre (cm)',
+        'mm' => 'Millimetre (mm)',
+        'sqm' => 'Square metre (sqm)',
+        'ft' => 'Foot (ft)',
+        'in' => 'Inch (in)',
+        'pack' => 'Pack',
+        'box' => 'Box',
+        'dozen' => 'Dozen',
+        'other' => 'Other',
+    ];
+
+    public const TAX_TREATMENTS = [
+        'inclusive' => 'Price includes tax',
+        'exclusive' => 'Tax added on top of price',
+        'exempt' => 'Tax exempt',
+    ];
+
     protected $fillable = [
         'business_id',
         'name',
         'slug',
         'description',
         'price',
+        'tax_treatment',
         'cost_price',
         'sku',
         'barcode',
         'category',
         'brand',
         'stock_quantity',
+        'measurement_unit',
         'low_stock_threshold',
         'weight',
         'dimensions',
@@ -151,6 +178,12 @@ class Product extends Model
     public function getMainImageAttribute()
     {
         return $this->images ? $this->images[0] : null;
+    }
+
+    public function getUnitLabelAttribute()
+    {
+        $unit = $this->measurement_unit ?: 'piece';
+        return $unit === 'piece' ? 'pcs' : $unit;
     }
 
     public function getFormattedPriceAttribute()

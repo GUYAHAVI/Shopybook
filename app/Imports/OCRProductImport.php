@@ -119,6 +119,8 @@ class OCRProductImport
             'category' => $data['category'] ?? null,
             'brand' => $data['brand'] ?? null,
             'stock_quantity' => $data['stock_quantity'],
+            'measurement_unit' => array_key_exists(strtolower(trim((string) ($data['measurement_unit'] ?? ''))), Product::UNITS)
+                ? strtolower(trim($data['measurement_unit'])) : 'piece',
             'low_stock_threshold' => $data['low_stock_threshold'] ?? null,
             'weight' => $data['weight'] ?? null,
             'dimensions' => $data['dimensions'] ?? null,

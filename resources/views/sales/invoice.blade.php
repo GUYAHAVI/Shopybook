@@ -373,7 +373,7 @@
                         ? $order->tax_rate
                         : (($order->subtotal > 0)
                             ? round(($order->tax / $order->subtotal) * 100, 2)
-                            : 16);
+                            : 0);
                 @endphp
                 <tr>
                     <td class="label">Tax ({{ number_format($displayTaxRate, 2) }}%):</td>

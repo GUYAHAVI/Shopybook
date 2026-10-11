@@ -88,7 +88,7 @@
 
                         <div class="row">
                             <!-- Stock Quantity -->
-                            <div class="col-md-6 mb-3">
+                            <div class="col-md-3 mb-3">
                                 <label for="stock_quantity" class="form-label required">
                                     <i class="fas fa-boxes text-info me-1"></i>Stock Quantity
                                 </label>
@@ -98,6 +98,14 @@
                                 @error('stock_quantity')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
+                            </div>
+
+                            <!-- Measurement Unit -->
+                            <div class="col-md-3 mb-3">
+                                <label for="measurement_unit" class="form-label">
+                                    <i class="fas fa-ruler text-info me-1"></i>Unit
+                                </label>
+                                @include('business.products.partials.unit-select', ['name' => 'measurement_unit', 'value' => null])
                             </div>
 
                             <!-- Category -->
@@ -121,6 +129,9 @@
                                 @enderror
                             </div>
                         </div>
+
+                        <!-- Tax Treatment -->
+                        @include('business.products.partials.tax-treatment', ['value' => null])
 
                         <!-- Product Image -->
                         <div class="mb-3">

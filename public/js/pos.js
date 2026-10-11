@@ -18,6 +18,43 @@ function initializePOS() {
     let cartTotal = 0;
     let isProcessing = false;
     const config = window.posConfig || {};
+    const taxConfig = Object.assign({ enabled: false, rate: 0, name: 'Tax', inclusive: false }, config.tax || {});
+
+    // Mirrors App\Services\TaxCalculator. The server recalculates on checkout; this is for display only.
+    function computeTotals(items) {
+        const enabled = !!taxConfig.enabled && parseFloat(taxConfig.rate) > 0;
+        const rate = enabled ? parseFloat(taxConfig.rate) : 0;
+        const defaultTreatment = taxConfig.inclusive ? 'inclusive' : 'exclusive';
+        let subtotal = 0, tax = 0, total = 0;
+
+        items.forEach(item => {
+            const gross = Math.round(item.price * item.quantity * 100) / 100;
+            const treatment = ['inclusive', 'exclusive', 'exempt'].includes(item.taxTreatment) ? item.taxTreatment : defaultTreatment;
+            let net = gross, lineTax = 0, lineGross = gross;
+
+            if (enabled && treatment !== 'exempt') {
+                if (treatment === 'inclusive') {
+                    lineTax = Math.round(gross * rate / (100 + rate) * 100) / 100;
+                    net = Math.round((gross - lineTax) * 100) / 100;
+                } else {
+                    lineTax = Math.round(net * rate / 100 * 100) / 100;
+                    lineGross = Math.round((net + lineTax) * 100) / 100;
+                }
+            }
+            subtotal += net; tax += lineTax; total += lineGross;
+        });
+
+        return {
+            subtotal: Math.round(subtotal * 100) / 100,
+            tax: Math.round(tax * 100) / 100,
+            total: Math.round(total * 100) / 100,
+            enabled, rate, inclusive: defaultTreatment === 'inclusive'
+        };
+    }
+
+    function unitSuffix(item) {
+        return item.unit && item.unit !== 'piece' ? ` ${item.unit}` : '';
+    }
     
 
     
@@ -96,9 +133,10 @@ function initializePOS() {
         if (!productCard) return;
 
         const productId = parseInt(productCard.dataset.productId);
-        const productName = productCard.querySelector('.card-title').textContent;
-        const productPrice = parseFloat(productCard.querySelector('.card-text').textContent.replace('KSh ', '').replace(',', ''));
-        const productStock = parseInt(productCard.querySelector('small').textContent.replace('Stock: ', ''));
+        const productName = productCard.dataset.name || productCard.querySelector('.card-title').textContent;
+        const productPrice = parseFloat(productCard.dataset.price);
+        const productStock = parseInt(productCard.dataset.stock);
+        const productMeta = { unit: productCard.dataset.unit || 'piece', taxTreatment: productCard.dataset.taxTreatment || null };
 
         // Check if this product has conversion options (for eligible users)
         const hasConversionBadge = productCard.querySelector('.conversion-badge') !== null;
@@ -124,17 +162,17 @@ function initializePOS() {
                 showDynamicConversionModal(productId, productName, productPrice, productStock);
             } else {
                 console.log('Adding to cart normally:', productName);
-                addToCart(productId, productName, productPrice, productStock);
+                addToCart(productId, productName, productPrice, productStock, productMeta);
             }
         } else {
             console.log('Adding to cart normally:', productName);
             // Regular add to cart
-            addToCart(productId, productName, productPrice, productStock);
+            addToCart(productId, productName, productPrice, productStock, productMeta);
         }
     }
 
     // Cart functions
-    function addToCart(productId, name, price, stock) {
+    function addToCart(productId, name, price, stock, meta = {}) {
         
         if (stock <= 0) {
             showAlert('This product is out of stock!', 'warning');
@@ -155,7 +193,9 @@ function initializePOS() {
                 name: name,
                 price: parseFloat(price),
                 quantity: 1,
-                stock: stock
+                stock: stock,
+                unit: meta.unit || 'piece',
+                taxTreatment: meta.taxTreatment || null
             });
         }
         
@@ -186,7 +226,7 @@ function initializePOS() {
                     <div class="d-flex justify-content-between align-items-start">
                         <div class="flex-grow-1">
                             <h6 class="mb-1">${item.name}</h6>
-                            <small class="text-muted">${config.currencySymbol}${item.price.toFixed(2)} × ${item.quantity}</small>
+                            <small class="text-muted">${config.currencySymbol}${item.price.toFixed(2)} × ${item.quantity}${unitSuffix(item)}</small>
                         </div>
                         <div class="text-end">
                             <div class="fw-bold">${config.currencySymbol}${itemTotal.toFixed(2)}</div>
@@ -255,43 +295,21 @@ function initializePOS() {
              });
          });
         
-                 const subtotal = cartTotal;
-         
-         // Check if this is the eligible business (Havi's Greenhouse Materials)
-         const isEligibleBusiness = window.isEligibleForDynamicConversions;
-         
-         let tax = 0;
-         let total = subtotal;
-         
-         if (isEligibleBusiness) {
-             // Flat yearly tax of 5000 KSh - no tax on individual sales
-             tax = 0;
-             total = subtotal;
-         } else {
-             // Regular 16% VAT for other businesses
-             tax = subtotal * 0.16;
-             total = subtotal + tax;
-         }
-         
-         if (elements.subtotal) elements.subtotal.textContent = `${config.currencySymbol}${subtotal.toFixed(2)}`;
-         if (elements.tax) {
-             if (isEligibleBusiness) {
-                 elements.tax.textContent = `${config.currencySymbol}0.00 (Yearly flat tax)`;
-             } else {
-                 elements.tax.textContent = `${config.currencySymbol}${tax.toFixed(2)}`;
-             }
-         }
-         
-         // Update tax label
-         const taxLabelElement = document.getElementById('taxLabel');
-         if (taxLabelElement) {
-             if (isEligibleBusiness) {
-                 taxLabelElement.textContent = 'Tax:';
-             } else {
-                 taxLabelElement.textContent = 'Tax (16%):';
-             }
-         }
-         if (elements.total) elements.total.textContent = `${config.currencySymbol}${total.toFixed(2)}`;
+        const totals = computeTotals(cart);
+        const { subtotal, tax, total } = totals;
+
+        if (elements.subtotal) elements.subtotal.textContent = `${config.currencySymbol}${subtotal.toFixed(2)}`;
+        if (elements.tax) elements.tax.textContent = `${config.currencySymbol}${tax.toFixed(2)}`;
+
+        const taxRow = document.getElementById('taxRow');
+        if (taxRow) taxRow.style.display = totals.enabled ? '' : 'none';
+
+        const taxLabelElement = document.getElementById('taxLabel');
+        if (taxLabelElement && totals.enabled) {
+            const rateText = `${taxConfig.name} (${parseFloat(totals.rate).toFixed(totals.rate % 1 === 0 ? 0 : 2)}%)`;
+            taxLabelElement.textContent = totals.inclusive ? `Incl. ${rateText}:` : `${rateText}:`;
+        }
+        if (elements.total) elements.total.textContent = `${config.currencySymbol}${total.toFixed(2)}`;
          
          // Enable/disable checkout button based on cart items
          if (elements.checkoutBtn) {
@@ -379,24 +397,12 @@ function initializePOS() {
             elements.checkoutBtn.innerHTML = '<span class="loading-spinner me-2" style="display:inline-block;"></span>Processing...';
         }
         
-                 // Calculate totals with proper validation
-         const subtotal = parseFloat(cartTotal.toFixed(2));
-         
-         // Check if this is the eligible business (Havi's Greenhouse Materials)
-         const isEligibleBusiness = window.isEligibleForDynamicConversions;
-         
-         let taxAmount = 0;
-         let totalAmount = subtotal;
-         
-         if (isEligibleBusiness) {
-             // Flat yearly tax of 5000 KSh - no tax on individual sales
-             taxAmount = 0;
-             totalAmount = subtotal;
-         } else {
-             // Regular 16% VAT for other businesses
-             taxAmount = parseFloat((subtotal * 0.16).toFixed(2));
-             totalAmount = parseFloat((subtotal + taxAmount).toFixed(2));
-         }
+        // Totals are recalculated server-side; these are sent for logging/comparison only
+        const isEligibleBusiness = window.isEligibleForDynamicConversions;
+        const totals = computeTotals(cart);
+        const subtotal = totals.subtotal;
+        const taxAmount = totals.tax;
+        const totalAmount = totals.total;
         
         // Validate cart items
         const validatedItems = cart.map(item => ({
@@ -990,10 +996,7 @@ function initializePOS() {
     
     // Add function to update partial payment display
     function calculateTotal() {
-        const subtotal = cartTotal;
-        const isEligibleBusiness = window.isEligibleForDynamicConversions;
-        const tax = isEligibleBusiness ? 0 : parseFloat((subtotal * 0.16).toFixed(2));
-        return parseFloat((subtotal + tax).toFixed(2));
+        return computeTotals(cart).total;
     }
 
     window.updatePartialPaymentTotals = function() {

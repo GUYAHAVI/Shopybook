@@ -46,6 +46,7 @@
                             <!-- Tax Enabled -->
                             <div class="col-md-12 mb-4">
                                 <div class="form-check form-switch">
+                                    <input type="hidden" name="tax_enabled" value="0">
                                     <input class="form-check-input" type="checkbox" id="tax_enabled" 
                                            name="tax_enabled" value="1" 
                                            {{ old('tax_enabled', $taxSettings->tax_enabled) ? 'checked' : '' }}>
@@ -135,6 +136,7 @@
                                     <label class="form-label">Receipt Display Options</label>
                                     
                                     <div class="form-check form-switch">
+                                        <input type="hidden" name="show_tax_on_receipt" value="0">
                                         <input class="form-check-input" type="checkbox" id="show_tax_on_receipt" 
                                                name="show_tax_on_receipt" value="1" 
                                                {{ old('show_tax_on_receipt', $taxSettings->show_tax_on_receipt) ? 'checked' : '' }}>
@@ -144,6 +146,7 @@
                                     </div>
 
                                     <div class="form-check form-switch mt-2">
+                                        <input type="hidden" name="separate_tax_column" value="0">
                                         <input class="form-check-input" type="checkbox" id="separate_tax_column" 
                                                name="separate_tax_column" value="1" 
                                                {{ old('separate_tax_column', $taxSettings->separate_tax_column) ? 'checked' : '' }}>

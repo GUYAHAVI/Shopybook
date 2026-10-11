@@ -23,6 +23,7 @@ class SalesController extends Controller
         $business = auth()->user()->business;
         $products = $business->products()->active()->inStock()->get();
         $customers = $business->customers()->get();
+        $taxSettings = $business->getTaxSettingsOrCreate();
         
         // Check if business is eligible for dynamic conversions
         $isEligibleForDynamicConversions = $business->isEligibleForDynamicConversions();
@@ -38,7 +39,7 @@ class SalesController extends Controller
             'dynamic_conversions_eligible' => $isEligibleForDynamicConversions
         ]);
         
-        return view('sales.pos', compact('products', 'customers', 'business', 'isEligibleForDynamicConversions'));
+        return view('sales.pos', compact('products', 'customers', 'business', 'isEligibleForDynamicConversions', 'taxSettings'));
     }
 
     public function orders()
@@ -128,9 +129,9 @@ class SalesController extends Controller
                 'payment_status' => 'nullable|string|in:paid,unpaid,partial',
                 'amount_paid' => 'nullable|numeric|min:0',
                 'notes' => 'nullable|string',
-                'subtotal' => 'required|numeric|min:0',
-                'tax' => 'required|numeric|min:0',
-                'total' => 'required|numeric|min:0'
+                'subtotal' => 'nullable|numeric|min:0',
+                'tax' => 'nullable|numeric|min:0',
+                'total' => 'nullable|numeric|min:0'
             ]);
 
             \Log::info('Validation passed');
@@ -140,29 +141,36 @@ class SalesController extends Controller
             $business = auth()->user()->business;
             $taxSettings = $business->taxSettings;
             
-            // Calculate or verify tax
-            $subtotal = $validated['subtotal'];
-            $taxAmount = $validated['tax'];
-            $total = $validated['total'];
-            
-            // If tax is enabled, verify/recalculate tax amounts and store metadata
-            if ($taxSettings && $taxSettings->tax_enabled) {
-                // Server-side tax calculation for verification
-                $calculatedTax = $taxSettings->calculateTax($subtotal);
-                $calculatedTotal = $taxSettings->getTotalWithTax($subtotal);
-                
-                // Use server calculation (more reliable)
-                $taxAmount = $calculatedTax;
-                $total = $calculatedTotal;
-                
-                \Log::info('Tax calculation', [
-                    'subtotal' => $subtotal,
-                    'client_tax' => $validated['tax'],
-                    'server_tax' => $calculatedTax,
-                    'tax_rate' => $taxSettings->tax_rate,
-                    'tax_inclusive' => $taxSettings->tax_inclusive
-                ]);
-            }
+            // Server-side tax calculation is the single source of truth; client totals are informational only.
+            $products = Product::where('business_id', $business->id)
+                ->whereIn('id', collect($validated['items'])->pluck('product_id'))
+                ->get()
+                ->keyBy('id');
+
+            $taxLines = collect($validated['items'])->map(fn($item) => [
+                'product' => $products->get($item['product_id']),
+                'product_id' => $item['product_id'],
+                'quantity' => $item['quantity'],
+                'price' => $item['price'],
+            ]);
+
+            $taxResult = (new \App\Services\TaxCalculator())->calculate($taxLines, $taxSettings);
+            $subtotal = $taxResult['subtotal'];
+            $taxAmount = $taxResult['tax'];
+            $total = $taxResult['total'];
+            $lineTax = collect($taxResult['lines'])->keyBy('product_id');
+
+            \Log::info('Tax calculation', [
+                'client' => [
+                    'subtotal' => $validated['subtotal'] ?? null,
+                    'tax' => $validated['tax'] ?? null,
+                    'total' => $validated['total'] ?? null,
+                ],
+                'server' => ['subtotal' => $subtotal, 'tax' => $taxAmount, 'total' => $total],
+                'tax_enabled' => $taxResult['tax_enabled'],
+                'tax_rate' => $taxResult['tax_rate'],
+                'tax_inclusive' => $taxResult['tax_inclusive'],
+            ]);
             
             $order = new Order();
             $order->business_id = $business->id;
@@ -178,7 +186,7 @@ class SalesController extends Controller
             $order->status = 'completed'; // POS orders are automatically completed
             $order->payment_status = $validated['payment_status'] ?? 'paid'; // Default to paid
             $order->payment_method = $validated['payment_method'];
-            $order->notes = $validated['notes'];
+            $order->notes = $validated['notes'] ?? null;
             $order->subtotal = $subtotal;
             $order->tax = $taxAmount;
             $order->total_amount = $total;
@@ -218,16 +226,9 @@ class SalesController extends Controller
             }
             
             // Store tax metadata
-            if ($taxSettings && $taxSettings->tax_enabled) {
-                $order->tax_rate = $taxSettings->tax_rate;
-                $order->tax_inclusive = $taxSettings->tax_inclusive;
-                $order->tax_type = $taxSettings->tax_type;
-            }
-            
-            // Fallback: if tax was charged but no rate is set, derive the effective rate from subtotal
-            if ($order->tax > 0 && $order->subtotal > 0 && (empty($order->tax_rate) || $order->tax_rate == 0)) {
-                $order->tax_rate = round(($order->tax / $order->subtotal) * 100, 2);
-            }
+            $order->tax_rate = $taxResult['tax_enabled'] ? $taxResult['tax_rate'] : 0;
+            $order->tax_inclusive = $taxResult['tax_enabled'] ? $taxResult['tax_inclusive'] : false;
+            $order->tax_type = $taxResult['tax_enabled'] ? $taxResult['tax_type'] : null;
             
             $order->save();
 
@@ -265,7 +266,8 @@ class SalesController extends Controller
             }
 
             foreach ($validated['items'] as $item) {
-                $product = Product::find($item['product_id']);
+                $product = $products->get($item['product_id']) ?? Product::findOrFail($item['product_id']);
+                $taxLine = $lineTax->get($item['product_id']);
                 
                 // Calculate stock to deduct based on conversion
                 $stockToDeduct = $item['quantity'];
@@ -305,6 +307,9 @@ class SalesController extends Controller
                     'quantity' => $item['quantity'],
                     'price' => $item['price'],
                     'total' => $item['price'] * $item['quantity'],
+                    'tax_amount' => $taxLine['tax'] ?? 0,
+                    'tax_treatment' => $taxLine['treatment'] ?? null,
+                    'unit' => $product->measurement_unit,
                 ];
                 
                 // Add conversion data if present
@@ -349,7 +354,7 @@ class SalesController extends Controller
             }
             
             // Store receipt data for reprinting
-            $receiptNumber = $this->storeReceiptData($order, $validated, $validated['cart_data'] ?? $validated['items']);
+            $receiptNumber = $this->storeReceiptData($order, $validated, $validated['cart_data'] ?? $validated['items'], $taxResult);
             
             // Send notifications after successful order creation
             try {
@@ -721,7 +726,7 @@ class SalesController extends Controller
     /**
      * Store receipt data for reprinting
      */
-    private function storeReceiptData($order, $validated, $cartData)
+    private function storeReceiptData($order, $validated, $cartData, array $taxResult = [])
     {
         try {
             $business = auth()->user()->business;
@@ -737,10 +742,31 @@ class SalesController extends Controller
                 'validated_keys' => array_keys($validated)
             ]);
             
-            // Calculate totals
-            $subtotal = $validated['subtotal'];
-            $taxAmount = $validated['tax'];
-            $totalAmount = $validated['total'];
+            // Totals come from the server-side calculation stored on the order
+            $subtotal = (float) $order->subtotal;
+            $taxAmount = (float) $order->tax;
+            $totalAmount = (float) $order->total_amount;
+
+            // Attach unit / line tax to each cart item so receipts can render them
+            $lineTax = collect($taxResult['lines'] ?? [])->keyBy('product_id');
+            $decorate = function ($item) use ($lineTax) {
+                if (!is_array($item)) return $item;
+                $pid = $item['id'] ?? $item['product_id'] ?? null;
+                $line = $pid ? $lineTax->get($pid) : null;
+                if ($line) {
+                    $item['unit'] = $item['unit'] ?? $line['unit'];
+                    $item['line_tax'] = $line['tax'];
+                    $item['tax_treatment'] = $line['treatment'];
+                }
+                return $item;
+            };
+            if (is_array($cartData)) {
+                if (isset($cartData['cart_items']) && is_array($cartData['cart_items'])) {
+                    $cartData['cart_items'] = array_map($decorate, $cartData['cart_items']);
+                } else {
+                    $cartData = array_map($decorate, $cartData);
+                }
+            }
             
             // Check if this order has converted items
             $hasConvertedItems = false;
@@ -761,11 +787,15 @@ class SalesController extends Controller
                 'customer_email' => $customer ? $customer->email : null,
                 'customer_address' => $customer ? $customer->address : null,
                 'payment_method' => $validated['payment_method'],
-                'items' => $validated['items'],
-                'cart_items' => $cartData, // Store the cart data for detailed receipt
+                'items' => array_map($decorate, $validated['items']),
+                'cart_items' => $cartData['cart_items'] ?? $cartData, // Store the cart data for detailed receipt
                 'subtotal' => $subtotal,
                 'tax_amount' => $taxAmount,
                 'total_amount' => $totalAmount,
+                'tax_enabled' => $taxResult['tax_enabled'] ?? ($taxAmount > 0),
+                'tax_rate' => $taxResult['tax_rate'] ?? (float) $order->tax_rate,
+                'tax_name' => $taxResult['tax_name'] ?? 'Tax',
+                'tax_inclusive' => $taxResult['tax_inclusive'] ?? (bool) $order->tax_inclusive,
                 'currency_symbol' => 'KSh ',
                 'notes' => $validated['notes'] ?? '',
                 'is_eligible_for_conversions' => $business->isEligibleForDynamicConversions()

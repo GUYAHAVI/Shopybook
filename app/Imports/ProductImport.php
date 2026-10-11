@@ -43,6 +43,8 @@ class ProductImport implements ToModel, WithHeadingRow, WithValidation, SkipsOnF
             'category' => $row['category'] ?? null,
             'brand' => $row['brand'] ?? null,
             'stock_quantity' => $row['stock_quantity'] ?? 0,
+            'measurement_unit' => $this->normaliseUnit($row['measurement_unit'] ?? ($row['unit'] ?? null)),
+            'tax_treatment' => $this->normaliseTaxTreatment($row['tax_treatment'] ?? null),
             'low_stock_threshold' => $row['low_stock_threshold'] ?? null,
             'weight' => $row['weight'] ?? null,
             'dimensions' => $row['dimensions'] ?? null,
@@ -63,6 +65,20 @@ class ProductImport implements ToModel, WithHeadingRow, WithValidation, SkipsOnF
                 'max:100',
             ],
         ];
+    }
+
+    protected function normaliseUnit($value): string
+    {
+        $unit = strtolower(trim((string) $value));
+        $aliases = ['pcs' => 'piece', 'pc' => 'piece', 'pieces' => 'piece', 'kgs' => 'kg', 'kilogram' => 'kg', 'litre' => 'l', 'liter' => 'l', 'ltr' => 'l', 'grams' => 'g', 'metre' => 'm', 'meter' => 'm'];
+        $unit = $aliases[$unit] ?? $unit;
+        return array_key_exists($unit, Product::UNITS) ? $unit : 'piece';
+    }
+
+    protected function normaliseTaxTreatment($value): ?string
+    {
+        $treatment = strtolower(trim((string) $value));
+        return array_key_exists($treatment, Product::TAX_TREATMENTS) ? $treatment : null;
     }
 
     public function onFailure(Failure ...$failures)

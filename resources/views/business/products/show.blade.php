@@ -172,8 +172,14 @@
                         <div class="col-sm-8">{{ $product->updated_at->format('M d, Y H:i') }}</div>
                     </div>
 
-                    <dt class="col-sm-3">Measurement Unit</dt>
-                    <dd class="col-sm-9">{{ $product->measurement_unit ? ucfirst($product->measurement_unit) : 'Not specified' }}</dd>
+                    <div class="row mb-3">
+                        <div class="col-sm-4"><strong>Measurement Unit:</strong></div>
+                        <div class="col-sm-8">{{ \App\Models\Product::UNITS[$product->measurement_unit] ?? 'Piece (pcs)' }}</div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-sm-4"><strong>Tax Treatment:</strong></div>
+                        <div class="col-sm-8">{{ \App\Models\Product::TAX_TREATMENTS[$product->tax_treatment] ?? 'Uses business tax setting' }}</div>
+                    </div>
                 </div>
             </div>
         </div>
