@@ -34,6 +34,11 @@ class Payment extends Model
         return $this->belongsTo(Order::class);
     }
 
+    public function receivedBy()
+    {
+        return $this->belongsTo(User::class, 'received_by');
+    }
+
     public function getStatusColorAttribute()
     {
         return match($this->status) {

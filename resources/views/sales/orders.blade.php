@@ -21,6 +21,9 @@
             <a href="{{ route('sales.supplier-debts') }}" class="nav-tab">
                 <i class="fas fa-file-invoice-dollar me-1"></i> Supplier Debts
             </a>
+            <a href="{{ route('sales.staff-sales') }}" class="nav-tab">
+                <i class="fas fa-user-tie me-1"></i> Staff Sales
+            </a>
         </div>
     </div>
 
@@ -73,6 +76,7 @@
                                 <th style="color: var(--text-secondary); border-bottom: 2px solid var(--border-color);">Products</th>
                                 <th style="color: var(--text-secondary); border-bottom: 2px solid var(--border-color);">Total</th>
                                 
+                                <th style="color: var(--text-secondary); border-bottom: 2px solid var(--border-color);">Served By</th>
                                 <th style="color: var(--text-secondary); border-bottom: 2px solid var(--border-color);">Date</th>
                                 <th style="color: var(--text-secondary); border-bottom: 2px solid var(--border-color);">Actions</th>
                             </tr>
@@ -133,6 +137,13 @@
                                         @endif
                                     </td>
                                     
+                                    <td>
+                                        @if($order->order_type === 'public_order')
+                                            <span style="color: var(--text-muted);">—</span>
+                                        @else
+                                            <small>{{ $order->served_by_name ?? '—' }}</small>
+                                        @endif
+                                    </td>
                                     <td>
                                         {{ $order->created_at->format('M d, Y H:i') }}
                                     </td>

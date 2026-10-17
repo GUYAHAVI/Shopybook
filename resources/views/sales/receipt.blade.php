@@ -410,6 +410,10 @@
                 <span class="info-label">Payment:</span>
                 <span class="info-value">{{ ucfirst(str_replace('_', ' ', $receiptData['payment_method'])) }}</span>
             </div>
+            <div class="info-row">
+                <span class="info-label">Served by:</span>
+                <span class="info-value">{{ $order->served_by_name ?? 'Staff' }}</span>
+            </div>
         </div>
         
         @if($receiptData['customer_name'] && $receiptData['customer_name'] !== 'Walk-in Customer')
@@ -599,6 +603,10 @@
                 <div class="info-row">
                     <span class="info-label">Date:</span>
                     <span class="info-value">{{ $order->created_at->format('M d, Y H:i') }}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Served by:</span>
+                    <span class="info-value">{{ $order->served_by_name ?? 'Staff' }}</span>
                 </div>
             </div>
             

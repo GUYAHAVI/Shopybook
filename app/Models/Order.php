@@ -41,6 +41,8 @@ class Order extends Model
         // Archive fields
         'is_archived',
         'archived_at',
+        // Staff attribution
+        'sold_by',
     ];
 
     protected $casts = [
@@ -83,6 +85,26 @@ class Order extends Model
     public function payments()
     {
         return $this->hasMany(Payment::class);
+    }
+
+    /**
+     * The staff member who made the sale ("Served by")
+     */
+    public function soldBy()
+    {
+        return $this->belongsTo(User::class, 'sold_by');
+    }
+
+    /**
+     * Display name for who served the customer — sold_by with
+     * fallback to whoever received the first payment.
+     */
+    public function getServedByNameAttribute()
+    {
+        if ($this->soldBy?->name) {
+            return $this->soldBy->name;
+        }
+        return $this->payments->sortBy('id')->first()?->receivedBy?->name;
     }
 
     public function product()

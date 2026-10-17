@@ -388,6 +388,9 @@ Route::prefix('team')->name('team.')->middleware(['auth', 'has.business'])->grou
         Route::get('/debts/suppliers', [SalesController::class, 'supplierDebts'])->name('sales.supplier-debts');
         Route::post('/debts/suppliers', [SalesController::class, 'storeSupplierDebt'])->name('sales.supplier-debts.store');
         Route::post('/debts/suppliers/{debt}/payment', [SalesController::class, 'recordSupplierPayment'])->name('sales.supplier-debts.payment');
+
+        // Staff Sales Report ("who sold what")
+        Route::get('/reports/staff-sales', [SalesController::class, 'staffSales'])->name('sales.staff-sales');
         
 Route::get('/receipts/{receiptNumber}/reprint', [SalesController::class, 'reprintReceipt'])->name('sales.reprint-receipt');
 Route::get('/receipts/search', [SalesController::class, 'searchReceipts'])->name('sales.search-receipts');

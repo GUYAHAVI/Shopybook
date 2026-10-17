@@ -45,7 +45,7 @@ class SalesController extends Controller
     public function orders()
     {
         $orders = auth()->user()->business->orders()
-            ->with(['customer', 'items.product', 'product'])
+            ->with(['customer', 'items.product', 'product', 'soldBy', 'payments.receivedBy'])
             ->latest()
             ->paginate(15);
             
@@ -185,6 +185,7 @@ class SalesController extends Controller
             }
             $order->order_number = 'ORD-' . strtoupper(uniqid());
             $order->status = 'completed'; // POS orders are automatically completed
+            $order->sold_by = auth()->id(); // Staff member who made the sale
             $order->payment_status = $validated['payment_status'] ?? 'paid'; // Default to paid
             $order->payment_method = $validated['payment_method'];
             $order->notes = $validated['notes'] ?? null;
@@ -1319,6 +1320,57 @@ class SalesController extends Controller
         return view('sales.customer-debts', compact('debts', 'summary'));
     }
     
+    /**
+     * Staff sales report — sales grouped by the staff member who made them.
+     */
+    public function staffSales(Request $request)
+    {
+        $business = auth()->user()->business;
+
+        $period = $request->get('period', 'month');
+
+        [$from, $to] = match ($period) {
+            'today'  => [now()->startOfDay(), now()->endOfDay()],
+            'week'   => [now()->startOfWeek(), now()->endOfWeek()],
+            'month'  => [now()->startOfMonth(), now()->endOfMonth()],
+            'custom' => [
+                $request->filled('from') ? \Carbon\Carbon::parse($request->input('from'))->startOfDay() : now()->startOfMonth(),
+                $request->filled('to')   ? \Carbon\Carbon::parse($request->input('to'))->endOfDay()     : now()->endOfDay(),
+            ],
+            default  => [null, null], // 'all'
+        };
+
+        $orders = Order::where('business_id', $business->id)
+            ->when($from, fn($q) => $q->where('created_at', '>=', $from))
+            ->when($to,   fn($q) => $q->where('created_at', '<=', $to))
+            ->with(['soldBy', 'customer', 'items.product'])
+            ->latest()
+            ->get();
+
+        $staffGroups = $orders->groupBy(fn($o) => $o->sold_by ?: 0)
+            ->map(function ($group) {
+                return [
+                    'user'    => $group->first()->soldBy,
+                    'orders'  => $group,
+                    'count'   => $group->count(),
+                    'total'   => $group->sum(fn($o) => (float) $o->total_amount),
+                    'paid'    => $group->sum(fn($o) => (float) $o->amount_paid),
+                    'balance' => $group->sum(fn($o) => (float) $o->balance_due),
+                ];
+            })
+            ->sortByDesc('total')
+            ->values();
+
+        $summary = [
+            'total_sales'  => $orders->sum(fn($o) => (float) $o->total_amount),
+            'total_orders' => $orders->count(),
+            'staff_count'  => $staffGroups->count(),
+            'top_performer'=> $staffGroups->first()['user']?->name ?? null,
+        ];
+
+        return view('sales.staff-sales', compact('staffGroups', 'summary', 'period'));
+    }
+
     public function supplierDebts(Request $request)
     {
         $business = auth()->user()->business;

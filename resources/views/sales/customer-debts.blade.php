@@ -21,6 +21,9 @@
             <a href="{{ route('sales.supplier-debts') }}" class="nav-tab">
                 <i class="fas fa-file-invoice-dollar me-1"></i> Supplier Debts
             </a>
+            <a href="{{ route('sales.staff-sales') }}" class="nav-tab">
+                <i class="fas fa-user-tie me-1"></i> Staff Sales
+            </a>
         </div>
     </div>
 
