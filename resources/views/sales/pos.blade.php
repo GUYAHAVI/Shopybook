@@ -68,9 +68,9 @@
                         </div>
                     </div>
 
-                    {{-- M-Pesa extras (phone + STK toggle) – only when Paystack configured --}}
-                    @php $paystackCfg = $business->getSettingsOrCreate(); @endphp
-                    @if($paystackCfg->paystack_enabled)
+                    {{-- M-Pesa extras (phone + STK toggle) – only when M-Pesa configured --}}
+                    @php $mpesaCfg = $business->getSettingsOrCreate()->mpesaConfig(); @endphp
+                    @if($mpesaCfg['ready'])
                     <div class="row" id="mpesa_phone_row" style="display:none;">
                         <div class="col-md-12">
                             <div class="mb-2">
@@ -79,7 +79,7 @@
                                     <input class="form-check-input" type="checkbox" id="use_stk_push" checked>
                                     <label class="form-check-label" for="use_stk_push" style="color: var(--text-primary);">
                                         <strong>Send STK Push</strong>
-                                        <span class="text-muted small"> — prompt customer's phone via Paystack</span>
+                                        <span class="text-muted small"> — prompt customer's phone via M-Pesa</span>
                                     </label>
                                 </div>
                                 {{-- Phone field (only needed for STK push) --}}
@@ -90,6 +90,7 @@
                                     <input type="tel" class="form-control" id="mpesa_phone"
                                            placeholder="e.g. 0712345678"
                                            style="border: 1px solid var(--border-color); background: var(--card-bg); color: var(--text-primary);">
+                                    <input type="hidden" id="mpesa_reference">
                                     <small class="text-muted">Number that will receive the STK push (07XXXXXXXX)</small>
                                 </div>
                             </div>
@@ -226,7 +227,7 @@
                         <i class="fas fa-check me-2"></i>Complete Sale
                     </button>
 
-                    @if($paystackCfg->paystack_enabled)
+                    @if($mpesaCfg['ready'])
                     <button class="btn btn-success w-100 mb-2" id="mpesa_stk_btn" style="display:none;" disabled>
                         <i class="fas fa-mobile-alt me-2"></i>Send M-Pesa STK Push
                     </button>
@@ -925,9 +926,9 @@ window.posConfig = {
         name: @json($taxSettings->tax_name ?: 'Tax'),
         inclusive: {{ $taxSettings->tax_inclusive ? 'true' : 'false' }}
     },
-    paystackEnabled: {{ $paystackCfg->paystack_enabled ? 'true' : 'false' }},
-    paystackMpesaChargeUrl: '{{ route("payment.paystack.mpesa.charge") }}',
-    paystackStatusUrl: '{{ url("/payment/paystack/status") }}',
+    mpesaEnabled: {{ $mpesaCfg['ready'] ? 'true' : 'false' }},
+    mpesaChargeUrl: '{{ route("payment.mpesa.charge") }}',
+    mpesaStatusUrl: '{{ url("/payment/mpesa/status") }}',
     routes: {
         createOrder: '{{ route("sales.create-order") }}',
         storeCustomer: '{{ route("sales.store-customer") }}',
@@ -995,9 +996,9 @@ function updatePartialPaymentDisplay() {
 <!-- Load our custom POS JavaScript -->
 <script src="{{ asset('js/pos.js') }}?v={{ time() }}"></script>
 
-@if($paystackCfg->paystack_enabled)
+@if($mpesaCfg['ready'])
 <!-- ============================================================
-     Paystack M-Pesa STK Push — Modal
+     M-Pesa Daraja STK Push — Modal
 ============================================================ -->
 <div class="modal fade" id="mpesaStkModal" tabindex="-1" data-bs-backdrop="static" aria-labelledby="mpesaStkModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
@@ -1118,7 +1119,7 @@ function updatePartialPaymentDisplay() {
 
         showStkModal('Sending STK push to ' + phone + '…', amount);
 
-        fetch(cfg.paystackMpesaChargeUrl, {
+        fetch(cfg.mpesaChargeUrl, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -1131,6 +1132,8 @@ function updatePartialPaymentDisplay() {
         .then(function (data) {
             if (data.success) {
                 stkReference = data.reference;
+                const refInput = document.getElementById('mpesa_reference');
+                if (refInput) refInput.value = stkReference;
                 document.getElementById('stk_status_text').textContent = data.message || 'Waiting for customer to approve…';
                 startPolling();
             } else {
@@ -1164,7 +1167,7 @@ function updatePartialPaymentDisplay() {
                 return;
             }
 
-            fetch(cfg.paystackStatusUrl + '/' + stkReference, {
+            fetch(cfg.mpesaStatusUrl + '/' + stkReference, {
                 headers: {
                     'X-CSRF-TOKEN': cfg.csrfToken,
                     'Accept': 'application/json',

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\BusinessSettings;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\Rule;
 
 class SettingsController extends Controller
 {
@@ -220,29 +221,38 @@ class SettingsController extends Controller
     }
 
     /**
-     * Update Paystack payment gateway settings
+     * Update M-Pesa payment gateway settings
      */
     public function updatePayments(Request $request)
     {
         $validated = $request->validate([
-            'paystack_enabled'    => 'boolean',
-            'paystack_public_key' => 'nullable|string|max:100',
-            'paystack_secret_key' => 'nullable|string|max:255',
-            'paystack_test_mode'  => 'boolean',
+            'mpesa_enabled'     => 'boolean',
+            'mpesa_type'        => 'required_if:mpesa_enabled,1|nullable|in:bank,paybill,till',
+            'mpesa_bank'        => ['nullable', 'string', 'in:' . implode(',', array_keys(config('mpesa_banks', []))), Rule::requiredIf(fn () => $request->input('mpesa_type') === 'bank')],
+            'mpesa_shortcode'   => ['nullable', 'string', 'max:20', Rule::requiredIf(fn () => $request->boolean('mpesa_enabled') && in_array($request->input('mpesa_type'), ['paybill', 'till']))],
+            'mpesa_account_ref' => ['nullable', 'string', 'max:50', Rule::requiredIf(fn () => $request->boolean('mpesa_enabled') && $request->input('mpesa_type') === 'bank')],
         ]);
 
         $business = auth()->user()->business;
         $settings = $business->getSettingsOrCreate();
 
-        // Never overwrite an existing secret key with an empty string
-        if (empty($validated['paystack_secret_key'])) {
-            unset($validated['paystack_secret_key']);
+        // Checkbox sends nothing when unchecked
+        $validated['mpesa_enabled'] = $request->boolean('mpesa_enabled');
+
+        // Clear fields irrelevant to the selected mode
+        if (($validated['mpesa_type'] ?? null) === 'bank') {
+            $validated['mpesa_shortcode'] = null;
+        } else {
+            $validated['mpesa_bank'] = null;
+        }
+        if (($validated['mpesa_type'] ?? null) === 'till') {
+            $validated['mpesa_account_ref'] = null;
         }
 
         $settings->update($validated);
 
         return redirect()->route('settings.index', ['#payments'])
-            ->with('success', 'Payment settings saved successfully!');
+            ->with('success', 'M-Pesa settings saved successfully!');
     }
 
     /**

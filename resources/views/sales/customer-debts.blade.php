@@ -138,11 +138,13 @@
                                 @endif
                             </td>
                             <td>
-                                @if($debt->status !== 'paid')
-                                <button type="button" class="btn btn-sm btn-success" 
-                                        onclick="viewInvoiceForPayment({{ $debt->order_id }})">
-                                    <i class="fas fa-money-bill-wave"></i> View Invoice
+                                @if($debt->status !== 'paid' && $debt->order_id)
+                                <button type="button" class="btn btn-sm btn-success"
+                                        onclick="openDebtPayment({{ $debt->order_id }}, {{ $debt->balance }}, '{{ addslashes($debt->customer->name) }}')">
+                                    <i class="fas fa-money-bill-wave me-1"></i>Record Payment
                                 </button>
+                                @elseif($debt->status === 'paid')
+                                <span class="text-success"><i class="fas fa-check-circle"></i></span>
                                 @endif
                             </td>
                         </tr>
@@ -207,11 +209,120 @@
 }
 </style>
 
+<!-- Record Debt Payment Modal -->
+<div class="modal fade" id="debtPaymentModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="background: var(--card-bg); border: 1px solid var(--border-color);">
+            <div class="modal-header" style="background: var(--bg-tertiary); border-bottom: 1px solid var(--border-color);">
+                <h5 class="modal-title" style="color: var(--text-primary);">
+                    <i class="fas fa-money-bill-wave text-success me-2"></i>Record Payment
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" style="color: var(--text-primary);">
+                <form id="debtPaymentForm">
+                    <input type="hidden" id="debtOrderId">
+
+                    <div class="alert alert-info">
+                        <strong>Customer:</strong> <span id="debtCustomerName"></span><br>
+                        <strong>Balance Due:</strong> KSh <span id="debtBalance">0.00</span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="debtPaymentMethod" class="form-label">Payment Method <span class="text-danger">*</span></label>
+                        <select class="form-select" id="debtPaymentMethod" name="payment_method" required>
+                            <option value="">Select payment method</option>
+                            <option value="cash">Cash</option>
+                            <option value="mpesa">M-Pesa</option>
+                            <option value="bank_transfer">Bank Transfer</option>
+                            <option value="card">Card</option>
+                            <option value="cheque">Cheque</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="debtAmountPaid" class="form-label">Amount Paid <span class="text-danger">*</span></label>
+                        <div class="input-group">
+                            <span class="input-group-text">KSh</span>
+                            <input type="number" class="form-control" id="debtAmountPaid" name="amount_paid" step="0.01" min="0.01" required>
+                        </div>
+                        <small class="text-muted">Enter a partial amount if the customer is paying in installments.</small>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="debtTransactionRef" class="form-label">Transaction Reference (Optional)</label>
+                        <input type="text" class="form-control" id="debtTransactionRef" name="transaction_reference" placeholder="e.g., M-Pesa code, cheque number">
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="debtPaymentNotes" class="form-label">Notes (Optional)</label>
+                        <textarea class="form-control" id="debtPaymentNotes" name="notes" rows="2" placeholder="Any additional notes about this payment"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer" style="border-top: 1px solid var(--border-color);">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-success" id="confirmDebtPaymentBtn">
+                    <i class="fas fa-check me-2"></i>Record Payment
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
-function viewInvoiceForPayment(orderId) {
-    // Redirect to orders page where the payment modal can be opened
-    window.location.href = "{{ route('sales.orders') }}?highlight=" + orderId;
+function openDebtPayment(orderId, balance, customerName) {
+    document.getElementById('debtPaymentForm').reset();
+    document.getElementById('debtOrderId').value = orderId;
+    document.getElementById('debtCustomerName').textContent = customerName;
+    document.getElementById('debtBalance').textContent = parseFloat(balance).toFixed(2);
+    document.getElementById('debtAmountPaid').value = parseFloat(balance).toFixed(2);
+    document.getElementById('debtAmountPaid').max = parseFloat(balance).toFixed(2);
+
+    new bootstrap.Modal(document.getElementById('debtPaymentModal')).show();
 }
+
+document.getElementById('confirmDebtPaymentBtn').addEventListener('click', async function() {
+    const form = document.getElementById('debtPaymentForm');
+    if (!form.checkValidity()) {
+        form.reportValidity();
+        return;
+    }
+
+    const orderId = document.getElementById('debtOrderId').value;
+    const data = Object.fromEntries(new FormData(form).entries());
+
+    const btn = this;
+    const originalText = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Processing...';
+
+    try {
+        const response = await fetch(`/sales/orders/${orderId}/record-payment`, {
+            method: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+            bootstrap.Modal.getInstance(document.getElementById('debtPaymentModal')).hide();
+            alert(result.message || 'Payment recorded successfully!');
+            location.reload();
+        } else {
+            alert('Error: ' + (result.message || 'Failed to record payment'));
+        }
+    } catch (error) {
+        alert('Error: ' + error.message);
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+    }
+});
 </script>
 
 @endsection

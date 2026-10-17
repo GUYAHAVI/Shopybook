@@ -434,6 +434,7 @@ function initializePOS() {
             payment_method: elements.paymentMethod && elements.paymentMethod.value ? elements.paymentMethod.value : 'cash',
             payment_status: paymentStatus,
             amount_paid: amountPaid,
+            mpesa_reference: (document.getElementById('mpesa_reference') || {}).value || null,
             notes: elements.orderNotes && elements.orderNotes.value ? elements.orderNotes.value : '',
             subtotal: subtotal,
             tax: taxAmount,

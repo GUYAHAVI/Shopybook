@@ -145,7 +145,9 @@
                                             <a href="{{ route('sales.generate-invoice', $order->id) }}" target="_blank" class="btn btn-sm btn-outline-warning" title="Generate Invoice">
                                                 <i class="fas fa-file-invoice"></i>
                                             </a>
-                                            <button type="button" class="btn btn-sm btn-outline-success" onclick="recordPayment({{ $order->id }}, {{ $order->total_amount }})" title="Record Payment">
+                                            @endif
+                                            @if(($order->payment_status ?? 'pending') !== 'paid')
+                                            <button type="button" class="btn btn-sm btn-outline-success" onclick="recordPayment({{ $order->id }}, {{ $order->balance_due ?? $order->total_amount }})" title="Record Payment">
                                                 <i class="fas fa-money-bill-wave"></i>
                                             </button>
                                             @endif

@@ -703,9 +703,9 @@ Route::post('/orders', [SalesController::class, 'createOrder'])->name('sales.cre
         // PayPal callbacks
         Route::get('/paypal/success', [PaymentController::class, 'paypalSuccess'])->name('payment.paypal.success');
         Route::get('/paypal/cancel', [PaymentController::class, 'paypalCancel'])->name('payment.paypal.cancel');
-        // Paystack M-Pesa STK push (POS)
-        Route::post('/paystack/mpesa/charge', [PaymentController::class, 'paystackMpesaCharge'])->name('payment.paystack.mpesa.charge')->middleware('has.business');
-        Route::get('/paystack/status/{reference}', [PaymentController::class, 'paystackChargeStatus'])->name('payment.paystack.status')->middleware('has.business')->where('reference', '[A-Za-z0-9_\-]+');
+        // M-Pesa Daraja STK push (POS) — aggregator model, settles to each business's till/paybill
+        Route::post('/mpesa/charge', [PaymentController::class, 'mpesaCharge'])->name('payment.mpesa.charge')->middleware('has.business');
+        Route::get('/mpesa/status/{checkoutRequestId}', [PaymentController::class, 'mpesaChargeStatus'])->name('payment.mpesa.status')->middleware('has.business')->where('checkoutRequestId', '[A-Za-z0-9_\-]+');
     });
 
     // Billing Routes
@@ -800,6 +800,9 @@ Route::post('/orders', [SalesController::class, 'createOrder'])->name('sales.cre
 
     // Learning system routes — disabled (internal system)
 });
+
+// M-Pesa Daraja STK callback (public — guarded by token query param, CSRF-exempt)
+Route::post('/mpesa/stk-callback', [PaymentController::class, 'mpesaStkCallback'])->name('mpesa.stk.callback');
 
 // Legal and Compliance Routes (Public - No Authentication Required)
 Route::get('/privacy-policy', function () {

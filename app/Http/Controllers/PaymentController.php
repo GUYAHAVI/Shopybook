@@ -8,18 +8,11 @@ use Illuminate\Support\Facades\Log;
 use App\Models\Order;
 use App\Models\Payment;
 use App\Models\Business;
+use App\Models\MpesaStkRequest;
+use App\Services\MpesaService;
 
 class PaymentController extends Controller
 {
-    // M-Pesa Configuration
-    private $mpesaConfig = [
-        'consumer_key' => 'your_mpesa_consumer_key',
-        'consumer_secret' => 'your_mpesa_consumer_secret',
-        'passkey' => 'your_mpesa_passkey',
-        'shortcode' => '174379', // Test shortcode
-        'environment' => 'sandbox', // or 'live'
-        'callback_url' => 'https://your-domain.com/api/mpesa/callback',
-    ];
 
     // PayPal Configuration
     private $paypalConfig = [
@@ -45,7 +38,7 @@ class PaymentController extends Controller
 
         switch ($request->payment_method) {
             case 'mpesa':
-                return $this->initiateMpesaPayment($order);
+                return $this->initiateMpesaPayment($order, $request->input('phone'));
             case 'paypal':
                 return $this->initiatePayPalPayment($order);
             default:
@@ -53,72 +46,34 @@ class PaymentController extends Controller
         }
     }
 
-    public function initiateMpesaPayment(Order $order)
+    public function initiateMpesaPayment(Order $order, ?string $phone = null)
     {
-        try {
-            // Generate M-Pesa STK Push request
-            $timestamp = date('YmdHis');
-            $password = base64_encode($this->mpesaConfig['shortcode'] . $this->mpesaConfig['passkey'] . $timestamp);
+        $phone = $phone ?: ($order->customer->phone ?? null);
 
-            $response = Http::withHeaders([
-                'Authorization' => 'Bearer ' . $this->getMpesaAccessToken(),
-                'Content-Type' => 'application/json',
-            ])->post($this->getMpesaUrl('stkpush'), [
-                'BusinessShortCode' => $this->mpesaConfig['shortcode'],
-                'Password' => $password,
-                'Timestamp' => $timestamp,
-                'TransactionType' => 'CustomerPayBillOnline',
-                'Amount' => $order->total_amount,
-                'PartyA' => '254700000000', // Customer phone number (dummy)
-                'PartyB' => $this->mpesaConfig['shortcode'],
-                'PhoneNumber' => '254700000000', // Customer phone number (dummy)
-                'CallBackURL' => $this->mpesaConfig['callback_url'],
-                'AccountReference' => 'Shopybook-' . $order->id,
-                'TransactionDesc' => 'Payment for Order #' . $order->id,
-            ]);
-
-            if ($response->successful()) {
-                $data = $response->json();
-                
-                // Create payment record
-                Payment::create([
-                    'order_id' => $order->id,
-                    'payment_method' => 'mpesa',
-                    'amount' => $order->total_amount,
-                    'currency' => 'KES',
-                    'transaction_id' => $data['CheckoutRequestID'] ?? 'MPESA_' . uniqid(),
-                    'status' => 'pending',
-                    'gateway_response' => $data,
-                ]);
-
-                return response()->json([
-                    'success' => true,
-                    'message' => 'M-Pesa payment initiated',
-                    'checkout_request_id' => $data['CheckoutRequestID'],
-                    'merchant_request_id' => $data['MerchantRequestID'],
-                    'instructions' => 'Please check your phone for M-Pesa prompt and enter your PIN to complete payment.',
-                ]);
-            } else {
-                Log::error('M-Pesa STK Push failed', [
-                    'order_id' => $order->id,
-                    'response' => $response->json(),
-                ]);
-
-                return response()->json([
-                    'error' => 'Failed to initiate M-Pesa payment',
-                    'details' => $response->json(),
-                ], 400);
-            }
-        } catch (\Exception $e) {
-            Log::error('M-Pesa payment error', [
-                'order_id' => $order->id,
-                'error' => $e->getMessage(),
-            ]);
-
+        if (empty($phone)) {
             return response()->json([
-                'error' => 'Payment service temporarily unavailable',
-            ], 500);
+                'error' => 'A customer phone number is required for M-Pesa payment.',
+            ], 422);
         }
+
+        $result = app(MpesaService::class)->stkPush(
+            $order->business,
+            $phone,
+            (float) $order->total_amount,
+            'Order' . $order->id,
+            $order->id
+        );
+
+        if (isset($result['error'])) {
+            return response()->json(['error' => $result['error']], 400);
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'M-Pesa payment initiated',
+            'checkout_request_id' => $result['reference'],
+            'instructions' => 'Please check your phone for M-Pesa prompt and enter your PIN to complete payment.',
+        ]);
     }
 
     public function initiatePayPalPayment(Order $order)
@@ -329,29 +284,6 @@ class PaymentController extends Controller
         return view('payment.history', compact('payments'));
     }
 
-    // Helper methods for M-Pesa
-    private function getMpesaAccessToken()
-    {
-        $response = Http::withHeaders([
-            'Authorization' => 'Basic ' . base64_encode($this->mpesaConfig['consumer_key'] . ':' . $this->mpesaConfig['consumer_secret']),
-        ])->get($this->getMpesaUrl('oauth1/v1/generate'));
-
-        if ($response->successful()) {
-            return $response->json()['access_token'];
-        }
-
-        throw new \Exception('Failed to get M-Pesa access token');
-    }
-
-    private function getMpesaUrl($endpoint)
-    {
-        $baseUrl = $this->mpesaConfig['environment'] === 'live' 
-            ? 'https://api.safaricom.co.ke' 
-            : 'https://sandbox.safaricom.co.ke';
-
-        return $baseUrl . '/' . $endpoint;
-    }
-
     // Helper methods for PayPal
     private function getPayPalAccessToken()
     {
@@ -382,143 +314,126 @@ class PaymentController extends Controller
      * Initiate a Paystack M-Pesa STK push for the authenticated business's customer.
      * The business's own Paystack credentials are used — each business collects into their own account.
      */
-    public function paystackMpesaCharge(Request $request)
+    /**
+     * POS: send an M-Pesa STK push to a customer. Funds settle to the
+     * business's own till/paybill via the platform's Daraja org credentials.
+     */
+    public function mpesaCharge(Request $request)
     {
         $request->validate([
-            'phone'  => 'required|string|min:9|max:15',
-            'amount' => 'required|numeric|min:1',
-            'email'  => 'nullable|email|max:255',
+            'phone'        => 'required|string|min:9|max:15',
+            'amount'       => 'required|numeric|min:1',
+            'account_ref'  => 'nullable|string|max:50',
         ]);
 
         $business = auth()->user()->business;
-        $settings = $business->getSettingsOrCreate();
-        $config   = $settings->paystackConfig();
 
-        if (!$config['enabled'] || empty($config['secret_key'])) {
-            return response()->json(['error' => 'Paystack is not configured for this business.'], 422);
+        $result = app(MpesaService::class)->stkPush(
+            $business,
+            $request->phone,
+            (float) $request->amount,
+            $request->input('account_ref')
+        );
+
+        if (isset($result['error'])) {
+            return response()->json(['error' => $result['error']], 400);
         }
-
-        // Normalize to +254XXXXXXXXX — Paystack M-Pesa requires E.164 format with + prefix
-        $raw   = $request->phone;
-        $phone = preg_replace('/\D/', '', $raw); // strip +, spaces, dashes
-
-        if (strlen($phone) === 10 && str_starts_with($phone, '0')) {
-            // 07XXXXXXXX or 01XXXXXXXX → 254...
-            $phone = '254' . substr($phone, 1);
-        } elseif (strlen($phone) === 9 && (str_starts_with($phone, '7') || str_starts_with($phone, '1'))) {
-            // 7XXXXXXXX → 254...
-            $phone = '254' . $phone;
-        } elseif (strlen($phone) === 13 && str_starts_with($phone, '0254')) {
-            // 02547XXXXXXXX → trim leading 0
-            $phone = substr($phone, 1);
-        }
-        // Prepend + for E.164 format Paystack requires
-        $phone = '+' . ltrim($phone, '+');
-
-        if (!preg_match('/^\+254[71]\d{8}$/', $phone)) {
-            Log::warning('Paystack phone normalization failed', [
-                'raw_input'  => $raw,
-                'normalized' => $phone,
-            ]);
-            return response()->json(['error' => 'Invalid phone number. Use 0712345678 or +254712345678.'], 422);
-        }
-
-        Log::info('Paystack charge attempt', [
-            'raw_phone'    => $raw,
-            'normalized'   => $phone,
-            'amount_kes'   => $request->amount,
-            'amount_kobo'  => (int) round((float) $request->amount * 100),
-            'key_prefix'   => substr($config['secret_key'] ?? '', 0, 10) . '...',
-            'test_mode'    => $config['test_mode'],
-        ]);
-
-        // Build a unique reference for every charge so Paystack never sees a duplicate
-        $reference = 'POS-' . strtoupper(str_replace('.', '-', uniqid('', true)));
-
-        // Build a unique email per transaction.
-        // Paystack blocks repeat charges with the same email, so we always append the
-        // reference suffix — but we preserve the real customer/business domain when available.
-        if (!empty($request->email)) {
-            // Use customer's actual email with a unique suffix so Paystack treats each
-            // transaction as distinct: customer+REF@domain.com
-            [$localPart, $domain] = explode('@', $request->email, 2);
-            $email = $localPart . '+' . strtolower($reference) . '@' . $domain;
-        } else {
-            // No customer email — build a synthetic one scoped to this business + reference
-            $businessSlug = preg_replace('/[^a-z0-9]/', '', strtolower($business->name ?? 'pos'));
-            $email = 'pos.' . $businessSlug . '.' . strtolower($reference) . '@shopybook.app';
-        }
-
-        // Amount must be in kobo (KES × 100)
-        $amount = (int) round((float) $request->amount * 100);
-
-        $payload = [
-            'email'        => $email,
-            'amount'       => $amount,
-            'currency'     => 'KES',
-            'reference'    => $reference,
-            'mobile_money' => [
-                'phone'    => $phone,
-                'provider' => 'mpesa',
-            ],
-        ];
-
-        Log::info('Paystack full payload', array_merge($payload, ['email_masked' => substr($email, 0, 6) . '***']));
-
-        $response = Http::withToken($config['secret_key'])
-            ->post("{$config['base_url']}/charge", $payload);
-
-        $data = $response->json();
-
-        if ($response->successful() && ($data['status'] ?? false)) {
-            return response()->json([
-                'success'   => true,
-                'reference' => $data['data']['reference'] ?? $reference,
-                'status'    => $data['data']['status'],
-                'message'   => $data['data']['display_text'] ?? 'STK push sent. Ask customer to enter M-Pesa PIN.',
-            ]);
-        }
-
-        Log::warning('Paystack M-Pesa charge failed', [
-            'business_id' => $business->id,
-            'phone_sent'  => $phone,
-            'amount_sent' => $amount,
-            'response'    => $data,
-        ]);
 
         return response()->json([
-            'error' => $data['message'] ?? 'Failed to send STK push. Check your Paystack credentials.',
-        ], 400);
+            'success'   => true,
+            'reference' => $result['reference'],
+            'status'    => 'pending',
+            'message'   => $result['message'] ?? 'STK push sent. Ask customer to enter M-Pesa PIN.',
+        ]);
     }
 
     /**
-     * Poll Paystack for the status of an in-flight charge reference.
+     * POS: poll for the result of an STK push (updated by the Daraja callback).
      */
-    public function paystackChargeStatus(Request $request, string $reference)
+    public function mpesaChargeStatus(Request $request, string $checkoutRequestId)
     {
-        $business = auth()->user()->business;
-        $settings = $business->getSettingsOrCreate();
-        $config   = $settings->paystackConfig();
-
-        if (empty($config['secret_key'])) {
-            return response()->json(['error' => 'Paystack not configured.'], 422);
-        }
-
-        // Validate reference to prevent SSRF-style path injection
-        if (!preg_match('/^[a-zA-Z0-9_\-]{4,60}$/', $reference)) {
+        if (!preg_match('/^[a-zA-Z0-9_\-]{4,80}$/', $checkoutRequestId)) {
             return response()->json(['error' => 'Invalid reference.'], 400);
         }
 
-        $response = Http::withToken($config['secret_key'])
-            ->get("{$config['base_url']}/charge/{$reference}");
+        $stk = MpesaStkRequest::where('checkout_request_id', $checkoutRequestId)
+            ->where('business_id', auth()->user()->business->id)
+            ->first();
 
-        $data = $response->json();
+        if (!$stk) {
+            return response()->json(['error' => 'Transaction not found.'], 404);
+        }
 
         return response()->json([
-            'success'   => $response->successful() && ($data['status'] ?? false),
-            'status'    => $data['data']['status'] ?? 'unknown',
-            'reference' => $reference,
-            'amount'    => isset($data['data']['amount']) ? $data['data']['amount'] / 100 : null,
+            'success'     => true,
+            'status'      => $stk->status,
+            'reference'   => $stk->checkout_request_id,
+            'amount'      => $stk->amount,
+            'receipt'     => $stk->mpesa_receipt_number,
+            'result_desc' => $stk->result_desc,
         ]);
+    }
+
+    /**
+     * Daraja STK callback — public endpoint guarded by a shared token.
+     * Matches CheckoutRequestID back to the pending STK request.
+     */
+    public function mpesaStkCallback(Request $request)
+    {
+        $token = config('services.mpesa.callback_token');
+        if ($token && !hash_equals($token, (string) $request->query('token'))) {
+            return response()->json(['message' => 'Forbidden'], 403);
+        }
+
+        Log::info('M-Pesa STK callback received', ['data' => $request->all()]);
+
+        $callback = $request->input('Body.stkCallback');
+        if (!$callback) {
+            return response()->json(['message' => 'Invalid payload'], 400);
+        }
+
+        $checkoutRequestId = $callback['CheckoutRequestID'] ?? null;
+        $resultCode        = $callback['ResultCode'] ?? null;
+        $resultDesc        = $callback['ResultDesc'] ?? null;
+
+        $stk = MpesaStkRequest::where('checkout_request_id', $checkoutRequestId)->first();
+
+        if (!$stk) {
+            Log::warning('STK callback for unknown request', ['checkout_request_id' => $checkoutRequestId]);
+            return response()->json(['message' => 'OK']);
+        }
+
+        if ((int) $resultCode === 0) {
+            $items = collect($callback['CallbackMetadata']['Item'] ?? [])->keyBy('Name');
+
+            $stk->update([
+                'status'                => 'success',
+                'result_code'           => $resultCode,
+                'result_desc'           => $resultDesc,
+                'mpesa_receipt_number'  => $items['MpesaReceiptNumber']['Value'] ?? null,
+                'amount'                => $items['Amount']['Value'] ?? $stk->amount,
+            ]);
+
+            Log::info('M-Pesa payment confirmed', [
+                'checkout_request_id' => $checkoutRequestId,
+                'receipt'             => $stk->mpesa_receipt_number,
+                'amount'              => $stk->amount,
+                'business_id'         => $stk->business_id,
+            ]);
+        } else {
+            $stk->update([
+                'status'      => 'failed',
+                'result_code' => $resultCode,
+                'result_desc' => $resultDesc,
+            ]);
+
+            Log::info('M-Pesa payment failed', [
+                'checkout_request_id' => $checkoutRequestId,
+                'result_code'         => $resultCode,
+                'result_desc'         => $resultDesc,
+            ]);
+        }
+
+        return response()->json(['message' => 'OK']);
     }
 }

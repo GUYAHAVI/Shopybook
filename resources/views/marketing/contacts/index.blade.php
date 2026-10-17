@@ -1,4 +1,4 @@
-@extends('layouts.app')
+@extends('layouts.dash')
 
 @section('content')
 <div class="container-fluid">
@@ -43,7 +43,7 @@
                                 </span>
                             </div>
                             <div class="dropdown">
-                                <button class="btn btn-sm btn-link" type="button" data-toggle="dropdown">
+                                <button class="btn btn-sm btn-link" type="button" data-bs-toggle="dropdown">
                                     <i class="fas fa-ellipsis-v"></i>
                                 </button>
                                 <div class="dropdown-menu dropdown-menu-right">

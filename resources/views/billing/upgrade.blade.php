@@ -1,4 +1,4 @@
-@extends('layouts.app')
+@extends('layouts.dash')
 
 @section('title', 'Upgrade Plan - Shopybook')
 

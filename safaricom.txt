@@ -1,0 +1,140 @@
+
+def safaricom_stk_push_request(payload):
+    try:
+        url = "https://api.safaricom.co.ke/mpesa/stkpush/v1/processrequest"
+        site_name = frappe.local.site
+        
+        call_back_basic = f"https://{site_name}"
+        # call_back_basic = "https://b965-102-213-49-154.ngrok-free.app"
+        short_code = "4079365"
+        passkey = get_env_data()['PASSWORD']
+        timestamp = "20240514183146"
+        password_string = f"{short_code}{passkey}{timestamp}"
+        password = base64.b64encode(password_string.encode()).decode()
+        callback_token = frappe.conf.get("safaricom_callback_token")
+        request_payload = {
+            "BusinessShortCode": short_code,
+            "Password": password,
+            "Timestamp": timestamp,
+            "TransactionType": "CustomerPayBillOnline",
+            "Amount": f"{payload['amount']}",
+            "PartyA": f"{payload['mobile_number']}",
+            "PartyB": f"{payload['paybill_number']}",
+            "PhoneNumber": f"{payload['mobile_number']}",
+            "CallBackURL": f"{call_back_basic}/api/method/kejapay.services.paymentintegration.payment.stk_push_response?token={callback_token}",
+            "AccountReference": f"{payload['bank_account_number']}",
+            "TransactionDesc": "Rent Payment"
+        }
+        headers = {
+            "Content-Type": "application/json",
+            "Authorization": f"Bearer {generate_access_token()}"
+        }
+
+        response = requests.request("POST", url, json=request_payload, headers=headers)
+        response_data = response.json()
+        return response_data
+    except Exception as e:
+        frappe.log_error(frappe.get_traceback(), f"{e}")
+        return {'error': str(e)}, 400
+
+def generate_access_token():
+    try:
+        config = frappe.get_conf()
+        consumer_key = config.get("consumer_key")
+        consumer_secret = config.get("consumer_secret")
+        if not consumer_key or not consumer_secret:
+            frappe.throw("Missing 'consumer_key' or 'consumer_secret' in common site config.")
+        credentials = f"{consumer_key}:{consumer_secret}"
+        encoded_credentials = base64.b64encode(credentials.encode()).decode()
+        url = "https://api.safaricom.co.ke/oauth/v1/generate"
+        querystring = {"grant_type": "client_credentials"}
+        headers = {
+            "Content-Type": "application/json",
+            "User-Agent": "Frappe App",
+            "Authorization": f"Basic {encoded_credentials}"
+        }
+        response = requests.get(url, headers=headers, params=querystring)
+        response.raise_for_status()
+        access_token = response.json().get('access_token')
+        if not access_token:
+            frappe.throw("Access token not found in response.")
+        return access_token
+    except requests.RequestException as e:
+        frappe.log_error(frappe.get_traceback(), "Safaricom Token Request Error")
+        return {"error": "Failed to retrieve access token", "details": str(e)}, 400
+
+
+@frappe.whitelist(allow_guest=True)
+def stk_push_response():
+    callback_token = frappe.conf.get("safaricom_callback_token")
+    incoming_token = frappe.request.args.get("token")
+
+    if incoming_token != callback_token:
+        frappe.log_error("Invalid callback token", "Safaricom Callback")
+        frappe.respond_as_web_page("403", "Forbidden", http_status_code=403)
+        return
+
+    data = frappe.request.get_json(force=True)
+    response = data['Body']['stkCallback']
+    items = response['CallbackMetadata']['Item']
+
+    Amount = next((item["Value"] for item in items if item["Name"] == "Amount"), None)
+    MpesaReceiptNumber = next((item["Value"] for item in items if item["Name"] == "MpesaReceiptNumber"), None)
+    TransactionDate = next((item["Value"] for item in items if item["Name"] == "TransactionDate"), None)
+    PhoneNumber = next((item["Value"] for item in items if item["Name"] == "PhoneNumber"), None)
+
+    reference_code = response['ResultCode']
+    merchant_request_id = response['MerchantRequestID']
+
+    payment_request = frappe.db.get_value(
+        'Process Payment Request',
+        {'mobile_number': undo_format_mobile_number(PhoneNumber), 'status': 'Pending'},
+        ['invoice_number', 'tenant_id', 'house', 'utility_name'],
+        as_dict=True
+    )
+    
+    invoice_number = payment_request.invoice_number if payment_request else None
+    tenant_id = payment_request.tenant_id if payment_request else None
+    house_number = payment_request.house if payment_request else None
+    utilitie = payment_request.utility_name if payment_request else None
+    
+    if not house_number and invoice_number:
+        house_number = frappe.db.get_value(
+            'Sales Invoice',
+            {'name': invoice_number},
+            'custom_house'
+        )
+    
+    if not house_number:
+        frappe.log_error(f"House not found for mobile: {PhoneNumber}, invoice: {invoice_number}", "STK Push Response")
+    
+    if invoice_number and utilitie:
+        apply_payment_to_invoice_items(
+            invoice_number=invoice_number,
+            utility_name=utilitie,
+            paid_amount=Amount
+        )
+    try:
+        doc = frappe.get_doc({
+            'doctype': 'Mpesa Payment Transactions',
+            'merchant_request_id': merchant_request_id,
+            'result_code': reference_code,
+            'amount': Amount,
+            'tenant_id': tenant_id,
+            'mpesa_receipt_number': MpesaReceiptNumber,
+            'transaction_date': TransactionDate,
+            'phone_number': PhoneNumber,
+            'status': 'Pending',
+            'invoice_number': invoice_number,
+            'house_number': house_number
+        })
+        doc.insert(ignore_permissions=True)
+        frappe.db.commit()
+        return process_payment_and_reconcile_tenant_invoice(
+            MpesaReceiptNumber, TransactionDate, PhoneNumber, Amount
+        )
+    except Exception as e:
+        frappe.log_error(frappe.get_traceback(), f"{e}")
+        return {'error': str(e)}, 400
+
+

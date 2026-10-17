@@ -128,6 +128,7 @@ class SalesController extends Controller
                 'payment_method' => 'required|string',
                 'payment_status' => 'nullable|string|in:paid,unpaid,partial',
                 'amount_paid' => 'nullable|numeric|min:0',
+                'mpesa_reference' => 'nullable|string|max:80',
                 'notes' => 'nullable|string',
                 'subtotal' => 'nullable|numeric|min:0',
                 'tax' => 'nullable|numeric|min:0',
@@ -251,6 +252,14 @@ class SalesController extends Controller
                 ]);
             }
             
+            // Link a completed STK push to this order (if payment came via M-Pesa STK)
+            $stkRequest = null;
+            if (!empty($validated['mpesa_reference'])) {
+                $stkRequest = \App\Models\MpesaStkRequest::where('checkout_request_id', $validated['mpesa_reference'])
+                    ->where('business_id', $business->id)
+                    ->first();
+            }
+
             // Create payment record if amount was paid
             if ($amountPaid > 0) {
                 Payment::create([
@@ -259,10 +268,15 @@ class SalesController extends Controller
                     'payment_number' => Payment::generatePaymentNumber(),
                     'amount' => $amountPaid,
                     'payment_method' => $order->payment_method,
+                    'transaction_reference' => $stkRequest?->mpesa_receipt_number,
                     'payment_date' => now(),
                     'notes' => $paymentStatus === 'partial' ? 'Partial payment at checkout' : 'Full payment at checkout',
                     'received_by' => auth()->id(),
                 ]);
+            }
+
+            if ($stkRequest) {
+                $stkRequest->update(['order_id' => $order->id]);
             }
 
             foreach ($validated['items'] as $item) {
@@ -1144,14 +1158,6 @@ class SalesController extends Controller
         
         if ($order->business_id !== $business->id) {
             abort(403);
-        }
-        
-        // Validate that order has an invoice
-        if (!$order->invoice_number) {
-            return response()->json([
-                'success' => false,
-                'message' => 'This order does not have an invoice.',
-            ], 422);
         }
         
         if ($order->payment_status === 'paid') {

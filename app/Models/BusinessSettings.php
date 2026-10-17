@@ -68,6 +68,12 @@ class BusinessSettings extends Model
         'paystack_public_key',
         'paystack_secret_key',
         'paystack_test_mode',
+        // M-Pesa Daraja STK Push
+        'mpesa_enabled',
+        'mpesa_type',
+        'mpesa_bank',
+        'mpesa_shortcode',
+        'mpesa_account_ref',
     ];
 
     protected $casts = [
@@ -103,6 +109,8 @@ class BusinessSettings extends Model
         'paystack_enabled' => 'boolean',
         'paystack_test_mode' => 'boolean',
         'paystack_secret_key' => 'encrypted',
+        // M-Pesa
+        'mpesa_enabled' => 'boolean',
     ];
 
     /**
@@ -116,6 +124,30 @@ class BusinessSettings extends Model
             'secret_key' => $this->paystack_secret_key,
             'test_mode'  => (bool) $this->paystack_test_mode,
             'base_url'   => 'https://api.paystack.co',
+        ];
+    }
+
+    /**
+     * Return M-Pesa config for the business. The platform's org shortcode +
+     * passkey (from services.mpesa) sign every request; PartyB is the
+     * business's own till/paybill or the selected bank's deposit paybill
+     * (with the business's bank account number as the account reference).
+     */
+    public function mpesaConfig(): array
+    {
+        $ready = (bool) $this->mpesa_enabled && match ($this->mpesa_type) {
+            'bank'           => !empty($this->mpesa_bank) && !empty($this->mpesa_account_ref),
+            'paybill', 'till' => !empty($this->mpesa_shortcode),
+            default          => false,
+        };
+
+        return [
+            'enabled'      => (bool) $this->mpesa_enabled,
+            'type'         => $this->mpesa_type,
+            'bank'         => $this->mpesa_bank,
+            'shortcode'    => $this->mpesa_shortcode,
+            'account_ref'  => $this->mpesa_account_ref,
+            'ready'        => $ready,
         ];
     }
 

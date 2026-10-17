@@ -28,10 +28,14 @@ return Application::configure(basePath: dirname(__DIR__))
         'honeypot'     => \App\Http\Middleware\Honeypot::class,
     ]);
     
+    // Trust proxy headers (ngrok, load balancers) so generated URLs are https
+    $middleware->trustProxies(at: '*');
+
     // Exclude M-Pesa and Paystack webhooks from CSRF verification
     $middleware->validateCsrfTokens(except: [
         'subscription/mpesa/callback',
         'subscription/paystack/webhook',
+        'mpesa/stk-callback',
     ]);
 })
     ->withExceptions(function (Exceptions $exceptions) {

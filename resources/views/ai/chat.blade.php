@@ -1,4 +1,4 @@
-@extends('layouts.app')
+@extends('layouts.dash')
 
 @section('title', 'KENADA Business Assistant')
 
@@ -123,7 +123,7 @@
 @push('styles')
 <style>
 .chat-container {
-    background-color: #f8f9fa;
+    background-color: var(--bg-tertiary);
 }
 
 .message {
@@ -147,19 +147,24 @@
 }
 
 .message.user .message-content {
-    background-color: #007bff;
+    background-color: var(--primary-color);
     color: white;
 }
 
 .message.ai .message-content {
-    background-color: white;
-    border: 1px solid #dee2e6;
+    background-color: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    color: var(--text-primary);
 }
 
 .message-time {
     font-size: 0.75rem;
-    color: #6c757d;
+    color: var(--text-muted);
     margin-top: 5px;
+}
+
+.message.user .message-time {
+    color: rgba(255, 255, 255, 0.75);
 }
 
 .suggestion-buttons {
@@ -173,12 +178,12 @@
 }
 
 .chat-input-container {
-    background-color: white;
+    background-color: var(--bg-secondary);
 }
 
 #message-input:focus {
-    border-color: #007bff;
-    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+    border-color: var(--primary-light);
+    box-shadow: 0 0 0 0.2rem rgba(255, 81, 26, 0.15);
 }
 
 .status-indicator {
@@ -190,11 +195,11 @@
 }
 
 .status-online {
-    background-color: #28a745;
+    background-color: var(--success-color);
 }
 
 .status-offline {
-    background-color: #dc3545;
+    background-color: var(--danger-color);
 }
 
 .insight-card {
@@ -219,118 +224,135 @@
 
 @push('scripts')
 <script>
-$(document).ready(function() {
+document.addEventListener('DOMContentLoaded', function() {
     let conversationHistory = [];
-    
+    const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+    const chatMessages = document.getElementById('chat-messages');
+    const messageInput = document.getElementById('message-input');
+    const loadingModal = new bootstrap.Modal(document.getElementById('loadingModal'));
+
     // Initialize
     loadAIStatus();
     loadConversationHistory();
-    
+
     // Auto-load insights for user's business
-    const businessId = $('#business-id').val();
+    const businessId = document.getElementById('business-id').value;
     if (businessId) {
         loadQuickInsights(businessId);
     }
-    
+
     // Send message
-    $('#send-button').click(sendMessage);
-    $('#message-input').keypress(function(e) {
-        if (e.which == 13) {
+    document.getElementById('send-button').addEventListener('click', sendMessage);
+    messageInput.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
             sendMessage();
         }
     });
-    
+
     // Suggestion buttons
-    $('.suggestion-btn').click(function() {
-        const message = $(this).data('message');
-        $('#message-input').val(message);
-        sendMessage();
+    document.querySelectorAll('.suggestion-btn').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            messageInput.value = this.dataset.message;
+            sendMessage();
+        });
     });
-    
+
     // Clear history
-    $('#clear-history').click(clearHistory);
-    
+    document.getElementById('clear-history').addEventListener('click', clearHistory);
+
     function sendMessage() {
-        const message = $('#message-input').val().trim();
-        
+        const message = messageInput.value.trim();
+
         if (!message) return;
-        
+
         // Add user message to chat
         addMessage(message, 'user');
-        $('#message-input').val('');
-        
+        messageInput.value = '';
+
         // Show loading
-        $('#loadingModal').modal('show');
-        
+        loadingModal.show();
+
         // Send to AI
-        $.ajax({
-            url: '{{ route("ai-comm.process-message") }}',
+        fetch('{{ route("ai-comm.process-message") }}', {
             method: 'POST',
-            data: {
-                message: message,
-                _token: '{{ csrf_token() }}'
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': csrfToken,
+                'Accept': 'application/json'
             },
-            success: function(response) {
-                $('#loadingModal').modal('hide');
-                
-                if (response.success) {
-                    addMessage(response.response, 'ai');
-                    
-                    // Update suggestions
-                    updateSuggestions(response.suggestions);
-                    
-                    // Reload conversation history
-                    loadConversationHistory();
-                } else {
-                    addMessage('Sorry, I encountered an error. Please try again.', 'ai');
-                }
-            },
-            error: function() {
-                $('#loadingModal').modal('hide');
-                addMessage('Sorry, I\'m having trouble connecting. Please try again.', 'ai');
+            body: JSON.stringify({ message: message })
+        })
+        .then(function(response) { return response.json(); })
+        .then(function(data) {
+            loadingModal.hide();
+
+            if (data.success) {
+                addMessage(data.response, 'ai');
+
+                // Update suggestions
+                updateSuggestions(data.suggestions);
+
+                // Reload conversation history
+                loadConversationHistory();
+            } else {
+                addMessage('Sorry, I encountered an error. Please try again.', 'ai');
             }
+        })
+        .catch(function() {
+            loadingModal.hide();
+            addMessage('Sorry, I\'m having trouble connecting. Please try again.', 'ai');
         });
     }
-    
+
     function addMessage(text, type) {
-        const messageHtml = `
-            <div class="message ${type}">
-                <div class="message-content">
-                    ${text}
-                    <div class="message-time">${new Date().toLocaleTimeString()}</div>
-                </div>
-            </div>
-        `;
-        
-        $('#chat-messages').append(messageHtml);
-        $('#chat-messages').scrollTop($('#chat-messages')[0].scrollHeight);
+        const wrapper = document.createElement('div');
+        wrapper.className = 'message ' + type;
+
+        const content = document.createElement('div');
+        content.className = 'message-content';
+
+        if (type === 'user') {
+            content.textContent = text;
+        } else {
+            content.innerHTML = text;
+        }
+
+        const time = document.createElement('div');
+        time.className = 'message-time';
+        time.textContent = new Date().toLocaleTimeString();
+
+        content.appendChild(time);
+        wrapper.appendChild(content);
+        chatMessages.appendChild(wrapper);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
     }
-    
+
     function updateSuggestions(suggestions) {
         if (suggestions && suggestions.length > 0) {
-            let buttonsHtml = '';
-            suggestions.forEach(suggestion => {
-                buttonsHtml += `<button class="btn btn-sm btn-outline-secondary suggestion-btn" data-message="${suggestion}">${suggestion}</button>`;
-            });
-            $('.suggestion-buttons').html(buttonsHtml);
-            
-            // Reattach click handlers
-            $('.suggestion-btn').click(function() {
-                const message = $(this).data('message');
-                $('#message-input').val(message);
-                sendMessage();
+            const container = document.querySelector('.suggestion-buttons');
+            container.innerHTML = '';
+
+            suggestions.forEach(function(suggestion) {
+                const btn = document.createElement('button');
+                btn.className = 'btn btn-sm btn-outline-secondary suggestion-btn';
+                btn.dataset.message = suggestion;
+                btn.textContent = suggestion;
+                btn.addEventListener('click', function() {
+                    messageInput.value = this.dataset.message;
+                    sendMessage();
+                });
+                container.appendChild(btn);
             });
         }
     }
-    
+
     function loadAIStatus() {
-        $.ajax({
-            url: '{{ route("ai-comm.status") }}',
-            method: 'GET',
-            success: function(response) {
-                if (response.success) {
-                    const status = response.status;
-                    let statusHtml = `
+        fetch('{{ route("ai-comm.status") }}')
+            .then(function(response) { return response.json(); })
+            .then(function(data) {
+                if (data.success) {
+                    const status = data.status;
+                    document.getElementById('ai-status').innerHTML = `
                         <div class="d-flex align-items-center mb-2">
                             <span class="status-indicator status-${status.system_ready ? 'online' : 'offline'}"></span>
                             <span>AI System ${status.system_ready ? 'Online' : 'Offline'}</span>
@@ -346,101 +368,115 @@ $(document).ready(function() {
                             </div>
                         </div>
                     `;
-                    $('#ai-status').html(statusHtml);
                 }
-            }
-        });
+            });
     }
-    
+
     function loadQuickInsights(businessId) {
-        $.ajax({
-            url: '{{ route("ai-comm.quick-insights") }}',
+        fetch('{{ route("ai-comm.quick-insights") }}', {
             method: 'POST',
-            data: {
-                business_id: businessId,
-                _token: '{{ csrf_token() }}'
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': csrfToken,
+                'Accept': 'application/json'
             },
-            success: function(response) {
-                if (response.success) {
-                    const insights = response.insights;
-                    let insightsHtml = `
-                        <div class="insight-card">
-                            <div class="insight-value">$${insights.sales.total}</div>
-                            <div class="insight-label">Total Sales</div>
-                        </div>
-                        <div class="insight-card">
-                            <div class="insight-value">$${insights.sales.avg_order}</div>
-                            <div class="insight-label">Avg Order Value</div>
-                        </div>
-                        <div class="insight-card">
-                            <div class="insight-value">${insights.market.trend}</div>
-                            <div class="insight-label">Market Sentiment</div>
-                        </div>
-                        <div class="mt-3">
-                            <small class="text-white-50">Recommendations:</small>
-                            <ul class="list-unstyled mt-1">
-                    `;
-                    
-                    insights.recommendations.forEach(rec => {
-                        insightsHtml += `<li class="small">• ${rec}</li>`;
-                    });
-                    
-                    insightsHtml += '</ul></div>';
-                    $('#quick-insights').html(insightsHtml);
-                }
+            body: JSON.stringify({ business_id: businessId })
+        })
+        .then(function(response) { return response.json(); })
+        .then(function(data) {
+            if (data.success) {
+                const insights = data.insights;
+                let insightsHtml = `
+                    <div class="insight-card">
+                        <div class="insight-value">$${insights.sales.total}</div>
+                        <div class="insight-label">Total Sales</div>
+                    </div>
+                    <div class="insight-card">
+                        <div class="insight-value">$${insights.sales.avg_order}</div>
+                        <div class="insight-label">Avg Order Value</div>
+                    </div>
+                    <div class="insight-card">
+                        <div class="insight-value">${insights.market.trend}</div>
+                        <div class="insight-label">Market Sentiment</div>
+                    </div>
+                    <div class="mt-3">
+                        <small class="text-white-50">Recommendations:</small>
+                        <ul class="list-unstyled mt-1">
+                `;
+
+                insights.recommendations.forEach(function(rec) {
+                    insightsHtml += `<li class="small">• ${rec}</li>`;
+                });
+
+                insightsHtml += '</ul></div>';
+                document.getElementById('quick-insights').innerHTML = insightsHtml;
             }
         });
     }
-    
+
     function loadConversationHistory() {
-        $.ajax({
-            url: '{{ route("ai-comm.history") }}',
-            method: 'GET',
-            success: function(response) {
-                if (response.success) {
-                    conversationHistory = response.history;
+        fetch('{{ route("ai-comm.history") }}')
+            .then(function(response) { return response.json(); })
+            .then(function(data) {
+                if (data.success) {
+                    conversationHistory = data.history;
                     displayConversationHistory();
                 }
-            }
-        });
+            });
     }
-    
+
     function displayConversationHistory() {
+        const container = document.getElementById('conversation-history');
+
         if (conversationHistory.length === 0) {
-            $('#conversation-history').html('<p class="text-muted">No conversation history yet</p>');
+            container.innerHTML = '<p class="text-muted">No conversation history yet</p>';
             return;
         }
-        
-        let historyHtml = '';
-        conversationHistory.slice(-5).forEach(item => {
+
+        container.innerHTML = '';
+        conversationHistory.slice(-5).forEach(function(item) {
             const time = new Date(item.timestamp).toLocaleTimeString();
             const truncatedMessage = item.message.length > 50 ? item.message.substring(0, 50) + '...' : item.message;
-            historyHtml += `
-                <div class="small mb-2">
-                    <div class="fw-bold">${item.type === 'user' ? 'You' : 'AI'}</div>
-                    <div class="text-muted">${truncatedMessage}</div>
-                    <div class="text-muted">${time}</div>
-                </div>
-            `;
+
+            const div = document.createElement('div');
+            div.className = 'small mb-2';
+
+            const who = document.createElement('div');
+            who.className = 'fw-bold';
+            who.textContent = item.type === 'user' ? 'You' : 'AI';
+
+            const msg = document.createElement('div');
+            msg.className = 'text-muted';
+            msg.textContent = truncatedMessage;
+
+            const t = document.createElement('div');
+            t.className = 'text-muted';
+            t.textContent = time;
+
+            div.appendChild(who);
+            div.appendChild(msg);
+            div.appendChild(t);
+            container.appendChild(div);
         });
-        
-        $('#conversation-history').html(historyHtml);
     }
-    
+
     function clearHistory() {
         if (confirm('Are you sure you want to clear the conversation history?')) {
-            $.ajax({
-                url: '{{ route("ai-comm.clear-history") }}',
+            fetch('{{ route("ai-comm.clear-history") }}', {
                 method: 'POST',
-                data: {
-                    _token: '{{ csrf_token() }}'
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken,
+                    'Accept': 'application/json'
                 },
-                success: function(response) {
-                    if (response.success) {
-                        conversationHistory = [];
-                        displayConversationHistory();
-                        $('#chat-messages').empty();
-                    }
+                body: JSON.stringify({})
+            })
+            .then(function(response) { return response.json(); })
+            .then(function(data) {
+                if (data.success) {
+                    conversationHistory = [];
+                    displayConversationHistory();
+                    chatMessages.innerHTML = '';
                 }
             });
         }
