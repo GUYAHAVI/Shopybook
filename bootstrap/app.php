@@ -24,6 +24,7 @@ return Application::configure(basePath: dirname(__DIR__))
     $middleware->alias([
         'has.business' => \App\Http\Middleware\HasBusiness::class,
         'permission'   => \App\Http\Middleware\CheckPermission::class,
+        'owner.only'   => \App\Http\Middleware\EnsureBusinessOwner::class,
         'admin'        => \App\Http\Middleware\AdminMiddleware::class,
         'honeypot'     => \App\Http\Middleware\Honeypot::class,
     ]);

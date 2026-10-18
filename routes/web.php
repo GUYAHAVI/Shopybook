@@ -225,7 +225,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Routes are now properly ordered - debug routes removed
 
     // Business Profile Routes (for users with businesses)
-    Route::prefix('business')->middleware('has.business')->group(function () {
+    Route::prefix('business')->middleware('has.business', 'owner.only')->group(function () {
         Route::get('/profile', [BusinessController::class, 'edit'])->name('business.profile');
         Route::get('/edit', [BusinessController::class, 'edit'])->name('business.edit');
         Route::put('/update', [BusinessController::class, 'update'])->name('business.update');
@@ -305,7 +305,7 @@ Route::prefix('tours')->name('tours.')->middleware(['auth'])->group(function () 
 });
 
 // ── Team / RBAC Routes ──────────────────────────────────────────────────────
-Route::prefix('team')->name('team.')->middleware(['auth', 'has.business'])->group(function () {
+Route::prefix('team')->name('team.')->middleware(['auth', 'has.business', 'owner.only'])->group(function () {
     Route::get('/',                          [TeamController::class, 'index'])->name('index');
     Route::post('/',                         [TeamController::class, 'store'])->name('store');
     Route::put('/{member}',                  [TeamController::class, 'update'])->name('update');
@@ -518,8 +518,8 @@ Route::post('/orders', [SalesController::class, 'createOrder'])->name('sales.cre
 
     // Subscription Routes
     Route::prefix('subscription')->middleware(['auth', 'has.business'])->group(function () {
-        Route::post('/upgrade', [App\Http\Controllers\SubscriptionController::class, 'upgrade'])->name('subscription.upgrade');
-        Route::post('/addon-business', [App\Http\Controllers\SubscriptionController::class, 'addonBusiness'])->name('subscription.addon-business');
+        Route::post('/upgrade', [App\Http\Controllers\SubscriptionController::class, 'upgrade'])->name('subscription.upgrade')->middleware('owner.only');
+        Route::post('/addon-business', [App\Http\Controllers\SubscriptionController::class, 'addonBusiness'])->name('subscription.addon-business')->middleware('owner.only');
         Route::post('/check-payment-status', [App\Http\Controllers\SubscriptionController::class, 'checkPaymentStatus'])->name('subscription.check.status');
     });
     
@@ -709,12 +709,12 @@ Route::post('/orders', [SalesController::class, 'createOrder'])->name('sales.cre
         Route::get('/paypal/success', [PaymentController::class, 'paypalSuccess'])->name('payment.paypal.success');
         Route::get('/paypal/cancel', [PaymentController::class, 'paypalCancel'])->name('payment.paypal.cancel');
         // M-Pesa Daraja STK push (POS) — aggregator model, settles to each business's till/paybill
-        Route::post('/mpesa/charge', [PaymentController::class, 'mpesaCharge'])->name('payment.mpesa.charge')->middleware('has.business');
-        Route::get('/mpesa/status/{checkoutRequestId}', [PaymentController::class, 'mpesaChargeStatus'])->name('payment.mpesa.status')->middleware('has.business')->where('checkoutRequestId', '[A-Za-z0-9_\-]+');
+        Route::post('/mpesa/charge', [PaymentController::class, 'mpesaCharge'])->name('payment.mpesa.charge')->middleware(['has.business', 'permission:pos']);
+        Route::get('/mpesa/status/{checkoutRequestId}', [PaymentController::class, 'mpesaChargeStatus'])->name('payment.mpesa.status')->middleware(['has.business', 'permission:pos'])->where('checkoutRequestId', '[A-Za-z0-9_\-]+');
     });
 
     // Billing Routes
-    Route::prefix('billing')->group(function () {
+    Route::prefix('billing')->middleware(['has.business', 'owner.only'])->group(function () {
         Route::get('/upgrade', [BillingController::class, 'upgrade'])->name('billing.upgrade');
         Route::post('/upgrade', [BillingController::class, 'processUpgrade'])->name('billing.process-upgrade');
         Route::get('/dashboard', [BillingController::class, 'dashboard'])->name('billing.dashboard');
@@ -967,7 +967,7 @@ Route::middleware(['auth', 'has.business', 'permission:website'])->prefix('websi
 });
 
 // App Management Routes
-Route::middleware(['auth'])->prefix('apps')->name('apps.')->group(function () {
+Route::middleware(['auth', 'has.business', 'permission:settings'])->prefix('apps')->name('apps.')->group(function () {
     Route::get('/', [App\Http\Controllers\AppManagementController::class, 'index'])->name('index');
     Route::post('/toggle', [App\Http\Controllers\AppManagementController::class, 'toggle'])->name('toggle');
     Route::post('/update-order', [App\Http\Controllers\AppManagementController::class, 'updateOrder'])->name('update-order');

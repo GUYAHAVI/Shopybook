@@ -2425,9 +2425,13 @@
             <div class="user-dd-name">{{ auth()->user()->name }}</div>
             <div class="user-dd-email">{{ auth()->user()->email }}</div>
         </div>
+        @if($__isOwner)
         <a href="{{ route('business.profile') }}"><i class="fas fa-building"></i> Business Profile</a>
-        <a href="{{ route('settings.index') }}"><i class="fas fa-cog"></i> Settings</a>
         <a href="{{ route('pricing') }}"><i class="fas fa-tag"></i> Plans & pricing</a>
+        @endif
+        @if($__can('settings'))
+        <a href="{{ route('settings.index') }}"><i class="fas fa-cog"></i> Settings</a>
+        @endif
         <div class="divider"></div>
         <a href="{{ route('pwa.install-guide') }}"><i class="fas fa-download"></i> Install App</a>
         <button onclick="resetPageGuides()"><i class="fas fa-compass"></i> Replay page guides</button>

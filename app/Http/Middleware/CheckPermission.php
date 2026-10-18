@@ -35,10 +35,19 @@ class CheckPermission
             return $next($request);
         }
 
-        // Team member – must be active (not suspended) AND have at least one required permission
+        // Team member – must be active (not suspended) AND have at least one required permission.
+        // The membership must belong to the CURRENT business context — not just any
+        // business the user is a member of.
         $membership = $user->relationLoaded('activeMembership')
             ? $user->getRelation('activeMembership')
             : $user->activeMembership;
+
+        if ((!$membership || $membership->business_id !== $ownedBusiness?->id) && $ownedBusiness) {
+            $membership = BusinessMember::where('user_id', $user->id)
+                ->where('business_id', $ownedBusiness->id)
+                ->where('status', 'active')
+                ->first();
+        }
 
         if (!$membership || $membership->status !== 'active') {
             if ($request->expectsJson()) {
