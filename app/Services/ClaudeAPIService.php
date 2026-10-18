@@ -1800,10 +1800,40 @@ Return ONLY the enhanced prompt, no explanations or additional text.";
     }
 
     /**
-     * Generate marketing image using free AI image generation service
-     * Uses Pollinations.AI - a free, open-source image generation API
+     * Generate a marketing / website image.
+     * Order: Replicate Flux (premium tier for paid+credits, else standard) → Pollinations → Lexica → Unsplash.
+     *
+     * @param string|null $tier 'premium' | 'standard' | null (null = standard when the Replicate free tier is enabled)
      */
-    public function generateMarketingImage($prompt, $style, $size, $businessName, $businessType, $postContent = null, $postTitle = null)
+    public function generateMarketingImage($prompt, $style, $size, $businessName, $businessType, $postContent = null, $postTitle = null, ?string $tier = null)
+    {
+        $replicate = app(ReplicateImageService::class);
+        $tiers = match (true) {
+            $tier === 'premium' && $replicate->isConfigured() => ['premium', 'standard'],
+            $replicate->freeTierEnabled()                      => ['standard'],
+            default                                            => [],
+        };
+
+        if ($tiers) {
+            $enhanced = $this->enhanceImagePrompt($prompt, $style, $businessName, $businessType, $postContent, $postTitle)
+                . ', no text, no watermark, no logos';
+
+            foreach ($tiers as $t) {
+                $result = $replicate->generateMarketingImage($enhanced, $businessName, $size, 'images', $t);
+                if ($result) {
+                    return $result;
+                }
+                Log::warning("Replicate {$t} image failed, trying next provider");
+            }
+        }
+
+        return $this->generatePollinationsImage($prompt, $style, $size, $businessName, $businessType, $postContent, $postTitle);
+    }
+
+    /**
+     * Free fallback: Pollinations.AI (then Lexica, then Unsplash).
+     */
+    protected function generatePollinationsImage($prompt, $style, $size, $businessName, $businessType, $postContent = null, $postTitle = null)
     {
         try {
             Log::info('Starting image generation', [

@@ -106,11 +106,7 @@ return [
         'use_cloud' => env('LTX_VIDEO_USE_CLOUD', true), // Force cloud API usage
     ],
     
-    // Cloud API providers
-    'replicate' => [
-        'api_key' => env('REPLICATE_API_TOKEN'),
-    ],
-    
+    // Cloud API providers ('replicate' is defined once, further below)
     'fal' => [
         'api_key' => env('FAL_KEY'),
     ],
@@ -180,6 +176,13 @@ return [
 
     'replicate' => [
         'token' => env('REPLICATE_API_TOKEN'),
+        'api_key' => env('REPLICATE_API_TOKEN'), // used by CloudLTXVideoService
+        // Image models (Black Forest Labs Flux)
+        'standard_model' => env('REPLICATE_STANDARD_MODEL', 'black-forest-labs/flux-schnell'),
+        'premium_model'  => env('REPLICATE_PREMIUM_MODEL', 'black-forest-labs/flux-1.1-pro'),
+        'logo_model'     => env('REPLICATE_LOGO_MODEL', 'black-forest-labs/flux-1.1-pro'),
+        // Free plans use the standard model instead of Pollinations (set false to save Replicate credits)
+        'free_tier'      => env('REPLICATE_FREE_TIER', true),
     ],
 
 ];

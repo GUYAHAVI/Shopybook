@@ -815,49 +815,11 @@ class MarketingPostController extends Controller
                 'business' => $business->name
             ]);
 
-            // Check if user is paid — use premium Replicate (Flux Schnell) if so
-            $usePremium = false;
+            // Paid plans with AI credits get the premium model (Flux 1.1 Pro); everyone else the
+            // standard model (Flux Schnell). Pollinations is only used if Replicate is unavailable.
             $creditService = app(\App\Services\AICreditService::class);
+            $usePremium = $creditService->canUsePremium($business, 'marketing_image_premium');
 
-            if ($business->isPremium() && $creditService->canUsePremium($business, 'marketing_image_premium')) {
-                $usePremium = true;
-            }
-
-            if ($usePremium) {
-                $replicate = app(\App\Services\ReplicateImageService::class);
-                if ($replicate->isConfigured()) {
-                    $imageData = $replicate->generateMarketingImage(
-                        $request->prompt,
-                        $business->name,
-                        $request->size ?? '1024x1024'
-                    );
-
-                    if ($imageData && isset($imageData['public_url'])) {
-                        $creditService->consume($business, 'marketing_image_premium');
-                        $storagePath = storage_path('app/public/' . $imageData['relative_path']);
-
-                        if (file_exists($storagePath)) {
-                            Log::info('Premium marketing image generated via Replicate', [
-                                'public_url' => $imageData['public_url'],
-                                'file_size' => filesize($storagePath),
-                            ]);
-
-                            return response()->json([
-                                'success' => true,
-                                'image_url' => $imageData['public_url'],
-                                'local_path' => $imageData['local_path'],
-                                'relative_path' => $imageData['relative_path'],
-                                'file_size' => filesize($storagePath),
-                                'premium' => true,
-                                'credits_remaining' => $business->fresh()->totalAiCredits(),
-                            ]);
-                        }
-                    }
-                    Log::warning('Replicate marketing image failed, falling back to Pollinations');
-                }
-            }
-
-            // Free / fallback: Pollinations (existing behavior)
             $imageData = $this->claudeService->generateMarketingImage(
                 $request->prompt,
                 $request->style ?? 'realistic',
@@ -865,8 +827,15 @@ class MarketingPostController extends Controller
                 $business->name,
                 $business->business_type,
                 $request->post_content,
-                $request->post_title
+                $request->post_title,
+                $usePremium ? 'premium' : null
             );
+
+            // Only charge credits when the premium model actually produced the image
+            $premiumDelivered = ($imageData['tier'] ?? null) === 'premium';
+            if ($premiumDelivered) {
+                $creditService->consume($business, 'marketing_image_premium');
+            }
 
             if ($imageData && isset($imageData['public_url'])) {
                 // Verify the file actually exists
@@ -887,6 +856,9 @@ class MarketingPostController extends Controller
                         'local_path' => $imageData['local_path'],
                         'relative_path' => $imageData['relative_path'],
                         'file_size' => $fileSize,
+                        'premium' => $premiumDelivered,
+                        'provider' => $imageData['provider'] ?? 'pollinations',
+                        'credits_remaining' => $business->fresh()->totalAiCredits(),
                     ]);
                 } else {
                     Log::error('Generated image file not found', [

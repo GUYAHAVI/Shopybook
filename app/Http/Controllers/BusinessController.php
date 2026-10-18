@@ -126,7 +126,12 @@ class BusinessController extends Controller
             'name' => 'required|string|max:255|unique:businesses',
             'business_type' => 'required|string',
             'description' => 'nullable|string',
-            'email' => 'nullable|email|unique:businesses',
+            // Owners may reuse their email across their own businesses; other users can't claim it
+            'email' => [
+                'nullable', 'email',
+                \Illuminate\Validation\Rule::unique('businesses', 'email')
+                    ->where(fn($q) => $q->where('user_id', '!=', Auth::id())),
+            ],
             'phone' => 'required|string|max:20',
             'address' => 'nullable|string',
             'city' => 'required|string',
@@ -357,7 +362,11 @@ class BusinessController extends Controller
             'name' => 'required|string|max:255|unique:businesses,name,' . $business->id,
             'business_type' => 'required|string',
             'description' => 'nullable|string',
-            'email' => 'nullable|email|unique:businesses,email,' . $business->id,
+            'email' => [
+                'nullable', 'email',
+                \Illuminate\Validation\Rule::unique('businesses', 'email')
+                    ->where(fn($q) => $q->where('user_id', '!=', $business->user_id)),
+            ],
             'phone' => 'required|string|max:20',
             'address' => 'nullable|string',
             'city' => 'required|string',
@@ -837,7 +846,7 @@ class BusinessController extends Controller
                         return response()->json([
                             'success' => true,
                             'logo_url' => $logoResult['public_url'],
-                            'logo_path' => $logoResult['local_path'],
+                            'logo_path' => $logoResult['relative_path'],
                             'premium' => true,
                             'credits_remaining' => $business->fresh()->totalAiCredits(),
                             'message' => 'High-quality logo generated! ' . $business->fresh()->totalAiCredits() . ' AI credits remaining.'
@@ -848,7 +857,30 @@ class BusinessController extends Controller
                 }
             }
 
-            // Free / fallback: Pollinations (existing behavior)
+            // Free plans: Replicate standard model (Flux Schnell) when enabled
+            $replicate = app(\App\Services\ReplicateImageService::class);
+            if ($replicate->freeTierEnabled()) {
+                $logoResult = $replicate->generateLogo(
+                    $this->claudeService->buildExpertLogoPrompt(
+                        $request->business_name, $description, $request->business_type,
+                        $style, $tagline, $colorPalette, $topProducts
+                    ),
+                    $request->business_name,
+                    'logos',
+                    'standard'
+                );
+                if ($logoResult) {
+                    return response()->json([
+                        'success'   => true,
+                        'logo_url'  => $logoResult['public_url'],
+                        'logo_path' => $logoResult['relative_path'],
+                        'premium'   => false,
+                        'message'   => 'Logo generated!',
+                    ]);
+                }
+            }
+
+            // Last resort: Pollinations (existing behavior)
             $logoResult = $this->claudeService->generateBusinessLogo(
                 $request->business_name,
                 $description,

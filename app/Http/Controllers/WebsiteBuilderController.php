@@ -900,16 +900,26 @@ class WebsiteBuilderController extends Controller
         $size = ($section->type === 'hero') ? '1200x600' : '800x500';
 
         try {
+            $creditService = app(\App\Services\AICreditService::class);
+            $usePremium = $creditService->canUsePremium($business, 'website_image_premium');
+
             $imageData = $this->claudeAPIService->generateMarketingImage(
                 $userPrompt,
                 'realistic',
                 $size,
                 $business->name,
-                $business->business_type ?? 'general'
+                $business->business_type ?? 'general',
+                null,
+                null,
+                $usePremium ? 'premium' : null
             );
 
             if (!$imageData || !isset($imageData['public_url'])) {
                 return response()->json(['error' => 'Image generation failed. Please try again.'], 500);
+            }
+
+            if (($imageData['tier'] ?? null) === 'premium') {
+                $creditService->consume($business, 'website_image_premium');
             }
 
             // Save the local path into section content
@@ -984,7 +994,21 @@ class WebsiteBuilderController extends Controller
         $logoPrompt = $prompt . ', logo design, clean vector style, white background, high contrast, simple iconic mark, no text unless it is the company name';
 
         try {
-            $imageData = $this->claudeAPIService->generateMarketingImage(
+            $creditService = app(\App\Services\AICreditService::class);
+            $replicate     = app(\App\Services\ReplicateImageService::class);
+            $imageData     = null;
+
+            // Paid + credits → logo model (Flux 1.1 Pro); free → standard model; Pollinations last
+            if ($creditService->canUsePremium($business, 'logo_premium')) {
+                $imageData = $replicate->generateLogo($logoPrompt, $business->name, 'logos', 'logo');
+                if ($imageData) {
+                    $creditService->consume($business, 'logo_premium');
+                }
+            }
+            if (!$imageData && $replicate->freeTierEnabled()) {
+                $imageData = $replicate->generateLogo($logoPrompt, $business->name, 'logos', 'standard');
+            }
+            $imageData ??= $this->claudeAPIService->generateMarketingImage(
                 $logoPrompt,
                 'minimalist',
                 '500x500',

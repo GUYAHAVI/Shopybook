@@ -7,20 +7,26 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 
 /**
- * Premium image generation via Replicate (Flux Pro).
- * Used for paid users only — higher quality than the free Pollinations fallback.
+ * Image generation via Replicate (Black Forest Labs Flux models).
  *
- * Costs approximately $0.03-0.06 per image depending on model.
+ * Tiers (models configurable in config/services.php → replicate):
+ *  - standard: fast + cheap (default Flux Schnell) — all plans, replaces Pollinations
+ *  - premium:  best quality (default Flux 1.1 Pro) — paid plans, consumes AI credits
+ *  - logo:     logo model (default Flux 1.1 Pro)
+ *
  * Requires REPLICATE_API_TOKEN in .env
  */
 class ReplicateImageService
 {
+    /** Aspect ratios accepted by every Flux model we use. */
+    protected const RATIOS = ['1:1', '16:9', '3:2', '2:3', '4:5', '5:4', '9:16', '3:4', '4:3'];
+
     protected string $apiToken;
     protected string $baseUrl = 'https://api.replicate.com/v1';
 
     public function __construct()
     {
-        $this->apiToken = env('REPLICATE_API_TOKEN', config('services.replicate.token', ''));
+        $this->apiToken = (string) config('services.replicate.token', '');
     }
 
     public function isConfigured(): bool
@@ -28,85 +34,94 @@ class ReplicateImageService
         return !empty($this->apiToken);
     }
 
-    /**
-     * Generate a high-quality logo via Flux Pro on Replicate.
-     */
-    public function generateLogo(string $prompt, string $businessName, string $subdirectory = 'logos'): ?array
+    /** Whether free-plan users get Replicate (standard tier) instead of Pollinations. */
+    public function freeTierEnabled(): bool
     {
-        return $this->generate($prompt, $businessName, $subdirectory, 'logo', '1024x1024');
+        return $this->isConfigured() && (bool) config('services.replicate.free_tier', true);
     }
 
-    /**
-     * Generate a marketing image via Flux Pro on Replicate.
-     */
-    public function generateMarketingImage(string $prompt, string $businessName, string $size = '1024x1024', string $subdirectory = 'marketing/images'): ?array
+    public function generateLogo(string $prompt, string $businessName, string $subdirectory = 'logos', string $tier = 'logo'): ?array
     {
-        return $this->generate($prompt, $businessName, $subdirectory, 'marketing', $size);
+        return $this->generate($prompt, $businessName, $subdirectory, 'logo', '1024x1024', $tier);
     }
 
-    /**
-     * Core generation method.
-     */
-    protected function generate(string $prompt, string $businessName, string $subdirectory, string $type, string $size = '1024x1024'): ?array
+    public function generateMarketingImage(string $prompt, string $businessName, string $size = '1024x1024', string $subdirectory = 'images', string $tier = 'standard'): ?array
+    {
+        return $this->generate($prompt, $businessName, $subdirectory, 'marketing', $size, $tier);
+    }
+
+    protected function modelFor(string $tier): string
+    {
+        return match ($tier) {
+            'premium' => config('services.replicate.premium_model', 'black-forest-labs/flux-1.1-pro'),
+            'logo'    => config('services.replicate.logo_model', 'black-forest-labs/flux-1.1-pro'),
+            default   => config('services.replicate.standard_model', 'black-forest-labs/flux-schnell'),
+        };
+    }
+
+    /** Closest supported aspect ratio for a "WxH" size string. */
+    protected function aspectRatio(string $size): string
+    {
+        [$w, $h] = array_map('intval', explode('x', $size) + [1024, 1024]);
+        $target = $h > 0 ? $w / $h : 1;
+
+        return collect(self::RATIOS)->sortBy(function ($r) use ($target) {
+            [$a, $b] = explode(':', $r);
+            return abs(log(($a / $b) / $target));
+        })->first();
+    }
+
+    protected function generate(string $prompt, string $businessName, string $subdirectory, string $type, string $size, string $tier): ?array
     {
         if (!$this->isConfigured()) {
             Log::warning('Replicate API token not configured');
             return null;
         }
 
+        $model = $this->modelFor($tier);
+
         try {
-            [$width, $height] = explode('x', $size) + [1024, 1024];
-
-            // Flux Pro Schnell — fast, high quality, ~$0.003 per image
-            // For logos we use Flux Pro (slower, better detail) — ~$0.055 per image
-            $model = $type === 'logo'
-                ? 'black-forest-labs/flux-pro'
-                : 'black-forest-labs/flux-schnell';
-
             $input = [
-                'prompt' => $prompt,
-                'width' => (int) $width,
-                'height' => (int) $height,
-                'output_format' => 'png',
+                'prompt'         => $prompt,
+                'aspect_ratio'   => $this->aspectRatio($size),
+                'output_format'  => 'webp',
+                'output_quality' => 90,
             ];
 
-            if ($type === 'logo') {
-                $input['guidance'] = 3.5;
-                $input['num_inference_steps'] = 28;
-            } else {
+            if (str_contains($model, 'schnell')) {
                 $input['num_inference_steps'] = 4;
+            } elseif (str_contains($model, 'flux-dev')) {
+                $input['num_inference_steps'] = 28;
+                $input['guidance'] = 3.5;
+            } else {
+                // Pro models: moderate safety tolerance avoids false-positive blocks on business imagery
+                $input['safety_tolerance'] = 2;
             }
 
-            // Create prediction
-            $response = Http::withHeaders([
-                'Authorization' => 'Bearer ' . $this->apiToken,
-                'Content-Type' => 'application/json',
-                'Prefer' => 'wait', // Wait for completion (up to 60s)
-            ])->timeout(120)->post("{$this->baseUrl}/models/{$model}/predictions", [
-                'input' => $input,
-            ]);
+            $response = Http::withToken($this->apiToken)
+                ->withHeaders(['Prefer' => 'wait=60'])
+                ->timeout(90)
+                ->post("{$this->baseUrl}/models/{$model}/predictions", ['input' => $input]);
 
             if (!$response->successful()) {
                 Log::error('Replicate API error', [
+                    'model'  => $model,
                     'status' => $response->status(),
-                    'body' => substr($response->body(), 0, 500),
+                    'body'   => substr($response->body(), 0, 500),
                 ]);
                 return null;
             }
 
-            $data = $response->json();
-
-            // If prediction is still processing, poll
-            $predictionUrl = $data['urls']['get'] ?? null;
+            $data   = $response->json();
             $status = $data['status'] ?? 'processing';
 
-            if ($status === 'processing' && $predictionUrl) {
-                $data = $this->pollPrediction($predictionUrl);
+            if (in_array($status, ['starting', 'processing']) && ($url = $data['urls']['get'] ?? null)) {
+                $data   = $this->pollPrediction($url);
                 $status = $data['status'] ?? 'failed';
             }
 
             if ($status !== 'succeeded' || empty($data['output'])) {
-                Log::error('Replicate prediction failed', ['status' => $status, 'data' => $data]);
+                Log::error('Replicate prediction failed', ['model' => $model, 'status' => $status, 'error' => $data['error'] ?? null]);
                 return null;
             }
 
@@ -115,35 +130,32 @@ class ReplicateImageService
                 return null;
             }
 
-            // Download and store the image
-            return $this->downloadAndStore($imageUrl, $businessName, $subdirectory, $type);
+            $stored = $this->downloadAndStore($imageUrl, $businessName, $subdirectory, $type);
+            if ($stored) {
+                $stored['tier']  = $tier;
+                $stored['model'] = $model;
+                Log::info('Replicate image generated', ['model' => $model, 'tier' => $tier, 'path' => $stored['relative_path']]);
+            }
 
+            return $stored;
         } catch (\Throwable $e) {
-            Log::error('Replicate generation exception: ' . $e->getMessage());
+            Log::error('Replicate generation exception: ' . $e->getMessage(), ['model' => $model]);
             return null;
         }
     }
 
-    /**
-     * Poll a prediction until it completes or times out.
-     */
     protected function pollPrediction(string $url, int $maxAttempts = 30, int $interval = 2): array
     {
         for ($i = 0; $i < $maxAttempts; $i++) {
             sleep($interval);
 
-            $response = Http::withHeaders([
-                'Authorization' => 'Bearer ' . $this->apiToken,
-            ])->timeout(30)->get($url);
-
+            $response = Http::withToken($this->apiToken)->timeout(30)->get($url);
             if (!$response->successful()) {
                 continue;
             }
 
             $data = $response->json();
-            $status = $data['status'] ?? 'processing';
-
-            if (in_array($status, ['succeeded', 'failed', 'canceled'])) {
+            if (in_array($data['status'] ?? 'processing', ['succeeded', 'failed', 'canceled'])) {
                 return $data;
             }
         }
@@ -151,9 +163,7 @@ class ReplicateImageService
         return ['status' => 'timeout'];
     }
 
-    /**
-     * Download the generated image and store it locally.
-     */
+    /** Download the generated image (Replicate URLs expire after ~1h) and store it locally. */
     protected function downloadAndStore(string $imageUrl, string $businessName, string $subdirectory, string $type): ?array
     {
         try {
@@ -163,20 +173,19 @@ class ReplicateImageService
                 return null;
             }
 
-            $imageData = $imageResponse->body();
-            $slug = \Illuminate\Support\Str::slug($businessName);
-            $filename = "ai-{$type}-{$slug}-" . time() . '-' . \Illuminate\Support\Str::random(8) . '.png';
+            $ext = pathinfo(parse_url($imageUrl, PHP_URL_PATH) ?? '', PATHINFO_EXTENSION) ?: 'webp';
+            $slug = \Illuminate\Support\Str::slug($businessName) ?: 'business';
+            $filename = "ai-{$type}-{$slug}-" . time() . '-' . \Illuminate\Support\Str::random(8) . ".{$ext}";
             $relativePath = "marketing/{$subdirectory}/{$filename}";
-            $fullPath = "public/{$relativePath}";
 
-            Storage::disk('local')->put($fullPath, $imageData);
+            Storage::disk('public')->put($relativePath, $imageResponse->body());
 
             return [
-                'public_url' => url('storage/' . $relativePath),
+                'public_url'    => asset('storage/' . $relativePath),
                 'relative_path' => $relativePath,
-                'local_path' => storage_path('app/' . $fullPath),
-                'filename' => $filename,
-                'provider' => 'replicate',
+                'local_path'    => Storage::disk('public')->path($relativePath),
+                'filename'      => $filename,
+                'provider'      => 'replicate',
             ];
         } catch (\Throwable $e) {
             Log::error('Replicate image download failed: ' . $e->getMessage());
