@@ -104,5 +104,8 @@
     </div>
 </div>
 
+@if(request('print'))
+<script>window.addEventListener('load', () => setTimeout(() => window.print(), 300));</script>
+@endif
 </body>
 </html>

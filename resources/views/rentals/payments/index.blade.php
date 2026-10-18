@@ -198,7 +198,10 @@ async function submitRecord() {
         })
     });
     const data = await res.json();
-    if (data.success) { location.reload(); }
+    if (data.success) {
+        if (data.receipt_url) window.open(data.receipt_url, '_blank', 'width=420,height=640');
+        location.reload();
+    }
     else { alert(data.message || 'Failed'); btn.disabled = false; }
 }
 

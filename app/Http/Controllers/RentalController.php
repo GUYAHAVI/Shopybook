@@ -389,7 +389,9 @@ class RentalController extends Controller
             'paid_method'    => 'nullable|in:cash,mpesa,bank,other',
         ]);
 
-        DB::transaction(function () use ($validated, $business) {
+        $paidPayment = null;
+
+        DB::transaction(function () use ($validated, $business, &$paidPayment) {
             $unit = null;
             if (!empty($validated['rental_unit_id'])) {
                 $unit = RentalUnit::where('business_id', $business->id)
@@ -414,7 +416,7 @@ class RentalController extends Controller
             $unit?->update(['status' => 'occupied', 'is_listed' => false]);
 
             if (!empty($validated['rent_paid']) && $tenant->rent_amount > 0) {
-                RentalPayment::create([
+                $paidPayment = RentalPayment::create([
                     'business_id'       => $business->id,
                     'rental_tenant_id'  => $tenant->id,
                     'rental_unit_id'    => $unit?->id,
@@ -428,7 +430,12 @@ class RentalController extends Controller
             }
         });
 
-        return back()->with('success', 'Tenant recorded' . (!empty($validated['rental_unit_id']) ? ' and unit marked occupied.' : '.'));
+        $flash = ['success' => 'Tenant recorded' . (!empty($validated['rental_unit_id']) ? ' and unit marked occupied.' : '.')];
+        if (!empty($paidPayment)) {
+            $flash['receipt_url'] = route('rentals.payments.receipt', $paidPayment) . '?print=1';
+        }
+
+        return back()->with($flash);
     }
 
     public function vacateTenant(RentalTenant $tenant)
@@ -501,9 +508,10 @@ class RentalController extends Controller
         $total  = (float) $validated['amount'];
         $per    = round($total / $months, 2);
         $start  = \Carbon\Carbon::createFromFormat('Y-m', $validated['period']);
+        $ids    = [];
 
         for ($i = 0; $i < $months; $i++) {
-            RentalPayment::create([
+            $ids[] = RentalPayment::create([
                 'business_id'           => $tenant->business_id,
                 'rental_tenant_id'      => $tenant->id,
                 'rental_unit_id'        => $tenant->rental_unit_id,
@@ -515,12 +523,17 @@ class RentalController extends Controller
                 'paid_at'               => now(),
                 'received_by'           => auth()->id(),
                 'notes'                 => $validated['notes'] ?? null,
-            ]);
+            ])->id;
         }
 
+        $receiptUrl = count($ids) === 1
+            ? route('rentals.payments.receipt', $ids[0]) . '?print=1'
+            : route('rentals.payments.receipt-multi', ['ids' => implode(',', $ids)]) . '&print=1';
+
         return response()->json([
-            'success' => true,
-            'message' => $months > 1 ? "Recorded — covers {$months} months." : 'Rent payment recorded.',
+            'success'     => true,
+            'message'     => $months > 1 ? "Recorded — covers {$months} months." : 'Rent payment recorded.',
+            'receipt_url' => $receiptUrl,
         ]);
     }
 
@@ -605,6 +618,24 @@ class RentalController extends Controller
             'payment'  => $payment,
             'business' => $payment->business,
         ]);
+    }
+
+    /** Combined receipt for a payment recorded across several periods. */
+    public function receiptMulti(Request $request)
+    {
+        $business = auth()->user()->business;
+
+        $ids = collect(explode(',', (string) $request->query('ids')))
+            ->map(fn($v) => (int) trim($v))->filter()->take(24);
+
+        $payments = RentalPayment::where('business_id', $business->id)
+            ->whereIn('id', $ids)->where('status', 'paid')
+            ->with(['tenant.unit.property', 'unit.property'])
+            ->orderBy('period')->get();
+
+        abort_if($payments->isEmpty(), 404);
+
+        return view('rentals.receipt-multi', compact('payments', 'business'));
     }
 
     // ── Public booking requests ─────────────────────────────────────────────

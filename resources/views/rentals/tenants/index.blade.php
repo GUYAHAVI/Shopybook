@@ -151,6 +151,10 @@ document.getElementById('rentPaidCheck')?.addEventListener('change', function() 
     document.getElementById('paidMethodWrap').style.display = this.checked ? 'block' : 'none';
 });
 
+@if(session('receipt_url'))
+window.open('{{ session('receipt_url') }}', '_blank', 'width=420,height=640');
+@endif
+
 // ?unit=<id> — opened from a vacant unit card: pre-select it and open the modal
 @if(request('unit'))
 (function () {

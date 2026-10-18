@@ -304,6 +304,10 @@ document.getElementById('tmRentPaid')?.addEventListener('change', function() {
     document.getElementById('tmPaidMethodWrap').style.display = this.checked ? 'block' : 'none';
 });
 
+@if(session('receipt_url'))
+window.open('{{ session('receipt_url') }}', '_blank', 'width=420,height=640');
+@endif
+
 function openPayModal(id, name, balance) {
     payTenant = id;
     document.getElementById('payTenantName').textContent = name;
@@ -328,7 +332,10 @@ async function submitPay() {
         })
     });
     const data = await res.json();
-    if (data.success) { location.reload(); }
+    if (data.success) {
+        if (data.receipt_url) window.open(data.receipt_url, '_blank', 'width=420,height=640');
+        location.reload();
+    }
     else { alert(data.message || 'Failed'); btn.disabled = false; }
 }
 
