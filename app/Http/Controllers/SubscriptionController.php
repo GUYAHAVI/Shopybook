@@ -70,29 +70,12 @@ class SubscriptionController extends Controller
         $amount = $plan === 'enterprise' ? 1000 : 500 ; // KES: 1000 for Enterprise, 500 for Premium
 
         try {
-            // Initialize Paystack M-Pesa charge
-            Log::info('Starting Paystack M-Pesa initialization', [
-                'business_id' => $business->id,
-                'plan' => $plan,
-                'phone_number' => $phoneNumber,
-                'amount' => $amount
-            ]);
-            
-            $response = $this->initializePaystackMpesa($phoneNumber, $amount, $plan, $business, $user);
-            
-            Log::info('Paystack initialization response', [
-                'success' => $response['success'],
-                'message' => $response['message'],
-                'reference' => $response['reference'] ?? null
-            ]);
-            
+            $response = $this->charge(
+                $phoneNumber, $amount, $plan, $business, $user,
+                match ($plan) { 'enterprise' => 'Shopybook Enterprise Plan', default => 'Shopybook Premium Plan' }
+            );
+
             if (!$response['success']) {
-                Log::error('Paystack M-Pesa initialization failed', [
-                    'business_id' => $business->id,
-                    'plan' => $plan,
-                    'error' => $response['message']
-                ]);
-                
                 if ($request->expectsJson() || $request->ajax()) {
                     return response()->json([
                         'success' => false,
@@ -102,21 +85,7 @@ class SubscriptionController extends Controller
                 return back()->with('error', $response['message']);
             }
 
-            // Store pending payment in database
-            DB::table('subscription_payments')->insert([
-                'business_id' => $business->id,
-                'user_id' => $user->id,
-                'plan' => $plan,
-                'amount' => $amount,
-                'phone_number' => $phoneNumber,
-                'checkout_request_id' => $response['reference'],
-                'merchant_request_id' => null,
-                'status' => 'pending',
-                'created_at' => now(),
-                'updated_at' => now()
-            ]);
-
-            Log::info('Paystack M-Pesa charge initiated', [
+            Log::info('Subscription charge initiated', [
                 'business_id' => $business->id,
                 'user_id' => $user->id,
                 'plan' => $plan,
@@ -188,31 +157,11 @@ class SubscriptionController extends Controller
         $amount = $user->businessAddonPrice();
 
         try {
-            $response = $this->initializePaystackMpesa($phoneNumber, $amount, 'business_addon', $business, $user);
+            $response = $this->charge($phoneNumber, $amount, 'business_addon', $business, $user, 'Shopybook Extra Business');
 
             if (!$response['success']) {
                 return response()->json(['success' => false, 'message' => $response['message']], 400);
             }
-
-            DB::table('subscription_payments')->insert([
-                'business_id' => $business->id,
-                'user_id' => $user->id,
-                'plan' => 'business_addon',
-                'amount' => $amount,
-                'phone_number' => $phoneNumber,
-                'checkout_request_id' => $response['reference'],
-                'merchant_request_id' => null,
-                'status' => 'pending',
-                'created_at' => now(),
-                'updated_at' => now()
-            ]);
-
-            Log::info('Extra business slot charge initiated', [
-                'business_id' => $business->id,
-                'user_id' => $user->id,
-                'amount' => $amount,
-                'reference' => $response['reference']
-            ]);
 
             return response()->json([
                 'success' => true,
@@ -269,19 +218,13 @@ class SubscriptionController extends Controller
                     return response()->json(['status' => 'ok'], 200);
                 }
 
-                // Update payment record
-                DB::table('subscription_payments')
-                    ->where('id', $payment->id)
-                    ->update([
-                        'status' => 'completed',
-                        'mpesa_receipt_number' => $data['reference'],
-                        'transaction_date' => now(),
-                        'result_desc' => 'Payment successful via Paystack M-Pesa',
-                        'updated_at' => now()
-                    ]);
-
-                // Credit the purchase (plan upgrade or extra business slot)
-                $this->creditPaymentOutcome($payment, $reference, 'webhook');
+                // Complete + credit (idempotent across webhook/polling races)
+                \App\Services\SubscriptionBilling::complete(
+                    $payment->id,
+                    $data['reference'],
+                    'paystack',
+                    'Payment successful via Paystack M-Pesa'
+                );
 
                 return response()->json(['status' => 'success'], 200);
 
@@ -353,6 +296,18 @@ class SubscriptionController extends Controller
             ]);
         }
 
+        // Daraja payments are confirmed by the STK callback — report the local status
+        if (($payment->gateway ?? 'paystack') === 'daraja') {
+            return response()->json([
+                'status' => 'pending',
+                'plan' => $payment->plan,
+                'amount' => $payment->amount,
+                'reference' => $payment->checkout_request_id,
+                'result_desc' => 'Waiting for M-Pesa confirmation',
+                'updated_at' => $payment->updated_at
+            ]);
+        }
+
         // If still pending, verify with Paystack API directly
         try {
             $secretKey = config('services.paystack.secret_key');
@@ -375,18 +330,12 @@ class SubscriptionController extends Controller
                     
                     // Update local database based on Paystack status
                     if ($status === 'success') {
-                        DB::table('subscription_payments')
-                            ->where('id', $payment->id)
-                            ->update([
-                                'status' => 'completed',
-                                'mpesa_receipt_number' => $transactionData['reference'] ?? $reference,
-                                'transaction_date' => now(),
-                                'result_desc' => 'Payment successful via Paystack M-Pesa',
-                                'updated_at' => now()
-                            ]);
-
-                        // Credit the purchase (plan upgrade or extra business slot)
-                        $this->creditPaymentOutcome($payment, $reference, 'polling');
+                        \App\Services\SubscriptionBilling::complete(
+                            $payment->id,
+                            $transactionData['reference'] ?? $reference,
+                            'paystack',
+                            'Payment successful via Paystack M-Pesa'
+                        );
 
                         return response()->json([
                             'status' => 'completed',
@@ -449,42 +398,96 @@ class SubscriptionController extends Controller
     }
 
     /**
-     * Initialize Paystack M-Pesa charge (STK Push)
+     * Initiate a subscription payment on the configured gateway and record it.
+     * Daraja — settling to the platform's bank account set by the super admin —
+     * when configured, Paystack otherwise.
+     *
+     * @return array{success: bool, message?: string, reference?: string}
      */
-    /**
-     * Credit a completed subscription payment: plan upgrades set business.plan;
-     * 'business_addon' payments grant the user an extra owned-business slot.
-     */
-    private function creditPaymentOutcome(object $payment, string $reference, string $via): void
+    private function charge(string $phoneNumber, float $amount, string $plan, $business, $user, string $description): array
     {
-        if ($payment->plan === 'business_addon') {
-            $user = \App\Models\User::find($payment->user_id);
-            if ($user) {
-                $user->increment('extra_business_slots');
-                Log::info("Extra business slot credited via {$via}", [
-                    'user_id' => $user->id,
-                    'slots' => $user->fresh()->extra_business_slots,
-                    'reference' => $reference
-                ]);
+        $dest = \App\Models\PlatformSetting::subscriptionDestination();
+
+        if ($dest['ready']) {
+            // Record first — the STK request row and the Daraja callback link back to this payment
+            $paymentId = DB::table('subscription_payments')->insertGetId([
+                'business_id'         => $business->id,
+                'user_id'             => $user->id,
+                'plan'                => $plan,
+                'gateway'             => 'daraja',
+                'amount'              => $amount,
+                'phone_number'        => $phoneNumber,
+                'checkout_request_id' => 'SB-' . strtoupper($plan) . '-' . uniqid(),
+                'merchant_request_id' => null,
+                'status'              => 'pending',
+                'created_at'          => now(),
+                'updated_at'          => now(),
+            ]);
+            DB::table('subscription_payments')->where('id', $paymentId)
+                ->update(['checkout_request_id' => 'SB-PENDING-' . $paymentId]);
+
+            $push = app(\App\Services\MpesaService::class)
+                ->platformStkPush($business, $phoneNumber, $amount, $paymentId, $description);
+
+            if (empty($push['success'])) {
+                DB::table('subscription_payments')->where('id', $paymentId)->delete();
+                return ['success' => false, 'message' => $push['error'] ?? 'Failed to send STK push.'];
             }
-            return;
-        }
 
-        $business = \App\Models\Business::find($payment->business_id);
-        if ($business) {
-            $business->update([
-                'plan' => $payment->plan,
-                'upgraded_at' => now()
+            DB::table('subscription_payments')->where('id', $paymentId)->update([
+                'checkout_request_id' => $push['reference'],
+                'merchant_request_id' => $push['merchant_request_id'] ?? null,
             ]);
 
-            Log::info("Business subscription upgraded via {$via}", [
-                'business_id' => $business->id,
-                'plan' => $payment->plan,
-                'reference' => $reference
+            Log::info('Subscription Daraja STK initiated', [
+                'payment_id' => $paymentId,
+                'plan'       => $plan,
+                'amount'     => $amount,
+                'party_b'    => $dest['paybill'],
+                'bank'       => $dest['bank'],
+                'reference'  => $push['reference'],
             ]);
+
+            return [
+                'success'   => true,
+                'message'   => $push['message'],
+                'reference' => $push['reference'],
+            ];
         }
+
+        // Paystack fallback
+        $response = $this->initializePaystackMpesa($phoneNumber, $amount, $plan, $business, $user);
+
+        Log::info('Paystack initialization response', [
+            'success' => $response['success'],
+            'message' => $response['message'],
+            'reference' => $response['reference'] ?? null
+        ]);
+
+        if (!$response['success']) {
+            return ['success' => false, 'message' => $response['message']];
+        }
+
+        DB::table('subscription_payments')->insert([
+            'business_id'         => $business->id,
+            'user_id'             => $user->id,
+            'plan'                => $plan,
+            'gateway'             => 'paystack',
+            'amount'              => $amount,
+            'phone_number'        => $phoneNumber,
+            'checkout_request_id' => $response['reference'],
+            'merchant_request_id' => null,
+            'status'              => 'pending',
+            'created_at'          => now(),
+            'updated_at'          => now()
+        ]);
+
+        return ['success' => true, 'message' => $response['message'], 'reference' => $response['reference']];
     }
 
+    /**
+     * Initialize Paystack M-Pesa charge (STK Push)
+     */
     private function initializePaystackMpesa($phoneNumber, $amount, $plan, $business, $user)
     {
         try {

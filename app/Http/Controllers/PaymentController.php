@@ -423,6 +423,16 @@ class PaymentController extends Controller
                 ]);
             }
 
+            // Shopybook subscription / business add-on paid to the platform bank account
+            if ($stk->subscription_payment_id) {
+                \App\Services\SubscriptionBilling::complete(
+                    $stk->subscription_payment_id,
+                    $stk->mpesa_receipt_number,
+                    'daraja',
+                    'Payment successful via M-Pesa'
+                );
+            }
+
             Log::info('M-Pesa payment confirmed', [
                 'checkout_request_id' => $checkoutRequestId,
                 'receipt'             => $stk->mpesa_receipt_number,
@@ -435,6 +445,10 @@ class PaymentController extends Controller
                 'result_code' => $resultCode,
                 'result_desc' => $resultDesc,
             ]);
+
+            if ($stk->subscription_payment_id) {
+                \App\Services\SubscriptionBilling::fail($stk->subscription_payment_id, $resultDesc);
+            }
 
             Log::info('M-Pesa payment failed', [
                 'checkout_request_id' => $checkoutRequestId,

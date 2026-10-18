@@ -167,7 +167,7 @@ Route::post('/email/verification-notification', function (Illuminate\Http\Reques
 
 // PUBLIC BUSINESS SHOW ROUTE - Moved AFTER specific business routes to avoid conflicts
 
-Route::get('/dashboard', [DashboardController::class, 'dashboard'])->name('dashboard')->middleware('auth');
+Route::get('/dashboard', [DashboardController::class, 'dashboard'])->name('dashboard')->middleware(['auth', 'has.business']);
 
 Route::get('/business/choose-type', [BusinessController::class, 'chooseType'])->name('business.choose-type')->middleware('auth');
 Route::get('/business/create', [BusinessController::class, 'create'])->name('business.create')->middleware('auth');
@@ -243,6 +243,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         // Business deletion with email verification
         Route::post('/deletion/send-code', [BusinessController::class, 'sendDeletionCode'])->name('business.deletion.send-code');
         Route::post('/deletion/verify', [BusinessController::class, 'verifyAndDelete'])->name('business.deletion.verify');
+        Route::get('/deletion/confirm', [BusinessController::class, 'confirmDeletion'])->name('business.deletion.confirm');
         
         // Legacy deletion routes (kept for backward compatibility)
         Route::post('/initiate-deletion', [BusinessController::class, 'initiateDeletion'])->name('business.initiate-deletion');
@@ -901,6 +902,10 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     // Subscriptions
     Route::get('/subscriptions', [\App\Http\Controllers\Admin\SuperAdminController::class, 'subscriptions'])->name('subscriptions.index');
     Route::post('/businesses/{business}/extend-subscription', [\App\Http\Controllers\Admin\SuperAdminController::class, 'extendSubscription'])->name('businesses.extend-subscription');
+
+    // Platform payment settings (where subscription money settles)
+    Route::get('/payment-settings', [\App\Http\Controllers\Admin\SuperAdminController::class, 'paymentSettings'])->name('payment-settings.index');
+    Route::post('/payment-settings', [\App\Http\Controllers\Admin\SuperAdminController::class, 'updatePaymentSettings'])->name('payment-settings.update');
 
     // Usage analytics
     Route::get('/usage', [\App\Http\Controllers\Admin\SuperAdminController::class, 'usageAnalytics'])->name('usage.index');

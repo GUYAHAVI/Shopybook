@@ -191,6 +191,7 @@
             <a href="{{ route('admin.businesses.index') }}" class="@if(request()->routeIs('admin.businesses.*')) active @endif"><i class="fas fa-store"></i> Businesses</a>
             <a href="{{ route('admin.subscriptions.index') }}" class="@if(request()->routeIs('admin.subscriptions.*')) active @endif"><i class="fas fa-credit-card"></i> Subscriptions</a>
             <a href="{{ route('admin.website-builder.index') }}" class="@if(request()->routeIs('admin.website-builder.*')) active @endif"><i class="fas fa-globe"></i> Websites</a>
+            <a href="{{ route('admin.payment-settings.index') }}" class="@if(request()->routeIs('admin.payment-settings.*')) active @endif"><i class="fas fa-landmark"></i> Payment settings</a>
 
             <div class="admin-nav-section">Content</div>
             <a href="{{ route('admin.testimonials.index') }}" class="@if(request()->routeIs('admin.testimonials.*')) active @endif"><i class="fas fa-star"></i> Testimonials</a>

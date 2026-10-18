@@ -539,6 +539,9 @@ class BusinessController extends Controller
             Auth::user()->refresh();
             
             // Clear any session data related to the business
+            if (session('current_business_id') === $businessId) {
+                session()->forget('current_business_id');
+            }
             session()->forget(['business_id', 'business_name']);
 
             Log::info('Business deleted successfully with email verification', [
@@ -632,6 +635,9 @@ class BusinessController extends Controller
             Auth::user()->refresh();
             
             // Clear any session data related to the business
+            if (session('current_business_id') === $businessId) {
+                session()->forget('current_business_id');
+            }
             session()->forget(['business_id', 'business_name']);
 
             Log::info('Business deleted successfully with 2FA', [
@@ -652,6 +658,73 @@ class BusinessController extends Controller
             ]);
 
             return back()->with('error', 'Failed to delete business. Please try again.');
+        }
+    }
+
+    /**
+     * Landing target after 2FA verification for a business deletion initiated
+     * through the standalone verify form (initiateDeletion → 2fa.verify).
+     * Performs the actual delete: requires both the verified flag and the
+     * pending business id set during 2FA, and the business must be owned.
+     */
+    public function confirmDeletion(Request $request)
+    {
+        $pendingId = $request->session()->pull('pending_business_deletion_id');
+        $verified  = $request->session()->pull('2fa_verified_business_delete');
+
+        if (!$pendingId || !$verified) {
+            return redirect()->route('business.edit')
+                ->with('error', 'Security verification required to delete business.');
+        }
+
+        $business = Business::where('id', $pendingId)
+            ->where('user_id', Auth::id())
+            ->first();
+
+        if (!$business) {
+            return redirect()->route('dashboard')
+                ->with('error', 'That business no longer exists.');
+        }
+
+        try {
+            $businessName = $business->name;
+            $businessId   = $business->id;
+
+            if ($business->logo_path) {
+                Storage::disk('public')->delete($business->logo_path);
+            }
+            if ($business->cover_path) {
+                Storage::disk('public')->delete($business->cover_path);
+            }
+
+            $business->delete();
+
+            Auth::user()->refresh();
+
+            if (session('current_business_id') === $businessId) {
+                session()->forget('current_business_id');
+            }
+            session()->forget(['business_id', 'business_name']);
+
+            Log::info('Business deleted via 2FA confirm', [
+                'business_id'   => $businessId,
+                'user_id'       => Auth::id(),
+                'business_name' => $businessName,
+                'ip'            => $request->ip()
+            ]);
+
+            return redirect()->route('dashboard')
+                ->with('success', 'Business "' . $businessName . '" has been deleted successfully.');
+
+        } catch (\Exception $e) {
+            Log::error('Failed to delete business', [
+                'business_id' => $pendingId,
+                'user_id'     => Auth::id(),
+                'error'       => $e->getMessage()
+            ]);
+
+            return redirect()->route('business.edit')
+                ->with('error', 'Failed to delete business. Please try again.');
         }
     }
 

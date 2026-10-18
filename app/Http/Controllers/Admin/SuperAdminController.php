@@ -588,6 +588,61 @@ class SuperAdminController extends Controller
         return view('admin.subscriptions.index', compact('businesses', 'stats', 'recentPayments'));
     }
 
+    /**
+     * Where subscription / add-on payments settle (platform bank via M-Pesa
+     * paybill) and which gateway charges customers.
+     */
+    public function paymentSettings()
+    {
+        $dest  = \App\Models\PlatformSetting::subscriptionDestination();
+        $banks = config('mpesa_banks');
+
+        $recentPayments = DB::table('subscription_payments')
+            ->leftJoin('businesses', 'subscription_payments.business_id', '=', 'businesses.id')
+            ->select('subscription_payments.*', 'businesses.name as business_name')
+            ->orderByDesc('subscription_payments.created_at')
+            ->limit(10)
+            ->get();
+
+        return view('admin.payments.settings', compact('dest', 'banks', 'recentPayments'));
+    }
+
+    public function updatePaymentSettings(Request $request)
+    {
+        $validated = $request->validate([
+            'gateway' => 'required|in:paystack,daraja',
+            'bank'    => 'required_if:gateway,daraja|nullable|in:' . implode(',', array_keys(config('mpesa_banks'))),
+            'account' => 'required_if:gateway,daraja|nullable|digits_between:5,20',
+        ]);
+
+        if ($validated['gateway'] === 'daraja') {
+            $missing = [];
+            if (!config('services.mpesa.consumer_key') || !config('services.mpesa.consumer_secret')) {
+                $missing[] = 'MPESA_CONSUMER_KEY / MPESA_CONSUMER_SECRET';
+            }
+            if (!config('services.mpesa.business_shortcode') || !config('services.mpesa.passkey')) {
+                $missing[] = 'MPESA_BUSINESS_SHORTCODE / MPESA_PASSKEY';
+            }
+            if ($missing) {
+                return back()->withInput()->with('error',
+                    'Daraja credentials are missing from the environment: ' . implode(' + ', $missing) . '. Add them to .env before switching.');
+            }
+        }
+
+        \App\Models\PlatformSetting::set([
+            'subscription_gateway'       => $validated['gateway'],
+            'subscription_mpesa_bank'    => $validated['gateway'] === 'daraja' ? $validated['bank'] : null,
+            'subscription_mpesa_account' => $validated['gateway'] === 'daraja' ? $validated['account'] : null,
+        ]);
+
+        $msg = $validated['gateway'] === 'daraja'
+            ? 'Subscription payments now settle to ' . config("mpesa_banks.{$validated['bank']}.name")
+                . ' account ' . $validated['account'] . ' via M-Pesa STK push.'
+            : 'Subscription payments now use Paystack.';
+
+        return back()->with('success', $msg);
+    }
+
     public function websiteBuilder(Request $request)
     {
         $query = Business::with(['user', 'website']);

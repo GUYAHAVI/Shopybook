@@ -183,9 +183,9 @@ class TwoFactorAuthController extends Controller
                 if (isset($context['business_id'])) {
                     $business = \App\Models\Business::find($context['business_id']);
                     if ($business && $business->user_id === auth()->id()) {
-                        // Store the business ID in session for the destroy method
+                        // Flag the business for deletion — the confirm page performs it
                         session(['pending_business_deletion_id' => $business->id]);
-                        return route('business.destroy', $business);
+                        return route('business.deletion.confirm');
                     }
                 }
                 return route('business.edit');

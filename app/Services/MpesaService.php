@@ -63,26 +63,7 @@ class MpesaService
             return ['error' => 'M-Pesa is not configured for this business. Set your till/paybill number in Settings.'];
         }
 
-        $phone = self::normalizePhone($phone);
-        if (!$phone) {
-            return ['error' => 'Invalid phone number. Use 0712345678 or 254712345678.'];
-        }
-
-        $orgShortcode = config('services.mpesa.business_shortcode');
-        $passkey      = config('services.mpesa.passkey');
-
-        if (empty($orgShortcode) || empty($passkey)) {
-            Log::error('M-Pesa org shortcode/passkey missing');
-            return ['error' => 'M-Pesa is not configured on this platform.'];
-        }
-
-        $token = $this->accessToken();
-        if (!$token) {
-            return ['error' => 'Failed to authenticate with M-Pesa.'];
-        }
-
         $type   = $settings['type'];
-        $isTill = $type === 'till';
         $isBank = $type === 'bank';
 
         // Resolve PartyB (who receives) + AccountReference per mode:
@@ -108,6 +89,57 @@ class MpesaService
             $accountRef = null;
         }
 
+        return $this->push($phone, $amount, $partyB, $accountRef, $type === 'till', 'Payment to ' . $business->name, [
+            'business_id'       => $business->id,
+            'order_id'          => $orderId,
+            'rental_payment_id' => $rentalPaymentId,
+        ]);
+    }
+
+    /**
+     * STK push for a Shopybook subscription: funds settle to the platform's own
+     * bank account (configured by the super admin), not the paying business.
+     */
+    public function platformStkPush(Business $payer, string $phone, float $amount, int $subscriptionPaymentId, string $description): array
+    {
+        $dest = \App\Models\PlatformSetting::subscriptionDestination();
+        if (!$dest['ready']) {
+            return ['error' => 'Subscription payments are not configured. Please contact support.'];
+        }
+
+        $accountRef = preg_replace('/\D/', '', (string) $dest['account']);
+
+        return $this->push($phone, $amount, $dest['paybill'], $accountRef, false, $description, [
+            'business_id'             => $payer->id,
+            'subscription_payment_id' => $subscriptionPaymentId,
+        ]);
+    }
+
+    /**
+     * Core Daraja STK request, signed with the platform org shortcode + passkey.
+     *
+     * @param array $links columns stored on the mpesa_stk_requests row (business_id, order_id, …)
+     */
+    protected function push(string $phone, float $amount, string $partyB, ?string $accountRef, bool $isTill, string $description, array $links): array
+    {
+        $phone = self::normalizePhone($phone);
+        if (!$phone) {
+            return ['error' => 'Invalid phone number. Use 0712345678 or 254712345678.'];
+        }
+
+        $orgShortcode = config('services.mpesa.business_shortcode');
+        $passkey      = config('services.mpesa.passkey');
+
+        if (empty($orgShortcode) || empty($passkey)) {
+            Log::error('M-Pesa org shortcode/passkey missing');
+            return ['error' => 'M-Pesa is not configured on this platform.'];
+        }
+
+        $token = $this->accessToken();
+        if (!$token) {
+            return ['error' => 'Failed to authenticate with M-Pesa.'];
+        }
+
         $timestamp  = now()->format('YmdHis');
         $password   = base64_encode($orgShortcode . $passkey . $timestamp);
 
@@ -121,7 +153,7 @@ class MpesaService
             'PartyB'            => $partyB,
             'PhoneNumber'       => $phone,
             'CallBackURL'       => $this->callbackUrl(),
-            'TransactionDesc'   => 'Payment to ' . $business->name,
+            'TransactionDesc'   => substr($description, 0, 100),
         ];
 
         if ($accountRef !== null) {
@@ -135,10 +167,7 @@ class MpesaService
             $data = $response->json();
 
             if ($response->successful() && ($data['ResponseCode'] ?? null) === '0') {
-                $stk = MpesaStkRequest::create([
-                    'business_id'         => $business->id,
-                    'order_id'            => $orderId,
-                    'rental_payment_id'   => $rentalPaymentId,
+                $stk = MpesaStkRequest::create($links + [
                     'phone'               => $phone,
                     'amount'              => $amount,
                     'transaction_type'    => $payload['TransactionType'],
@@ -150,23 +179,24 @@ class MpesaService
                 ]);
 
                 return [
-                    'success'   => true,
-                    'reference' => $stk->checkout_request_id,
-                    'message'   => $data['CustomerMessage'] ?? 'STK push sent. Ask the customer to enter their M-Pesa PIN.',
+                    'success'             => true,
+                    'reference'           => $stk->checkout_request_id,
+                    'merchant_request_id' => $data['MerchantRequestID'] ?? null,
+                    'message'             => $data['CustomerMessage'] ?? 'STK push sent. Ask the customer to enter their M-Pesa PIN.',
                 ];
             }
 
             Log::warning('M-Pesa STK push rejected', [
-                'business_id' => $business->id,
-                'party_b'     => $partyB,
-                'response'    => $data,
+                'links'    => $links,
+                'party_b'  => $partyB,
+                'response' => $data,
             ]);
 
             return ['error' => $data['CustomerMessage'] ?? $data['errorMessage'] ?? 'Failed to send STK push.'];
         } catch (\Exception $e) {
             Log::error('M-Pesa STK push error', [
-                'business_id' => $business->id,
-                'error'       => $e->getMessage(),
+                'links' => $links,
+                'error' => $e->getMessage(),
             ]);
             return ['error' => 'M-Pesa request failed. Please try again.'];
         }
