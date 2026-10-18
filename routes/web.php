@@ -162,6 +162,7 @@ Route::get('/dashboard', [DashboardController::class, 'dashboard'])->name('dashb
 Route::get('/business/choose-type', [BusinessController::class, 'chooseType'])->name('business.choose-type')->middleware('auth');
 Route::get('/business/create', [BusinessController::class, 'create'])->name('business.create')->middleware('auth');
 Route::post('/business/store', [BusinessController::class, 'store'])->name('business.store')->middleware('auth');
+Route::post('/business/switch', [BusinessController::class, 'switchBusiness'])->name('business.switch')->middleware('auth');
 Route::post('/business/enhance-description', [BusinessController::class, 'enhanceDescription'])->name('business.enhance-description')->middleware('auth');
 Route::post('/business/generate-logo', [BusinessController::class, 'generateLogo'])->name('business.generate-logo')->middleware(['auth', 'throttle:10,1']);
 
@@ -518,6 +519,7 @@ Route::post('/orders', [SalesController::class, 'createOrder'])->name('sales.cre
     // Subscription Routes
     Route::prefix('subscription')->middleware(['auth', 'has.business'])->group(function () {
         Route::post('/upgrade', [App\Http\Controllers\SubscriptionController::class, 'upgrade'])->name('subscription.upgrade');
+        Route::post('/addon-business', [App\Http\Controllers\SubscriptionController::class, 'addonBusiness'])->name('subscription.addon-business');
         Route::post('/check-payment-status', [App\Http\Controllers\SubscriptionController::class, 'checkPaymentStatus'])->name('subscription.check.status');
     });
     

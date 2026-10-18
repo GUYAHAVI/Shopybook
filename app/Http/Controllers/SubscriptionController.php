@@ -160,6 +160,73 @@ class SubscriptionController extends Controller
     }
 
     /**
+     * Purchase an extra business slot (multi-business add-on).
+     * Enterprise includes 2 businesses; each extra is half the enterprise rate.
+     */
+    public function addonBusiness(Request $request)
+    {
+        $request->validate([
+            'phone_number' => 'required|string|min:10|max:12',
+        ]);
+
+        $user = Auth::user();
+        $business = $user->business;
+
+        if (!$business) {
+            return response()->json(['success' => false, 'message' => 'Business not found.'], 404);
+        }
+
+        if ($user->canCreateBusiness()) {
+            return response()->json(['success' => false, 'message' => 'You can already create another business — no add-on needed.'], 422);
+        }
+
+        $phoneNumber = $this->formatPhoneNumber($request->input('phone_number'));
+        if (!$phoneNumber) {
+            return response()->json(['success' => false, 'message' => 'Invalid phone number format.'], 422);
+        }
+
+        $amount = $user->businessAddonPrice();
+
+        try {
+            $response = $this->initializePaystackMpesa($phoneNumber, $amount, 'business_addon', $business, $user);
+
+            if (!$response['success']) {
+                return response()->json(['success' => false, 'message' => $response['message']], 400);
+            }
+
+            DB::table('subscription_payments')->insert([
+                'business_id' => $business->id,
+                'user_id' => $user->id,
+                'plan' => 'business_addon',
+                'amount' => $amount,
+                'phone_number' => $phoneNumber,
+                'checkout_request_id' => $response['reference'],
+                'merchant_request_id' => null,
+                'status' => 'pending',
+                'created_at' => now(),
+                'updated_at' => now()
+            ]);
+
+            Log::info('Extra business slot charge initiated', [
+                'business_id' => $business->id,
+                'user_id' => $user->id,
+                'amount' => $amount,
+                'reference' => $response['reference']
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'M-Pesa payment request sent! Enter your PIN to unlock the extra business slot.',
+                'reference' => $response['reference']
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Business add-on payment exception', ['error' => $e->getMessage()]);
+            return response()->json(['success' => false, 'message' => 'Payment initialization failed. Please try again.'], 500);
+        }
+    }
+
+    /**
      * Paystack webhook handler for M-Pesa payments
      */
     public function paystackWebhook(Request $request)
@@ -213,21 +280,8 @@ class SubscriptionController extends Controller
                         'updated_at' => now()
                     ]);
 
-                // Upgrade business plan
-                $business = \App\Models\Business::find($payment->business_id);
-                if ($business) {
-                    $business->update([
-                        'plan' => $payment->plan,
-                        'upgraded_at' => now()
-                    ]);
-
-                    Log::info('Business subscription upgraded via Paystack M-Pesa webhook', [
-                        'business_id' => $business->id,
-                        'plan' => $payment->plan,
-                        'amount' => $payment->amount,
-                        'reference' => $reference
-                    ]);
-                }
+                // Credit the purchase (plan upgrade or extra business slot)
+                $this->creditPaymentOutcome($payment, $reference, 'webhook');
 
                 return response()->json(['status' => 'success'], 200);
 
@@ -331,20 +385,8 @@ class SubscriptionController extends Controller
                                 'updated_at' => now()
                             ]);
 
-                        // Upgrade business plan
-                        $business = \App\Models\Business::find($payment->business_id);
-                        if ($business) {
-                            $business->update([
-                                'plan' => $payment->plan,
-                                'upgraded_at' => now()
-                            ]);
-
-                            Log::info('Business subscription upgraded via polling', [
-                                'business_id' => $business->id,
-                                'plan' => $payment->plan,
-                                'reference' => $reference
-                            ]);
-                        }
+                        // Credit the purchase (plan upgrade or extra business slot)
+                        $this->creditPaymentOutcome($payment, $reference, 'polling');
 
                         return response()->json([
                             'status' => 'completed',
@@ -409,6 +451,40 @@ class SubscriptionController extends Controller
     /**
      * Initialize Paystack M-Pesa charge (STK Push)
      */
+    /**
+     * Credit a completed subscription payment: plan upgrades set business.plan;
+     * 'business_addon' payments grant the user an extra owned-business slot.
+     */
+    private function creditPaymentOutcome(object $payment, string $reference, string $via): void
+    {
+        if ($payment->plan === 'business_addon') {
+            $user = \App\Models\User::find($payment->user_id);
+            if ($user) {
+                $user->increment('extra_business_slots');
+                Log::info("Extra business slot credited via {$via}", [
+                    'user_id' => $user->id,
+                    'slots' => $user->fresh()->extra_business_slots,
+                    'reference' => $reference
+                ]);
+            }
+            return;
+        }
+
+        $business = \App\Models\Business::find($payment->business_id);
+        if ($business) {
+            $business->update([
+                'plan' => $payment->plan,
+                'upgraded_at' => now()
+            ]);
+
+            Log::info("Business subscription upgraded via {$via}", [
+                'business_id' => $business->id,
+                'plan' => $payment->plan,
+                'reference' => $reference
+            ]);
+        }
+    }
+
     private function initializePaystackMpesa($phoneNumber, $amount, $plan, $business, $user)
     {
         try {
@@ -421,7 +497,11 @@ class SubscriptionController extends Controller
                 ];
             }
 
-            $planName = $plan === 'enterprise' ? 'Enterprise' : 'Premium';
+            $planName = match ($plan) {
+                'enterprise'     => 'Enterprise',
+                'business_addon' => 'Extra Business',
+                default          => 'Premium',
+            };
             $reference = 'SB-' . strtoupper($plan) . '-' . time() . '-' . $business->id;
             
             // Convert amount to kobo (Paystack uses smallest currency unit)

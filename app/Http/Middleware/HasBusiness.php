@@ -17,8 +17,36 @@ class HasBusiness
             return redirect()->route('login');
         }
 
+        // ── Path 0: Session-selected business (multi-business switcher) ───────
+        $business = null;
+        $activeId = $request->session()->get('current_business_id');
+
+        if ($activeId) {
+            // Owned business?
+            $business = $user->businesses()->where('id', $activeId)->first();
+
+            if (!$business) {
+                // Active membership in that business?
+                $membership = BusinessMember::where('user_id', $user->id)
+                    ->where('business_id', $activeId)
+                    ->where('status', 'active')
+                    ->with('business')
+                    ->first();
+
+                if ($membership && $membership->business) {
+                    $business = $membership->business;
+                    $user->setRelation('activeMembership', $membership);
+                }
+            }
+
+            // Stored selection is no longer accessible — clear it
+            if (!$business) {
+                $request->session()->forget('current_business_id');
+            }
+        }
+
         // ── Path 1: User owns a business ──────────────────────────────────────
-        $business = $user->business;
+        $business = $business ?? $user->business;
 
         // ── Path 2: User is a team member of another business ─────────────────
         if (!$business) {

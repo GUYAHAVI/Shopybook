@@ -131,23 +131,79 @@ class User extends Authenticatable implements MustVerifyEmail
      */
     public function hasModulePermission(string $module, ?string $businessId = null): bool
     {
-        // If user owns a business, they have all permissions
-        $ownedBusiness = $this->relations['business'] ?? $this->business;
-        if ($ownedBusiness) {
+        // Resolve the business context: explicit param, else the active business
+        // injected by HasBusiness middleware, else the user's first owned business.
+        $activeId = $businessId
+            ?? ($this->relations['business'] ?? null)?->id
+            ?? $this->business?->id;
+
+        if (!$activeId) {
+            return false;
+        }
+
+        // Owner of THE ACTIVE business → full access
+        if ($this->businesses()->where('id', $activeId)->exists()) {
             return true;
         }
 
-        // Team member path – check membership permissions
-        $membership = $this->relations['activeMembership'] ?? $this->activeMembership;
-        if (!$membership) {
-            return false;
+        // Otherwise must be an active member of that business with the module granted
+        $membership = ($this->relations['activeMembership'] ?? null)
+            ?: $this->businessMemberships()
+                ->where('business_id', $activeId)
+                ->where('status', 'active')
+                ->first();
+
+        if ($membership && $membership->business_id === $activeId) {
+            return $membership->hasPermission($module);
         }
 
-        if ($businessId && $membership->business_id !== $businessId) {
-            return false;
-        }
+        return false;
+    }
 
-        return $membership->hasPermission($module);
+    /**
+     * All businesses this user can operate: owned ones plus active memberships.
+     * Each item: ['business' => Business, 'role' => 'owner'|<member role>]
+     */
+    public function accessibleBusinesses()
+    {
+        $items = $this->businesses()->get()
+            ->map(fn($b) => ['business' => $b, 'role' => 'owner']);
+
+        $this->businessMemberships()
+            ->where('status', 'active')
+            ->with('business')
+            ->get()
+            ->each(function ($m) use ($items) {
+                if ($m->business) {
+                    $items->push(['business' => $m->business, 'role' => $m->role]);
+                }
+            });
+
+        return $items;
+    }
+
+    /**
+     * How many businesses this user may own.
+     * Enterprise plan includes 2; every other plan includes 1.
+     * Additional slots are purchased as add-ons (extra_business_slots).
+     */
+    public function ownedBusinessLimit(): int
+    {
+        $base = ($this->business?->plan ?? 'free') === 'enterprise' ? 2 : 1;
+        return $base + (int) ($this->extra_business_slots ?? 0);
+    }
+
+    public function canCreateBusiness(): bool
+    {
+        return $this->businesses()->count() < $this->ownedBusinessLimit();
+    }
+
+    /**
+     * Price (KES) for one additional business slot — half the enterprise rate.
+     */
+    public function businessAddonPrice(): float
+    {
+        return 500;
     }
 
     /**

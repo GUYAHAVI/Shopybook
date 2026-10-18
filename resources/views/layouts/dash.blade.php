@@ -1500,6 +1500,96 @@
             margin: 4px 0;
         }
 
+        /* Business switcher */
+        .biz-switch-btn {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 7px 12px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-size: 0.82rem;
+            font-weight: 600;
+            cursor: pointer;
+            max-width: 210px;
+        }
+        .biz-switch-btn:hover { background: var(--border-color); }
+        .biz-switch-btn .biz-name {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .biz-switch-menu {
+            position: fixed;
+            top: 64px;
+            width: 260px;
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.15);
+            z-index: 1100;
+            padding: 8px;
+            display: none;
+            animation: launcherIn 0.18s ease;
+            max-height: 70vh;
+            overflow-y: auto;
+        }
+        .biz-switch-menu.open { display: block; }
+        .biz-switch-menu .biz-section {
+            font-size: 0.68rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+            padding: 8px 10px 4px;
+            font-weight: 700;
+        }
+        .biz-switch-menu .biz-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 9px 10px;
+            border-radius: 8px;
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+            font-weight: 500;
+            background: none;
+            border: none;
+            width: 100%;
+            text-align: left;
+            cursor: pointer;
+            text-decoration: none;
+            transition: background 0.15s;
+        }
+        .biz-switch-menu .biz-item:hover {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+        }
+        .biz-switch-menu .biz-item.active {
+            background: rgba(var(--primary-color-rgb, 0,123,255), 0.1);
+            color: var(--primary-color);
+        }
+        .biz-switch-menu .biz-item .biz-label {
+            flex: 1;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .biz-switch-menu .biz-item .biz-role {
+            font-size: 0.68rem;
+            color: var(--text-muted);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 1px 7px;
+        }
+        .biz-switch-menu .biz-divider {
+            height: 1px;
+            background: var(--border-color);
+            margin: 6px 0;
+        }
+        .biz-switch-menu form { margin: 0; }
+
         /* ─── Clean Sidebar tweaks ─── */
         .sidebar-nav-group-label {
             font-size: 0.68rem;
@@ -2161,6 +2251,18 @@
                     <input type="text" class="search-input" placeholder="Search">
                 </div>
                 
+                <!-- Business Switcher -->
+                @php
+                    $__bizList = auth()->user()->accessibleBusinesses();
+                @endphp
+                @if($__bizList->isNotEmpty())
+                <button type="button" class="biz-switch-btn" onclick="toggleBusinessSwitcher(event)" title="Switch business">
+                    <i class="fas fa-building"></i>
+                    <span class="biz-name">{{ \Illuminate\Support\Str::limit($business?->name ?? 'Business', 18) }}</span>
+                    <i class="fas fa-chevron-down" style="font-size:0.65rem;"></i>
+                </button>
+                @endif
+
                 <!-- Notification Bell -->
                 <div class="notification-bell" onclick="toggleNotifications()">
                     <i class="fas fa-bell"></i>
@@ -2335,6 +2437,56 @@
         </button>
         <form id="topbar-logout-form" action="{{ route('logout') }}" method="POST" class="d-none">@csrf</form>
     </div>
+
+    <!-- Business Switcher Menu -->
+    @if($__bizList->isNotEmpty())
+    <div id="businessSwitcherMenu" class="biz-switch-menu">
+        @php
+            $__owned  = $__bizList->where('role', 'owner');
+            $__member = $__bizList->where('role', '!=', 'owner');
+        @endphp
+
+        @if($__owned->isNotEmpty())
+        <div class="biz-section">My Businesses</div>
+        @foreach($__owned as $item)
+        <form method="POST" action="{{ route('business.switch') }}">
+            @csrf
+            <input type="hidden" name="business_id" value="{{ $item['business']->id }}">
+            <button type="submit" class="biz-item {{ $business && $item['business']->id === $business->id ? 'active' : '' }}">
+                <i class="fas fa-crown" style="color:#f59e0b;"></i>
+                <span class="biz-label">{{ $item['business']->name }}</span>
+                <span class="biz-role">Owner</span>
+                @if($business && $item['business']->id === $business->id)<i class="fas fa-check"></i>@endif
+            </button>
+        </form>
+        @endforeach
+        @endif
+
+        @if($__member->isNotEmpty())
+        <div class="biz-section">Member Of</div>
+        @foreach($__member as $item)
+        <form method="POST" action="{{ route('business.switch') }}">
+            @csrf
+            <input type="hidden" name="business_id" value="{{ $item['business']->id }}">
+            <button type="submit" class="biz-item {{ $business && $item['business']->id === $business->id ? 'active' : '' }}">
+                <i class="fas fa-user-tie"></i>
+                <span class="biz-label">{{ $item['business']->name }}</span>
+                <span class="biz-role">{{ config("rbac.role_labels.{$item['role']}", ucfirst($item['role'])) }}</span>
+                @if($business && $item['business']->id === $business->id)<i class="fas fa-check"></i>@endif
+            </button>
+        </form>
+        @endforeach
+        @endif
+
+        @if($__owned->isNotEmpty())
+        <div class="biz-divider"></div>
+        <a href="{{ route('business.choose-type') }}" class="biz-item">
+            <i class="fas fa-plus"></i>
+            <span class="biz-label">New Business</span>
+        </a>
+        @endif
+    </div>
+    @endif
 
     <!-- Notifications Panel -->
     <div id="notificationsPanel" class="notifications-panel" style="display: none;">
@@ -2846,13 +2998,36 @@
             dd.classList.toggle('open');
         }
 
+        // ── Business Switcher ────────────────────────────────────
+        function toggleBusinessSwitcher(e) {
+            e.stopPropagation();
+            const menu = document.getElementById('businessSwitcherMenu');
+            if (!menu) return;
+            const isOpen = menu.classList.contains('open');
+            closeAllTopMenus();
+            if (!isOpen) {
+                const rect = e.currentTarget.getBoundingClientRect();
+                menu.style.left = Math.min(rect.left, window.innerWidth - 280) + 'px';
+                menu.style.top = (rect.bottom + 8) + 'px';
+                menu.classList.add('open');
+            }
+        }
+
+        function closeAllTopMenus() {
+            document.getElementById('appLauncherPanel').classList.remove('open');
+            document.getElementById('topbarUserDropdown').classList.remove('open');
+            document.getElementById('businessSwitcherMenu')?.classList.remove('open');
+        }
+
         // Close both panels when clicking outside
         document.addEventListener('click', function() {
             document.getElementById('appLauncherPanel').classList.remove('open');
             document.getElementById('topbarUserDropdown').classList.remove('open');
+            document.getElementById('businessSwitcherMenu')?.classList.remove('open');
         });
         document.getElementById('appLauncherPanel').addEventListener('click', e => e.stopPropagation());
         document.getElementById('topbarUserDropdown').addEventListener('click', e => e.stopPropagation());
+        document.getElementById('businessSwitcherMenu')?.addEventListener('click', e => e.stopPropagation());
 
         // Replay guided tours on every page
         function resetPageGuides() {

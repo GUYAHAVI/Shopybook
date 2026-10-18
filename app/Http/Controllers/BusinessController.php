@@ -47,9 +47,8 @@ class BusinessController extends Controller
      */
   public function chooseType()
 {
-    // Use same access method as dashboard
-    if (auth()->user()->business()->exists()) {
-        return redirect()->route('dashboard');
+    if ($gate = $this->gateBusinessCreation(auth()->user())) {
+        return $gate;
     }
 
     return view('business.choose-type');
@@ -60,9 +59,10 @@ class BusinessController extends Controller
      */
     public function create(Request $request)
     {
-        // Check if user already has a business
-        if (Auth::user()->business) {
-            return redirect()->route('dashboard');
+        // Multi-business: allowed until the user's owned-business limit;
+        // beyond that show the add-on / upgrade prompt.
+        if ($gate = $this->gateBusinessCreation(Auth::user())) {
+            return $gate;
         }
 
         $type = $request->get('type', 'product');
@@ -111,6 +111,10 @@ class BusinessController extends Controller
      */
     public function store(Request $request)
     {
+        if ($gate = $this->gateBusinessCreation(Auth::user())) {
+            return $gate;
+        }
+
         $validated = $request->validate([
             'name' => 'required|string|max:255|unique:businesses',
             'business_type' => 'required|string',
@@ -201,6 +205,53 @@ class BusinessController extends Controller
             return back()->withInput()
                 ->with('error', 'Failed to create business. Please try again.');
         }
+    }
+
+    /**
+     * Switch the active business context (multi-business switcher).
+     */
+    public function switchBusiness(Request $request)
+    {
+        $validated = $request->validate([
+            'business_id' => 'required|string',
+        ]);
+
+        $user = Auth::user();
+        $businessId = $validated['business_id'];
+
+        $owns = $user->businesses()->where('id', $businessId)->exists();
+        $isMember = ! $owns && \App\Models\BusinessMember::where('user_id', $user->id)
+            ->where('business_id', $businessId)
+            ->where('status', 'active')
+            ->exists();
+
+        if (! $owns && ! $isMember) {
+            abort(403, 'You do not have access to that business.');
+        }
+
+        $request->session()->put('current_business_id', $businessId);
+
+        return redirect()->back();
+    }
+
+    /**
+     * Gate for creating another business:
+     *   - under the owned-business limit → allow (returns null)
+     *   - at limit on a non-enterprise plan → upgrade prompt
+     *   - at limit on enterprise → pay-per-extra-business prompt (half enterprise rate)
+     */
+    private function gateBusinessCreation($user)
+    {
+        if ($user->canCreateBusiness()) {
+            return null;
+        }
+
+        return view('business.add-business', [
+            'isEnterprise'  => ($user->business?->plan ?? 'free') === 'enterprise',
+            'limit'         => $user->ownedBusinessLimit(),
+            'ownedCount'    => $user->businesses()->count(),
+            'addonPrice'    => $user->businessAddonPrice(),
+        ]);
     }
 
     /**
