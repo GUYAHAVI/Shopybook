@@ -95,6 +95,36 @@
             <div class="card border-0 shadow-sm">
                 <div class="card-body p-0">
                     <div class="p-3 border-bottom d-flex justify-content-between align-items-center">
+                        <span class="fw-semibold"><i class="fas fa-user-check text-dark me-2"></i>Occupied units</span>
+                        <a href="{{ route('rentals.units.index', ['status' => 'occupied']) }}" class="btn btn-sm btn-outline-secondary">All units</a>
+                    </div>
+                    @forelse($occupiedUnits->take(8) as $u)
+                        <div class="p-3 border-bottom d-flex justify-content-between align-items-center">
+                            <div>
+                                <div class="fw-semibold">{{ $u->label }}</div>
+                                @if($u->tenant)
+                                    <small class="text-muted d-block"><i class="fas fa-user me-1"></i>{{ $u->tenant->name }}
+                                        @if($u->tenant->phone) · <a href="tel:{{ $u->tenant->phone }}" class="text-muted">{{ $u->tenant->phone }}</a>@endif
+                                    </small>
+                                @else
+                                    <small class="text-warning">No tenant assigned</small>
+                                @endif
+                            </div>
+                            @php $b = match($u->rentState) { 'paid' => 'bg-success', 'partial' => 'bg-warning text-dark', 'overdue' => 'bg-danger', default => 'bg-info text-dark' }; @endphp
+                            <span class="badge {{ $b }}">{{ match($u->rentState) { 'paid' => 'Paid', 'partial' => 'Part-paid', 'overdue' => 'Overdue', default => 'Due' } }}</span>
+                        </div>
+                    @empty
+                        <div class="text-center text-muted py-4">No occupied units.</div>
+                    @endforelse
+                    @if($occupiedUnits->count() > 8)
+                        <div class="p-2 text-center"><a href="{{ route('rentals.units.index', ['status' => 'occupied']) }}" class="small">View all {{ $occupiedUnits->count() }} occupied units</a></div>
+                    @endif
+                </div>
+            </div>
+
+            <div class="card border-0 shadow-sm mt-4">
+                <div class="card-body p-0">
+                    <div class="p-3 border-bottom d-flex justify-content-between align-items-center">
                         <span class="fw-semibold"><i class="fas fa-bullhorn text-info me-2"></i>Vacant units</span>
                         <a href="{{ route('rentals.units.index', ['status' => 'vacant']) }}" class="btn btn-sm btn-outline-secondary">All units</a>
                     </div>

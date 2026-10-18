@@ -165,7 +165,7 @@ class DashboardController extends Controller
     {
         $period = now()->format('Y-m');
 
-        $units        = $business->rentalUnits()->with('property')->get();
+        $units        = $business->rentalUnits()->with(['property', 'tenant'])->get();
         $activeTenants = $business->rentalTenants()->where('status', 'active')->with('unit')->get();
         $paidByTenant = \App\Models\RentalPayment::where('business_id', $business->id)
             ->where('period', $period)->where('status', 'paid')
@@ -197,7 +197,24 @@ class DashboardController extends Controller
 
         $vacantUnits = $units->where('status', 'vacant')->sortBy('label')->take(8)->values();
 
-        return view('rentals.dashboard', compact('business', 'stats', 'arrears', 'recentPayments', 'vacantUnits'));
+        // Occupied units — tenant + this month's payment state (due-day aware)
+        $dueDay  = max(1, min(28, (int) data_get($business->settings?->custom_settings, 'rent_due_day', 5)));
+        $pastDue = now()->day > $dueDay;
+        $paidByUnit = \App\Models\RentalPayment::where('business_id', $business->id)
+            ->where('period', $period)->where('status', 'paid')
+            ->selectRaw('rental_unit_id, SUM(amount) as total')
+            ->groupBy('rental_unit_id')->pluck('total', 'rental_unit_id');
+
+        $occupiedUnits = $units->where('status', 'occupied')->sortBy('label')
+            ->map(function ($u) use ($paidByUnit, $pastDue) {
+                $u->periodPaid = (float) ($paidByUnit[$u->id] ?? 0);
+                $u->rentState  = $u->periodPaid >= (float) $u->rent_amount ? 'paid'
+                    : ($u->periodPaid > 0 ? 'partial'
+                    : ($pastDue ? 'overdue' : 'due'));
+                return $u;
+            })->values();
+
+        return view('rentals.dashboard', compact('business', 'stats', 'arrears', 'recentPayments', 'vacantUnits', 'occupiedUnits', 'dueDay'));
     }
 }
 

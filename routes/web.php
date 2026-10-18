@@ -707,7 +707,9 @@ Route::post('/orders', [SalesController::class, 'createOrder'])->name('sales.cre
         Route::post('/tenants/{tenant}/vacate', [RentalController::class, 'vacateTenant'])->name('tenants.vacate');
         Route::get('/payments', [RentalController::class, 'payments'])->name('payments.index');
         Route::post('/payments/{tenant}/record', [RentalController::class, 'recordPayment'])->name('payments.record');
+        Route::post('/payments/{tenant}/unmark', [RentalController::class, 'unmarkPayments'])->name('payments.unmark');
         Route::post('/payments/{tenant}/stk', [RentalController::class, 'stkPayment'])->name('payments.stk');
+        Route::post('/settings', [RentalController::class, 'updateRentSettings'])->name('settings.update');
         Route::get('/payments/{payment}/receipt', [RentalController::class, 'receipt'])->name('payments.receipt');
         Route::get('/bookings', [RentalController::class, 'bookings'])->name('bookings.index');
         Route::patch('/bookings/{booking}', [RentalController::class, 'updateBooking'])->name('bookings.update');

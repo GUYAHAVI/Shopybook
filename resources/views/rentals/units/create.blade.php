@@ -90,9 +90,16 @@
                     <div class="form-text">Rough notes are fine — AI turns them into a polished listing line (uses label, type, rent & property location).</div>
                 </div>
 
-                <div class="mb-4">
+                <div class="mb-3">
                     <label class="form-label">Images (shared across created units, max 6)</label>
                     <input type="file" name="images[]" class="form-control" accept="image/*" multiple>
+                </div>
+
+                <div class="form-check mb-4">
+                    <input class="form-check-input" type="checkbox" name="listed" value="1" id="listed" {{ old('listed', '1') ? 'checked' : '' }}>
+                    <label class="form-check-label" for="listed">
+                        List on the public "Find a House" page <span class="text-muted">(while vacant — auto-unlisted when occupied)</span>
+                    </label>
                 </div>
 
                 <button type="submit" class="btn btn-primary w-100">

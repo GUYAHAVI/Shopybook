@@ -132,6 +132,9 @@
                     <option value="cash">Cash</option><option value="mpesa">M-Pesa (manual)</option>
                     <option value="bank_transfer">Bank Transfer</option><option value="card">Card</option><option value="cheque">Cheque</option>
                 </select></div>
+            <div class="col-6"><label class="form-label">Months covered</label>
+                <input type="number" id="recMonths" class="form-control" min="1" max="24" value="1">
+                <div class="form-text">&gt;1 splits it across months ahead.</div></div>
             <div class="col-6"><label class="form-label">Reference</label>
                 <input type="text" id="recRef" class="form-control" placeholder="Receipt / txn no."></div>
             <div class="col-12"><label class="form-label">Notes</label>
@@ -187,6 +190,7 @@ async function submitRecord() {
         headers: {'X-CSRF-TOKEN': csrf, 'Content-Type': 'application/json', 'Accept': 'application/json'},
         body: JSON.stringify({
             period: document.getElementById('recPeriod').value,
+            months: parseInt(document.getElementById('recMonths').value) || 1,
             amount: document.getElementById('recAmount').value,
             method: document.getElementById('recMethod').value,
             transaction_reference: document.getElementById('recRef').value,

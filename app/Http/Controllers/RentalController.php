@@ -30,12 +30,65 @@ class RentalController extends Controller
             $query->where('is_listed', true)->where('status', 'vacant');
         }
 
+        if ($request->filled('q')) {
+            $q = trim($request->q);
+            $query->where(function ($w) use ($q) {
+                $w->where('label', 'like', "%{$q}%")
+                  ->orWhereHas('tenant', fn($t) => $t
+                      ->where('name', 'like', "%{$q}%")
+                      ->orWhere('phone', 'like', "%{$q}%"));
+            });
+        }
+
         $units       = $query->orderBy('label')->paginate(24)->withQueryString();
         $properties  = $business->rentalProperties()->orderBy('name')->get();
         $orphanCount = RentalUnit::where('business_id', $business->id)
             ->whereNull('rental_property_id')->count();
 
-        return view('rentals.units.index', compact('units', 'properties', 'orphanCount'));
+        // Current-period rent state per unit (paid / partial / due / overdue)
+        $period  = now()->format('Y-m');
+        $dueDay  = max(1, min(28, (int) data_get($business->settings?->custom_settings, 'rent_due_day', 5)));
+        $pastDue = now()->day > $dueDay;
+
+        $paidMap = RentalPayment::where('business_id', $business->id)
+            ->where('period', $period)->where('status', 'paid')
+            ->whereIn('rental_unit_id', $units->pluck('id'))
+            ->selectRaw('rental_unit_id, SUM(amount) as t')
+            ->groupBy('rental_unit_id')->pluck('t', 'rental_unit_id');
+
+        $throughMap = RentalPayment::where('business_id', $business->id)
+            ->where('period', '>', $period)->where('status', 'paid')
+            ->whereIn('rental_unit_id', $units->pluck('id'))
+            ->selectRaw('rental_unit_id, MAX(period) as m')
+            ->groupBy('rental_unit_id')->pluck('m', 'rental_unit_id');
+
+        foreach ($units as $u) {
+            $u->periodPaid  = (float) ($paidMap[$u->id] ?? 0);
+            $u->paidThrough = $throughMap[$u->id] ?? null;
+            $u->rentState   = !$u->tenant ? 'vacant'
+                : ($u->periodPaid >= (float) $u->rent_amount ? 'paid'
+                : ($u->periodPaid > 0 ? 'partial'
+                : ($pastDue ? 'overdue' : 'due')));
+        }
+
+        return view('rentals.units.index', compact('units', 'properties', 'orphanCount', 'period', 'dueDay'));
+    }
+
+    /** Rental preferences (rent due day). */
+    public function updateRentSettings(Request $request)
+    {
+        $business = auth()->user()->business;
+
+        $validated = $request->validate([
+            'rent_due_day' => 'required|integer|min:1|max:28',
+        ]);
+
+        $settings = $business->getSettingsOrCreate();
+        $custom   = $settings->custom_settings ?? [];
+        $custom['rent_due_day'] = (int) $validated['rent_due_day'];
+        $settings->update(['custom_settings' => $custom]);
+
+        return back()->with('success', "Rent is now marked overdue after day {$custom['rent_due_day']} of each month.");
     }
 
     public function createUnit()
@@ -64,6 +117,7 @@ class RentalController extends Controller
             'description'        => 'nullable|string|max:2000',
             'images'             => 'nullable|array|max:6',
             'images.*'           => 'image|max:4096',
+            'listed'             => 'nullable|boolean',
         ]);
 
         // Shared images apply to every unit created in this batch
@@ -71,8 +125,9 @@ class RentalController extends Controller
 
         $prefix = trim($validated['label_prefix'] ?? '') ?: 'Unit';
         $count  = (int) $validated['count'];
+        $listed = $request->boolean('listed');
 
-        DB::transaction(function () use ($validated, $business, $prefix, $count, $imagePaths) {
+        DB::transaction(function () use ($validated, $business, $prefix, $count, $imagePaths, $listed) {
             $start = RentalUnit::where('business_id', $business->id)->count() + 1;
 
             for ($i = 0; $i < $count; $i++) {
@@ -86,7 +141,7 @@ class RentalController extends Controller
                     'description'         => $validated['description'] ?? null,
                     'images'              => $imagePaths ?: null,
                     'status'              => 'vacant',
-                    'is_listed'           => false,
+                    'is_listed'           => $listed,
                 ]);
             }
         });
@@ -436,24 +491,55 @@ class RentalController extends Controller
             'amount'                => 'required|numeric|min:1',
             'method'                => 'required|in:cash,mpesa,bank_transfer,card,cheque',
             'transaction_reference' => 'nullable|string|max:120',
+            'months'                => 'nullable|integer|min:1|max:24',
             'notes'                 => 'nullable|string|max:1000',
         ]);
 
-        RentalPayment::create([
-            'business_id'           => $tenant->business_id,
-            'rental_tenant_id'      => $tenant->id,
-            'rental_unit_id'        => $tenant->rental_unit_id,
-            'period'                => $validated['period'],
-            'amount'                => $validated['amount'],
-            'method'                => $validated['method'],
-            'status'                => 'paid',
-            'transaction_reference' => $validated['transaction_reference'] ?? null,
-            'paid_at'               => now(),
-            'received_by'           => auth()->id(),
-            'notes'                 => $validated['notes'] ?? null,
-        ]);
+        // Multi-month payments are split across consecutive periods so each
+        // month shows as paid until the prepaid period runs out.
+        $months = (int) ($validated['months'] ?? 1);
+        $total  = (float) $validated['amount'];
+        $per    = round($total / $months, 2);
+        $start  = \Carbon\Carbon::createFromFormat('Y-m', $validated['period']);
 
-        return response()->json(['success' => true, 'message' => 'Rent payment recorded.']);
+        for ($i = 0; $i < $months; $i++) {
+            RentalPayment::create([
+                'business_id'           => $tenant->business_id,
+                'rental_tenant_id'      => $tenant->id,
+                'rental_unit_id'        => $tenant->rental_unit_id,
+                'period'                => $start->copy()->addMonths($i)->format('Y-m'),
+                'amount'                => $i === $months - 1 ? round($total - $per * ($months - 1), 2) : $per,
+                'method'                => $validated['method'],
+                'status'                => 'paid',
+                'transaction_reference' => $validated['transaction_reference'] ?? null,
+                'paid_at'               => now(),
+                'received_by'           => auth()->id(),
+                'notes'                 => $validated['notes'] ?? null,
+            ]);
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => $months > 1 ? "Recorded — covers {$months} months." : 'Rent payment recorded.',
+        ]);
+    }
+
+    /** Un-mark a period as paid (reverses the rows — kept for audit). */
+    public function unmarkPayments(Request $request, RentalTenant $tenant)
+    {
+        $this->authorizeRental($tenant);
+
+        $validated = $request->validate(['period' => 'required|regex:/^\d{4}-\d{2}$/']);
+
+        $n = RentalPayment::where('rental_tenant_id', $tenant->id)
+            ->where('period', $validated['period'])
+            ->where('status', 'paid')
+            ->update(['status' => 'reversed']);
+
+        return response()->json([
+            'success' => $n > 0,
+            'message' => $n > 0 ? 'Marked as unpaid — payment reversed.' : 'No paid payment found for that period.',
+        ]);
     }
 
     public function stkPayment(Request $request, RentalTenant $tenant, MpesaService $mpesa)

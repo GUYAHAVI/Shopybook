@@ -99,7 +99,7 @@
                         <select name="rental_unit_id" class="form-select" id="tenantUnitSelect">
                             <option value="">— Not yet assigned —</option>
                             @foreach($vacantUnits as $u)
-                                <option value="{{ $u->id }}" data-rent="{{ $u->rent_amount }}">
+                                <option value="{{ $u->id }}" data-rent="{{ $u->rent_amount }}" {{ request('unit') == $u->id ? 'selected' : '' }}>
                                     {{ $u->label }}{{ $u->property ? ' · '.$u->property->name : '' }} — KES {{ number_format($u->rent_amount) }}
                                 </option>
                             @endforeach
@@ -150,5 +150,14 @@ document.getElementById('tenantUnitSelect')?.addEventListener('change', function
 document.getElementById('rentPaidCheck')?.addEventListener('change', function() {
     document.getElementById('paidMethodWrap').style.display = this.checked ? 'block' : 'none';
 });
+
+// ?unit=<id> — opened from a vacant unit card: pre-select it and open the modal
+@if(request('unit'))
+(function () {
+    const sel = document.getElementById('tenantUnitSelect');
+    sel.dispatchEvent(new Event('change'));
+    new bootstrap.Modal('#addTenantModal').show();
+})();
+@endif
 </script>
 @endsection
