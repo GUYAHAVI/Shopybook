@@ -33,7 +33,7 @@
                 <div class="row g-4">
 
                     {{-- Products --}}
-                    <div class="col-md-4">
+                    <div class="col-md-6 col-lg-3">
                         <a href="{{ route('business.create', ['type' => 'product']) }}" class="sb-type-option sb-type-product">
                             <div class="sb-type-icon">
                                 <i class="fas fa-shopping-cart"></i>
@@ -45,7 +45,7 @@
                     </div>
 
                     {{-- Services --}}
-                    <div class="col-md-4">
+                    <div class="col-md-6 col-lg-3">
                         <a href="{{ route('business.create', ['type' => 'service']) }}" class="sb-type-option sb-type-service">
                             <div class="sb-type-icon">
                                 <i class="fas fa-hands-helping"></i>
@@ -57,13 +57,25 @@
                     </div>
 
                     {{-- Both --}}
-                    <div class="col-md-4">
+                    <div class="col-md-6 col-lg-3">
                         <a href="{{ route('business.create', ['type' => 'hybrid']) }}" class="sb-type-option sb-type-both">
                             <div class="sb-type-icon">
                                 <i class="fas fa-store"></i>
                             </div>
                             <h3>I Do Both</h3>
                             <p>Great for businesses that sell products AND provide services, like a salon that also sells beauty products.</p>
+                            <span class="sb-type-cta">Get Started <i class="fas fa-arrow-right ms-1"></i></span>
+                        </a>
+                    </div>
+
+                    {{-- Rentals --}}
+                    <div class="col-md-6 col-lg-3">
+                        <a href="{{ route('business.create', ['type' => 'rentals']) }}" class="sb-type-option sb-type-rentals">
+                            <div class="sb-type-icon">
+                                <i class="fas fa-building"></i>
+                            </div>
+                            <h3>I Rent Property</h3>
+                            <p>For landlords and property managers — rental units, tenants, rent collection via M-Pesa, and public vacancy listings.</p>
                             <span class="sb-type-cta">Get Started <i class="fas fa-arrow-right ms-1"></i></span>
                         </a>
                     </div>

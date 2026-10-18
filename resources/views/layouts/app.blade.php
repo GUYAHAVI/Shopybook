@@ -42,7 +42,7 @@
         @include('layouts.navigation')
 
         <!-- PWA Installation Banner -->
-        <div id="pwa-install-banner" class="hidden fixed top-0 left-0 right-0 bg-blue-600 text-white p-4 z-50 shadow-lg">
+        <div id="pwa-install-banner" class="hidden fixed top-0 left-0 right-0 bg-blue-600 text-white p-4 z-50 shadow-lg" style="display: none;">
             <div class="container mx-auto flex items-center justify-between">
                 <div class="flex items-center space-x-3">
                     <div class="w-10 h-10 bg-white rounded-lg flex items-center justify-center">
@@ -100,7 +100,7 @@
                 
                 // Show banner after a short delay
                 setTimeout(() => {
-                    pwaBanner.classList.remove('hidden');
+                    pwaBanner.style.display = 'block';
                     document.body.style.paddingTop = '80px'; // Add padding for banner
                 }, 2000);
             });
@@ -114,7 +114,7 @@
                 
                 if (outcome === 'accepted') {
                     console.log('PWA installed successfully');
-                    pwaBanner.classList.add('hidden');
+                    pwaBanner.style.display = 'none';
                     document.body.style.paddingTop = '0';
                 }
                 
@@ -127,7 +127,7 @@
 
         // Handle dismiss button click
         pwaDismissBtn.addEventListener('click', () => {
-            pwaBanner.classList.add('hidden');
+            pwaBanner.style.display = 'none';
             document.body.style.paddingTop = '0';
             localStorage.setItem('pwa-banner-dismissed', 'true');
         });
@@ -151,7 +151,7 @@
 
         // Listen for successful installation
         window.addEventListener('appinstalled', () => {
-            pwaBanner.classList.add('hidden');
+            pwaBanner.style.display = 'none';
             document.body.style.paddingTop = '0';
             console.log('PWA was installed');
         });

@@ -414,6 +414,15 @@ class PaymentController extends Controller
                 'amount'                => $items['Amount']['Value'] ?? $stk->amount,
             ]);
 
+            // Rent collection: mark the linked rental payment as paid
+            if ($stk->rental_payment_id) {
+                \App\Models\RentalPayment::where('id', $stk->rental_payment_id)->update([
+                    'status'                => 'paid',
+                    'transaction_reference' => $stk->mpesa_receipt_number,
+                    'paid_at'               => now(),
+                ]);
+            }
+
             Log::info('M-Pesa payment confirmed', [
                 'checkout_request_id' => $checkoutRequestId,
                 'receipt'             => $stk->mpesa_receipt_number,

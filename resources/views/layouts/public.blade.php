@@ -8,16 +8,17 @@
     <meta name="description" content="@yield('meta_description', 'Shopybook - Complete business management platform for small businesses in Kenya. Manage products, services, customers, inventory, staff, and sales with M-Pesa integration.')">
     <meta name="keywords" content="@yield('meta_keywords', 'business management software Kenya, inventory management system Kenya, POS system Kenya, M-Pesa integration, small business software Kenya')">
     <meta name="author" content="Shopybook">
-    <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large">
+    <meta name="robots" content="@yield('robots', 'index, follow, max-snippet:-1, max-image-preview:large')">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <link rel="canonical" href="{{ url()->current() }}">
+    <link rel="canonical" href="@yield('canonical', url()->current())">
+    <meta name="geo.region" content="KE">
 
     <!-- Open Graph -->
     <meta property="og:title" content="@yield('title', 'Shopybook - Business Management Platform')">
     <meta property="og:description" content="@yield('meta_description', 'Complete business management platform for small businesses in Kenya.')">
-    <meta property="og:type" content="website">
-    <meta property="og:url" content="{{ url()->current() }}">
-    <meta property="og:image" content="{{ asset('img/logo.png') }}">
+    <meta property="og:type" content="@yield('og_type', 'website')">
+    <meta property="og:url" content="@yield('canonical', url()->current())">
+    <meta property="og:image" content="@yield('og_image', asset('img/heroimage.png'))">
     <meta property="og:site_name" content="Shopybook">
     <meta property="og:locale" content="en_KE">
 
@@ -25,7 +26,13 @@
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="@yield('title', 'Shopybook - Business Management Platform')">
     <meta name="twitter:description" content="@yield('meta_description', 'Complete business management platform for small businesses in Kenya.')">
-    <meta name="twitter:image" content="{{ asset('img/logo.png') }}">
+    <meta name="twitter:image" content="@yield('og_image', asset('img/heroimage.png'))">
+
+    @if(config('services.google.site_verification'))
+    <meta name="google-site-verification" content="{{ config('services.google.site_verification') }}">
+    @endif
+
+    @stack('schema')
 
     <link rel="shortcut icon" href="{{ asset('img/logo.png') }}" type="image/x-icon">
 
@@ -146,19 +153,20 @@
                                             </div>
                                             <div class="col-md-4 dropdown-links-col">
                                                 <h5>Operations</h5>
-                                                <a class="dropdown-item" href="#features">Product Management</a>
-                                                <a class="dropdown-item" href="#features">Inventory Tracking</a>
-                                                <a class="dropdown-item" href="#features">Point of Sale</a>
-                                                <a class="dropdown-item" href="#features">Service Bookings</a>
-                                                <a class="dropdown-item" href="#features">Stock Receiving</a>
+                                                <a class="dropdown-item" href="{{ route('index') }}#features">Point of Sale &amp; M-Pesa STK</a>
+                                                <a class="dropdown-item" href="{{ route('index') }}#features">Products &amp; Inventory</a>
+                                                <a class="dropdown-item" href="{{ route('index') }}#features">Service Bookings</a>
+                                                <a class="dropdown-item" href="{{ route('index') }}#features">Rental &amp; Tenant Management</a>
+                                                <a class="dropdown-item" href="{{ route('index') }}#features">Customer Debts</a>
+                                                <a class="dropdown-item" href="{{ route('index') }}#features">Multi-Business &amp; Staff Roles</a>
                                             </div>
                                             <div class="col-md-4 dropdown-links-col">
                                                 <h5>Growth</h5>
-                                                <a class="dropdown-item" href="#features">Customer CRM</a>
-                                                <a class="dropdown-item" href="#features">SMS Marketing</a>
-                                                <a class="dropdown-item" href="#features">AI Website Builder</a>
-                                                <a class="dropdown-item" href="#features">Business Analytics</a>
-                                                <a class="dropdown-item" href="#features">KENADA AI Advisor</a>
+                                                <a class="dropdown-item" href="{{ route('index') }}#features">Customer CRM &amp; SMS</a>
+                                                <a class="dropdown-item" href="{{ route('index') }}#features">AI Website Builder</a>
+                                                <a class="dropdown-item" href="{{ route('index') }}#features">Staff Sales Reports</a>
+                                                <a class="dropdown-item" href="{{ route('index') }}#features">KENADA AI Advisor</a>
+                                                <a class="dropdown-item" href="{{ route('houses.index') }}">Public House Listings</a>
                                             </div>
                                         </div>
                                     </div>
@@ -182,6 +190,7 @@
                                                 <a class="dropdown-item" href="{{ route('businesses') }}?type=product">Product Businesses</a>
                                                 <a class="dropdown-item" href="{{ route('businesses') }}?type=service">Service Businesses</a>
                                                 <a class="dropdown-item" href="{{ route('businesses') }}?type=hybrid">Hybrid Businesses</a>
+                                                <a class="dropdown-item" href="{{ route('businesses') }}?type=rentals">Rentals &amp; Landlords</a>
                                                 <a class="dropdown-item" href="{{ route('businesses') }}">All Businesses</a>
                                             </div>
                                             <div class="col-md-4 dropdown-links-col">
@@ -193,6 +202,10 @@
                                         </div>
                                     </div>
                                 </div>
+                            </li>
+
+                            <li class="nav-item">
+                                <a class="nav-link {{ request()->routeIs('houses.*') ? 'active' : '' }}" href="{{ route('houses.index') }}"><i class="fas fa-home me-1"></i>Find a House</a>
                             </li>
 
                             <li class="nav-item">
@@ -242,6 +255,7 @@
                     <ul class="list-unstyled">
                         <li><i class="fa-solid fa-forward"></i><a href="{{ route('index') }}">Home</a></li>
                         <li><i class="fa-solid fa-forward"></i><a href="{{ route('businesses') }}">Businesses</a></li>
+                        <li><i class="fa-solid fa-forward"></i><a href="{{ route('houses.index') }}">Houses for Rent</a></li>
                         <li><i class="fa-solid fa-forward"></i><a href="{{ route('pricing') }}">Pricing</a></li>
                         <li><i class="fa-solid fa-forward"></i><a href="{{ route('docs') }}">Documentation</a></li>
                         <li><i class="fa-solid fa-forward"></i><a href="{{ route('privacy-policy') }}">Privacy Policy</a></li>
@@ -251,11 +265,12 @@
                 <div class="col-md-3">
                     <h2>Features</h2>
                     <ul class="list-unstyled">
-                        <li><i class="fa-solid fa-forward"></i><a href="#features">Point of Sale</a></li>
-                        <li><i class="fa-solid fa-forward"></i><a href="#features">Inventory Management</a></li>
-                        <li><i class="fa-solid fa-forward"></i><a href="#features">Customer CRM</a></li>
-                        <li><i class="fa-solid fa-forward"></i><a href="#features">Staff & Payroll</a></li>
-                        <li><i class="fa-solid fa-forward"></i><a href="#features">AI Website Builder</a></li>
+                        <li><i class="fa-solid fa-forward"></i><a href="{{ route('index') }}#features">Point of Sale &amp; M-Pesa</a></li>
+                        <li><i class="fa-solid fa-forward"></i><a href="{{ route('index') }}#features">Inventory Management</a></li>
+                        <li><i class="fa-solid fa-forward"></i><a href="{{ route('index') }}#features">Rental Management</a></li>
+                        <li><i class="fa-solid fa-forward"></i><a href="{{ route('index') }}#features">Staff &amp; Payroll</a></li>
+                        <li><i class="fa-solid fa-forward"></i><a href="{{ route('index') }}#features">AI Website Builder</a></li>
+                        <li><i class="fa-solid fa-forward"></i><a href="{{ route('index') }}#faq">FAQ</a></li>
                     </ul>
                 </div>
 

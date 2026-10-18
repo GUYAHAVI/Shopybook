@@ -26,6 +26,7 @@ return [
         'website'   => ['label' => 'Website Builder',      'icon' => 'fas fa-globe',          'color' => '#6366f1'],
         'ai'        => ['label' => 'AI Tools',             'icon' => 'fas fa-robot',          'color' => '#13e8e9'],
         'settings'  => ['label' => 'Business Settings',    'icon' => 'fas fa-cog',            'color' => '#6b7280'],
+        'rentals'   => ['label' => 'Rentals & Tenants',    'icon' => 'fas fa-building',       'color' => '#6366f1'],
     ],
 
     /*
@@ -34,10 +35,10 @@ return [
     |--------------------------------------------------------------------------
     */
     'role_defaults' => [
-        'admin'   => ['pos','products','orders','customers','suppliers','returns','services','staff','expenses','reports','marketing','website','ai','settings'],
-        'manager' => ['pos','products','orders','customers','suppliers','returns','services','staff','expenses','reports'],
+        'admin'   => ['pos','products','orders','customers','suppliers','returns','services','staff','expenses','reports','marketing','website','ai','settings','rentals'],
+        'manager' => ['pos','products','orders','customers','suppliers','returns','services','staff','expenses','reports','rentals'],
         'cashier' => ['pos','orders','customers'],
-        'staff'   => ['pos','orders'],
+        'staff'   => ['pos','orders','rentals'],
         'viewer'  => ['reports'],
     ],
 

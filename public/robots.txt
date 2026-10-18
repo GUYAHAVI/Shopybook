@@ -1,2 +1,17 @@
 User-agent: *
-Disallow:
+Allow: /
+Disallow: /dashboard
+Disallow: /pos
+Disallow: /sales
+Disallow: /products
+Disallow: /settings
+Disallow: /rentals
+Disallow: /team
+Disallow: /billing
+Disallow: /business/profile
+Disallow: /admin
+Disallow: /api/
+Disallow: /payment/
+Disallow: /*?sort=
+
+Sitemap: https://shopybook.com/sitemap.xml

@@ -30,6 +30,11 @@ class DashboardController extends Controller
             }
         }
 
+        // Rental businesses get a dedicated dashboard
+        if ($business->business_category === 'rentals') {
+            return $this->rentalDashboard($business);
+        }
+
         // Determine permissions once (owners get everything)
         $isOwner   = $user->isOwnerOf($business->id);
         $can = fn(string $m) => $isOwner || $user->hasModulePermission($m);
@@ -151,6 +156,48 @@ class DashboardController extends Controller
             // Product & Customer data
             'topProducts', 'topCustomers'
         ));
+    }
+
+    /**
+     * Dedicated dashboard for rental/property businesses.
+     */
+    private function rentalDashboard($business)
+    {
+        $period = now()->format('Y-m');
+
+        $units        = $business->rentalUnits()->with('property')->get();
+        $activeTenants = $business->rentalTenants()->where('status', 'active')->with('unit')->get();
+        $paidByTenant = \App\Models\RentalPayment::where('business_id', $business->id)
+            ->where('period', $period)->where('status', 'paid')
+            ->selectRaw('rental_tenant_id, SUM(amount) as total')
+            ->groupBy('rental_tenant_id')
+            ->pluck('total', 'rental_tenant_id');
+
+        $stats = [
+            'total_units' => $units->count(),
+            'occupied'    => $units->where('status', 'occupied')->count(),
+            'vacant'      => $units->where('status', 'vacant')->count(),
+            'occupancy'   => $units->count() ? round($units->where('status', 'occupied')->count() / $units->count() * 100) : 0,
+            'expected'    => $activeTenants->sum(fn($t) => (float) $t->rent_amount),
+            'collected'   => \App\Models\RentalPayment::where('business_id', $business->id)
+                ->where('period', $period)->where('status', 'paid')->sum('amount'),
+            'listed'      => $units->where('is_listed', true)->where('status', 'vacant')->count(),
+        ];
+
+        $arrears = $activeTenants
+            ->map(function ($t) use ($paidByTenant) {
+                $t->balance = max(0, (float) $t->rent_amount - (float) ($paidByTenant[$t->id] ?? 0));
+                return $t;
+            })
+            ->filter(fn($t) => $t->balance > 0)
+            ->sortBy('name')->values();
+
+        $recentPayments = \App\Models\RentalPayment::where('business_id', $business->id)
+            ->with(['tenant', 'unit'])->latest()->take(8)->get();
+
+        $vacantUnits = $units->where('status', 'vacant')->sortBy('label')->take(8)->values();
+
+        return view('rentals.dashboard', compact('business', 'stats', 'arrears', 'recentPayments', 'vacantUnits'));
     }
 }
 

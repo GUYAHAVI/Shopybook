@@ -1785,6 +1785,13 @@
             // topbar breadcrumb can adapt to it. See config/navigation.php.
             $__navActive = fn(string $patterns): bool => request()->routeIs(...explode('|', $patterns));
 
+            // ── Business-category nav filter ─────────────────────────────────
+            // A rental business only sees rentals + shared apps; shops never see rentals.
+            $__bizCat  = $business->business_category ?? null;
+            $__catApps = config("navigation.category_apps.{$__bizCat}")
+                         ?? config('navigation.category_apps.default');
+            $__appOk   = fn(string $k): bool => in_array($k, $__catApps);
+
             $navApps = config('navigation.apps', []);
             $activeAppKey = null;
             foreach ($navApps as $__key => $__app) {
@@ -1806,6 +1813,7 @@
             // Determine which sections are currently active (open) by route
             $activeSection = null;
             $sections = [
+                'rentals'  => request()->routeIs('rentals.*'),
                 'sales'    => request()->routeIs('sales.*', 'returns.*'),
                 'products' => request()->routeIs('products.*', 'product-conversions.*', 'ocr.*'),
                 'services' => request()->routeIs('services.*', 'service-bookings.*'),
@@ -1834,8 +1842,62 @@
 
             <div class="sidebar-divider"></div>
 
+            {{-- Rentals (rental businesses only) --}}
+            @if($__appOk('rentals'))
+            @php $isOpen = $activeSection === 'rentals'; @endphp
+            <div class="nav-section {{ $isOpen ? '' : 'collapsed' }}">
+                <div class="nav-section-title" onclick="toggleSection(this)">
+                    <span>Rentals</span>
+                    <i class="fas fa-chevron-down collapse-icon"></i>
+                </div>
+                <div class="nav-section-content">
+                    @if($__can('rentals'))
+                    <div class="nav-item">
+                        <a href="{{ route('rentals.properties.index') }}" class="nav-link {{ request()->routeIs('rentals.properties*') ? 'active' : '' }}">
+                            <i class="fas fa-city"></i>
+                            <span>Properties</span>
+                        </a>
+                    </div>
+                    <div class="nav-item">
+                        <a href="{{ route('rentals.units.index') }}" class="nav-link {{ request()->routeIs('rentals.units*') ? 'active' : '' }}">
+                            <i class="fas fa-building"></i>
+                            <span>Units</span>
+                        </a>
+                    </div>
+                    <div class="nav-item">
+                        <a href="{{ route('rentals.tenants.index') }}" class="nav-link {{ request()->routeIs('rentals.tenants*') ? 'active' : '' }}">
+                            <i class="fas fa-users"></i>
+                            <span>Tenants</span>
+                        </a>
+                    </div>
+                    <div class="nav-item">
+                        <a href="{{ route('rentals.payments.index') }}" class="nav-link {{ request()->routeIs('rentals.payments*') ? 'active' : '' }}">
+                            <i class="fas fa-money-bill-wave"></i>
+                            <span>Rent Payments</span>
+                        </a>
+                    </div>
+                    <div class="nav-item">
+                        <a href="{{ route('rentals.bookings.index') }}" class="nav-link {{ request()->routeIs('rentals.bookings*') ? 'active' : '' }}">
+                            <i class="fas fa-calendar-check"></i>
+                            <span>Bookings</span>
+                            @php $newBookings = \App\Models\RentalBooking::where('business_id', $business->id ?? '')->where('status','new')->count(); @endphp
+                            @if($newBookings > 0)<span class="badge bg-danger ms-auto" style="font-size:0.6rem;">{{ $newBookings }}</span>@endif
+                        </a>
+                    </div>
+                    <div class="nav-item">
+                        <a href="{{ route('rentals.units.index', ['listed' => 1]) }}" class="nav-link">
+                            <i class="fas fa-bullhorn"></i>
+                            <span>Public Listings</span>
+                        </a>
+                    </div>
+                    @endif
+                </div>
+            </div>
+            @endif
+
             {{-- Sales --}}
             @php $isOpen = $activeSection === 'sales'; @endphp
+            @if($__appOk('sales'))
             <div class="nav-section {{ $isOpen ? '' : 'collapsed' }}">
                 <div class="nav-section-title" onclick="toggleSection(this)">
                     <span>Sell</span>
@@ -1900,8 +1962,11 @@
                 </div>
             </div>
 
+            @endif
+
             {{-- Products --}}
             @php $isOpen = $activeSection === 'products'; @endphp
+            @if($__appOk('products'))
             <div class="nav-section {{ $isOpen ? '' : 'collapsed' }}">
                 <div class="nav-section-title" onclick="toggleSection(this)">
                     <span>Stock</span>
@@ -1943,8 +2008,11 @@
                 </div>
             </div>
 
+            @endif
+
             {{-- Services --}}
             @php $isOpen = $activeSection === 'services'; @endphp
+            @if($__appOk('services'))
             <div class="nav-section {{ $isOpen ? '' : 'collapsed' }}">
                 <div class="nav-section-title" onclick="toggleSection(this)">
                     <span>Book</span>
@@ -1968,8 +2036,11 @@
                 </div>
             </div>
 
+            @endif
+
             {{-- Staff --}}
             @php $isOpen = $activeSection === 'staff'; @endphp
+            @if($__appOk('staff'))
             <div class="nav-section {{ $isOpen ? '' : 'collapsed' }}">
                 <div class="nav-section-title" onclick="toggleSection(this)">
                     <span>Team</span>
@@ -1998,9 +2069,11 @@
                     @endif
                 </div>
             </div>
+            @endif
 
             {{-- Money --}}
             @php $isOpen = $activeSection === 'finance'; @endphp
+            @if($__appOk('finance'))
             <div class="nav-section {{ $isOpen ? '' : 'collapsed' }}">
                 <div class="nav-section-title" onclick="toggleSection(this)">
                     <span>Money</span>
@@ -2028,7 +2101,7 @@
                     </div>
                     @endif
 
-                    @if($__can('suppliers'))
+                    @if($__can('suppliers') && $__appOk('suppliers'))
                     <div class="nav-item">
                         <a href="{{ route('suppliers.index') }}" class="nav-link {{ request()->routeIs('suppliers.*') ? 'active' : '' }}">
                             <i class="fas fa-truck"></i>
@@ -2038,9 +2111,11 @@
                     @endif
                 </div>
             </div>
+            @endif
 
             {{-- Reports --}}
             @php $isOpen = $activeSection === 'reports'; @endphp
+            @if($__appOk('reports'))
             <div class="nav-section {{ $isOpen ? '' : 'collapsed' }}">
                 <div class="nav-section-title" onclick="toggleSection(this)">
                     <span>Reports</span>
@@ -2069,9 +2144,11 @@
                     @endif
                 </div>
             </div>
+            @endif
 
             {{-- Growth --}}
             @php $isOpen = $activeSection === 'growth'; @endphp
+            @if($__appOk('growth'))
             <div class="nav-section {{ $isOpen ? '' : 'collapsed' }}">
                 <div class="nav-section-title" onclick="toggleSection(this)">
                     <span>Grow</span>
@@ -2102,9 +2179,11 @@
                     @endif
                 </div>
             </div>
+            @endif
 
             {{-- AI Tools --}}
             @php $isOpen = $activeSection === 'ai'; @endphp
+            @if($__appOk('ai'))
             <div class="nav-section {{ $isOpen ? '' : 'collapsed' }}">
                 <div class="nav-section-title" onclick="toggleSection(this)">
                     <span>AI</span>
@@ -2133,6 +2212,7 @@
                     @endif
                 </div>
             </div>
+            @endif
 
             {{-- System --}}
             @php $isOpen = $activeSection === 'system'; @endphp
@@ -2296,13 +2376,27 @@
         </div>
         <input type="text" class="app-launcher-search" id="appLauncherSearch" placeholder="Search apps…" oninput="filterApps(this.value)">
         <div class="app-launcher-grid" id="appLauncherGrid">
-            @if($__can('pos'))
+            @if($__can('rentals') && $__appOk('rentals'))
+            <a href="{{ route('rentals.units.index') }}" class="app-tile {{ request()->routeIs('rentals.units*') ? 'active' : '' }}" data-label="Rental Units">
+                <div class="app-tile-icon" style="background:#6366f1;"><i class="fas fa-building"></i></div>
+                <span class="app-tile-label">Units</span>
+            </a>
+            <a href="{{ route('rentals.tenants.index') }}" class="app-tile {{ request()->routeIs('rentals.tenants*') ? 'active' : '' }}" data-label="Tenants">
+                <div class="app-tile-icon" style="background:#06b6d4;"><i class="fas fa-users"></i></div>
+                <span class="app-tile-label">Tenants</span>
+            </a>
+            <a href="{{ route('rentals.payments.index') }}" class="app-tile {{ request()->routeIs('rentals.payments*') ? 'active' : '' }}" data-label="Rent Payments">
+                <div class="app-tile-icon" style="background:#22c55e;"><i class="fas fa-money-bill-wave"></i></div>
+                <span class="app-tile-label">Rent</span>
+            </a>
+            @endif
+            @if($__can('pos') && $__appOk('sales'))
             <a href="{{ route('sales.pos') }}" class="app-tile {{ request()->routeIs('sales.pos') ? 'active' : '' }}" data-label="Point of Sale">
                 <div class="app-tile-icon" style="background:#22c55e;"><i class="fas fa-cash-register"></i></div>
                 <span class="app-tile-label">Point of Sale</span>
             </a>
             @endif
-            @if($__can('products'))
+            @if($__can('products') && $__appOk('products'))
             <a href="{{ route('products.index') }}" class="app-tile {{ request()->routeIs('products.*') ? 'active' : '' }}" data-label="Products">
                 <div class="app-tile-icon" style="background:#3b82f6;"><i class="fas fa-box"></i></div>
                 <span class="app-tile-label">Products</span>
@@ -2320,31 +2414,31 @@
                 <span class="app-tile-label">OCR Scan</span>
             </a>
             @endif
-            @if($__can('orders'))
+            @if($__can('orders') && $__appOk('sales'))
             <a href="{{ route('sales.orders') }}" class="app-tile {{ request()->routeIs('sales.orders*') ? 'active' : '' }}" data-label="Orders">
                 <div class="app-tile-icon" style="background:#f59e0b;"><i class="fas fa-shopping-cart"></i></div>
                 <span class="app-tile-label">Orders</span>
             </a>
             @endif
-            @if($__can('returns'))
+            @if($__can('returns') && $__appOk('sales'))
             <a href="{{ route('returns.index') }}" class="app-tile {{ request()->routeIs('returns.*') ? 'active' : '' }}" data-label="Returns">
                 <div class="app-tile-icon" style="background:#ef4444;"><i class="fas fa-undo"></i></div>
                 <span class="app-tile-label">Returns</span>
             </a>
             @endif
-            @if($__can('customers'))
+            @if($__can('customers') && $__appOk('sales'))
             <a href="{{ route('sales.customers') }}" class="app-tile {{ request()->routeIs('sales.customers*') ? 'active' : '' }}" data-label="Customers">
                 <div class="app-tile-icon" style="background:#06b6d4;"><i class="fas fa-users"></i></div>
                 <span class="app-tile-label">Customers</span>
             </a>
             @endif
-            @if($__can('suppliers'))
+            @if($__can('suppliers') && $__appOk('suppliers'))
             <a href="{{ route('suppliers.index') }}" class="app-tile {{ request()->routeIs('suppliers.*') ? 'active' : '' }}" data-label="Suppliers">
                 <div class="app-tile-icon" style="background:#64748b;"><i class="fas fa-truck"></i></div>
                 <span class="app-tile-label">Suppliers</span>
             </a>
             @endif
-            @if($__can('services'))
+            @if($__can('services') && $__appOk('services'))
             <a href="{{ route('services.index') }}" class="app-tile {{ request()->routeIs('services.*') ? 'active' : '' }}" data-label="Services">
                 <div class="app-tile-icon" style="background:#10b981;"><i class="fas fa-concierge-bell"></i></div>
                 <span class="app-tile-label">Services</span>
@@ -2354,13 +2448,13 @@
                 <span class="app-tile-label">Bookings</span>
             </a>
             @endif
-            @if($__can('staff'))
+            @if($__can('staff') && $__appOk('staff'))
             <a href="{{ route('staff.index') }}" class="app-tile {{ request()->routeIs('staff.*') ? 'active' : '' }}" data-label="Staff">
                 <div class="app-tile-icon" style="background:#ff511a;"><i class="fas fa-user-tie"></i></div>
                 <span class="app-tile-label">Staff</span>
             </a>
             @endif
-            @if($__can('expenses'))
+            @if($__can('expenses') && $__appOk('finance'))
             <a href="{{ route('costs.index') }}" class="app-tile {{ request()->routeIs('costs.*') ? 'active' : '' }}" data-label="Expenses">
                 <div class="app-tile-icon" style="background:#f97316;"><i class="fas fa-receipt"></i></div>
                 <span class="app-tile-label">Expenses</span>
@@ -2370,7 +2464,7 @@
                 <span class="app-tile-label">Tax</span>
             </a>
             @endif
-            @if($__can('reports'))
+            @if($__can('reports') && $__appOk('reports'))
             <a href="{{ route('reports.index') }}" class="app-tile {{ request()->routeIs('reports.*') ? 'active' : '' }}" data-label="Reports">
                 <div class="app-tile-icon" style="background:#7b2e2e;"><i class="fas fa-file-chart-line"></i></div>
                 <span class="app-tile-label">Reports</span>
@@ -2380,7 +2474,7 @@
                 <span class="app-tile-label">Financials</span>
             </a>
             @endif
-            @if($__can('website'))
+            @if($__can('website') && $__appOk('growth'))
             <a href="{{ route('website.builder.index') }}" class="app-tile {{ request()->routeIs('website.builder.*') ? 'active' : '' }}" data-label="Website Builder">
                 <div class="app-tile-icon" style="background:#6366f1;"><i class="fas fa-globe"></i></div>
                 <span class="app-tile-label">Website Builder</span>
@@ -2394,13 +2488,13 @@
                 @endif
             </a>
             @endif
-            @if($__can('marketing'))
+            @if($__can('marketing') && $__appOk('growth'))
             <a href="{{ route('marketing.social-media') }}" class="app-tile {{ request()->routeIs('marketing.*') ? 'active' : '' }}" data-label="Marketing">
                 <div class="app-tile-icon" style="background:#ec4899;"><i class="fas fa-bullhorn"></i></div>
                 <span class="app-tile-label">Marketing</span>
             </a>
             @endif
-            @if($__can('ai'))
+            @if($__can('ai') && $__appOk('ai'))
             <a href="{{ route('ai-comm.chat') }}" class="app-tile {{ request()->routeIs('ai-comm.*') ? 'active' : '' }}" data-label="AI Assistant">
                 <div class="app-tile-icon" style="background:#ff511a; color:#7b2e2e;"><i class="fas fa-robot"></i></div>
                 <span class="app-tile-label">AI Assistant</span>
@@ -2526,7 +2620,7 @@
                 // Hide PWA banner
                 const pwaBanner = document.getElementById('pwa-install-banner');
                 if (pwaBanner) {
-                    pwaBanner.classList.add('hidden');
+                    pwaBanner.style.display = 'none';
                 }
                 
                 // Hide sidebar install button
@@ -3411,7 +3505,7 @@
                 
                 // Show banner after a short delay
                 setTimeout(() => {
-                    pwaBanner.classList.remove('hidden');
+                    pwaBanner.style.display = 'block';
                     // Add padding to body to account for banner
                     document.body.style.paddingTop = '80px';
                 }, 3000); // Show after 3 seconds
@@ -3427,7 +3521,7 @@
                     
                     if (outcome === 'accepted') {
                         console.log('PWA installed successfully');
-                        pwaBanner.classList.add('hidden');
+                        pwaBanner.style.display = 'none';
                         document.body.style.paddingTop = '0';
                     }
                     
@@ -3442,7 +3536,7 @@
         // Handle dismiss button click
         if (pwaDismissBtn) {
             pwaDismissBtn.addEventListener('click', () => {
-                pwaBanner.classList.add('hidden');
+                pwaBanner.style.display = 'none';
                 document.body.style.paddingTop = '0';
                 localStorage.setItem('pwa-banner-dismissed', 'true');
             });
@@ -3536,7 +3630,7 @@
         // Listen for successful installation
         window.addEventListener('appinstalled', () => {
             if (pwaBanner) {
-                pwaBanner.classList.add('hidden');
+                pwaBanner.style.display = 'none';
                 document.body.style.paddingTop = '0';
             }
             console.log('PWA was installed');

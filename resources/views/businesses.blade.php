@@ -1,13 +1,23 @@
 @extends('layouts.public')
-@section('title', 'Discover Businesses on Shopybook - Browse Kenyan Businesses')
-@section('meta_description', 'Browse product, service, and hybrid businesses on Shopybook. Discover Kenyan businesses across multiple categories.')
+@php
+    $typeLabels = ['product' => 'Shops & Product Businesses', 'service' => 'Service Businesses', 'hybrid' => 'Hybrid Businesses', 'rentals' => 'Rental Properties & Landlords'];
+    $typeLabel  = $typeLabels[$type] ?? null;
+@endphp
+@section('title', $typeLabel ? "{$typeLabel} in Kenya — Shopybook Business Directory" : 'Kenyan Business Directory — Shops, Salons, Rentals & Services | Shopybook')
+@section('meta_description', $typeLabel
+    ? "Browse {$typeLabel} in Kenya on Shopybook. View business profiles, websites, contacts and locations."
+    : 'Discover Kenyan businesses on Shopybook — shops, hardware stores, salons, barbershops, rental properties and more. View profiles, websites and contacts.')
+@section('canonical', $typeLabel ? route('businesses', ['type' => $type]) : route('businesses'))
+@if(request()->has('sort'))
+    @section('robots', 'noindex, follow')
+@endif
 
 @section('content')
 
 {{-- ═══════════════ HERO ═══════════════ --}}
 <section class="hero-section text-light">
     <div class="container text-center">
-        <h1>Discover Amazing Businesses</h1>
+        <h1>{{ $typeLabel ? $typeLabel . ' in Kenya' : 'Discover Kenyan Businesses' }}</h1>
         <p class="mx-auto" style="max-width:620px;">
             @if($type)
                 Browse {{ ucfirst($type) }} businesses in our community
@@ -46,6 +56,10 @@
                 <a href="{{ route('businesses', ['type' => 'hybrid']) }}"
                    class="sb-filter {{ $type === 'hybrid' ? 'active' : '' }}">
                     <i class="fas fa-layer-group"></i> Hybrid Businesses
+                </a>
+                <a href="{{ route('businesses', ['type' => 'rentals']) }}"
+                   class="sb-filter {{ $type === 'rentals' ? 'active' : '' }}">
+                    <i class="fas fa-building"></i> Rentals
                 </a>
             </div>
         </div>

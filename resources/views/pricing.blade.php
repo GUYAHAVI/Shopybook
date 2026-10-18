@@ -82,6 +82,9 @@
                         <li><i class="fas fa-check"></i> Full-featured POS</li>
                         <li><i class="fas fa-check"></i> Staff management (up to 10) + commissions</li>
                         <li><i class="fas fa-check"></i> Service booking system</li>
+                        <li><i class="fas fa-check"></i> Rental &amp; tenant management + rent receipts</li>
+                        <li><i class="fas fa-check"></i> M-Pesa STK push for sales &amp; rent</li>
+                        <li><i class="fas fa-check"></i> Staff sales report &amp; customer debts</li>
                         <li><i class="fas fa-check"></i> AI website builder (8 themes)</li>
                         <li><i class="fas fa-check"></i> Advanced analytics &amp; reports</li>
                         <li><i class="fas fa-check"></i> Bulk SMS &amp; email marketing</li>
@@ -110,7 +113,7 @@
 
                     <ul class="list-unstyled flex-grow-1 my-4">
                         <li><i class="fas fa-check"></i> Everything in Business Pro</li>
-                        <li><i class="fas fa-check"></i> Multi-location support</li>
+                        <li><i class="fas fa-check"></i> 2 businesses included — extra businesses at half price</li>
                         <li><i class="fas fa-check"></i> Unlimited staff accounts</li>
                         <li><i class="fas fa-check"></i> Advanced user permissions &amp; roles</li>
                         <li><i class="fas fa-check"></i> Custom integrations</li>

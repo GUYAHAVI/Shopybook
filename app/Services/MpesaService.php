@@ -55,7 +55,7 @@ class MpesaService
      *
      * @return array{success: bool, reference?: string, message?: string, error?: string}
      */
-    public function stkPush(Business $business, string $phone, float $amount, ?string $accountRef = null, ?int $orderId = null): array
+    public function stkPush(Business $business, string $phone, float $amount, ?string $accountRef = null, ?int $orderId = null, ?int $rentalPaymentId = null): array
     {
         $settings = $business->getSettingsOrCreate()->mpesaConfig();
 
@@ -138,6 +138,7 @@ class MpesaService
                 $stk = MpesaStkRequest::create([
                     'business_id'         => $business->id,
                     'order_id'            => $orderId,
+                    'rental_payment_id'   => $rentalPaymentId,
                     'phone'               => $phone,
                     'amount'              => $amount,
                     'transaction_type'    => $payload['TransactionType'],

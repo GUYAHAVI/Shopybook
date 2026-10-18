@@ -1,6 +1,14 @@
 @extends('layouts.public')
-@section('title', $business->name . ' - Shopybook')
-@section('meta_description', $business->description)
+@section('title', $business->name . ($business->city ? ' — ' . $business->city . ', Kenya' : ' — Kenya') . ' | Shopybook')
+@section('meta_description', \Illuminate\Support\Str::limit(strip_tags($business->description ?: ($business->name . ' in ' . ($business->city ?: 'Kenya') . '. View products, services, contacts and location on Shopybook.')), 158))
+@section('canonical', route('business.show', $business->slug))
+@section('og_type', 'business.business')
+@if($business->logo_path)
+    @section('og_image', asset('storage/' . $business->logo_path))
+@endif
+@push('schema')
+    @include('partials.schema-local-business', ['business' => $business])
+@endpush
 @section('content')
 
 @php

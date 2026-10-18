@@ -23,6 +23,8 @@ use App\Http\Controllers\CostController;
 use App\Http\Controllers\InventoryController;
 use App\Http\Controllers\CommissionPayoutController;
 use App\Http\Controllers\SupplierController;
+use App\Http\Controllers\RentalController;
+use App\Http\Controllers\PublicRentalController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\CategoryController;
@@ -72,6 +74,12 @@ use App\Http\Controllers\PublicWebsiteController;
 use App\Http\Controllers\TestimonialController;
 Route::get('/site/{subdomain}', [PublicWebsiteController::class, 'homepage'])
     ->name('public.website.direct');
+// Rental business vacancies page — must precede the {slug} wildcard
+Route::get('/site/{subdomain}/houses', [App\Http\Controllers\PublicRentalController::class, 'businessHouses'])
+    ->name('public.website.houses');
+Route::post('/site/{subdomain}/houses/{unit}/book', [App\Http\Controllers\PublicRentalController::class, 'businessBook'])
+    ->middleware(['honeypot', 'throttle:10,1'])
+    ->name('public.website.houses.book');
 Route::get('/site/{subdomain}/{slug}', [PublicWebsiteController::class, 'page'])
     ->name('public.website.direct.page');
 Route::post('/site/{subdomain}/contact', [PublicWebsiteController::class, 'submitContact'])
@@ -93,6 +101,8 @@ Route::post('/testimonials', [TestimonialController::class, 'submitPlatform'])
 Route::domain('{subdomain}.' . env('APP_DOMAIN', 'shopybook.com'))->group(function () {
     Route::get('/', [PublicWebsiteController::class, 'homepage'])
         ->name('public.website.subdomain');
+    Route::get('/sitemap.xml', [App\Http\Controllers\SitemapController::class, 'website'])
+        ->name('public.website.subdomain.sitemap');
     Route::get('/{slug}', [PublicWebsiteController::class, 'page'])
         ->name('public.website.subdomain.page');
     Route::post('/contact', [PublicWebsiteController::class, 'submitContact'])
@@ -676,6 +686,32 @@ Route::post('/orders', [SalesController::class, 'createOrder'])->name('sales.cre
         Route::delete('/{employee}', [EmployeeController::class, 'destroy'])->name('employees.destroy');
     });
 
+    // Rentals module (landlords / property managers)
+    Route::prefix('rentals')->name('rentals.')->middleware(['has.business', 'permission:rentals'])->group(function () {
+        Route::get('/', fn() => redirect()->route('rentals.units.index'));
+        Route::get('/units', [RentalController::class, 'units'])->name('units.index');
+        Route::get('/units/create', [RentalController::class, 'createUnit'])->name('units.create');
+        Route::post('/units', [RentalController::class, 'storeUnit'])->name('units.store');
+        Route::get('/units/{unit}', [RentalController::class, 'editUnit'])->name('units.edit');
+        Route::put('/units/{unit}', [RentalController::class, 'updateUnit'])->name('units.update');
+        Route::patch('/units/{unit}/toggle-listing', [RentalController::class, 'toggleListing'])->name('units.toggle-listing');
+        Route::post('/units/assign-property', [RentalController::class, 'assignProperty'])->name('units.assign-property');
+        Route::post('/units/enhance-description', [RentalController::class, 'enhanceDescription'])->name('units.enhance-description');
+        Route::delete('/units/{unit}', [RentalController::class, 'destroyUnit'])->name('units.destroy');
+        Route::get('/properties', [RentalController::class, 'properties'])->name('properties.index');
+        Route::post('/properties', [RentalController::class, 'storeProperty'])->name('properties.store');
+        Route::delete('/properties/{property}', [RentalController::class, 'destroyProperty'])->name('properties.destroy');
+        Route::get('/tenants', [RentalController::class, 'tenants'])->name('tenants.index');
+        Route::post('/tenants', [RentalController::class, 'storeTenant'])->name('tenants.store');
+        Route::post('/tenants/{tenant}/vacate', [RentalController::class, 'vacateTenant'])->name('tenants.vacate');
+        Route::get('/payments', [RentalController::class, 'payments'])->name('payments.index');
+        Route::post('/payments/{tenant}/record', [RentalController::class, 'recordPayment'])->name('payments.record');
+        Route::post('/payments/{tenant}/stk', [RentalController::class, 'stkPayment'])->name('payments.stk');
+        Route::get('/payments/{payment}/receipt', [RentalController::class, 'receipt'])->name('payments.receipt');
+        Route::get('/bookings', [RentalController::class, 'bookings'])->name('bookings.index');
+        Route::patch('/bookings/{booking}', [RentalController::class, 'updateBooking'])->name('bookings.update');
+    });
+
     // Categories Routes  
     Route::prefix('categories')->middleware(['has.business', 'permission:products'])->group(function () {
         Route::get('/', [CategoryController::class, 'index'])->name('categories.index');
@@ -710,7 +746,7 @@ Route::post('/orders', [SalesController::class, 'createOrder'])->name('sales.cre
         Route::get('/paypal/cancel', [PaymentController::class, 'paypalCancel'])->name('payment.paypal.cancel');
         // M-Pesa Daraja STK push (POS) — aggregator model, settles to each business's till/paybill
         Route::post('/mpesa/charge', [PaymentController::class, 'mpesaCharge'])->name('payment.mpesa.charge')->middleware(['has.business', 'permission:pos']);
-        Route::get('/mpesa/status/{checkoutRequestId}', [PaymentController::class, 'mpesaChargeStatus'])->name('payment.mpesa.status')->middleware(['has.business', 'permission:pos'])->where('checkoutRequestId', '[A-Za-z0-9_\-]+');
+        Route::get('/mpesa/status/{checkoutRequestId}', [PaymentController::class, 'mpesaChargeStatus'])->name('payment.mpesa.status')->middleware(['has.business', 'permission:pos,rentals'])->where('checkoutRequestId', '[A-Za-z0-9_\-]+');
     });
 
     // Billing Routes
@@ -973,6 +1009,16 @@ Route::middleware(['auth', 'has.business', 'permission:settings'])->prefix('apps
     Route::post('/update-order', [App\Http\Controllers\AppManagementController::class, 'updateOrder'])->name('update-order');
     Route::get('/enabled', [App\Http\Controllers\AppManagementController::class, 'getEnabledApps'])->name('enabled');
 });
+
+// PUBLIC VACANT-RENTAL SEARCH — house-seekers browse listed vacant units
+Route::get('/sitemap.xml', [App\Http\Controllers\SitemapController::class, 'index'])->name('sitemap');
+Route::get('/houses', [App\Http\Controllers\PublicRentalController::class, 'index'])->name('houses.index');
+Route::get('/houses/in/{town}', [App\Http\Controllers\PublicRentalController::class, 'town'])
+    ->where('town', '[a-z0-9\-]+')->name('houses.town');
+Route::get('/houses/{unit}', [App\Http\Controllers\PublicRentalController::class, 'show'])->name('houses.show');
+Route::post('/houses/{unit}/book', [App\Http\Controllers\PublicRentalController::class, 'book'])
+    ->middleware(['honeypot', 'throttle:10,1'])
+    ->name('houses.book');
 
 // PUBLIC BUSINESS SHOW ROUTE
 // IMPORTANT: This MUST be at the end of the file to avoid catching specific routes like /business/profile

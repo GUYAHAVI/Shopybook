@@ -25,11 +25,11 @@ class BusinessController extends Controller
      */
     public function index(Request $request)
     {
-        $sort = $request->get('sort', 'name');
-        $order = $request->get('order', 'asc');
-        $type = $request->get('type', 'all');
+        $sort  = in_array($request->get('sort'), ['name', 'created_at'], true) ? $request->get('sort') : 'name';
+        $order = $request->get('order') === 'desc' ? 'desc' : 'asc';
+        $type  = $request->get('type', 'all');
 
-        $query = Business::query();
+        $query = Business::where('active', true);
 
         if ($type !== 'all') {
             $query->where('business_category', $type);
@@ -96,6 +96,13 @@ class BusinessController extends Controller
                 'retail_service' => 'Retail with Services',
                 'tech_service' => 'Technology Sales & Support',
                 'other_hybrid' => 'Other Hybrid Business',
+            ],
+            'rentals' => [
+                'residential' => 'Residential Houses',
+                'commercial'  => 'Commercial Spaces (shops/offices)',
+                'hostels'     => 'Hostels & Bedsitters',
+                'short_stay'  => 'Short Stay / Airbnb',
+                'other_rental'=> 'Other Rental Property',
             ]
         ];
 
@@ -291,6 +298,13 @@ class BusinessController extends Controller
                 'retail_service' => 'Retail with Services',
                 'tech_service' => 'Technology Sales & Support',
                 'other_hybrid' => 'Other Hybrid Business',
+            ],
+            'rentals' => [
+                'residential' => 'Residential Houses',
+                'commercial'  => 'Commercial Spaces (shops/offices)',
+                'hostels'     => 'Hostels & Bedsitters',
+                'short_stay'  => 'Short Stay / Airbnb',
+                'other_rental'=> 'Other Rental Property',
             ]
         ];
 
@@ -657,15 +671,14 @@ class BusinessController extends Controller
             'business_name' => $business ? $business->name : null,
         ]);
         
-        if (!$business) {
-            Log::warning('Business not found', ['slug' => $slug]);
-            return redirect()->route('businesses')->with('error', 'Business not found or is not currently active.');
-        }
+        // Real 404 (not a redirect) so search engines drop dead/inactive profiles
+        abort_unless($business, 404);
         
-        // If the business has a published website, send the visitor there directly
+        // If the business has a published website, send the visitor there directly.
+        // 301 so search engines consolidate ranking onto the website URL.
         $website = $business->website;
-        if ($website && $website->is_published) {
-            return redirect($website->url);
+        if ($website && $website->isAccessible()) {
+            return redirect($website->url, 301);
         }
 
         // Get services and products for this business
@@ -683,6 +696,7 @@ class BusinessController extends Controller
         $productTypes = ['retail', 'online', 'fashion', 'electronics', 'grocery', 'beauty', 'wholesale', 'other_product'];
         $serviceTypes = ['consulting', 'beauty_service', 'repair', 'cleaning', 'education', 'healthcare', 'professional', 'other_service'];
         $hybridTypes = ['restaurant', 'salon', 'auto_service', 'retail_service', 'tech_service', 'other_hybrid'];
+        $rentalTypes = ['residential', 'commercial', 'hostels', 'short_stay', 'other_rental', 'rentals'];
 
         if (in_array($businessType, $productTypes)) {
             return 'product';
@@ -690,6 +704,8 @@ class BusinessController extends Controller
             return 'service';
         } elseif (in_array($businessType, $hybridTypes)) {
             return 'hybrid';
+        } elseif (in_array($businessType, $rentalTypes)) {
+            return 'rentals';
         }
 
         return 'other';

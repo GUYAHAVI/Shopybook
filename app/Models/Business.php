@@ -316,6 +316,31 @@ class Business extends BaseTenant implements TenantWithDatabase
         return $this->hasMany(CommissionPayout::class);
     }
 
+    public function rentalProperties()
+    {
+        return $this->hasMany(RentalProperty::class);
+    }
+
+    public function rentalUnits()
+    {
+        return $this->hasMany(RentalUnit::class);
+    }
+
+    public function rentalTenants()
+    {
+        return $this->hasMany(RentalTenant::class);
+    }
+
+    public function rentalPayments()
+    {
+        return $this->hasMany(RentalPayment::class);
+    }
+
+    public function isRental(): bool
+    {
+        return $this->business_category === 'rentals';
+    }
+
     public function socialMediaAccounts()
     {
         return $this->hasMany(SocialMediaAccount::class);

@@ -11,13 +11,33 @@
     <meta name="keywords" content="{{ $page->meta_keywords }}">
     @endif
 
+    @php
+        $seoBiz   = $website->business;
+        $seoImage = $page->getOgImage() ?: ($seoBiz->cover_path ?: ($seoBiz->logo_path ?: $website->logo_path));
+    @endphp
+    <meta name="robots" content="{{ ($isPreview ?? false) ? 'noindex, nofollow' : 'index, follow, max-image-preview:large' }}">
+    <link rel="canonical" href="{{ $page->url }}">
+    <link rel="sitemap" type="application/xml" href="{{ $website->getFullUrl('sitemap.xml') }}">
+
     <!-- Open Graph -->
     <meta property="og:type" content="website">
     <meta property="og:url" content="{{ $page->url }}">
+    <meta property="og:site_name" content="{{ $seoBiz->name }}">
+    <meta property="og:locale" content="en_KE">
     <meta property="og:title" content="{{ $page->getMetaTitle() }}">
     <meta property="og:description" content="{{ $page->getMetaDescription() }}">
-    @if($page->getOgImage())
-    <meta property="og:image" content="{{ asset('storage/' . $page->getOgImage()) }}">
+    @if($seoImage)
+    <meta property="og:image" content="{{ asset('storage/' . $seoImage) }}">
+    @endif
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="{{ $page->getMetaTitle() }}">
+    <meta name="twitter:description" content="{{ $page->getMetaDescription() }}">
+    @if($seoImage)
+    <meta name="twitter:image" content="{{ asset('storage/' . $seoImage) }}">
+    @endif
+
+    @if($page->is_homepage)
+        @include('partials.schema-local-business', ['business' => $seoBiz, 'url' => $website->url])
     @endif
 
     <!-- Favicon -->

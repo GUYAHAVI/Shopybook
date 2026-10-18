@@ -1341,6 +1341,11 @@ footer img {
     color: #ff511a;
 }
 
+.sb-type-rentals .sb-type-icon {
+    background: rgba(99, 102, 241, 0.12);
+    color: #6366f1;
+}
+
 .sb-type-option h3 {
     font-family: "Playfair", serif;
     font-size: 1.4rem;

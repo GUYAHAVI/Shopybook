@@ -10,6 +10,7 @@ class MpesaStkRequest extends Model
     protected $fillable = [
         'business_id',
         'order_id',
+        'rental_payment_id',
         'phone',
         'amount',
         'transaction_type',

@@ -23,6 +23,16 @@
 */
 
 return [
+    /*
+    | Apps shown per business category. A rental business only needs rentals +
+    | shared tools (finance, reports); a shop needs sales/products/etc but not
+    | rentals. Sidebar sections and app-launcher tiles are filtered by this.
+    */
+    'category_apps' => [
+        'rentals' => ['rentals', 'finance', 'reports'],
+        'default' => ['sales', 'products', 'services', 'staff', 'suppliers', 'finance', 'reports', 'growth', 'ai'],
+    ],
+
     'apps' => [
 
         'sales' => [
@@ -50,6 +60,18 @@ return [
                 ['label' => 'Receive Stock', 'route' => 'products.receive', 'icon' => 'fa-dolly', 'active' => 'products.receive*', 'permission' => 'products'],
                 ['label' => 'Conversions', 'route' => 'product-conversions.index', 'icon' => 'fa-exchange-alt', 'active' => 'product-conversions.*', 'permission' => 'products'],
                 ['label' => 'OCR Scan', 'route' => 'ocr.index', 'icon' => 'fa-camera', 'active' => 'ocr.*', 'permission' => 'products'],
+            ],
+        ],
+
+        'rentals' => [
+            'label' => 'Rentals',
+            'icon'  => 'fa-building',
+            'match' => ['rentals.*'],
+            'items' => [
+                ['label' => 'Properties & Units', 'route' => 'rentals.units.index', 'icon' => 'fa-building', 'active' => 'rentals.units*|rentals.properties*', 'permission' => 'rentals'],
+                ['label' => 'Tenants', 'route' => 'rentals.tenants.index', 'icon' => 'fa-users', 'active' => 'rentals.tenants*', 'permission' => 'rentals'],
+                ['label' => 'Rent Payments', 'route' => 'rentals.payments.index', 'icon' => 'fa-money-bill-wave', 'active' => 'rentals.payments*', 'permission' => 'rentals'],
+                ['label' => 'Public Listings', 'route' => 'rentals.units.index', 'icon' => 'fa-bullhorn', 'active' => 'rentals.listings', 'permission' => 'rentals'],
             ],
         ],
 

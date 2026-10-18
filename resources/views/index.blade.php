@@ -1,7 +1,71 @@
 @extends('layouts.public')
-@section('title', 'Shopybook - Complete Business Management Platform for Small Businesses in Kenya')
-@section('meta_description', 'Transform your small business with Shopybook\'s all-in-one platform. Manage products, services, customers, inventory, staff and sales with M-Pesa integration. Built for Kenyan businesses.')
-@section('meta_keywords', 'business management software Kenya, small business platform, inventory management, M-Pesa integration, POS system Kenya, customer management, staff management, service booking')
+@section('title', 'Shopybook — POS, Inventory, Rental Management & M-Pesa Software for Kenyan Businesses')
+@section('meta_description', 'Run your shop, salon, hardware store or rental property on one platform. POS, inventory, M-Pesa STK payments, staff, tenants & rent collection, AI websites and a free business listing on Google. Start free in Kenya.')
+@section('meta_keywords', 'POS system Kenya, inventory management Kenya, rental management software Kenya, landlord software Kenya, M-Pesa STK push, business management software Kenya, salon software Kenya, houses for rent Kenya, free business website Kenya')
+@section('og_image', asset('img/heroimage.png'))
+
+@php
+    $faqs = [
+        ['q' => 'What is Shopybook?', 'a' => 'Shopybook is an all-in-one business management platform for Kenyan small businesses. It combines POS, inventory, customers, staff, M-Pesa payments, rental property management, reports and an AI website builder in one system.'],
+        ['q' => 'Can I accept M-Pesa payments with Shopybook?', 'a' => 'Yes. Shopybook sends an M-Pesa STK push straight to your customer\'s or tenant\'s phone and records the payment automatically once they enter their PIN. Funds go to your own business bank account paybill.'],
+        ['q' => 'Can landlords use Shopybook to manage rentals?', 'a' => 'Yes. Landlords register properties and units (even 15 identical houses at once), assign tenants, collect rent via M-Pesa, track arrears and part-payments, print rent receipts and list vacant houses publicly.'],
+        ['q' => 'Can I manage more than one business with one account?', 'a' => 'Yes. One login can own several businesses and switch between them instantly. Each business has its own staff, permissions, products and reports.'],
+        ['q' => 'Will my business appear on Google?', 'a' => 'Every active business gets a public profile page and can publish a free website on a shopybook.com subdomain. These pages include search-engine structured data and are listed in our sitemap so Google can find them.'],
+        ['q' => 'How much does Shopybook cost?', 'a' => 'You can start free. Paid plans start at KSh 500 per month, and the Enterprise plan includes two businesses with extra businesses at half price.'],
+    ];
+@endphp
+
+@push('schema')
+<script type="application/ld+json">
+{!! json_encode([
+    '@context' => 'https://schema.org',
+    '@graph' => [
+        [
+            '@type' => 'Organization',
+            '@id' => url('/') . '#org',
+            'name' => 'Shopybook',
+            'url' => url('/'),
+            'logo' => asset('img/logo.png'),
+            'email' => 'support@shopybook.com',
+            'telephone' => '+254717745891',
+            'address' => ['@type' => 'PostalAddress', 'addressLocality' => 'Nairobi', 'addressCountry' => 'KE'],
+            'areaServed' => 'KE',
+        ],
+        [
+            '@type' => 'WebSite',
+            '@id' => url('/') . '#website',
+            'url' => url('/'),
+            'name' => 'Shopybook',
+            'publisher' => ['@id' => url('/') . '#org'],
+            'potentialAction' => [
+                '@type' => 'SearchAction',
+                'target' => ['@type' => 'EntryPoint', 'urlTemplate' => route('houses.index') . '?q={search_term_string}'],
+                'query-input' => 'required name=search_term_string',
+            ],
+        ],
+        [
+            '@type' => 'SoftwareApplication',
+            'name' => 'Shopybook',
+            'applicationCategory' => 'BusinessApplication',
+            'operatingSystem' => 'Web, Android, iOS',
+            'offers' => [
+                ['@type' => 'Offer', 'name' => 'Free Starter', 'price' => '0', 'priceCurrency' => 'KES'],
+                ['@type' => 'Offer', 'name' => 'Business Pro', 'price' => '500', 'priceCurrency' => 'KES'],
+                ['@type' => 'Offer', 'name' => 'Enterprise', 'price' => '1000', 'priceCurrency' => 'KES'],
+            ],
+        ],
+        [
+            '@type' => 'FAQPage',
+            'mainEntity' => collect($faqs)->map(fn($f) => [
+                '@type' => 'Question',
+                'name' => $f['q'],
+                'acceptedAnswer' => ['@type' => 'Answer', 'text' => $f['a']],
+            ])->all(),
+        ],
+    ],
+], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) !!}
+</script>
+@endpush
 
 @section('content')
 
@@ -24,13 +88,15 @@
                 <p>Run Your Shop, Not Your Spreadsheets</p>
 
                 <p class="mt-3">
-                    POS, inventory, services, staff, M-Pesa payments, AI website builder and SMS marketing —
-                    everything a Kenyan small business needs, in one simple system.
+                    POS, inventory, services, staff, rental &amp; tenant management, M-Pesa STK payments,
+                    AI website builder and SMS marketing — for shops, salons, hardware stores and landlords,
+                    all in one simple system.
                 </p>
 
                 <div class="d-flex flex-wrap gap-3 pt-4">
                     <a href="{{ route('register') }}" class="btn1">Get Started Free</a>
                     <a href="#features" class="btnb">Explore Features</a>
+                    <a href="{{ route('houses.index') }}" class="btnb"><i class="fas fa-home me-1"></i> Find a House</a>
                 </div>
 
                 <p class="mt-4 mb-0" style="font-size: .9rem;">
@@ -43,32 +109,8 @@
             </div>
 
             <div class="col-md-5 mt-5 mt-md-0">
-                <div class="hero-card">
-                    <div class="d-flex align-items-center gap-3 mb-4">
-                        <div class="hero-icon">
-                            <i class="fas fa-mobile-alt"></i>
-                        </div>
-                        <div>
-                            <h5>M-Pesa Payment Received</h5>
-                            <small>KSh 3,500 from Jane Doe</small>
-                        </div>
-                    </div>
-                    <hr>
-                    <div class="row text-center g-3">
-                        <div class="col-4">
-                            <div class="hero-stat">KSh 24k</div>
-                            <small>Today's Sales</small>
-                        </div>
-                        <div class="col-4">
-                            <div class="hero-stat">142</div>
-                            <small>Products</small>
-                        </div>
-                        <div class="col-4">
-                            <div class="hero-stat">18</div>
-                            <small>Customers</small>
-                        </div>
-                    </div>
-                </div>
+                <img src="{{ asset('img/heroimage.png') }}" alt="Manage barbershop, salon, hardware store and rentals on Shopybook — all in one place"
+                     class="img-fluid" style="filter: drop-shadow(0 1.5rem 2.5rem rgba(0,0,0,.35));">
             </div>
         </div>
     </div>
@@ -126,6 +168,21 @@
                 <div class="service-box"><h5><i class="fa-solid fa-chart-line"></i> Analytics</h5></div>
             </div>
         </div>
+
+        <div class="row pt-4">
+            <div class="col-md-3 col-6">
+                <div class="service-box"><h5><i class="fa-solid fa-building"></i> Rentals</h5></div>
+            </div>
+            <div class="col-md-3 col-6">
+                <div class="service-box"><h5><i class="fa-solid fa-mobile-screen-button"></i> M-Pesa STK</h5></div>
+            </div>
+            <div class="col-md-3 col-6">
+                <div class="service-box"><h5><i class="fa-solid fa-sitemap"></i> Multi-Business</h5></div>
+            </div>
+            <div class="col-md-3 col-6">
+                <div class="service-box"><h5><i class="fa-solid fa-globe"></i> Websites</h5></div>
+            </div>
+        </div>
     </div>
 </section>
 
@@ -143,9 +200,9 @@
                     affordable platform built specifically for the way local businesses actually work.
                 </p>
                 <p>
-                    From your very first sale to managing multiple branches, Shopybook grows with you — with
-                    M-Pesa payments, real-time inventory, staff management and AI-powered insights all
-                    included in one place.
+                    From your very first sale to running several businesses from one login, Shopybook grows with
+                    you — with M-Pesa payments, real-time inventory, staff permissions, rental and tenant
+                    management, and AI-powered insights all included in one place.
                 </p>
 
                 <div class="row count pt-4">
@@ -157,7 +214,7 @@
                     </div>
                     <div class="col-sm-4">
                         <div class="count-box">
-                            <h3>12</h3>
+                            <h3>16</h3>
                             <p>Business Modules</p>
                         </div>
                     </div>
@@ -267,6 +324,137 @@
                     </div>
                 </div>
             </div>
+
+            <div class="col-md-4">
+                <div class="offercard my-3">
+                    <div class="offercard-head">
+                        <i class="fa-solid fa-building"></i>
+                        <span>Rental Management <small class="badge bg-success ms-1">New</small></span>
+                    </div>
+                    <div class="offercardtxt">
+                        <h3>Built For Landlords</h3>
+                        <p>Register properties and bulk-create units, assign tenants, track arrears and part-payments, and print rent receipts in one click.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="offercard my-3">
+                    <div class="offercard-head">
+                        <i class="fa-solid fa-mobile-screen-button"></i>
+                        <span>M-Pesa STK Push</span>
+                    </div>
+                    <div class="offercardtxt">
+                        <h3>Get Paid Instantly</h3>
+                        <p>Send a payment prompt straight to your customer's or tenant's phone. Payments are confirmed and recorded automatically into your own bank paybill.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="offercard my-3">
+                    <div class="offercard-head">
+                        <i class="fa-solid fa-sitemap"></i>
+                        <span>Multi-Business &amp; Roles <small class="badge bg-success ms-1">New</small></span>
+                    </div>
+                    <div class="offercardtxt">
+                        <h3>One Login, Many Businesses</h3>
+                        <p>Own several businesses and switch instantly. Hire staff per business and lock each one to only the modules they need — POS, orders or rentals.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="offercard my-3">
+                    <div class="offercard-head">
+                        <i class="fa-solid fa-ranking-star"></i>
+                        <span>Staff Sales Report <small class="badge bg-success ms-1">New</small></span>
+                    </div>
+                    <div class="offercardtxt">
+                        <h3>Know Who Sold What</h3>
+                        <p>Every sale records who served the customer. See totals, collections and balances per employee, with "Served by" on every receipt.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="offercard my-3">
+                    <div class="offercard-head">
+                        <i class="fa-solid fa-hand-holding-dollar"></i>
+                        <span>Customer Debts</span>
+                    </div>
+                    <div class="offercardtxt">
+                        <h3>Never Forget A Balance</h3>
+                        <p>Sell on credit, record repayments from the debts page and watch balances and order statuses update automatically.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="offercard my-3">
+                    <div class="offercard-head">
+                        <i class="fa-solid fa-wand-magic-sparkles"></i>
+                        <span>AI House Search <small class="badge bg-success ms-1">New</small></span>
+                    </div>
+                    <div class="offercardtxt">
+                        <h3>Vacancies That Get Found</h3>
+                        <p>List vacant houses publicly. Seekers describe what they want — "2 bedroom in Kiritiri under 15k" — and AI matches them to your units and booking requests.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+{{-- ═══════════════ BUILT FOR EVERY BUSINESS ═══════════════ --}}
+<section class="sb-section sb-section-light" id="business-types">
+    <div class="container">
+        <div class="text-center mb-5">
+            <span class="sb-eyebrow">Who It's For</span>
+            <h2 class="sb-heading">A Dashboard Built For Your Kind Of Business</h2>
+            <p class="sb-subheading">Pick your business type and Shopybook shows only the tools you need.</p>
+        </div>
+        <div class="row g-4">
+            @foreach([
+                ['fa-store', 'Shops & Retail', 'Hardware stores, boutiques, mini-marts, agrovets and pharmacies.', ['POS & receipts', 'Stock alerts & suppliers', 'Customer debts']],
+                ['fa-scissors', 'Service Businesses', 'Salons, barbershops, spas, garages and clinics.', ['Appointments & bookings', 'Staff commissions', 'Customer history']],
+                ['fa-layer-group', 'Hybrid Businesses', 'Sell products and offer services under one roof.', ['Products + services', 'One checkout', 'Unified reports']],
+                ['fa-building', 'Rentals & Landlords', 'Apartments, bedsitters, hostels, commercial spaces and short-stays.', ['Units & tenants', 'Rent via M-Pesa + receipts', 'Public vacancy listings']],
+            ] as [$icon, $title, $desc, $points])
+            <div class="col-md-6 col-lg-3">
+                <div class="offercard h-100">
+                    <div class="offercard-head"><i class="fa-solid {{ $icon }}"></i><span>{{ $title }}</span></div>
+                    <div class="offercardtxt">
+                        <p>{{ $desc }}</p>
+                        <ul class="list-unstyled small mb-0">
+                            @foreach($points as $p)
+                                <li class="mb-1"><i class="fas fa-check me-1" style="color:#43ba7f;"></i>{{ $p }}</li>
+                            @endforeach
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            @endforeach
+        </div>
+    </div>
+</section>
+
+{{-- ═══════════════ HOUSE SEARCH BAND ═══════════════ --}}
+<section class="hero-section text-light py-5" id="find-a-house">
+    <div class="container">
+        <div class="row align-items-center g-4">
+            <div class="col-lg-6">
+                <span class="sb-eyebrow" style="color:#ffb199;">Looking For A House?</span>
+                <h2 class="mt-2">Find Vacant Houses Across Kenya</h2>
+                <p class="mb-0">Describe the house you want in your own words. We match you with vacant rentals listed directly by landlords on Shopybook — then you book a viewing.</p>
+            </div>
+            <div class="col-lg-6">
+                <form action="{{ route('houses.index') }}" method="GET" class="bg-white rounded-3 p-2 d-flex gap-2 shadow">
+                    <input type="text" name="q" class="form-control border-0 shadow-none" placeholder='e.g. "bedsitter in Kiritiri under 5,000"' aria-label="Describe the house you want">
+                    <button class="btn1 text-nowrap" style="border:none;"><i class="fas fa-search me-1"></i> Search</button>
+                </form>
+                <small class="d-block mt-2 opacity-75"><i class="fas fa-shield-alt me-1"></i> Only pay after viewing a house and verifying the owner.</small>
+            </div>
         </div>
     </div>
 </section>
@@ -294,7 +482,9 @@
                 </p>
                 <ul class="list-unstyled">
                     <li><i class="fas fa-check"></i> <span><strong>All-in-one</strong> — no need to pay for five different tools</span></li>
-                    <li><i class="fas fa-check"></i> <span><strong>M-Pesa ready</strong> — accept mobile money from day one</span></li>
+                    <li><i class="fas fa-check"></i> <span><strong>M-Pesa ready</strong> — STK push payments into your own bank paybill</span></li>
+                    <li><i class="fas fa-check"></i> <span><strong>Found on Google</strong> — a free business profile and website, built for search</span></li>
+                    <li><i class="fas fa-check"></i> <span><strong>Secure staff access</strong> — every employee sees only what you allow</span></li>
                     <li><i class="fas fa-check"></i> <span><strong>Mobile first</strong> — run your business from your phone</span></li>
                     <li><i class="fas fa-check"></i> <span><strong>Affordable</strong> — start free and upgrade only as you grow</span></li>
                     <li><i class="fas fa-check"></i> <span><strong>Local support</strong> — WhatsApp and email help right here in Kenya</span></li>
@@ -408,13 +598,37 @@
                     </div>
                     <ul class="list-unstyled flex-grow-1 mb-4">
                         <li><i class="fas fa-check"></i> Everything in Pro</li>
-                        <li><i class="fas fa-check"></i> Multi-location support</li>
-                        <li><i class="fas fa-check"></i> Unlimited staff</li>
+                        <li><i class="fas fa-check"></i> 2 businesses included (+50% off extras)</li>
+                        <li><i class="fas fa-check"></i> Unlimited staff &amp; roles</li>
                         <li><i class="fas fa-check"></i> Dedicated support</li>
                     </ul>
                     <a href="{{ route('pricing') }}" class="btnb btn-block-j">Compare Plans</a>
                 </div>
             </div>
+        </div>
+    </div>
+</section>
+
+{{-- ═══════════════ FAQ ═══════════════ --}}
+<section class="sb-section sb-section-light" id="faq">
+    <div class="container" style="max-width:860px;">
+        <div class="text-center mb-5">
+            <span class="sb-eyebrow">FAQ</span>
+            <h2 class="sb-heading">Frequently Asked Questions</h2>
+        </div>
+        <div class="accordion" id="faqAccordion">
+            @foreach($faqs as $i => $f)
+            <div class="accordion-item">
+                <h3 class="accordion-header">
+                    <button class="accordion-button {{ $i ? 'collapsed' : '' }}" type="button" data-bs-toggle="collapse" data-bs-target="#faq{{ $i }}">
+                        {{ $f['q'] }}
+                    </button>
+                </h3>
+                <div id="faq{{ $i }}" class="accordion-collapse collapse {{ $i ? '' : 'show' }}" data-bs-parent="#faqAccordion">
+                    <div class="accordion-body">{{ $f['a'] }}</div>
+                </div>
+            </div>
+            @endforeach
         </div>
     </div>
 </section>
