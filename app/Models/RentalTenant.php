@@ -17,6 +17,7 @@ class RentalTenant extends Model
         'status',
         'move_in_date',
         'move_out_date',
+        'move_out_reason',
         'notes',
     ];
 

@@ -439,16 +439,84 @@ class RentalController extends Controller
         return back()->with($flash);
     }
 
-    public function vacateTenant(RentalTenant $tenant)
+    public function updateTenant(Request $request, RentalTenant $tenant)
+    {
+        $this->authorizeRental($tenant);
+        $business = auth()->user()->business;
+
+        $validated = $request->validate([
+            'name'           => 'required|string|max:120',
+            'phone'          => 'required|string|max:20',
+            'email'          => 'nullable|email|max:191',
+            'id_number'      => 'nullable|string|max:30',
+            'rental_unit_id' => [
+                'nullable',
+                \Illuminate\Validation\Rule::exists('rental_units', 'id')
+                    ->where('business_id', $business->id),
+            ],
+            'rent_amount'    => 'nullable|numeric|min:0',
+            'move_in_date'   => 'nullable|date',
+            'notes'          => 'nullable|string|max:2000',
+        ]);
+
+        DB::transaction(function () use ($tenant, $validated, $business) {
+            // Only active tenants can be moved between units — a vacated
+            // tenant's old unit may already be occupied by someone else.
+            $newUnitId = $tenant->isActive()
+                ? (!empty($validated['rental_unit_id']) ? (int) $validated['rental_unit_id'] : null)
+                : $tenant->rental_unit_id;
+
+            if ($newUnitId !== $tenant->rental_unit_id) {
+                $newUnit = null;
+                if ($newUnitId) {
+                    $newUnit = RentalUnit::where('business_id', $business->id)
+                        ->where('id', $newUnitId)
+                        ->where('status', 'vacant')
+                        ->first();
+                    throw_unless($newUnit, \Illuminate\Validation\ValidationException::withMessages([
+                        'rental_unit_id' => 'That unit is not vacant.',
+                    ]));
+                }
+                $tenant->unit?->update(['status' => 'vacant']);
+                $newUnit?->update(['status' => 'occupied', 'is_listed' => false]);
+            }
+
+            $tenant->update([
+                'name'           => $validated['name'],
+                'phone'          => $validated['phone'],
+                'email'          => $validated['email'] ?? null,
+                'id_number'      => $validated['id_number'] ?? null,
+                'rental_unit_id' => $newUnitId,
+                'rent_amount'    => $validated['rent_amount'] ?? $tenant->rent_amount,
+                'move_in_date'   => $validated['move_in_date'] ?? $tenant->move_in_date,
+                'notes'          => $validated['notes'] ?? null,
+            ]);
+        });
+
+        return back()->with('success', 'Tenant updated.');
+    }
+
+    public function vacateTenant(Request $request, RentalTenant $tenant)
     {
         $this->authorizeRental($tenant);
 
-        DB::transaction(function () use ($tenant) {
-            $tenant->update(['status' => 'vacated', 'move_out_date' => now()]);
+        $validated = $request->validate([
+            'move_out_date'   => 'nullable|date',
+            'move_out_reason' => 'nullable|string|max:500',
+        ]);
+
+        DB::transaction(function () use ($tenant, $validated) {
+            $tenant->update([
+                'status'          => 'vacated',
+                'move_out_date'   => $validated['move_out_date'] ?? now(),
+                'move_out_reason' => $validated['move_out_reason'] ?? null,
+            ]);
             $tenant->unit?->update(['status' => 'vacant']);
         });
 
-        return back()->with('success', "{$tenant->name} marked as moved out. Unit is now vacant.");
+        return back()->with('success', $tenant->unit
+            ? "{$tenant->name} marked as moved out. Unit is now vacant."
+            : "{$tenant->name} marked as moved out.");
     }
 
     // ── Rent Payments ────────────────────────────────────────────────────────

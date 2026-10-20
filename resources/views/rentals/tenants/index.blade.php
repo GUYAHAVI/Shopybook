@@ -44,15 +44,34 @@
                     <td>{{ $t->phone }}</td>
                     <td>{{ $t->unit ? $t->unit->label . ($t->unit->property ? ' · '.$t->unit->property->name : '') : '—' }}</td>
                     <td class="text-end">KES {{ number_format($t->rent_amount) }}</td>
-                    <td>{{ $t->move_in_date?->format('d M Y') ?? '—' }}</td>
+                    <td>
+                        {{ $t->move_in_date?->format('d M Y') ?? '—' }}
+                        @if($t->status === 'vacated' && $t->move_out_date)
+                            <div class="text-muted small" @if($t->move_out_reason) title="{{ $t->move_out_reason }}" @endif>Out: {{ $t->move_out_date->format('d M Y') }}</div>
+                        @endif
+                    </td>
                     <td><span class="badge {{ $t->status==='active' ? 'bg-success' : 'bg-secondary' }}">{{ $t->status === 'active' ? 'Active' : 'Moved out' }}</span></td>
-                    <td class="text-end">
+                    <td class="text-end text-nowrap">
+                        <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#editTenantModal"
+                            data-update-url="{{ route('rentals.tenants.update', $t) }}"
+                            data-status="{{ $t->status }}"
+                            data-name="{{ $t->name }}"
+                            data-phone="{{ $t->phone }}"
+                            data-email="{{ $t->email }}"
+                            data-id-number="{{ $t->id_number }}"
+                            data-rent-amount="{{ (float) $t->rent_amount }}"
+                            data-move-in="{{ $t->move_in_date?->format('Y-m-d') }}"
+                            data-notes="{{ $t->notes }}"
+                            data-unit-id="{{ $t->rental_unit_id }}"
+                            data-unit-label="{{ $t->unit ? $t->unit->label . ($t->unit->property ? ' · '.$t->unit->property->name : '') : '' }}">
+                            Edit
+                        </button>
                         @if($t->status === 'active')
-                        <form method="POST" action="{{ route('rentals.tenants.vacate', $t) }}" class="d-inline"
-                              onsubmit="return confirm('Mark {{ addslashes($t->name) }} as moved out? The unit becomes vacant.')">
-                            @csrf
-                            <button class="btn btn-sm btn-outline-warning">Mark moved out</button>
-                        </form>
+                        <button class="btn btn-sm btn-outline-warning" data-bs-toggle="modal" data-bs-target="#vacateTenantModal"
+                            data-vacate-url="{{ route('rentals.tenants.vacate', $t) }}"
+                            data-name="{{ $t->name }}">
+                            Mark moved out
+                        </button>
                         @endif
                     </td>
                 </tr>
@@ -142,6 +161,98 @@
     </div></div>
 </div>
 
+{{-- Edit Tenant Modal --}}
+<div class="modal fade" id="editTenantModal" tabindex="-1">
+    <div class="modal-dialog"><div class="modal-content">
+        <form method="POST" id="editTenantForm">
+            @csrf
+            @method('PUT')
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="fas fa-user-edit me-2"></i>Edit Tenant</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="form-label">Full name <span class="text-danger">*</span></label>
+                    <input type="text" name="name" class="form-control" required>
+                </div>
+                <div class="row g-3 mb-3">
+                    <div class="col-md-6">
+                        <label class="form-label">Phone <span class="text-danger">*</span></label>
+                        <input type="tel" name="phone" class="form-control" required>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">ID / Passport</label>
+                        <input type="text" name="id_number" class="form-control">
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Email</label>
+                    <input type="email" name="email" class="form-control">
+                </div>
+                <div class="row g-3 mb-3" id="editUnitRow">
+                    <div class="col-md-7">
+                        <label class="form-label">Assigned unit</label>
+                        <select name="rental_unit_id" class="form-select" id="editTenantUnitSelect">
+                            <option value="">— Not assigned —</option>
+                            @foreach($vacantUnits as $u)
+                                <option value="{{ $u->id }}">
+                                    {{ $u->label }}{{ $u->property ? ' · '.$u->property->name : '' }} — KES {{ number_format($u->rent_amount) }}
+                                </option>
+                            @endforeach
+                        </select>
+                        <div class="form-text">Only vacant units are listed; the current unit is kept unless changed.</div>
+                    </div>
+                    <div class="col-md-5">
+                        <label class="form-label">Rent (KES/mo)</label>
+                        <input type="number" name="rent_amount" class="form-control" min="0" step="0.01">
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Move-in date</label>
+                    <input type="date" name="move_in_date" class="form-control">
+                </div>
+                <div class="mb-1">
+                    <label class="form-label">Notes</label>
+                    <textarea name="notes" class="form-control" rows="2"></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+                <button type="submit" class="btn btn-primary">Save Changes</button>
+            </div>
+        </form>
+    </div></div>
+</div>
+
+{{-- Move-out Modal --}}
+<div class="modal fade" id="vacateTenantModal" tabindex="-1">
+    <div class="modal-dialog modal-sm"><div class="modal-content">
+        <form method="POST" id="vacateTenantForm">
+            @csrf
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="fas fa-door-open me-2"></i>Mark Moved Out</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p class="mb-3">Record move-out for <strong id="vacateTenantName"></strong>. Their unit becomes vacant.</p>
+                <div class="mb-3">
+                    <label class="form-label">Move-out date</label>
+                    <input type="date" name="move_out_date" class="form-control" value="{{ date('Y-m-d') }}">
+                </div>
+                <div class="mb-1">
+                    <label class="form-label">Reason <span class="text-muted">(optional)</span></label>
+                    <input type="text" name="move_out_reason" class="form-control" maxlength="500" placeholder="e.g. Lease ended, eviction…">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+                <button type="submit" class="btn btn-warning">Confirm</button>
+            </div>
+        </form>
+    </div></div>
+</div>
+
 <script>
 document.getElementById('tenantUnitSelect')?.addEventListener('change', function() {
     const rent = this.selectedOptions[0]?.dataset.rent;
@@ -149,6 +260,37 @@ document.getElementById('tenantUnitSelect')?.addEventListener('change', function
 });
 document.getElementById('rentPaidCheck')?.addEventListener('change', function() {
     document.getElementById('paidMethodWrap').style.display = this.checked ? 'block' : 'none';
+});
+
+// Edit modal — populate fields from the clicked row's data attributes
+document.getElementById('editTenantModal')?.addEventListener('show.bs.modal', function (e) {
+    const b = e.relatedTarget;
+    const f = document.getElementById('editTenantForm');
+    f.action = b.dataset.updateUrl;
+    f.elements.name.value           = b.dataset.name;
+    f.elements.phone.value          = b.dataset.phone;
+    f.elements.email.value          = b.dataset.email || '';
+    f.elements.id_number.value      = b.dataset.idNumber || '';
+    f.elements.rent_amount.value    = b.dataset.rentAmount || '';
+    f.elements.move_in_date.value   = b.dataset.moveIn || '';
+    f.elements.notes.value          = b.dataset.notes || '';
+
+    const unitSel = f.elements.rental_unit_id;
+    unitSel.querySelector('option[data-current]')?.remove();
+    if (b.dataset.unitId) {
+        const opt = new Option(b.dataset.unitLabel + ' — current unit', b.dataset.unitId);
+        opt.dataset.current = '1';
+        unitSel.insertBefore(opt, unitSel.children[1]);
+    }
+    unitSel.value = b.dataset.unitId || '';
+    document.getElementById('editUnitRow').style.display = b.dataset.status === 'vacated' ? 'none' : '';
+});
+
+// Move-out modal — point the form at the right tenant and show their name
+document.getElementById('vacateTenantModal')?.addEventListener('show.bs.modal', function (e) {
+    const b = e.relatedTarget;
+    document.getElementById('vacateTenantForm').action = b.dataset.vacateUrl;
+    document.getElementById('vacateTenantName').textContent = b.dataset.name;
 });
 
 @if(session('receipt_url'))

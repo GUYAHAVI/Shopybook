@@ -704,6 +704,7 @@ Route::post('/orders', [SalesController::class, 'createOrder'])->name('sales.cre
         Route::delete('/properties/{property}', [RentalController::class, 'destroyProperty'])->name('properties.destroy');
         Route::get('/tenants', [RentalController::class, 'tenants'])->name('tenants.index');
         Route::post('/tenants', [RentalController::class, 'storeTenant'])->name('tenants.store');
+        Route::put('/tenants/{tenant}', [RentalController::class, 'updateTenant'])->name('tenants.update');
         Route::post('/tenants/{tenant}/vacate', [RentalController::class, 'vacateTenant'])->name('tenants.vacate');
         Route::get('/payments', [RentalController::class, 'payments'])->name('payments.index');
         Route::post('/payments/{tenant}/record', [RentalController::class, 'recordPayment'])->name('payments.record');
