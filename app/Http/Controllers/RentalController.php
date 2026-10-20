@@ -239,6 +239,7 @@ class RentalController extends Controller
     public function updateUnit(Request $request, RentalUnit $unit)
     {
         $this->authorizeRental($unit);
+        $business = auth()->user()->business;
 
         $validated = $request->validate([
             'rental_property_id' => [
