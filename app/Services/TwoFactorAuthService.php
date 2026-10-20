@@ -135,6 +135,7 @@ class TwoFactorAuthService
     {
         $actions = [
             'business_delete' => 'Delete Business',
+            'business_reset' => 'Reset Business Data',
             'business_edit' => 'Edit Business Profile',
             'account_delete' => 'Delete Account',
             'password_change' => 'Change Password',

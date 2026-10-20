@@ -758,6 +758,40 @@
                                 <strong>Warning:</strong> Actions in this section are irreversible and can result in permanent data loss.
                             </div>
 
+                            @if($business->user_id !== auth()->id())
+                                <div class="alert alert-secondary mb-0">
+                                    <i class="fas fa-lock me-2"></i>
+                                    Only the business owner ({{ $business->owner?->email }}) can perform these actions.
+                                </div>
+                            @else
+                            <div class="card border-warning mb-4">
+                                <div class="card-header bg-warning text-dark">
+                                    <h6 class="mb-0"><i class="fas fa-undo me-2"></i>Reset Business Data</h6>
+                                </div>
+                                <div class="card-body">
+                                    <h6 class="text-warning">Erase all transactions and zero stock</h6>
+                                    <p class="text-muted mb-3">
+                                        Intended for businesses that went live after testing. This permanently deletes:
+                                    </p>
+                                    <ul class="text-muted mb-3">
+                                        <li>All sales — orders, order items, payments, receipts, invoices, returns and credit notes</li>
+                                        <li>All service bookings, service records and their line items</li>
+                                        <li>All stock receipts, inventory transactions and M-Pesa STK logs</li>
+                                        <li>All promotion usages, customer debts, supplier debts and recorded costs</li>
+                                        <li>Product and inventory quantities — <strong>set back to 0</strong></li>
+                                    </ul>
+                                    <p class="text-muted mb-3">
+                                        Your catalog stays: products, services, categories, brands, customers, suppliers, staff, rentals and settings are kept.
+                                    </p>
+                                    <p class="text-muted mb-4">
+                                        <strong>This action cannot be undone.</strong> A verification code will be sent to the owner's email address.
+                                    </p>
+                                    <button type="button" class="btn btn-warning" id="resetBusinessData">
+                                        <i class="fas fa-undo me-2"></i>Reset Business Data
+                                    </button>
+                                </div>
+                            </div>
+
                             <div class="card border-danger">
                                 <div class="card-header bg-danger text-white">
                                     <h6 class="mb-0"><i class="fas fa-trash-alt me-2"></i>Delete Business</h6>
@@ -783,6 +817,7 @@
                                     </button>
                                 </div>
                             </div>
+                            @endif
                         </div>
                     </div>
                 </div>
@@ -902,6 +937,67 @@
     </div>
 </div>
 
+<!-- Business Data Reset Verification Modal -->
+<div class="modal fade" id="resetVerificationModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-warning text-dark">
+                <h5 class="modal-title">
+                    <i class="fas fa-undo me-2"></i>Verify Business Data Reset
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div id="resetStep1">
+                    <div class="alert alert-warning">
+                        <strong><i class="fas fa-exclamation-circle me-2"></i>Final Warning</strong>
+                        <p class="mb-0 mt-2">You are about to permanently erase all sales and stock data for <strong>{{ $business->name }}</strong>, and set every product quantity to 0. This action cannot be undone.</p>
+                    </div>
+                    <p class="mb-3">To proceed, we will send a verification code to the owner's email: <strong>{{ $business->owner?->email }}</strong></p>
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" id="resetConfirmUnderstand">
+                        <label class="form-check-label" for="resetConfirmUnderstand">
+                            I understand that all sales records will be deleted and stock set to zero
+                        </label>
+                    </div>
+                </div>
+
+                <div id="resetStep2" style="display: none;">
+                    <p class="mb-3">
+                        <i class="fas fa-envelope me-2 text-primary"></i>
+                        A verification code has been sent to <strong>{{ $business->owner?->email }}</strong>
+                    </p>
+                    <div class="mb-3">
+                        <label for="resetVerificationCode" class="form-label">Enter 6-digit verification code</label>
+                        <input type="text" class="form-control form-control-lg text-center" id="resetVerificationCode"
+                               maxlength="6" placeholder="000000"
+                               style="letter-spacing: 0.5em; font-size: 1.5rem;">
+                        <div class="form-text">Code expires in 10 minutes</div>
+                    </div>
+                    <div id="resetVerificationError" class="alert alert-danger" style="display: none;"></div>
+                    <div id="resetVerificationSuccess" class="alert alert-success" style="display: none;"></div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <div id="resetStep1Footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-warning" id="sendResetCode" disabled>
+                        <i class="fas fa-paper-plane me-2"></i>Send Verification Code
+                    </button>
+                </div>
+                <div id="resetStep2Footer" style="display: none;">
+                    <button type="button" class="btn btn-secondary" id="resendResetCode">
+                        <i class="fas fa-redo me-2"></i>Resend Code
+                    </button>
+                    <button type="button" class="btn btn-warning" id="confirmReset">
+                        <i class="fas fa-undo me-2"></i>Reset Data
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Business Deletion Verification Modal -->
 <div class="modal fade" id="deletionVerificationModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
@@ -964,6 +1060,148 @@
 </div>
 
 <script>
+// Business data reset flow (owner only — server enforces too)
+document.addEventListener('DOMContentLoaded', function() {
+    const resetModalEl = document.getElementById('resetVerificationModal');
+    const resetBtn = document.getElementById('resetBusinessData');
+    if (!resetModalEl || !resetBtn) return;
+
+    const resetModal = new bootstrap.Modal(resetModalEl);
+    const resetUnderstand = document.getElementById('resetConfirmUnderstand');
+    const sendResetBtn = document.getElementById('sendResetCode');
+    const resendResetBtn = document.getElementById('resendResetCode');
+    const confirmResetBtn = document.getElementById('confirmReset');
+    const resetCodeInput = document.getElementById('resetVerificationCode');
+    const resetError = document.getElementById('resetVerificationError');
+    const resetSuccess = document.getElementById('resetVerificationSuccess');
+
+    resetBtn.addEventListener('click', function() {
+        resetModal.show();
+    });
+
+    resetUnderstand.addEventListener('change', function() {
+        sendResetBtn.disabled = !this.checked;
+    });
+
+    function sendResetCodeRequest(button, defaultHtml) {
+        button.disabled = true;
+        button.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Sending...';
+
+        return fetch('{{ route('settings.data-reset.send-code') }}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': '{{ csrf_token() }}'
+            }
+        })
+        .then(response => response.json())
+        .finally(() => {
+            button.disabled = false;
+            button.innerHTML = defaultHtml;
+        });
+    }
+
+    sendResetBtn.addEventListener('click', function() {
+        sendResetCodeRequest(sendResetBtn, '<i class="fas fa-paper-plane me-2"></i>Send Verification Code')
+        .then(data => {
+            if (data.success) {
+                document.getElementById('resetStep1').style.display = 'none';
+                document.getElementById('resetStep1Footer').style.display = 'none';
+                document.getElementById('resetStep2').style.display = 'block';
+                document.getElementById('resetStep2Footer').style.display = 'flex';
+                sendResetBtn.disabled = true;
+                resetCodeInput.focus();
+            } else {
+                alert(data.message || 'Failed to send verification code. Please try again.');
+            }
+        })
+        .catch(() => alert('An error occurred. Please try again.'));
+    });
+
+    resendResetBtn.addEventListener('click', function() {
+        sendResetCodeRequest(resendResetBtn, '<i class="fas fa-redo me-2"></i>Resend Code')
+        .then(data => {
+            if (data.success) {
+                resetSuccess.textContent = 'Verification code resent successfully!';
+                resetSuccess.style.display = 'block';
+                resetError.style.display = 'none';
+                setTimeout(() => { resetSuccess.style.display = 'none'; }, 3000);
+            } else {
+                resetError.textContent = data.message || 'Failed to resend code.';
+                resetError.style.display = 'block';
+            }
+        })
+        .catch(() => {
+            resetError.textContent = 'An error occurred. Please try again.';
+            resetError.style.display = 'block';
+        });
+    });
+
+    confirmResetBtn.addEventListener('click', function() {
+        const code = resetCodeInput.value.trim();
+
+        if (code.length !== 6) {
+            resetError.textContent = 'Please enter a valid 6-digit code.';
+            resetError.style.display = 'block';
+            return;
+        }
+
+        confirmResetBtn.disabled = true;
+        confirmResetBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Resetting...';
+        resetError.style.display = 'none';
+
+        fetch('{{ route('settings.data-reset.verify') }}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': '{{ csrf_token() }}'
+            },
+            body: JSON.stringify({ code: code })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                resetSuccess.textContent = data.message;
+                resetSuccess.style.display = 'block';
+                resetError.style.display = 'none';
+                setTimeout(() => { window.location.href = data.redirect; }, 1500);
+            } else {
+                resetError.textContent = data.message || 'Invalid verification code.';
+                resetError.style.display = 'block';
+                confirmResetBtn.disabled = false;
+                confirmResetBtn.innerHTML = '<i class="fas fa-undo me-2"></i>Reset Data';
+            }
+        })
+        .catch(() => {
+            resetError.textContent = 'An error occurred. Please try again.';
+            resetError.style.display = 'block';
+            confirmResetBtn.disabled = false;
+            confirmResetBtn.innerHTML = '<i class="fas fa-undo me-2"></i>Reset Data';
+        });
+    });
+
+    resetCodeInput.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            confirmResetBtn.click();
+        }
+    });
+
+    resetModalEl.addEventListener('hidden.bs.modal', function() {
+        document.getElementById('resetStep1').style.display = 'block';
+        document.getElementById('resetStep1Footer').style.display = 'flex';
+        document.getElementById('resetStep2').style.display = 'none';
+        document.getElementById('resetStep2Footer').style.display = 'none';
+        resetUnderstand.checked = false;
+        sendResetBtn.disabled = true;
+        sendResetBtn.innerHTML = '<i class="fas fa-paper-plane me-2"></i>Send Verification Code';
+        resetCodeInput.value = '';
+        resetError.style.display = 'none';
+        resetSuccess.style.display = 'none';
+        confirmResetBtn.disabled = false;
+        confirmResetBtn.innerHTML = '<i class="fas fa-undo me-2"></i>Reset Data';
+    });
+});
+
 document.addEventListener('DOMContentLoaded', function() {
     const deletionModal = new bootstrap.Modal(document.getElementById('deletionVerificationModal'));
     const deleteBtn = document.getElementById('deleteBusiness');
@@ -974,6 +1212,8 @@ document.addEventListener('DOMContentLoaded', function() {
     const verificationCode = document.getElementById('verificationCode');
     const verificationError = document.getElementById('verificationError');
     const verificationSuccess = document.getElementById('verificationSuccess');
+
+    if (!deleteBtn) return; // danger zone hidden for non-owners
 
     // Show modal when delete button is clicked
     deleteBtn.addEventListener('click', function() {

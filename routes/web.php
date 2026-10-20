@@ -525,6 +525,8 @@ Route::post('/orders', [SalesController::class, 'createOrder'])->name('sales.cre
         Route::put('/security', [SettingsController::class, 'updateSecurity'])->name('settings.update.security');
         Route::put('/payments', [SettingsController::class, 'updatePayments'])->name('settings.update.payments');
         Route::post('/reset-defaults', [SettingsController::class, 'resetToDefaults'])->name('settings.reset-defaults');
+        Route::post('/data-reset/send-code', [SettingsController::class, 'sendDataResetCode'])->name('settings.data-reset.send-code');
+        Route::post('/data-reset/verify', [SettingsController::class, 'verifyAndResetData'])->name('settings.data-reset.verify');
     });
 
     // Subscription Routes

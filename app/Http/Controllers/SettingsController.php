@@ -3,7 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Models\BusinessSettings;
+use App\Services\TwoFactorAuthService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 
@@ -280,6 +283,140 @@ class SettingsController extends Controller
 
         return redirect()->route('settings.index')
             ->with('success', 'Settings reset to defaults successfully!');
+    }
+
+    /**
+     * Send an email OTP to the business owner to authorize a data reset.
+     * Only the owning account may do this — a team member's active business
+     * resolves to the owner's business, so compare user_id explicitly.
+     */
+    public function sendDataResetCode(Request $request, TwoFactorAuthService $twoFactorService)
+    {
+        $business = auth()->user()->business;
+
+        if (!$business || $business->user_id !== auth()->id()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Only the business owner can reset business data.',
+            ], 403);
+        }
+
+        $sent = $twoFactorService->sendVerificationCode(auth()->user(), 'business_reset', [
+            'business_id'   => $business->id,
+            'business_name' => $business->name,
+            'action'        => 'reset',
+        ]);
+
+        if ($sent) {
+            Log::info('Business data reset code sent', [
+                'business_id' => $business->id,
+                'user_id'     => auth()->id(),
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Verification code sent to your email address.',
+            ]);
+        }
+
+        return response()->json([
+            'success' => false,
+            'message' => 'Failed to send verification code. Please try again.',
+        ], 500);
+    }
+
+    /**
+     * Verify the owner's OTP and wipe all transactional data:
+     * every sale, stock movement and financial record is deleted and all
+     * product / inventory quantities are zeroed. Catalog data (products,
+     * services, customers, suppliers, staff, settings) is kept.
+     */
+    public function verifyAndResetData(Request $request, TwoFactorAuthService $twoFactorService)
+    {
+        $request->validate(['code' => 'required|string|size:6']);
+
+        $business = auth()->user()->business;
+
+        if (!$business || $business->user_id !== auth()->id()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Only the business owner can reset business data.',
+            ], 403);
+        }
+
+        $result = $twoFactorService->verifyCode(auth()->user(), 'business_reset', $request->code);
+
+        if (!$result['success']) {
+            return response()->json([
+                'success' => false,
+                'message' => $result['message'],
+            ], 400);
+        }
+
+        try {
+            $summary = DB::transaction(function () use ($business) {
+                $bid = $business->id;
+                $summary = [];
+
+                $promotionIds = DB::table('promotions')->where('business_id', $bid)->pluck('id');
+                $summary['promotion_usages'] = DB::table('promotion_usages')->whereIn('promotion_id', $promotionIds)->delete();
+
+                // Rental STK requests are kept — the rentals module is not reset.
+                $summary['mpesa_stk_requests'] = DB::table('mpesa_stk_requests')
+                    ->where('business_id', $bid)->whereNull('rental_payment_id')->delete();
+                $summary['customer_debts']     = DB::table('customer_debts')->where('business_id', $bid)->delete();
+                $summary['supplier_debts']     = DB::table('supplier_debts')->where('business_id', $bid)->delete();
+                $summary['costs']              = DB::table('costs')->where('business_id', $bid)->delete();
+
+                // Service-business sales: bookings, legacy records, their line items.
+                $bookingIds = DB::table('service_bookings')->where('business_id', $bid)->pluck('id');
+                $serviceIds = DB::table('services')->where('business_id', $bid)->pluck('id');
+                $recordIds  = DB::table('service_records')->whereIn('service_id', $serviceIds)->pluck('id');
+                $summary['service_items'] = DB::table('service_items')
+                    ->whereIn('service_booking_id', $bookingIds)
+                    ->orWhereIn('service_record_id', $recordIds)
+                    ->orWhereIn('service_id', $serviceIds)
+                    ->delete();
+                $summary['service_records']  = DB::table('service_records')->whereIn('id', $recordIds)->delete();
+                $summary['service_bookings'] = DB::table('service_bookings')->whereIn('id', $bookingIds)->delete();
+
+                $summary['inventory_transactions'] = DB::table('inventory_transactions')->where('business_id', $bid)->delete();
+                $summary['stock_receipts']         = DB::table('stock_receipts')->where('business_id', $bid)->delete();
+
+                // Deleting orders cascades to order_items, payments, receipts,
+                // invoices, credit notes, returns and their promotion usages.
+                $summary['orders'] = DB::table('orders')->where('business_id', $bid)->delete();
+
+                $summary['products_zeroed']        = DB::table('products')->where('business_id', $bid)->update(['stock_quantity' => 0]);
+                $summary['inventory_items_zeroed'] = DB::table('inventory_items')->where('business_id', $bid)->update(['current_quantity' => 0]);
+
+                return $summary;
+            });
+
+            Log::info('Business data reset after owner verification', [
+                'business_id' => $business->id,
+                'user_id'     => auth()->id(),
+                'summary'     => $summary,
+                'ip'          => $request->ip(),
+            ]);
+
+            return response()->json([
+                'success'  => true,
+                'message'  => 'Business data has been reset — sales records removed and stock set to zero.',
+                'redirect' => route('settings.index'),
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Business data reset failed', [
+                'business_id' => $business->id,
+                'user_id'     => auth()->id(),
+                'error'       => $e->getMessage(),
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Reset failed — nothing was deleted. Please try again.',
+            ], 500);
+        }
     }
 
     /**

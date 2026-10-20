@@ -452,6 +452,15 @@ class BusinessController extends Controller
                 ], 404);
             }
 
+            // Only the owner may delete — a member's active business resolves
+            // here too, so compare user_id explicitly.
+            if ($business->user_id !== Auth::id()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Only the business owner can delete this business.'
+                ], 403);
+            }
+
             // Send email verification code
             $context = [
                 'business_id' => $business->id,
@@ -507,6 +516,13 @@ class BusinessController extends Controller
                     'success' => false,
                     'message' => 'No business found.'
                 ], 404);
+            }
+
+            if ($business->user_id !== Auth::id()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Only the business owner can delete this business.'
+                ], 403);
             }
 
             // Verify the code
