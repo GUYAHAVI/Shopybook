@@ -61,7 +61,7 @@ class ProductsController extends Controller
             ],
             'category' => 'nullable|string|max:100',
             'brand' => 'nullable|string|max:100',
-            'stock_quantity' => 'required|integer|min:0',
+            'stock_quantity' => 'required|numeric|min:0',
             'measurement_unit' => ['nullable', Rule::in(array_keys(Product::UNITS))],
             'tax_treatment' => ['nullable', Rule::in(array_keys(Product::TAX_TREATMENTS))],
             'low_stock_threshold' => 'nullable|integer|min:0',
@@ -97,7 +97,7 @@ class ProductsController extends Controller
             'name' => 'required|string|max:255',
             'price' => 'required|numeric|min:0',
             'cost_price' => 'nullable|numeric|min:0',
-            'stock_quantity' => 'required|integer|min:0',
+            'stock_quantity' => 'required|numeric|min:0',
             'measurement_unit' => ['nullable', Rule::in(array_keys(Product::UNITS))],
             'tax_treatment' => ['nullable', Rule::in(array_keys(Product::TAX_TREATMENTS))],
             'category' => 'nullable|string|max:100',
@@ -173,7 +173,7 @@ class ProductsController extends Controller
             ],
             'category' => 'nullable|string|max:100',
             'brand' => 'nullable|string|max:100',
-            'stock_quantity' => 'required|integer|min:0',
+            'stock_quantity' => 'required|numeric|min:0',
             'measurement_unit' => ['nullable', Rule::in(array_keys(Product::UNITS))],
             'tax_treatment' => ['nullable', Rule::in(array_keys(Product::TAX_TREATMENTS))],
             'low_stock_threshold' => 'nullable|integer|min:0',
@@ -346,7 +346,7 @@ class ProductsController extends Controller
         $this->authorize('update', $product);
         
         $request->validate([
-            'stock_quantity' => 'required|integer|min:0',
+            'stock_quantity' => 'required|numeric|min:0',
             'adjustment_reason' => 'nullable|string|max:255',
         ]);
 
@@ -445,7 +445,7 @@ class ProductsController extends Controller
             'products.*.description' => 'nullable|string',
             'products.*.price' => 'required|numeric|min:0',
             'products.*.cost_price' => 'nullable|numeric|min:0',
-            'products.*.stock_quantity' => 'required|integer|min:0',
+            'products.*.stock_quantity' => 'required|numeric|min:0',
             'products.*.sku' => [
                 'nullable',
                 'string',
@@ -556,12 +556,12 @@ class ProductsController extends Controller
             
             // For existing products
             'product_id' => 'required_if:receipt_type,existing_product|nullable|exists:products,id',
-            'quantity_received' => 'required_if:receipt_type,existing_product|nullable|integer|min:1',
+            'quantity_received' => 'required_if:receipt_type,existing_product|nullable|numeric|min:0.001',
             'unit_cost' => 'nullable|numeric|min:0',
             
             // For new products
             'new_product_name' => 'required_if:receipt_type,new_product|nullable|string|max:255',
-            'new_quantity' => 'required_if:receipt_type,new_product|nullable|integer|min:1',
+            'new_quantity' => 'required_if:receipt_type,new_product|nullable|numeric|min:0.001',
             'new_unit_cost' => 'required_if:receipt_type,new_product|nullable|numeric|min:0',
             'selling_price' => 'required_if:receipt_type,new_product|nullable|numeric|min:0',
             'sku' => 'nullable|string|max:100',

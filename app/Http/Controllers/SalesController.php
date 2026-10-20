@@ -109,7 +109,7 @@ class SalesController extends Controller
                 'customer_id' => 'nullable|integer|exists:customers,id',
                 'items' => 'required|array|min:1',
                 'items.*.product_id' => 'required|integer|exists:products,id',
-                'items.*.quantity' => 'required|integer|min:1',
+                'items.*.quantity' => 'required|numeric|min:0.001',
                 'items.*.price' => 'required|numeric|min:0',
                 'items.*.conversion' => 'nullable|array',
                 'items.*.conversion.sell_unit' => 'nullable|string',
@@ -121,7 +121,7 @@ class SalesController extends Controller
                 'cart_data' => 'nullable|array', // Add validation for cart_data
                 'cart_data.*.id' => 'nullable|integer',
                 'cart_data.*.name' => 'nullable|string',
-                'cart_data.*.quantity' => 'nullable|integer',
+                'cart_data.*.quantity' => 'nullable|numeric',
                 'cart_data.*.price' => 'nullable|numeric',
                 'cart_data.*.conversion' => 'nullable|array',
                 'cart_data.*.stockRequired' => 'nullable|numeric',

@@ -94,7 +94,7 @@
                                 </label>
                                 <input type="number" class="form-control @error('stock_quantity') is-invalid @enderror" 
                                        id="stock_quantity" name="stock_quantity" value="{{ old('stock_quantity', 1) }}" 
-                                       min="0" required placeholder="How many do you have?">
+                                       min="0" step="0.001" required placeholder="How many do you have?">
                                 @error('stock_quantity')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror

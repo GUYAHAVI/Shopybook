@@ -153,7 +153,7 @@
                                     <label for="stock_quantity" class="form-label">Stock Quantity *</label>
                                     <input type="number" class="form-control @error('stock_quantity') is-invalid @enderror" 
                                            id="stock_quantity" name="stock_quantity" value="{{ old('stock_quantity', 0) }}" 
-                                           min="0" required>
+                                           min="0" step="0.001" required>
                                     @error('stock_quantity')
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror

@@ -27,7 +27,7 @@ class StockReceipt extends Model
     ];
 
     protected $casts = [
-        'quantity_received' => 'integer',
+        'quantity_received' => 'float',
         'unit_cost' => 'decimal:2',
         'total_cost' => 'decimal:2',
         'receipt_date' => 'date',

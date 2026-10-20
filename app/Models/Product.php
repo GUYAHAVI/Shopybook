@@ -63,7 +63,7 @@ class Product extends Model
     protected $casts = [
         'price' => 'decimal:2',
         'cost_price' => 'decimal:2',
-        'stock_quantity' => 'integer',
+        'stock_quantity' => 'float',
         'low_stock_threshold' => 'integer',
         'weight' => 'decimal:2',
         'images' => 'array',

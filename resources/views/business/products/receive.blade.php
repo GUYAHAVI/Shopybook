@@ -114,7 +114,7 @@
                             <div class="row mb-3">
                                 <div class="col-md-6">
                                     <label for="quantity_received" class="form-label">Quantity Received <span class="text-danger">*</span></label>
-                                    <input type="number" class="form-control" id="quantity_received" name="quantity_received" value="{{ old('quantity_received') }}" min="1" placeholder="Enter quantity">
+                                    <input type="number" class="form-control" id="quantity_received" name="quantity_received" value="{{ old('quantity_received') }}" min="0.001" step="0.001" placeholder="Enter quantity">
                                 </div>
                                 <div class="col-md-6">
                                     <label for="unit_cost" class="form-label">Unit Cost (KSh)</label>
@@ -178,7 +178,7 @@
                             <div class="row mb-3">
                                 <div class="col-md-4">
                                     <label for="new_quantity" class="form-label">Initial Quantity <span class="text-danger">*</span></label>
-                                    <input type="number" class="form-control" id="new_quantity" name="new_quantity" value="{{ old('new_quantity') }}" min="1" placeholder="Quantity received">
+                                    <input type="number" class="form-control" id="new_quantity" name="new_quantity" value="{{ old('new_quantity') }}" min="0.001" step="0.001" placeholder="Quantity received">
                                 </div>
                                 <div class="col-md-4">
                                     <label for="new_unit_cost" class="form-label">Unit Cost (KSh) <span class="text-danger">*</span></label>
@@ -279,8 +279,8 @@ document.addEventListener('DOMContentLoaded', function() {
     function updateNewStock() {
         const selectedOption = productSelect.options[productSelect.selectedIndex];
         if (selectedOption.value && quantityInput.value) {
-            const currentStock = parseInt(selectedOption.dataset.stock) || 0;
-            const quantityReceived = parseInt(quantityInput.value) || 0;
+            const currentStock = parseFloat(selectedOption.dataset.stock) || 0;
+            const quantityReceived = parseFloat(quantityInput.value) || 0;
             const newStock = currentStock + quantityReceived;
             document.getElementById('new-stock').textContent = newStock;
         }

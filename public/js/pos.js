@@ -55,6 +55,16 @@ function initializePOS() {
     function unitSuffix(item) {
         return item.unit && item.unit !== 'piece' ? ` ${item.unit}` : '';
     }
+
+    // Units that may be sold fractionally (0.5 kg nails, 2.5 m rope, etc.).
+    // Count-based units (piece/pack/box/dozen) stay whole.
+    const FRACTIONAL_UNITS = ['kg', 'g', 'lb', 'l', 'ml', 'm', 'cm', 'mm', 'sqm', 'ft', 'in', 'other'];
+    function isFractional(item) {
+        return FRACTIONAL_UNITS.includes(item.unit);
+    }
+    function formatQty(q) {
+        return parseFloat(Number(q).toFixed(3));
+    }
     
 
     
@@ -135,7 +145,7 @@ function initializePOS() {
         const productId = parseInt(productCard.dataset.productId);
         const productName = productCard.dataset.name || productCard.querySelector('.card-title').textContent;
         const productPrice = parseFloat(productCard.dataset.price);
-        const productStock = parseInt(productCard.dataset.stock);
+        const productStock = parseFloat(productCard.dataset.stock);
         const productMeta = { unit: productCard.dataset.unit || 'piece', taxTreatment: productCard.dataset.taxTreatment || null };
 
         // Check if this product has conversion options (for eligible users)
@@ -237,7 +247,7 @@ function initializePOS() {
                     </div>
                     <div class="quantity-control mt-2">
                         <button class="quantity-btn decrease" data-index="${index}">-</button>
-                        <input type="number" class="quantity-input" value="${item.quantity}" min="1" max="${item.stock}" data-index="${index}" style="width: 60px; text-align: center; margin: 0 5px;">
+                        <input type="number" class="quantity-input" value="${item.quantity}" min="0.001" step="${isFractional(item) ? '0.01' : '1'}" max="${item.stock}" data-index="${index}" style="width: ${isFractional(item) ? '75px' : '60px'}; text-align: center; margin: 0 5px;">
                         <button class="quantity-btn increase" data-index="${index}">+</button>
                     </div>
                 </div>
@@ -271,18 +281,19 @@ function initializePOS() {
          document.querySelectorAll('.quantity-input').forEach(input => {
              input.addEventListener('change', function() {
                  const index = parseInt(this.dataset.index);
-                 const newQuantity = parseInt(this.value) || 1;
                  const item = cart[index];
+                 // Decimals are accepted for every product — a cashier typing
+                 // 0.5 means 0.5, regardless of the product's unit.
+                 const newQuantity = parseFloat(this.value);
                  
-                 if (newQuantity <= 0) {
-                     this.value = 1;
-                     item.quantity = 1;
+                 if (isNaN(newQuantity) || newQuantity <= 0) {
+                     this.value = item.quantity; // restore last valid value
                  } else if (newQuantity > item.stock) {
                      this.value = item.stock;
                      item.quantity = item.stock;
                      showAlert('Quantity cannot exceed available stock!', 'warning');
                  } else {
-                     item.quantity = newQuantity;
+                     item.quantity = formatQty(newQuantity);
                  }
                  
                  updateCartDisplay();
@@ -331,7 +342,10 @@ function initializePOS() {
 
     function updateQuantity(index, change) {
         const item = cart[index];
-        const newQuantity = item.quantity + change;
+        // Fractional units step by 0.5 so half-kilos/litres are quick to tap;
+        // precise amounts (e.g. 0.25 kg) are typed into the input.
+        const step = isFractional(item) ? 0.5 : 1;
+        const newQuantity = formatQty(item.quantity + change * step);
         
         if (newQuantity <= 0) {
             removeFromCart(index);
@@ -407,7 +421,7 @@ function initializePOS() {
         // Validate cart items
         const validatedItems = cart.map(item => ({
             product_id: parseInt(item.id),
-            quantity: parseInt(item.quantity),
+            quantity: parseFloat(item.quantity),
             price: parseFloat(item.price)
         }));
         
