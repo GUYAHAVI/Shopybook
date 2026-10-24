@@ -93,7 +93,7 @@ class ReturnsController extends Controller
             'reason' => 'required|string',
             'items' => 'required_if:return_type,partial|array',
             'items.*.product_id' => 'required_with:items|exists:products,id',
-            'items.*.quantity' => 'required_with:items|integer|min:1',
+            'items.*.quantity' => 'required_with:items|numeric|min:0.001',
             'items.*.refund_amount' => 'required_with:items|numeric|min:0',
             'restocking_fee' => 'nullable|numeric|min:0',
             'return_to_stock' => 'boolean',
@@ -216,31 +216,15 @@ class ReturnsController extends Controller
         
         DB::beginTransaction();
         try {
-            // Return stock if applicable
+            $ledger = app(\App\Services\Accounting\Ledger::class);
+
+            // Return stock if applicable (restocks at the cost it was sold at)
+            $restockValue = 0.0;
             if ($return->return_to_stock && !$return->stock_returned) {
-                if ($return->return_type === 'full') {
-                    // Return all items from order
-                    foreach ($return->order->items as $item) {
-                        $product = Product::find($item->product_id);
-                        if ($product) {
-                            $product->increment('stock_quantity', $item->quantity);
-                        }
-                    }
-                } else {
-                    // Return specific items
-                    if ($return->items_data) {
-                        foreach ($return->items_data as $item) {
-                            $product = Product::find($item['product_id']);
-                            if ($product) {
-                                $product->increment('stock_quantity', $item['quantity']);
-                            }
-                        }
-                    }
-                }
-                
+                $restockValue = $ledger->restockReturnGoods($return);
                 $return->stock_returned = true;
             }
-            
+
             // Mark refund as processed
             $return->update([
                 'status' => 'completed',
@@ -248,6 +232,8 @@ class ReturnsController extends Controller
                 'refund_processed' => true,
                 'refund_processed_at' => now(),
             ]);
+
+            $ledger->postReturn($return, $restockValue);
             
             DB::commit();
             

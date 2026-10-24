@@ -509,22 +509,6 @@ class BusinessController extends Controller
         ]);
 
         try {
-            $business = Auth::user()->business;
-            
-            if (!$business) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'No business found.'
-                ], 404);
-            }
-
-            if ($business->user_id !== Auth::id()) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Only the business owner can delete this business.'
-                ], 403);
-            }
-
             // Verify the code
             $result = $twoFactorService->verifyCode(Auth::user(), 'business_delete', $request->code);
             
@@ -533,6 +517,19 @@ class BusinessController extends Controller
                     'success' => false,
                     'message' => $result['message']
                 ], 400);
+            }
+
+            // Delete the business the code was issued for (context) — not
+            // whatever is active now. businesses() only returns owned
+            // businesses, so this also enforces ownership.
+            $business = Auth::user()->businesses()
+                ->find($result['context']['business_id'] ?? null);
+
+            if (!$business) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Only the business owner can delete this business.'
+                ], 403);
             }
 
             // Code verified, proceed with deletion

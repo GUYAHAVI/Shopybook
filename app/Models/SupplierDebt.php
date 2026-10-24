@@ -9,6 +9,8 @@ class SupplierDebt extends Model
     protected $fillable = [
         'business_id',
         'supplier_id',
+        'stock_receipt_id',
+        'expense_account_id',
         'supplier_name',
         'supplier_phone',
         'supplier_email',
@@ -36,6 +38,16 @@ class SupplierDebt extends Model
     public function supplier()
     {
         return $this->belongsTo(Supplier::class);
+    }
+
+    public function payments()
+    {
+        return $this->hasMany(SupplierPayment::class);
+    }
+
+    public function stockReceipt()
+    {
+        return $this->belongsTo(StockReceipt::class);
     }
 
     public function updateStatus()

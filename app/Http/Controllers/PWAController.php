@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Storage;
 use App\Models\User;
 use App\Models\Business;
+use App\Models\Payment;
 
 class PWAController extends Controller
 {
@@ -273,21 +274,41 @@ class PWAController extends Controller
         ]);
         
         // Add order items
+        $ledger = app(\App\Services\Accounting\Ledger::class);
         if (isset($data['items']) && is_array($data['items'])) {
             foreach ($data['items'] as $item) {
+                // Update product stock
+                $product = $business->products()->find($item['product_id']);
+                $unitCost = $costAmount = null;
+                if ($product) {
+                    [$unitCost, $costAmount] = $ledger->issueStockForSale($product, (float) $item['quantity'], $order);
+                    $product->decrement('stock_quantity', $item['quantity']);
+                }
+
                 $order->items()->create([
                     'product_id' => $item['product_id'],
                     'quantity' => $item['quantity'],
+                    'stock_qty' => $item['quantity'],
+                    'unit_cost' => $unitCost,
+                    'cost_amount' => $costAmount,
                     'price' => $item['price'],
                     'total' => $item['total']
                 ]);
-                
-                // Update product stock
-                $product = $business->products()->find($item['product_id']);
-                if ($product) {
-                    $product->decrement('stock_quantity', $item['quantity']);
-                }
             }
+        }
+
+        $ledger->postSale($order->fresh());
+        // A payment method was recorded offline, so the sale was already paid for
+        if (!empty($data['payment_method']) && (float) $order->total_amount > 0) {
+            $payment = $order->payments()->create([
+                'business_id' => $business->id,
+                'payment_number' => Payment::generatePaymentNumber(),
+                'payment_method' => $data['payment_method'],
+                'amount' => $order->total_amount,
+                'payment_date' => now(),
+                'notes' => 'Recorded offline',
+            ]);
+            $ledger->postPayment($payment);
         }
     }
     
@@ -300,6 +321,7 @@ class PWAController extends Controller
         $product = $business->products()->find($data['product_id']);
         
         if ($product) {
+            app(\App\Services\Accounting\Ledger::class)->postStockAdjustment($product, (float) $data['stock_quantity'], $product);
             $product->update([
                 'stock_quantity' => $data['stock_quantity'],
                 'price' => $data['price'] ?? $product->price,

@@ -170,6 +170,11 @@ class Product extends Model
         return $this->hasMany(StockReceipt::class);
     }
 
+    public function stockLedgerEntries()
+    {
+        return $this->hasMany(StockLedgerEntry::class);
+    }
+
     public function latestStockReceipt()
     {
         return $this->hasOne(StockReceipt::class)->latestOfMany();

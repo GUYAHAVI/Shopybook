@@ -22,6 +22,7 @@
                         <input type="number" step="0.01" class="form-control" id="amount" name="amount" value="{{ old('amount') }}" required>
                         @error('amount')<div class="text-danger small">{{ $message }}</div>@enderror
                     </div>
+                    @include('partials.accounting.paid-from')
                     <div class="mb-3">
                         <label for="paid_at" class="form-label">Paid At</label>
                         <input type="datetime-local" class="form-control" id="paid_at" name="paid_at" value="{{ old('paid_at') }}">

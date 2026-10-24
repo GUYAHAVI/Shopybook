@@ -335,15 +335,6 @@ class SettingsController extends Controller
     {
         $request->validate(['code' => 'required|string|size:6']);
 
-        $business = auth()->user()->business;
-
-        if (!$business || $business->user_id !== auth()->id()) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Only the business owner can reset business data.',
-            ], 403);
-        }
-
         $result = $twoFactorService->verifyCode(auth()->user(), 'business_reset', $request->code);
 
         if (!$result['success']) {
@@ -351,6 +342,20 @@ class SettingsController extends Controller
                 'success' => false,
                 'message' => $result['message'],
             ], 400);
+        }
+
+        // Reset the business the code was issued for — not whatever happens
+        // to be active now (the owner may have switched businesses between
+        // requesting the code and entering it). businesses() only returns
+        // owned businesses, so this enforces ownership too.
+        $business = auth()->user()->businesses()
+            ->find($result['context']['business_id'] ?? null);
+
+        if (!$business) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Only the business owner can reset business data.',
+            ], 403);
         }
 
         try {

@@ -7,6 +7,7 @@ use App\Models\Order;
 use App\Models\Customer;
 use App\Models\Product;
 use App\Models\Invoice;
+use App\Models\AccountingSetting;
 use App\Models\Payment;
 use App\Models\CustomerDebt;
 use Illuminate\Support\Facades\DB;
@@ -14,6 +15,9 @@ use Illuminate\Validation\ValidationException;
 use App\Models\OrganizationCustomer;
 use Illuminate\Support\Facades\Hash;
 use App\Services\NotificationService;
+use App\Services\Accounting\Ledger;
+use App\Models\SupplierDebt;
+use App\Models\SupplierPayment;
 // date
 
 class SalesController extends Controller
@@ -100,7 +104,7 @@ class SalesController extends Controller
         return response()->json($result);
     }
 
-    public function createOrder(Request $request)
+    public function createOrder(Request $request, Ledger $ledger)
     {
         \Log::info('CreateOrder called with data:', $request->all());
         
@@ -223,7 +227,7 @@ class SalesController extends Controller
             
             // Generate invoice number if payment is not full
             if ($paymentStatus !== 'paid') {
-                $order->invoice_number = 'INV-' . date('Y') . '-' . str_pad(time(), 6, '0', STR_PAD_LEFT);
+                $order->invoice_number = AccountingSetting::for((string) $business->id)->nextInvoiceNumber();
                 $order->invoice_generated_at = now();
             }
             
@@ -262,8 +266,9 @@ class SalesController extends Controller
             }
 
             // Create payment record if amount was paid
+            $checkoutPayment = null;
             if ($amountPaid > 0) {
-                Payment::create([
+                $checkoutPayment = Payment::create([
                     'business_id' => $business->id,
                     'order_id' => $order->id,
                     'payment_number' => Payment::generatePaymentNumber(),
@@ -315,11 +320,17 @@ class SalesController extends Controller
                     $sellUnitText = isset($sellUnit) ? " ({$sellUnit})" : "";
                     throw new \Exception("Insufficient stock for {$product->name}{$sellUnitText}. Required: {$stockToDeduct} kg, Available: {$product->stock_quantity} kg");
                 }
+
+                // Take the stock out of inventory at moving-average cost (before stock_quantity changes)
+                [$unitCost, $costAmount] = $ledger->issueStockForSale($product, (float) $stockToDeduct, $order);
                 
                 // Prepare order item data
                 $orderItemData = [
                     'product_id' => $product->id,
                     'quantity' => $item['quantity'],
+                    'stock_qty' => $stockToDeduct,
+                    'unit_cost' => $unitCost,
+                    'cost_amount' => $costAmount,
                     'price' => $item['price'],
                     'total' => $item['price'] * $item['quantity'],
                     'tax_amount' => $taxLine['tax'] ?? 0,
@@ -366,6 +377,12 @@ class SalesController extends Controller
                         'error' => $e->getMessage(),
                     ]);
                 }
+            }
+
+            // Record the sale and any payment taken at checkout in the books
+            $ledger->postSale($order);
+            if ($checkoutPayment) {
+                $ledger->postPayment($checkoutPayment);
             }
             
             // Store receipt data for reprinting
@@ -436,10 +453,30 @@ class SalesController extends Controller
         $oldStatus = $order->status;
         $newStatus = $validated['status'];
         
+        $ledger = app(Ledger::class);
+
+        // Cancelling a completed sale reverses its ledger entries and puts the stock back
+        if ($newStatus === 'cancelled' && $oldStatus === 'completed') {
+            try {
+                DB::transaction(function () use ($order, $ledger, $newStatus) {
+                    $ledger->cancelSale($order);
+                    $order->update(['status' => $newStatus]);
+                });
+            } catch (\Exception $e) {
+                \Log::error('Error cancelling order: ' . $e->getMessage());
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Failed to cancel order. Please try again.'
+                ], 500);
+            }
+            return response()->json(['success' => true, 'message' => 'Order cancelled and stock restored.']);
+        }
+
         // If order is being marked as completed and wasn't completed before, reduce stock
         if ($newStatus === 'completed' && $oldStatus !== 'completed') {
             DB::beginTransaction();
             try {
+                $saleCost = null;
                 // For public orders (single product)
                 if ($order->order_type === 'public_order' && $order->product_id) {
                     $product = Product::find($order->product_id);
@@ -451,7 +488,9 @@ class SalesController extends Controller
                                 'message' => "Insufficient stock for {$product->name}. Required: {$order->quantity}, Available: {$product->stock_quantity}"
                             ], 422);
                         }
-                        
+
+                        [, $saleCost] = $ledger->issueStockForSale($product, (float) $order->quantity, $order);
+
                         $product->stock_quantity -= $order->quantity;
                         $product->save();
                         
@@ -509,7 +548,14 @@ class SalesController extends Controller
                                     'message' => "Insufficient stock for {$product->name}. Required: {$stockToDeduct}, Available: {$product->stock_quantity}"
                                 ], 422);
                             }
-                            
+
+                            [$unitCost, $costAmount] = $ledger->issueStockForSale($product, (float) $stockToDeduct, $order);
+                            $item->update([
+                                'stock_qty' => $stockToDeduct,
+                                'unit_cost' => $unitCost,
+                                'cost_amount' => $costAmount,
+                            ]);
+
                             $product->stock_quantity -= $stockToDeduct;
                             $product->save();
                             
@@ -532,6 +578,7 @@ class SalesController extends Controller
                 }
                 
                 $order->update(['status' => $newStatus]);
+                $ledger->postSale($order->fresh(), $saleCost);
                 DB::commit();
                 
             } catch (\Exception $e) {
@@ -587,7 +634,7 @@ class SalesController extends Controller
             
             // Generate invoice number if not exists
             if (!$order->invoice_number) {
-                $order->invoice_number = 'INV-' . date('Y') . '-' . str_pad($order->id, 6, '0', STR_PAD_LEFT);
+                $order->invoice_number = AccountingSetting::for((string) $business->id)->nextInvoiceNumber();
                 $order->invoice_generated_at = now();
                 $order->save();
             }
@@ -1010,13 +1057,16 @@ class SalesController extends Controller
         }
         
         if ($validated['action'] === 'approve') {
-            $creditNote->update([
-                'status' => 'approved',
-                'approved_by' => auth()->id(),
-                'approved_at' => now(),
-                'otp_code' => null,
-                'otp_expires_at' => null,
-            ]);
+            DB::transaction(function () use ($creditNote) {
+                $creditNote->update([
+                    'status' => 'approved',
+                    'approved_by' => auth()->id(),
+                    'approved_at' => now(),
+                    'otp_code' => null,
+                    'otp_expires_at' => null,
+                ]);
+                app(Ledger::class)->postCreditNote($creditNote);
+            });
             
             return response()->json([
                 'success' => true,
@@ -1201,6 +1251,7 @@ class SalesController extends Controller
                 'notes' => $validated['notes'],
                 'received_by' => auth()->id(),
             ]);
+            app(Ledger::class)->postPayment($payment);
             
             // Update order amounts
             $totalAmountPaid = (float) $order->amount_paid + $amountPaid;
@@ -1402,7 +1453,9 @@ class SalesController extends Controller
             'pending_count' => DB::table('supplier_debts')->where('business_id', $business->id)->where('status', 'pending')->count(),
         ];
         
-        return view('sales.supplier-debts', compact('debts', 'summary'));
+        $expenseAccounts = app(Ledger::class)->expenseAccounts($business->id);
+        
+        return view('sales.supplier-debts', compact('debts', 'summary', 'expenseAccounts'));
     }
     
     public function storeSupplierDebt(Request $request)
@@ -1413,27 +1466,39 @@ class SalesController extends Controller
             'supplier_name' => 'required|string|max:255',
             'supplier_phone' => 'nullable|string|max:20',
             'supplier_email' => 'nullable|email|max:255',
-            'reference_number' => 'required|string|max:100|unique:supplier_debts,reference_number',
+            'reference_number' => [
+                'required', 'string', 'max:100',
+                \Illuminate\Validation\Rule::unique('supplier_debts', 'reference_number')->where('business_id', $business->id),
+            ],
             'total_amount' => 'required|numeric|min:0.01',
             'due_date' => 'required|date|after_or_equal:today',
             'description' => 'nullable|string|max:1000',
+            'expense_account_id' => ['nullable', 'integer', Ledger::expenseAccountRule($business->id)],
         ]);
-        
-        DB::table('supplier_debts')->insert([
-            'business_id' => $business->id,
-            'supplier_name' => $validated['supplier_name'],
-            'supplier_phone' => $validated['supplier_phone'],
-            'supplier_email' => $validated['supplier_email'],
-            'reference_number' => $validated['reference_number'],
-            'total_amount' => $validated['total_amount'],
-            'amount_paid' => 0,
-            'balance' => $validated['total_amount'],
-            'due_date' => $validated['due_date'],
-            'status' => 'pending',
-            'description' => $validated['description'],
-            'created_at' => now(),
-            'updated_at' => now(),
-        ]);
+
+        try {
+            DB::transaction(function () use ($business, $validated) {
+                $debt = SupplierDebt::create([
+                    'business_id' => $business->id,
+                    'supplier_id' => \App\Models\Supplier::where('business_id', $business->id)
+                        ->where('name', $validated['supplier_name'])->value('id'),
+                    'supplier_name' => $validated['supplier_name'],
+                    'supplier_phone' => $validated['supplier_phone'] ?? null,
+                    'supplier_email' => $validated['supplier_email'] ?? null,
+                    'reference_number' => $validated['reference_number'],
+                    'total_amount' => $validated['total_amount'],
+                    'amount_paid' => 0,
+                    'balance' => $validated['total_amount'],
+                    'due_date' => $validated['due_date'],
+                    'status' => 'pending',
+                    'description' => $validated['description'] ?? null,
+                    'expense_account_id' => $validated['expense_account_id'] ?? null,
+                ]);
+                app(Ledger::class)->postSupplierDebt($debt);
+            });
+        } catch (\App\Exceptions\Accounting\LedgerException $e) {
+            return back()->withInput()->with('error', $e->getMessage());
+        }
         
         return redirect()->route('sales.supplier-debts')->with('success', 'Supplier debt recorded successfully.');
     }
@@ -1442,8 +1507,7 @@ class SalesController extends Controller
     {
         $business = auth()->user()->business;
         
-        $debt = DB::table('supplier_debts')
-            ->where('id', $debtId)
+        $debt = SupplierDebt::where('id', $debtId)
             ->where('business_id', $business->id)
             ->first();
         
@@ -1494,14 +1558,29 @@ class SalesController extends Controller
             $paymentStatus = 'overdue';
         }
         
-        DB::table('supplier_debts')
-            ->where('id', $debtId)
-            ->update([
-                'amount_paid' => $totalAmountPaid,
-                'balance' => $newBalance,
-                'status' => $paymentStatus,
-                'updated_at' => now(),
-            ]);
+        try {
+            DB::transaction(function () use ($business, $debt, $validated, $amountPaid, $totalAmountPaid, $newBalance, $paymentStatus) {
+                $payment = SupplierPayment::create([
+                    'business_id' => $business->id,
+                    'supplier_debt_id' => $debt->id,
+                    'amount' => $amountPaid,
+                    'payment_method' => $validated['payment_method'],
+                    'transaction_reference' => $validated['transaction_reference'] ?? null,
+                    'notes' => $validated['notes'] ?? null,
+                    'paid_at' => now()->toDateString(),
+                    'recorded_by' => auth()->id(),
+                ]);
+                app(Ledger::class)->postSupplierPayment($payment);
+
+                $debt->update([
+                    'amount_paid' => $totalAmountPaid,
+                    'balance' => $newBalance,
+                    'status' => $paymentStatus,
+                ]);
+            });
+        } catch (\App\Exceptions\Accounting\LedgerException $e) {
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 422);
+        }
         
         $message = $paymentStatus === 'paid' 
             ? 'Payment recorded successfully. Debt marked as paid.'

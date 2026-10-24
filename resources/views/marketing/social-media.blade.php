@@ -484,10 +484,12 @@
                                 <i class="fas fa-image me-1"></i>Generate Image
                             </label>
                             
+                            @if(Route::has('marketing.video.generate'))
                             <input type="radio" class="btn-check" name="mediaType" id="generateVideo" value="generate">
                             <label class="btn btn-outline-secondary" for="generateVideo">
                                 <i class="fas fa-magic me-1"></i>Generate Video
                             </label>
+                            @endif
                         </div>
                         
                         <!-- Upload Media Section -->
@@ -1771,7 +1773,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         
         // Make API request
-        fetch('{{ route("marketing.video.generate") }}', {
+        fetch('{{ Route::has("marketing.video.generate") ? route("marketing.video.generate") : "#" }}', {
             method: 'POST',
             headers: {
                 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),

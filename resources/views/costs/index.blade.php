@@ -49,6 +49,16 @@
                                     <td>{{ $cost->description ?? '-' }}</td>
                                     <td>{{ $cost->date ?? '-' }}</td>
                                     <td>
+                                        @if($cost->type === 'salary' && !$cost->salary_paid_at)
+                                        <form action="{{ route('costs.mark-salary-paid', $cost) }}" method="POST" class="d-inline">
+                                            @csrf
+                                            <button type="submit" class="btn btn-sm btn-outline-success me-1"
+                                                    onclick="return confirm('Mark these salaries as paid from Cash?')"
+                                                    title="Mark salaries paid">
+                                                <i class="fas fa-check"></i>
+                                            </button>
+                                        </form>
+                                        @endif
                                         <a href="{{ route('costs.edit', $cost) }}" 
                                            class="btn btn-sm btn-outline-primary me-1" 
                                            title="Edit Cost">

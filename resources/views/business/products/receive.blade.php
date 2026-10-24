@@ -86,6 +86,30 @@
                             </div>
                         </div>
 
+                        <!-- How the stock was paid for -->
+                        <div class="row mb-4">
+                            <div class="col-md-4">
+                                <label for="payment_mode" class="form-label">How did you pay?</label>
+                                <select class="form-select" id="payment_mode" name="payment_mode">
+                                    <option value="paid" @selected(old('payment_mode', 'paid') === 'paid')>Paid now</option>
+                                    <option value="credit" @selected(old('payment_mode') === 'credit')>On credit (pay supplier later)</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4" id="paid-from-group">
+                                <label for="paid_from_account_id" class="form-label">Paid from</label>
+                                <select class="form-select" id="paid_from_account_id" name="paid_from_account_id">
+                                    @foreach($moneyAccounts as $account)
+                                        <option value="{{ $account->id }}" @selected((string) old('paid_from_account_id') === (string) $account->id || (!old('paid_from_account_id') && $account->system_key === 'cash'))>{{ $account->name }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div class="col-md-4 d-none" id="due-date-group">
+                                <label for="due_date" class="form-label">Pay supplier by</label>
+                                <input type="date" class="form-control" id="due_date" name="due_date" value="{{ old('due_date', now()->addDays(30)->format('Y-m-d')) }}">
+                                <div class="form-text">Added to Supplier Debts automatically.</div>
+                            </div>
+                        </div>
+
                         <hr class="my-4">
 
                         <!-- Existing Product Form -->
@@ -176,15 +200,23 @@
                             </div>
 
                             <div class="row mb-3">
-                                <div class="col-md-4">
+                                <div class="col-md-3">
                                     <label for="new_quantity" class="form-label">Initial Quantity <span class="text-danger">*</span></label>
                                     <input type="number" class="form-control" id="new_quantity" name="new_quantity" value="{{ old('new_quantity') }}" min="0.001" step="0.001" placeholder="Quantity received">
                                 </div>
-                                <div class="col-md-4">
+                                <div class="col-md-3">
+                                    <label for="new_measurement_unit" class="form-label">Measured in</label>
+                                    <select class="form-select" id="new_measurement_unit" name="new_measurement_unit">
+                                        @foreach(\App\Models\Product::UNITS as $unit)
+                                            <option value="{{ $unit }}" @selected(old('new_measurement_unit', 'piece') === $unit)>{{ $unit === 'sqm' ? 'Square meter' : ucfirst($unit) }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div class="col-md-3">
                                     <label for="new_unit_cost" class="form-label">Unit Cost (KSh) <span class="text-danger">*</span></label>
                                     <input type="number" class="form-control" id="new_unit_cost" name="new_unit_cost" value="{{ old('new_unit_cost') }}" min="0" step="0.01" placeholder="Cost per unit">
                                 </div>
-                                <div class="col-md-4">
+                                <div class="col-md-3">
                                     <label for="selling_price" class="form-label">Selling Price (KSh) <span class="text-danger">*</span></label>
                                     <input type="number" class="form-control" id="selling_price" name="selling_price" value="{{ old('selling_price') }}" min="0" step="0.01" placeholder="Retail price">
                                 </div>
@@ -223,6 +255,16 @@ document.addEventListener('DOMContentLoaded', function() {
     const productSelect = document.getElementById('product_id');
     const quantityInput = document.getElementById('quantity_received');
     const existingProductInfo = document.getElementById('existing-product-info');
+
+    // Paid now -> choose money account; on credit -> choose due date
+    const paymentMode = document.getElementById('payment_mode');
+    const togglePaymentMode = () => {
+        const credit = paymentMode.value === 'credit';
+        document.getElementById('paid-from-group').classList.toggle('d-none', credit);
+        document.getElementById('due-date-group').classList.toggle('d-none', !credit);
+    };
+    paymentMode.addEventListener('change', togglePaymentMode);
+    togglePaymentMode();
 
     // Toggle forms based on receipt type
     existingProductRadio.addEventListener('change', function() {

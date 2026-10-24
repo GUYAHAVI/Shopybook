@@ -416,11 +416,15 @@ class PaymentController extends Controller
 
             // Rent collection: mark the linked rental payment as paid
             if ($stk->rental_payment_id) {
-                \App\Models\RentalPayment::where('id', $stk->rental_payment_id)->update([
-                    'status'                => 'paid',
-                    'transaction_reference' => $stk->mpesa_receipt_number,
-                    'paid_at'               => now(),
-                ]);
+                $rentalPayment = \App\Models\RentalPayment::find($stk->rental_payment_id);
+                if ($rentalPayment) {
+                    $rentalPayment->update([
+                        'status'                => 'paid',
+                        'transaction_reference' => $stk->mpesa_receipt_number,
+                        'paid_at'               => now(),
+                    ]);
+                    app(\App\Services\Accounting\Ledger::class)->postRentalPayment($rentalPayment);
+                }
             }
 
             // Shopybook subscription / business add-on paid to the platform bank account

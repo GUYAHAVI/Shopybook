@@ -29,6 +29,7 @@
                         <input type="number" step="0.01" class="form-control" id="amount" name="amount" value="{{ old('amount', $cost->amount) }}" required>
                         @error('amount')<div class="text-danger small">{{ $message }}</div>@enderror
                     </div>
+                    @include('partials.accounting.paid-from', ['selected' => $cost->paid_from_account_id])
                     <div class="mb-3">
                         <label for="description" class="form-label">Description</label>
                         <input type="text" class="form-control" id="description" name="description" value="{{ old('description', $cost->description) }}">

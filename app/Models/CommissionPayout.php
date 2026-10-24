@@ -10,7 +10,7 @@ class CommissionPayout extends Model
     use HasFactory;
 
     protected $fillable = [
-        'business_id', 'staff_id', 'amount', 'paid_at', 'notes'
+        'business_id', 'staff_id', 'amount', 'paid_from_account_id', 'paid_at', 'notes'
     ];
 
     public function business()

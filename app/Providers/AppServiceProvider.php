@@ -41,6 +41,13 @@ class AppServiceProvider extends ServiceProvider
         // Register policies
         Gate::policy(OrderReturn::class, OrderReturnPolicy::class);
         Gate::policy(Supplier::class, SupplierPolicy::class);
+
+        // A product created with stock on hand is opening inventory in the books
+        \App\Models\Product::created(function (\App\Models\Product $product) {
+            if ((float) $product->stock_quantity > 0) {
+                app(\App\Services\Accounting\Ledger::class)->postOpeningStock($product);
+            }
+        });
         
         // Register explicit route model binding for 'return' parameter
         Route::bind('return', function ($value) {

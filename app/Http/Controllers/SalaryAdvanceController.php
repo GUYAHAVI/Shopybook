@@ -157,7 +157,10 @@ class SalaryAdvanceController extends Controller
             return back()->withErrors(['password' => 'Invalid password. Please try again.']);
         }
 
-        $salaryAdvance->markAsPaid();
+        DB::transaction(function () use ($salaryAdvance) {
+            $salaryAdvance->markAsPaid();
+            app(\App\Services\Accounting\Ledger::class)->postSalaryAdvance($salaryAdvance);
+        });
 
         // Clear any cached relationships and calculated attributes
         $salaryAdvance->staff->clearCalculatedAttributesCache();

@@ -29,8 +29,8 @@ class GenerateMonthlySalaryCosts extends Command
     public function handle()
     {
         $month = $this->option('month') ? Carbon::createFromFormat('Y-m', $this->option('month')) : now();
-        $startOfMonth = $month->startOfMonth();
-        $endOfMonth = $month->endOfMonth();
+        $startOfMonth = $month->copy()->startOfMonth();
+        $endOfMonth = $month->copy()->endOfMonth();
 
         $this->info("Generating salary costs for {$month->format('F Y')}...");
 
@@ -49,13 +49,13 @@ class GenerateMonthlySalaryCosts extends Command
 
                 if (!$existingCost) {
                     // Create salary cost entry
-                    Cost::create([
+                    \Illuminate\Support\Facades\DB::transaction(fn () => app(\App\Services\Accounting\Ledger::class)->postCost(Cost::create([
                         'business_id' => $business->id,
                         'type' => 'salary',
                         'amount' => $totalSalary,
                         'description' => "Monthly staff salaries for {$month->format('F Y')}",
                         'date' => $startOfMonth->format('Y-m-d'),
-                    ]);
+                    ])));
 
                     $totalCostsCreated++;
                     $this->line("✓ Created salary cost for {$business->name}: KSh " . number_format($totalSalary, 2));

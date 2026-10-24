@@ -21,6 +21,7 @@
                             <option value="renovation" @if(old('type')=='renovation') selected @endif>Renovation</option>
                             <option value="other" @if(old('type')=='other') selected @endif>Other</option>
                         </select>
+                        <div class="form-text">Buying stock to sell? Use <a href="{{ route('products.receive') }}">Receive Stock</a> instead so it is added to your stock value.</div>
                         @error('type')<div class="text-danger small">{{ $message }}</div>@enderror
                     </div>
                     <div class="mb-3">
@@ -28,6 +29,7 @@
                         <input type="number" step="0.01" class="form-control" id="amount" name="amount" value="{{ old('amount') }}" required>
                         @error('amount')<div class="text-danger small">{{ $message }}</div>@enderror
                     </div>
+                    @include('partials.accounting.paid-from')
                     <div class="mb-3">
                         <label for="description" class="form-label">Description</label>
                         <input type="text" class="form-control" id="description" name="description" value="{{ old('description') }}">

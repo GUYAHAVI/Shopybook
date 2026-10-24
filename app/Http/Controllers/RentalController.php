@@ -428,6 +428,7 @@ class RentalController extends Controller
                     'paid_at'           => now(),
                     'notes'             => 'Recorded at tenant registration',
                 ]);
+                app(\App\Services\Accounting\Ledger::class)->postRentalPayment($paidPayment);
             }
         });
 
@@ -580,7 +581,7 @@ class RentalController extends Controller
         $ids    = [];
 
         for ($i = 0; $i < $months; $i++) {
-            $ids[] = RentalPayment::create([
+            $payment = RentalPayment::create([
                 'business_id'           => $tenant->business_id,
                 'rental_tenant_id'      => $tenant->id,
                 'rental_unit_id'        => $tenant->rental_unit_id,
@@ -592,7 +593,9 @@ class RentalController extends Controller
                 'paid_at'               => now(),
                 'received_by'           => auth()->id(),
                 'notes'                 => $validated['notes'] ?? null,
-            ])->id;
+            ]);
+            app(\App\Services\Accounting\Ledger::class)->postRentalPayment($payment);
+            $ids[] = $payment->id;
         }
 
         $receiptUrl = count($ids) === 1
@@ -613,10 +616,17 @@ class RentalController extends Controller
 
         $validated = $request->validate(['period' => 'required|regex:/^\d{4}-\d{2}$/']);
 
-        $n = RentalPayment::where('rental_tenant_id', $tenant->id)
+        $payments = RentalPayment::where('rental_tenant_id', $tenant->id)
             ->where('period', $validated['period'])
             ->where('status', 'paid')
-            ->update(['status' => 'reversed']);
+            ->get();
+
+        $ledger = app(\App\Services\Accounting\Ledger::class);
+        foreach ($payments as $payment) {
+            $payment->update(['status' => 'reversed']);
+            $ledger->reverse($payment);
+        }
+        $n = $payments->count();
 
         return response()->json([
             'success' => $n > 0,

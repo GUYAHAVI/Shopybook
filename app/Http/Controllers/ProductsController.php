@@ -13,6 +13,7 @@ use Maatwebsite\Excel\Facades\Excel;
 use App\Services\SimpleOCRService;
 use App\Imports\OCRProductImport;
 use App\Services\ClaudeAPIService;
+use App\Services\Accounting\Ledger;
 
 class ProductsController extends Controller
 {
@@ -184,6 +185,9 @@ class ProductsController extends Controller
             'is_featured' => 'boolean',
         ]);
 
+        // Book any stock quantity change before the product is saved
+        app(Ledger::class)->postStockAdjustment($product, (float) $request->input('stock_quantity'), $product);
+
         $product->fill($request->all());
         $product->measurement_unit = $request->input('measurement_unit') ?: ($product->measurement_unit ?: 'piece');
         $product->tax_treatment = $request->input('tax_treatment') ?: null;
@@ -350,6 +354,7 @@ class ProductsController extends Controller
             'adjustment_reason' => 'nullable|string|max:255',
         ]);
 
+        app(Ledger::class)->postStockAdjustment($product, (float) $request->stock_quantity);
         $product->stock_quantity = $request->stock_quantity;
         $product->save();
         
@@ -533,24 +538,30 @@ class ProductsController extends Controller
     /**
      * Show the form for receiving products
      */
-    public function showReceiveForm()
+    public function showReceiveForm(Ledger $ledger)
     {
-        $products = auth()->user()->business->products()
+        $business = auth()->user()->business;
+        $products = $business->products()
             ->orderBy('name', 'asc')
             ->get(['id', 'name', 'sku', 'stock_quantity', 'cost_price']);
+        $moneyAccounts = $ledger->moneyAccounts($business->id);
             
-        return view('business.products.receive', compact('products'));
+        return view('business.products.receive', compact('products', 'moneyAccounts'));
     }
 
     /**
      * Process product receiving
      */
-    public function processReceive(Request $request)
+    public function processReceive(Request $request, Ledger $ledger)
     {
+        $businessId = auth()->user()->business->id;
         $request->validate([
             'receipt_type' => 'required|in:existing_product,new_product',
             'receipt_date' => 'required|date',
             'supplier' => 'nullable|string|max:255',
+            'payment_mode' => 'nullable|in:paid,credit',
+            'paid_from_account_id' => ['nullable', 'integer', Ledger::moneyAccountRule($businessId)],
+            'due_date' => 'nullable|date',
             'invoice_number' => 'nullable|string|max:255',
             'notes' => 'nullable|string',
             
@@ -563,6 +574,7 @@ class ProductsController extends Controller
             'new_product_name' => 'required_if:receipt_type,new_product|nullable|string|max:255',
             'new_quantity' => 'required_if:receipt_type,new_product|nullable|numeric|min:0.001',
             'new_unit_cost' => 'required_if:receipt_type,new_product|nullable|numeric|min:0',
+            'new_measurement_unit' => ['nullable', Rule::in(Product::UNITS)],
             'selling_price' => 'required_if:receipt_type,new_product|nullable|numeric|min:0',
             'sku' => 'nullable|string|max:100',
             'barcode' => 'nullable|string|max:100',
@@ -604,7 +616,9 @@ class ProductsController extends Controller
                     'notes' => $request->notes,
                     'received_by' => auth()->id(),
                     'receipt_type' => 'existing_product',
-                ]);
+                ] + $this->receiptPaymentFields($request, $business->id));
+
+                $this->recordReceiptInBooks($receipt, $product, $request, $ledger);
                 
                 // Update product stock
                 $product->stock_quantity += $quantity;
@@ -638,7 +652,8 @@ class ProductsController extends Controller
                 $product->barcode = $request->barcode;
                 $product->category = $request->category;
                 $product->brand = $request->brand;
-                $product->stock_quantity = $quantity;
+                $product->measurement_unit = $request->new_measurement_unit ?: 'piece';
+                $product->stock_quantity = 0; // set after the receipt is valued below
                 $product->low_stock_threshold = $request->low_stock_threshold ?? 10;
                 $product->is_active = true;
                 $product->save();
@@ -663,7 +678,11 @@ class ProductsController extends Controller
                         'category' => $request->category,
                         'brand' => $request->brand,
                     ],
-                ]);
+                ] + $this->receiptPaymentFields($request, $business->id));
+
+                $this->recordReceiptInBooks($receipt, $product, $request, $ledger);
+                $product->stock_quantity = $quantity;
+                $product->save();
                 
                 DB::commit();
                 
@@ -674,6 +693,42 @@ class ProductsController extends Controller
         } catch (\Exception $e) {
             DB::rollBack();
             return back()->withErrors(['error' => 'Failed to process receipt: ' . $e->getMessage()])->withInput();
+        }
+    }
+
+    /** How the stock was paid for: now from a money account, or on credit from the supplier. */
+    private function receiptPaymentFields(Request $request, string $businessId): array
+    {
+        $onCredit = $request->input('payment_mode') === 'credit';
+
+        return [
+            'payment_mode' => $onCredit ? 'credit' : 'paid',
+            'paid_from_account_id' => $onCredit ? null : $request->input('paid_from_account_id'),
+            'supplier_id' => $request->filled('supplier')
+                ? \App\Models\Supplier::where('business_id', $businessId)->where('name', $request->supplier)->value('id')
+                : null,
+        ];
+    }
+
+    /** Value the stock into inventory and, when bought on credit, open a supplier debt for it. */
+    private function recordReceiptInBooks(StockReceipt $receipt, Product $product, Request $request, Ledger $ledger): void
+    {
+        $ledger->receiveStock($receipt, $product);
+
+        if ($receipt->payment_mode === 'credit' && (float) $receipt->total_cost > 0) {
+            \App\Models\SupplierDebt::create([
+                'business_id' => $receipt->business_id,
+                'supplier_id' => $receipt->supplier_id,
+                'stock_receipt_id' => $receipt->id,
+                'supplier_name' => $receipt->supplier ?: 'Unnamed supplier',
+                'reference_number' => $receipt->invoice_number ?: $receipt->receipt_number,
+                'total_amount' => $receipt->total_cost,
+                'amount_paid' => 0,
+                'balance' => $receipt->total_cost,
+                'due_date' => $request->input('due_date') ?: now()->addDays(30)->toDateString(),
+                'status' => 'pending',
+                'description' => "Stock received: {$receipt->quantity_received} x {$receipt->product_name}",
+            ]);
         }
     }
 

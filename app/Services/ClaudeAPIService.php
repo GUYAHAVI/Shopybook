@@ -3531,9 +3531,25 @@ RULES:
                     'order_id' => $order->id,
                     'product_id' => $product->id,
                     'quantity' => $record['quantity'] ?? 1,
+                    'stock_qty' => $record['quantity'] ?? 1,
                     'price' => $record['unit_price'] ?? 0,
-                    'subtotal' => $record['total'] ?? 0
+                    'total' => $record['total'] ?? 0
                 ]);
+
+                // Book the sale + its payment. Imported historical sales don't touch the
+                // stock ledger (no reliable cost), so they contribute revenue but no COGS.
+                $ledger = app(\App\Services\Accounting\Ledger::class);
+                $ledger->postSale($order->fresh());
+                if ((float) $order->total_amount > 0) {
+                    $ledger->postPayment($order->payments()->create([
+                        'business_id' => $businessId,
+                        'payment_number' => \App\Models\Payment::generatePaymentNumber(),
+                        'payment_method' => $record['payment_method'] ?? 'cash',
+                        'amount' => $order->total_amount,
+                        'payment_date' => $order->created_at,
+                        'notes' => 'Imported via OCR',
+                    ]));
+                }
 
                 $created++;
             } catch (\Exception $e) {

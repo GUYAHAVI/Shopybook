@@ -2101,6 +2101,15 @@
                     </div>
                     @endif
 
+                    @if($__can('settings'))
+                    <div class="nav-item">
+                        <a href="{{ route('money.index') }}" class="nav-link {{ request()->routeIs('money.*') ? 'active' : '' }}">
+                            <i class="fas fa-money-bill-wave"></i>
+                            <span>Money Accounts</span>
+                        </a>
+                    </div>
+                    @endif
+
                     @if($__can('suppliers') && $__appOk('suppliers'))
                     <div class="nav-item">
                         <a href="{{ route('suppliers.index') }}" class="nav-link {{ request()->routeIs('suppliers.*') ? 'active' : '' }}">
@@ -2133,6 +2142,12 @@
                         <a href="{{ route('reports.index') }}" class="nav-link {{ request()->routeIs('reports.*') ? 'active' : '' }}">
                             <i class="fas fa-file-alt"></i>
                             <span>Reports</span>
+                        </a>
+                    </div>
+                    <div class="nav-item">
+                        <a href="{{ route('accounting.index') }}" class="nav-link {{ request()->routeIs('accounting.*') ? 'active' : '' }}">
+                            <i class="fas fa-book-open"></i>
+                            <span>Financial Reports</span>
                         </a>
                     </div>
                     <div class="nav-item">

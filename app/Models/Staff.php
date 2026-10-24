@@ -184,10 +184,14 @@ class Staff extends Model
         $totalDeducted = 0;
         $availableAmount = $this->salary ?? 0;
 
+        $ledger = app(\App\Services\Accounting\Ledger::class);
         foreach ($advancesToDeduct as $advance) {
             if ($availableAmount <= 0) break;
-            
+
             $deductedAmount = $advance->deductFromSalary($availableAmount);
+            if ($deductedAmount > 0) {
+                $ledger->postAdvanceDeduction($advance, $deductedAmount);
+            }
             $totalDeducted += $deductedAmount;
             $availableAmount -= $deductedAmount;
         }

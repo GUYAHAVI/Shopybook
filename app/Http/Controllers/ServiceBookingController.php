@@ -136,6 +136,7 @@ class ServiceBookingController extends Controller
                 'payment_method' => $request->input('payment_method'),
                 'notes' => $request->input('notes'),
             ]);
+            app(\App\Services\Accounting\Ledger::class)->postServiceBooking($serviceBooking);
 
             // Create service items with commission data
             foreach ($serviceItems as $itemData) {
@@ -236,6 +237,10 @@ class ServiceBookingController extends Controller
                 'sequence_order' => 1,
                 'notes' => $request->input('notes'),
             ]);
+
+            $ledger = app(\App\Services\Accounting\Ledger::class);
+            $ledger->reverse($serviceBooking);
+            $ledger->postServiceBooking($serviceBooking);
         });
 
         return redirect()->route('service-bookings.index')
@@ -353,9 +358,12 @@ class ServiceBookingController extends Controller
     {
         $this->authorize('update', $serviceBooking);
 
-        $serviceBooking->update([
-            'payment_status' => 'paid',
-        ]);
+        DB::transaction(function () use ($serviceBooking) {
+            $serviceBooking->update([
+                'payment_status' => 'paid',
+            ]);
+            app(\App\Services\Accounting\Ledger::class)->postServiceBooking($serviceBooking);
+        });
 
         return redirect()->route('service-bookings.show', $serviceBooking)
             ->with('success', 'Service booking marked as complete.');
@@ -606,6 +614,7 @@ class ServiceBookingController extends Controller
                         'payment_method' => $bookingData['payment_method'],
                         'notes' => $bookingData['notes'],
                     ]);
+                    app(\App\Services\Accounting\Ledger::class)->postServiceBooking($serviceBooking);
 
                     // Create the service item
                     ServiceItem::create([

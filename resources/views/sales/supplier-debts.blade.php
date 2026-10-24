@@ -211,6 +211,15 @@
                         <input type="number" step="0.01" class="form-control" id="total_amount" name="total_amount" required>
                     </div>
                     <div class="mb-3">
+                        <label for="expense_account_id" class="form-label">What was this for?</label>
+                        <select class="form-select" id="expense_account_id" name="expense_account_id">
+                            @foreach($expenseAccounts as $account)
+                                <option value="{{ $account->id }}" @selected($account->system_key === 'purchases_misc')>{{ $account->name }}</option>
+                            @endforeach
+                        </select>
+                        <small class="text-muted">Stock bought on credit? Use Receive Stock with "On credit" so it is added to your stock.</small>
+                    </div>
+                    <div class="mb-3">
                         <label for="due_date" class="form-label">Due Date *</label>
                         <input type="date" class="form-control" id="due_date" name="due_date" required min="{{ date('Y-m-d') }}">
                     </div>

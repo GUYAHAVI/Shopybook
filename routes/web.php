@@ -628,6 +628,36 @@ Route::post('/orders', [SalesController::class, 'createOrder'])->name('sales.cre
     Route::get('/commission-reports', [StaffController::class, 'commissionReports'])->middleware(['has.business', 'permission:staff'])->name('commission-reports');
 
     // Costs Routes
+    Route::prefix('money')->middleware(['has.business', 'permission:settings'])->group(function () {
+        Route::get('/', [\App\Http\Controllers\Accounting\MoneyController::class, 'index'])->name('money.index');
+        Route::post('/', [\App\Http\Controllers\Accounting\MoneyController::class, 'store'])->name('money.store');
+        Route::post('/lock', [\App\Http\Controllers\Accounting\MoneyController::class, 'updateLock'])->name('money.lock');
+        Route::post('/import', [\App\Http\Controllers\Accounting\MoneyController::class, 'importStatement'])->name('money.import');
+        Route::get('/reconcile', [\App\Http\Controllers\Accounting\MoneyController::class, 'reconcile'])->name('money.reconcile');
+    });
+
+    Route::prefix('accounting/setup')->middleware(['has.business', 'permission:settings'])->group(function () {
+        Route::get('/', [\App\Http\Controllers\Accounting\SetupController::class, 'index'])->name('accounting.setup');
+        Route::post('/backfill', [\App\Http\Controllers\Accounting\SetupController::class, 'backfill'])->name('accounting.setup.backfill');
+        Route::get('/review', [\App\Http\Controllers\Accounting\SetupController::class, 'review'])->name('accounting.setup.review');
+        Route::post('/commit', [\App\Http\Controllers\Accounting\SetupController::class, 'commit'])->name('accounting.setup.commit');
+        Route::post('/discard', [\App\Http\Controllers\Accounting\SetupController::class, 'discard'])->name('accounting.setup.discard');
+        Route::post('/open', [\App\Http\Controllers\Accounting\SetupController::class, 'open'])->name('accounting.setup.open');
+    });
+
+    Route::prefix('accounting')->middleware(['has.business', 'permission:reports'])->group(function () {
+        Route::get('/', [\App\Http\Controllers\Accounting\ReportsController::class, 'index'])->name('accounting.index');
+        Route::get('/profit-loss', [\App\Http\Controllers\Accounting\ReportsController::class, 'profitLoss'])->name('accounting.profit-loss');
+        Route::get('/balance-sheet', [\App\Http\Controllers\Accounting\ReportsController::class, 'balanceSheet'])->name('accounting.balance-sheet');
+        Route::get('/trial-balance', [\App\Http\Controllers\Accounting\ReportsController::class, 'trialBalance'])->name('accounting.trial-balance');
+        Route::get('/accounts/{account}', [\App\Http\Controllers\Accounting\ReportsController::class, 'statement'])->name('accounting.statement');
+        Route::get('/money-book', [\App\Http\Controllers\Accounting\ReportsController::class, 'money'])->name('accounting.money-book');
+        Route::get('/parties/{type}/{party}', [\App\Http\Controllers\Accounting\ReportsController::class, 'party'])->name('accounting.party');
+        Route::get('/debts', [\App\Http\Controllers\Accounting\ReportsController::class, 'aging'])->name('accounting.aging');
+        Route::get('/stock-value', [\App\Http\Controllers\Accounting\ReportsController::class, 'stockValuation'])->name('accounting.stock-valuation');
+        Route::get('/vat', [\App\Http\Controllers\Accounting\ReportsController::class, 'vat'])->name('accounting.vat');
+    });
+
     Route::prefix('costs')->middleware(['has.business', 'permission:expenses'])->group(function () {
         Route::get('/', [CostController::class, 'index'])->name('costs.index');
         Route::get('/create', [CostController::class, 'create'])->name('costs.create');
@@ -635,6 +665,7 @@ Route::post('/orders', [SalesController::class, 'createOrder'])->name('sales.cre
         Route::get('/{cost}', [CostController::class, 'show'])->name('costs.show');
         Route::get('/{cost}/edit', [CostController::class, 'edit'])->name('costs.edit');
         Route::put('/{cost}', [CostController::class, 'update'])->name('costs.update');
+        Route::post('/{cost}/mark-salary-paid', [CostController::class, 'markSalaryPaid'])->name('costs.mark-salary-paid');
         Route::delete('/{cost}', [CostController::class, 'destroy'])->name('costs.destroy');
     });
 
