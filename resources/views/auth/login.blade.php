@@ -408,6 +408,12 @@
                 <p>Enter your credentials to access your account</p>
             </div>
 
+            @if(session('error'))
+                <div style="background:#fef2f2;border:1px solid #fecaca;color:#b91c1c;padding:10px 14px;border-radius:8px;font-size:0.9rem;margin-bottom:16px;">
+                    {{ session('error') }}
+                </div>
+            @endif
+
             <form method="POST" action="{{ route('login') }}" id="loginForm">
                 @csrf
                 <x-honeypot />

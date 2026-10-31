@@ -3154,7 +3154,7 @@
 
         // Replay guided tours on every page
         function resetPageGuides() {
-            fetch('{{ route("tours.reset") }}', {
+            apiFetch('{{ route("tours.reset") }}', {
                 method: 'POST',
                 headers: {
                     'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
@@ -3272,14 +3272,31 @@
             }
         }
         
+        // fetch() wrapper for JSON endpoints: sends AJAX headers so an expired
+        // session gets a 401 (not a redirect that hijacks the post-login
+        // "intended" URL), then sends this stale tab to the login page.
+        function apiFetch(url, options = {}) {
+            options.headers = Object.assign({
+                'Accept': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest',
+            }, options.headers || {});
+            return fetch(url, options).then(response => {
+                if (response.status === 401 || (response.redirected && response.url.includes('/login'))) {
+                    window.location.href = '{{ route("login") }}';
+                    return new Promise(() => {});
+                }
+                return response;
+            });
+        }
+
         function checkForNewInsights() {
             // Check for new AI insights or recommendations
-            fetch('{{ route("ai-comm.status") }}')
+            apiFetch('{{ route("ai-comm.status") }}')
             .then(response => response.json())
             .then(data => {
                 if (data.success && data.status.knowledge_available) {
                     // Check for unread advice
-                    fetch('{{ route("ai-advice.unread-count") }}')
+                    apiFetch('{{ route("ai-advice.unread-count") }}')
                     .then(response => response.json())
                     .then(adviceData => {
                         if (adviceData.success && adviceData.count > 0) {
@@ -3352,7 +3369,7 @@
             document.getElementById('ai-chat-messages').insertAdjacentHTML('beforeend', loadingHtml);
             
             // Send to AI
-            fetch('{{ route("ai-comm.process-message") }}', {
+            apiFetch('{{ route("ai-comm.process-message") }}', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -3405,7 +3422,7 @@
         }
         
         function loadAIConversationHistory() {
-            fetch('{{ route("ai-comm.history") }}')
+            apiFetch('{{ route("ai-comm.history") }}')
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
@@ -3680,7 +3697,7 @@
         }
         
         function loadNotifications() {
-            fetch('{{ route("notifications.index") }}')
+            apiFetch('{{ route("notifications.index") }}')
                 .then(response => response.json())
                 .then(data => {
                     displayNotifications(data.notifications);
@@ -3732,7 +3749,7 @@
         }
         
         function markNotificationAsRead(notificationId) {
-            fetch(`{{ url('notifications') }}/${notificationId}/read`, {
+            apiFetch(`{{ url('notifications') }}/${notificationId}/read`, {
                 method: 'PATCH',
                 headers: {
                     'X-CSRF-TOKEN': '{{ csrf_token() }}',
@@ -3757,7 +3774,7 @@
         }
         
         function markAllNotificationsAsRead() {
-            fetch('{{ route("notifications.mark-all-read") }}', {
+            apiFetch('{{ route("notifications.mark-all-read") }}', {
                 method: 'PATCH',
                 headers: {
                     'X-CSRF-TOKEN': '{{ csrf_token() }}',
@@ -3781,7 +3798,7 @@
         }
         
         function loadNotificationCount() {
-            fetch('{{ route("notifications.unread-count") }}')
+            apiFetch('{{ route("notifications.unread-count") }}')
                 .then(response => response.json())
                 .then(data => {
                     updateNotificationBadge(data.count);

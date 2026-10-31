@@ -43,10 +43,16 @@
                 <tbody>
                 @forelse($properties as $prop)
                     <tr>
-                        <td class="fw-semibold">{{ $prop->name }}</td>
+                        <td class="fw-semibold">
+                            <a href="{{ route('rentals.units.index', ['property_id' => $prop->id]) }}" class="text-decoration-none">{{ $prop->name }}</a>
+                        </td>
                         <td>{{ $prop->location ?: '—' }}</td>
-                        <td class="text-center">{{ $prop->units_count }}</td>
-                        <td class="text-end">
+                        <td class="text-center">
+                            {{ $prop->units_count }}
+                            <div class="text-muted small">{{ $prop->occupied_units_count }} occupied</div>
+                        </td>
+                        <td class="text-end text-nowrap">
+                            <a href="{{ route('rentals.units.index', ['property_id' => $prop->id]) }}" class="btn btn-sm btn-outline-primary">View units</a>
                             <form method="POST" action="{{ route('rentals.properties.destroy', $prop) }}" class="d-inline"
                                   onsubmit="return confirm('Remove {{ addslashes($prop->name) }}? Units are kept but unlinked.')">
                                 @csrf @method('DELETE')

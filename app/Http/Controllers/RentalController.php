@@ -26,6 +26,11 @@ class RentalController extends Controller
         if ($request->filled('status')) {
             $query->where('status', $request->status);
         }
+        if ($request->filled('property_id')) {
+            $request->property_id === 'none'
+                ? $query->whereNull('rental_property_id')
+                : $query->where('rental_property_id', $request->property_id);
+        }
         if ($request->boolean('listed')) {
             $query->where('is_listed', true)->where('status', 'vacant');
         }
@@ -44,6 +49,8 @@ class RentalController extends Controller
         $properties  = $business->rentalProperties()->orderBy('name')->get();
         $orphanCount = RentalUnit::where('business_id', $business->id)
             ->whereNull('rental_property_id')->count();
+        $vacantUnits = RentalUnit::where('business_id', $business->id)
+            ->where('status', 'vacant')->orderBy('label')->get();
 
         // Current-period rent state per unit (paid / partial / due / overdue)
         $period  = now()->format('Y-m');
@@ -71,7 +78,7 @@ class RentalController extends Controller
                 : ($pastDue ? 'overdue' : 'due')));
         }
 
-        return view('rentals.units.index', compact('units', 'properties', 'orphanCount', 'period', 'dueDay'));
+        return view('rentals.units.index', compact('units', 'properties', 'orphanCount', 'vacantUnits', 'period', 'dueDay'));
     }
 
     /** Rental preferences (rent due day). */
@@ -321,7 +328,10 @@ class RentalController extends Controller
     public function properties()
     {
         $business   = auth()->user()->business;
-        $properties = $business->rentalProperties()->withCount('units')->orderBy('name')->get();
+        $properties = $business->rentalProperties()
+            ->withCount('units')
+            ->withCount(['units as occupied_units_count' => fn($q) => $q->where('status', 'occupied')])
+            ->orderBy('name')->get();
         return view('rentals.properties.index', compact('properties'));
     }
 

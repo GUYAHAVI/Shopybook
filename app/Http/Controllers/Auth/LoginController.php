@@ -43,6 +43,17 @@ class LoginController extends Controller
 
     protected function authenticated(Request $request, $user)
     {
+        // Polled JSON endpoints are never a real destination: a stale dashboard
+        // tab hitting one while logged out stores it as url.intended and would
+        // dump the user on a raw JSON response right after login. Drop those.
+        $intendedPath = (string) parse_url((string) $request->session()->get('url.intended'), PHP_URL_PATH);
+        if (preg_match('#^/notifications(/|$)#', $intendedPath)
+            || preg_match('#/unread-count$#', $intendedPath)
+            || preg_match('#^/payment/mpesa/status/#', $intendedPath)
+            || preg_match('#^/ai-communication/(status|history)$#', $intendedPath)) {
+            $request->session()->forget('url.intended');
+        }
+
         // Check if user owns a business
         if ($user->business) {
             return redirect()->intended($this->redirectPath());
