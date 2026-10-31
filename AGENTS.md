@@ -18,3 +18,8 @@
 - Posting is idempotent per (source model, event).
 - Reports live in `app/Services/Accounting/ReportService.php` + `app/Http/Controllers/Accounting/` (routes `accounting.*`). Every report reads posted `journal_lines` only.
 - Report view pages: `resources/views/accounting/` with shared header `partials/head.blade.php`.
+
+## Purchasing (procure-to-pay)
+- `purchase_orders` + `purchase_order_items`; statuses: draft → sent → partially_received → received (cancelled side-state). Edit/delete draft only.
+- Receiving a PO creates a `stock_receipt` per line (`purchase_order_id`/`purchase_order_item_id` links) and posts `Ledger::receiveStock` + creates a `SupplierDebt` when `payment_mode=credit`, all inside `DB::transaction` in `PurchaseOrderController::receive` (same pattern as `ProductsController::processReceive`).
+- `supplier_debts` is the supplier-bill/AP record (posts `Dr expense|inventory / Cr payable`); `supplier_payments` settle it (`Dr payable / Cr money`). `purchase_order_id` links bills back to a PO.

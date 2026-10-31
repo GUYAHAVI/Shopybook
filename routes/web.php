@@ -23,6 +23,7 @@ use App\Http\Controllers\CostController;
 use App\Http\Controllers\InventoryController;
 use App\Http\Controllers\CommissionPayoutController;
 use App\Http\Controllers\SupplierController;
+use App\Http\Controllers\PurchaseOrderController;
 use App\Http\Controllers\RentalController;
 use App\Http\Controllers\PublicRentalController;
 use App\Http\Controllers\OrderController;
@@ -703,6 +704,21 @@ Route::post('/orders', [SalesController::class, 'createOrder'])->name('sales.cre
     });
 
     // Suppliers Routes
+    Route::prefix('purchase-orders')->middleware(['auth', 'has.business', 'permission:suppliers'])->group(function () {
+        Route::get('/', [PurchaseOrderController::class, 'index'])->name('purchase-orders.index');
+        Route::get('/create', [PurchaseOrderController::class, 'create'])->name('purchase-orders.create');
+        Route::post('/', [PurchaseOrderController::class, 'store'])->name('purchase-orders.store');
+        Route::get('/{purchaseOrder}', [PurchaseOrderController::class, 'show'])->name('purchase-orders.show');
+        Route::get('/{purchaseOrder}/edit', [PurchaseOrderController::class, 'edit'])->name('purchase-orders.edit');
+        Route::put('/{purchaseOrder}', [PurchaseOrderController::class, 'update'])->name('purchase-orders.update');
+        Route::delete('/{purchaseOrder}', [PurchaseOrderController::class, 'destroy'])->name('purchase-orders.destroy');
+        Route::post('/{purchaseOrder}/send', [PurchaseOrderController::class, 'send'])->name('purchase-orders.send');
+        Route::post('/{purchaseOrder}/resend-email', [PurchaseOrderController::class, 'resendEmail'])->name('purchase-orders.resend-email');
+        Route::post('/{purchaseOrder}/cancel', [PurchaseOrderController::class, 'cancel'])->name('purchase-orders.cancel');
+        Route::get('/{purchaseOrder}/receive', [PurchaseOrderController::class, 'receiveForm'])->name('purchase-orders.receive');
+        Route::post('/{purchaseOrder}/receive', [PurchaseOrderController::class, 'receive'])->name('purchase-orders.receive.process');
+    });
+
     Route::prefix('suppliers')->middleware(['auth', 'has.business', 'permission:suppliers'])->group(function () {
         Route::get('/', [SupplierController::class, 'index'])->name('suppliers.index');
         Route::get('/create', [SupplierController::class, 'create'])->name('suppliers.create');

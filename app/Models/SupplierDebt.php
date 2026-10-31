@@ -10,6 +10,7 @@ class SupplierDebt extends Model
         'business_id',
         'supplier_id',
         'stock_receipt_id',
+        'purchase_order_id',
         'expense_account_id',
         'supplier_name',
         'supplier_phone',
@@ -48,6 +49,11 @@ class SupplierDebt extends Model
     public function stockReceipt()
     {
         return $this->belongsTo(StockReceipt::class);
+    }
+
+    public function purchaseOrder()
+    {
+        return $this->belongsTo(PurchaseOrder::class);
     }
 
     public function updateStatus()

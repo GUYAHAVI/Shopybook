@@ -96,6 +96,8 @@ abstract class AccountingTestCase extends TestCase
             $t->string('product_name');
             $t->string('supplier')->nullable();
             $t->unsignedBigInteger('supplier_id')->nullable();
+            $t->unsignedBigInteger('purchase_order_id')->nullable();
+            $t->unsignedBigInteger('purchase_order_item_id')->nullable();
             $t->decimal('quantity_received', 12, 3);
             $t->decimal('unit_cost', 15, 2);
             $t->decimal('total_cost', 15, 2);
@@ -105,11 +107,42 @@ abstract class AccountingTestCase extends TestCase
             $t->string('invoice_number')->nullable();
             $t->timestamps();
         });
+        Schema::create('suppliers', function (Blueprint $t) {
+            $t->id();
+            $t->string('business_id');
+            $t->string('name');
+            $t->timestamps();
+        });
+        Schema::create('purchase_orders', function (Blueprint $t) {
+            $t->id();
+            $t->string('business_id');
+            $t->string('po_number');
+            $t->unsignedBigInteger('supplier_id');
+            $t->string('status')->default('draft');
+            $t->date('order_date');
+            $t->date('expected_date')->nullable();
+            $t->decimal('total_amount', 15, 2)->default(0);
+            $t->text('notes')->nullable();
+            $t->unsignedBigInteger('created_by')->nullable();
+            $t->timestamps();
+        });
+        Schema::create('purchase_order_items', function (Blueprint $t) {
+            $t->id();
+            $t->unsignedBigInteger('purchase_order_id');
+            $t->unsignedBigInteger('product_id');
+            $t->string('product_name');
+            $t->decimal('quantity_ordered', 12, 3);
+            $t->decimal('quantity_received', 12, 3)->default(0);
+            $t->decimal('unit_cost', 15, 2);
+            $t->decimal('total_cost', 15, 2);
+            $t->timestamps();
+        });
         Schema::create('supplier_debts', function (Blueprint $t) {
             $t->id();
             $t->string('business_id');
             $t->unsignedBigInteger('supplier_id')->nullable();
             $t->unsignedBigInteger('stock_receipt_id')->nullable();
+            $t->unsignedBigInteger('purchase_order_id')->nullable();
             $t->unsignedBigInteger('expense_account_id')->nullable();
             $t->string('supplier_name')->nullable();
             $t->string('reference_number')->nullable();

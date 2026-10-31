@@ -2117,6 +2117,12 @@
                             <span>Suppliers</span>
                         </a>
                     </div>
+                    <div class="nav-item">
+                        <a href="{{ route('purchase-orders.index') }}" class="nav-link {{ request()->routeIs('purchase-orders.*') ? 'active' : '' }}">
+                            <i class="fas fa-clipboard-list"></i>
+                            <span>Purchase Orders</span>
+                        </a>
+                    </div>
                     @endif
                 </div>
             </div>
@@ -2451,6 +2457,10 @@
             <a href="{{ route('suppliers.index') }}" class="app-tile {{ request()->routeIs('suppliers.*') ? 'active' : '' }}" data-label="Suppliers">
                 <div class="app-tile-icon" style="background:#64748b;"><i class="fas fa-truck"></i></div>
                 <span class="app-tile-label">Suppliers</span>
+            </a>
+            <a href="{{ route('purchase-orders.index') }}" class="app-tile {{ request()->routeIs('purchase-orders.*') ? 'active' : '' }}" data-label="Purchasing">
+                <div class="app-tile-icon" style="background:#8b5cf6;"><i class="fas fa-clipboard-list"></i></div>
+                <span class="app-tile-label">Purchasing</span>
             </a>
             @endif
             @if($__can('services') && $__appOk('services'))

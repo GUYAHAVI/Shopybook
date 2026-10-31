@@ -16,6 +16,8 @@ class StockReceipt extends Model
         'product_name',
         'supplier',
         'supplier_id',
+        'purchase_order_id',
+        'purchase_order_item_id',
         'quantity_received',
         'unit_cost',
         'total_cost',
@@ -91,6 +93,11 @@ class StockReceipt extends Model
     public function receivedBy()
     {
         return $this->belongsTo(User::class, 'received_by');
+    }
+
+    public function purchaseOrder()
+    {
+        return $this->belongsTo(PurchaseOrder::class);
     }
 
     /**
