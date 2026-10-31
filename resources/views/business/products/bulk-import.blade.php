@@ -1,6 +1,7 @@
 @extends('layouts.dash')
 
 @section('content')
+@php $excelTab = session('active_tab') === 'update' || request('tab') === 'update'; @endphp
 <div class="container-fluid px-4">
     <div class="d-sm-flex align-items-center justify-content-between mb-4">
         <div>
@@ -58,7 +59,7 @@
             <!-- Import Method Tabs -->
             <ul class="nav nav-tabs mb-3" id="importTabs" role="tablist">
                 <li class="nav-item" role="presentation">
-                    <button class="nav-link{{ session('active_tab') === 'update' ? '' : ' active' }}" id="file-tab" data-bs-toggle="tab" data-bs-target="#file-import" type="button" role="tab">
+                    <button class="nav-link{{ $excelTab ? '' : ' active' }}" id="file-tab" data-bs-toggle="tab" data-bs-target="#file-import" type="button" role="tab">
                         <i class="fas fa-file-csv me-2"></i>File Import
                     </button>
                 </li>
@@ -73,7 +74,7 @@
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
-                    <button class="nav-link{{ session('active_tab') === 'update' ? ' active' : '' }}" id="update-tab" data-bs-toggle="tab" data-bs-target="#excel-update" type="button" role="tab">
+                    <button class="nav-link{{ $excelTab ? ' active' : '' }}" id="update-tab" data-bs-toggle="tab" data-bs-target="#excel-update" type="button" role="tab">
                         <i class="fas fa-file-excel me-2"></i>Edit in Excel
                     </button>
                 </li>
@@ -82,7 +83,7 @@
             <!-- Tab Content -->
             <div class="tab-content" id="importTabContent">
                 <!-- File Import Tab -->
-                <div class="tab-pane fade{{ session('active_tab') === 'update' ? '' : ' show active' }}" id="file-import" role="tabpanel">
+                <div class="tab-pane fade{{ $excelTab ? '' : ' show active' }}" id="file-import" role="tabpanel">
                     <div class="card shadow">
                         <div class="card-header py-3">
                             <h6 class="m-0 font-weight-bold text-primary">Upload File</h6>
@@ -266,7 +267,7 @@
                 </div>
 
                 <!-- Edit in Excel Tab -->
-                <div class="tab-pane fade{{ session('active_tab') === 'update' ? ' show active' : '' }}" id="excel-update" role="tabpanel">
+                <div class="tab-pane fade{{ $excelTab ? ' show active' : '' }}" id="excel-update" role="tabpanel">
                     <div class="card shadow">
                         <div class="card-header py-3">
                             <h6 class="m-0 font-weight-bold text-primary">Edit Existing Products in Excel</h6>

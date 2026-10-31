@@ -15,6 +15,9 @@
             <a href="{{ route('products.export-excel') }}" class="btn btn-outline-success" data-tour="products-export">
                 <i class="fas fa-file-excel me-2"></i>Export Excel
             </a>
+            <a href="{{ route('products.bulk-import', ['tab' => 'update']) }}" class="btn btn-outline-primary" data-tour="products-bulk-update">
+                <i class="fas fa-upload me-2"></i>Bulk Update
+            </a>
             <a href="{{ route('products.bulk-import') }}" class="btn btn-outline-secondary" data-tour="products-import">
                 <i class="fas fa-file-import me-2"></i>Bulk Import
             </a>

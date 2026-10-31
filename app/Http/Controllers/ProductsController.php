@@ -251,7 +251,7 @@ class ProductsController extends Controller
             $columns = collect($headings)->flatten()->map(fn ($h) => strtolower(trim((string) $h)));
             if ($columns->contains('id')) {
                 return back()
-                    ->with('error', 'This file has an "id" column — it looks like a products export. Use the "Edit in Excel" tab to update existing products instead of importing it as new products.')
+                    ->with('error', 'This file has an "id" column — it looks like a products export. Use the "Edit in Excel" tab on this page to update existing products instead of importing it as new products.')
                     ->with('active_tab', 'update');
             }
         }
