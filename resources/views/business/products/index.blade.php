@@ -12,6 +12,9 @@
             <a href="{{ route('products.receive') }}" class="btn btn-info" data-tour="products-receive">
                 <i class="fas fa-truck-loading me-2"></i>Receive Stock
             </a>
+            <a href="{{ route('products.export-excel') }}" class="btn btn-outline-success" data-tour="products-export">
+                <i class="fas fa-file-excel me-2"></i>Export Excel
+            </a>
             <a href="{{ route('products.bulk-import') }}" class="btn btn-outline-secondary" data-tour="products-import">
                 <i class="fas fa-file-import me-2"></i>Bulk Import
             </a>
@@ -37,6 +40,15 @@
             </div>
         </div>
     </div>
+
+    @foreach(['success' => 'success', 'warning' => 'warning', 'error' => 'danger'] as $key => $class)
+        @if(session($key))
+            <div class="alert alert-{{ $class }} alert-dismissible fade show">
+                <i class="fas fa-{{ $key === 'success' ? 'check-circle' : 'exclamation-triangle' }} me-2"></i>{{ session($key) }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        @endif
+    @endforeach
 
     <!-- Stats Cards -->
     <div class="row mb-4">

@@ -244,6 +244,18 @@ class ProductsController extends Controller
         $skipDuplicates = $request->has('skip_duplicates');
         $file = $request->file('csv_file');
 
+        // An "id" column means this is the products export file — uploading it here
+        // would create duplicates. Point the user at the Edit in Excel tab instead.
+        if ($hasHeader) {
+            $headings = (new \Maatwebsite\Excel\HeadingRowImport)->toArray($file);
+            $columns = collect($headings)->flatten()->map(fn ($h) => strtolower(trim((string) $h)));
+            if ($columns->contains('id')) {
+                return back()
+                    ->with('error', 'This file has an "id" column — it looks like a products export. Use the "Edit in Excel" tab to update existing products instead of importing it as new products.')
+                    ->with('active_tab', 'update');
+            }
+        }
+
         try {
             Excel::import(new \App\Imports\ProductImport(auth()->user()->business->id, $skipDuplicates), $file);
         } catch (\Maatwebsite\Excel\Validators\ValidationException $e) {
@@ -252,6 +264,53 @@ class ProductsController extends Controller
         }
 
         return redirect()->route('products.index')->with('success', 'Products imported successfully!');
+    }
+
+    /**
+     * Download all products as an editable Excel file (bulk update sheet)
+     */
+    public function exportProducts()
+    {
+        $products = auth()->user()->business->products()
+            ->orderBy('name')
+            ->get();
+
+        return Excel::download(
+            new \App\Exports\ProductsExport($products),
+            'products_' . date('Y-m-d') . '.xlsx'
+        );
+    }
+
+    /**
+     * Upload an edited products Excel file and update the matching products
+     */
+    public function processBulkUpdate(Request $request)
+    {
+        $request->validate([
+            'update_file' => 'required|file|mimes:xlsx,xls,csv|max:5120',
+        ]);
+
+        $import = new \App\Imports\ProductsUpdateImport(auth()->user()->business->id);
+
+        try {
+            Excel::import($import, $request->file('update_file'));
+        } catch (\Exception $e) {
+            return back()->with('error', 'Could not read the file: ' . $e->getMessage())
+                ->with('active_tab', 'update');
+        }
+
+        $message = "{$import->updated} product(s) updated.";
+        if ($import->skipped > 0) {
+            $message .= " {$import->skipped} row(s) skipped.";
+        }
+        if (count($import->errors) > 0) {
+            $message .= ' ' . count($import->errors) . ' error(s) — see below.';
+        }
+
+        return redirect()->route('products.bulk-import')
+            ->with($import->updated > 0 ? 'success' : 'warning', $message)
+            ->with('update_errors', $import->errors)
+            ->with('active_tab', 'update');
     }
 
     /**

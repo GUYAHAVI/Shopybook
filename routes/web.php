@@ -345,6 +345,10 @@ Route::prefix('team')->name('team.')->middleware(['auth', 'has.business', 'owner
         Route::get('/bulk-import/template-excel', [ProductsController::class, 'downloadExcelTemplate'])->name('products.bulk-import.template-excel');
         Route::post('/bulk-import/manual', [ProductsController::class, 'processManualEntry'])->name('products.bulk-import.manual');
 
+        // Bulk Update via edited Excel export
+        Route::get('/export-excel', [ProductsController::class, 'exportProducts'])->name('products.export-excel');
+        Route::post('/bulk-update', [ProductsController::class, 'processBulkUpdate'])->name('products.bulk-update');
+
         // OCR Routes
         Route::post('/ocr/preview', [ProductsController::class, 'previewOCRResults'])->name('products.ocr.preview');
         Route::post('/ocr/process', [ProductsController::class, 'processOCRImages'])->name('products.ocr.process');

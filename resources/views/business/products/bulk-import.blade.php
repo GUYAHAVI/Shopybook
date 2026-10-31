@@ -13,6 +13,34 @@
     </div>
 
     <!-- Error Messages -->
+    @if(session('success'))
+        <div class="alert alert-success alert-dismissible fade show">
+            <i class="fas fa-check-circle me-2"></i>{{ session('success') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    @endif
+    @if(session('warning'))
+        <div class="alert alert-warning alert-dismissible fade show">
+            <i class="fas fa-exclamation-triangle me-2"></i>{{ session('warning') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    @endif
+    @if(session('error'))
+        <div class="alert alert-danger alert-dismissible fade show">
+            <i class="fas fa-exclamation-circle me-2"></i>{{ session('error') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    @endif
+    @if(session('update_errors') && count(session('update_errors')))
+        <div class="alert alert-danger">
+            <h6><i class="fas fa-exclamation-triangle me-2"></i>Update Errors</h6>
+            <ul class="mb-0">
+                @foreach(session('update_errors') as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
     @if(session('failures'))
         <div class="alert alert-danger">
             <h6><i class="fas fa-exclamation-triangle me-2"></i>Import Errors</h6>
@@ -30,7 +58,7 @@
             <!-- Import Method Tabs -->
             <ul class="nav nav-tabs mb-3" id="importTabs" role="tablist">
                 <li class="nav-item" role="presentation">
-                    <button class="nav-link active" id="file-tab" data-bs-toggle="tab" data-bs-target="#file-import" type="button" role="tab">
+                    <button class="nav-link{{ session('active_tab') === 'update' ? '' : ' active' }}" id="file-tab" data-bs-toggle="tab" data-bs-target="#file-import" type="button" role="tab">
                         <i class="fas fa-file-csv me-2"></i>File Import
                     </button>
                 </li>
@@ -44,12 +72,17 @@
                         <i class="fas fa-camera me-2"></i>Image OCR
                     </button>
                 </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link{{ session('active_tab') === 'update' ? ' active' : '' }}" id="update-tab" data-bs-toggle="tab" data-bs-target="#excel-update" type="button" role="tab">
+                        <i class="fas fa-file-excel me-2"></i>Edit in Excel
+                    </button>
+                </li>
             </ul>
 
             <!-- Tab Content -->
             <div class="tab-content" id="importTabContent">
                 <!-- File Import Tab -->
-                <div class="tab-pane fade show active" id="file-import" role="tabpanel">
+                <div class="tab-pane fade{{ session('active_tab') === 'update' ? '' : ' show active' }}" id="file-import" role="tabpanel">
                     <div class="card shadow">
                         <div class="card-header py-3">
                             <h6 class="m-0 font-weight-bold text-primary">Upload File</h6>
@@ -227,6 +260,52 @@
                                     <span class="visually-hidden">Processing...</span>
                                 </div>
                                 <p class="mt-2">Processing images with OCR...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Edit in Excel Tab -->
+                <div class="tab-pane fade{{ session('active_tab') === 'update' ? ' show active' : '' }}" id="excel-update" role="tabpanel">
+                    <div class="card shadow">
+                        <div class="card-header py-3">
+                            <h6 class="m-0 font-weight-bold text-primary">Edit Existing Products in Excel</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6 border-end">
+                                    <h6 class="font-weight-bold">Step 1 — Download</h6>
+                                    <p class="text-muted">Export all your products to an Excel file, edit the values, and save it.</p>
+                                    <a href="{{ route('products.export-excel') }}" class="btn btn-success">
+                                        <i class="fas fa-file-excel me-2"></i>Download Products Excel
+                                    </a>
+                                </div>
+                                <div class="col-md-6">
+                                    <h6 class="font-weight-bold">Step 2 — Upload</h6>
+                                    <form action="{{ route('products.bulk-update') }}" method="POST" enctype="multipart/form-data">
+                                        @csrf
+                                        <div class="mb-3">
+                                            <input type="file" class="form-control @error('update_file') is-invalid @enderror"
+                                                   name="update_file" accept=".xlsx,.xls,.csv" required>
+                                            @error('update_file')
+                                                <div class="invalid-feedback">{{ $message }}</div>
+                                            @enderror
+                                        </div>
+                                        <button type="submit" class="btn btn-primary">
+                                            <i class="fas fa-upload me-2"></i>Update Products
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                            <hr>
+                            <div class="alert alert-info mb-0">
+                                <strong>How it works:</strong>
+                                <ul class="mb-0 mt-1">
+                                    <li>Products are matched by the <code>id</code> column — do not change or delete it.</li>
+                                    <li>Blank cells clear a field (except <code>stock_quantity</code>, <code>measurement_unit</code>, <code>is_active</code> and <code>is_featured</code>, which keep their current value when blank).</li>
+                                    <li>Stock changes are recorded as stock adjustments in your books.</li>
+                                    <li>Rows without a matching product are skipped and reported.</li>
+                                </ul>
                             </div>
                         </div>
                     </div>
