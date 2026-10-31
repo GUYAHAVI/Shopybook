@@ -243,7 +243,9 @@ class BusinessController extends Controller
 
         $request->session()->put('current_business_id', $businessId);
 
-        return redirect()->back();
+        // Always land on the dashboard — the page the user was on may not
+        // exist (or may be forbidden) in the new business's context.
+        return redirect()->route('dashboard');
     }
 
     /**
