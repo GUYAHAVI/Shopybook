@@ -23,3 +23,9 @@
 - `purchase_orders` + `purchase_order_items`; statuses: draft → sent → partially_received → received (cancelled side-state). Edit/delete draft only.
 - Receiving a PO creates a `stock_receipt` per line (`purchase_order_id`/`purchase_order_item_id` links) and posts `Ledger::receiveStock` + creates a `SupplierDebt` when `payment_mode=credit`, all inside `DB::transaction` in `PurchaseOrderController::receive` (same pattern as `ProductsController::processReceive`).
 - `supplier_debts` is the supplier-bill/AP record (posts `Dr expense|inventory / Cr payable`); `supplier_payments` settle it (`Dr payable / Cr money`). `purchase_order_id` links bills back to a PO.
+
+## Sales (order-to-cash)
+- `quotations` + `quotation_items`; statuses: draft → sent → accepted|declined → converted (cancelled side-state). Edit/delete draft only. Customer is either a linked `customers` row or snapshot fields (prospect — a `Customer` is auto-created on conversion).
+- `QuotationController::convert` creates an `Order` in one `DB::transaction`: server-side `TaxCalculator` totals, `Ledger::issueStockForSale` per line **before** `stock_quantity` changes, `postSale` (always Dr receivable / Cr sales+VAT + COGS/inventory), `Payment` + `postPayment` (Dr money / Cr receivable) when paid/partial, `CustomerDebt` for the unpaid balance, `invoice_number` via `AccountingSetting::nextInvoiceNumber()` when not fully paid.
+- `customer_debts` is the AR bill; `recordPayment` on the order settles it. AR aging lives in `ReportService::aging($biz,'receivable')`.
+- Accounting-test caveat: `created_at`/`payment_date` are NOT mass-assignable — set them directly in tests, and suppress the `Product::created` observer when backdating opening stock (`postOpeningStock` dates the entry with `product->created_at` or the triggering movement's date).

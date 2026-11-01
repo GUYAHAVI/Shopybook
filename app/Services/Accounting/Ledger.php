@@ -537,9 +537,9 @@ class Ledger
      * Balance Equity) when it's created with stock or first moves. No-op if the
      * product already has stock ledger history.
      */
-    public function postOpeningStock(Product $product): void
+    public function postOpeningStock(Product $product, $date = null): void
     {
-        $this->stock->position($product);
+        $this->stock->position($product, $date ?? $product->created_at);
     }
 
     /** Resolve a system key (e.g. 'mpesa'), id or Account into this business's Account. */

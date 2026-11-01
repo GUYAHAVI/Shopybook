@@ -27,8 +27,11 @@ class ReportServiceTest extends AccountingTestCase
             'business_id' => $this->businessId, 'customer_id' => $customerId,
             'order_number' => 'ORD-'.uniqid(), 'subtotal' => $total - $tax,
             'tax' => $tax, 'total_amount' => $total, 'balance_due' => $total,
-            'created_at' => $date.' 10:00:00',
         ]);
+        // created_at isn't mass-assignable — set it directly so the posted
+        // journal lands on the intended date regardless of when tests run.
+        $order->created_at = $date.' 10:00:00';
+        $order->save();
         [$unitCost, $costAmount] = $this->ledger->issueStockForSale($product, $qty, $order);
         $order->items()->create([
             'product_id' => $product->id, 'quantity' => $qty, 'stock_qty' => $qty,
@@ -44,13 +47,25 @@ class ReportServiceTest extends AccountingTestCase
     /** A small trading month: sell, part-pay, buy stock, pay rent. */
     private function scenario(): Order
     {
-        $product = Product::create(['business_id' => $this->businessId, 'name' => 'Flour', 'price' => 116, 'cost_price' => 50, 'stock_quantity' => 20]);
+        // Product::created posts opening stock at now() — suppress it so the
+        // opening entry can be dated inside the report window like everything else.
+        $product = Product::withoutEvents(fn () => Product::create([
+            'business_id' => $this->businessId, 'name' => 'Flour',
+            'price' => 116, 'cost_price' => 50, 'stock_quantity' => 20,
+        ]));
+        $product->created_at = '2026-10-01';
+        $product->save();
+        $this->ledger->postOpeningStock($product);
+
         $order = $this->sell($product, 2, total: 232, tax: 32, customerId: 11);
 
         $payment = $order->payments()->create([
             'business_id' => $this->businessId, 'payment_number' => 'PAY-1',
-            'payment_method' => 'mpesa', 'amount' => 100, 'payment_date' => '2026-10-05',
+            'payment_method' => 'mpesa', 'amount' => 100,
         ]);
+        // payment_date isn't mass-assignable either — same reason as above.
+        $payment->payment_date = '2026-10-05';
+        $payment->save();
         $this->ledger->postPayment($payment);
 
         $cost = Cost::create(['business_id' => $this->businessId, 'type' => 'rent', 'amount' => 5000, 'date' => '2026-10-10']);

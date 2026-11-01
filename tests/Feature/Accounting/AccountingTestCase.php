@@ -55,9 +55,22 @@ abstract class AccountingTestCase extends TestCase
             $t->string('order_type')->nullable();
             $t->decimal('subtotal', 15, 2)->default(0);
             $t->decimal('tax', 15, 2)->default(0);
+            $t->decimal('tax_rate', 5, 2)->nullable();
+            $t->boolean('tax_inclusive')->default(false);
+            $t->string('tax_type')->nullable();
             $t->decimal('total_amount', 15, 2)->default(0);
             $t->decimal('balance_due', 15, 2)->default(0);
             $t->decimal('total_price', 15, 2)->nullable();
+            $t->string('payment_status')->nullable();
+            $t->string('payment_method')->nullable();
+            $t->decimal('amount_paid', 15, 2)->default(0);
+            $t->string('invoice_number')->nullable();
+            $t->timestamp('invoice_generated_at')->nullable();
+            $t->text('notes')->nullable();
+            $t->unsignedBigInteger('sold_by')->nullable();
+            $t->string('customer_name')->nullable();
+            $t->string('customer_phone')->nullable();
+            $t->string('customer_email')->nullable();
             $t->timestamps();
         });
         Schema::create('order_items', function (Blueprint $t) {
@@ -70,6 +83,9 @@ abstract class AccountingTestCase extends TestCase
             $t->decimal('cost_amount', 15, 2)->nullable();
             $t->decimal('price', 15, 2);
             $t->decimal('total', 15, 2);
+            $t->decimal('tax_amount', 15, 2)->nullable();
+            $t->string('tax_treatment')->nullable();
+            $t->string('unit')->nullable();
             $t->string('sell_unit')->nullable();
             $t->string('material_type')->nullable();
             $t->decimal('original_quantity', 10, 4)->nullable();
@@ -85,7 +101,70 @@ abstract class AccountingTestCase extends TestCase
             $t->string('transaction_id')->nullable();
             $t->string('transaction_reference')->nullable();
             $t->string('status')->nullable();
+            $t->text('notes')->nullable();
+            $t->unsignedBigInteger('received_by')->nullable();
             $t->timestamp('payment_date')->nullable();
+            $t->timestamps();
+        });
+        Schema::create('customers', function (Blueprint $t) {
+            $t->id();
+            $t->string('business_id');
+            $t->string('name');
+            $t->string('email')->nullable();
+            $t->string('phone')->nullable();
+            $t->timestamps();
+        });
+        Schema::create('customer_debts', function (Blueprint $t) {
+            $t->id();
+            $t->string('business_id');
+            $t->unsignedBigInteger('customer_id');
+            $t->unsignedBigInteger('order_id')->nullable();
+            $t->decimal('total_amount', 15, 2);
+            $t->decimal('amount_paid', 15, 2)->default(0);
+            $t->decimal('balance', 15, 2);
+            $t->date('due_date')->nullable();
+            $t->string('status')->default('pending');
+            $t->text('notes')->nullable();
+            $t->timestamps();
+        });
+        Schema::create('tax_settings', function (Blueprint $t) {
+            $t->id();
+            $t->string('business_id');
+            $t->boolean('tax_enabled')->default(false);
+            $t->string('tax_type')->nullable();
+            $t->decimal('tax_rate', 5, 2)->default(0);
+            $t->string('tax_name')->nullable();
+            $t->boolean('tax_inclusive')->default(false);
+            $t->json('tax_exemption_items')->nullable();
+            $t->timestamps();
+        });
+        Schema::create('quotations', function (Blueprint $t) {
+            $t->id();
+            $t->string('business_id');
+            $t->string('quote_number');
+            $t->unsignedBigInteger('customer_id')->nullable();
+            $t->string('customer_name')->nullable();
+            $t->string('customer_email')->nullable();
+            $t->string('customer_phone')->nullable();
+            $t->string('status')->default('draft');
+            $t->date('quote_date');
+            $t->date('valid_until')->nullable();
+            $t->decimal('subtotal', 15, 2)->default(0);
+            $t->decimal('tax', 15, 2)->default(0);
+            $t->decimal('total_amount', 15, 2)->default(0);
+            $t->text('notes')->nullable();
+            $t->unsignedBigInteger('created_by')->nullable();
+            $t->unsignedBigInteger('order_id')->nullable();
+            $t->timestamps();
+        });
+        Schema::create('quotation_items', function (Blueprint $t) {
+            $t->id();
+            $t->unsignedBigInteger('quotation_id');
+            $t->unsignedBigInteger('product_id');
+            $t->string('product_name');
+            $t->decimal('quantity', 12, 3);
+            $t->decimal('unit_price', 15, 2);
+            $t->decimal('total', 15, 2);
             $t->timestamps();
         });
         Schema::create('stock_receipts', function (Blueprint $t) {
@@ -242,6 +321,7 @@ abstract class AccountingTestCase extends TestCase
 
         (require database_path('migrations/2026_10_24_000001_create_accounting_tables.php'))->up();
         (require database_path('migrations/2026_10_24_000003_create_supplier_payments_table.php'))->up();
+        (require database_path('migrations/2026_10_24_000004_add_invoice_counter_to_accounting_settings.php'))->up();
 
         DB::table('businesses')->insert([
             ['id' => 'biz-1', 'name' => 'Duka One'],

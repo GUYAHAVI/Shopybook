@@ -1920,6 +1920,12 @@
                             <span>Orders</span>
                         </a>
                     </div>
+                    <div class="nav-item">
+                        <a href="{{ route('quotations.index') }}" class="nav-link {{ request()->routeIs('quotations.*') ? 'active' : '' }}">
+                            <i class="fas fa-file-signature"></i>
+                            <span>Quotations</span>
+                        </a>
+                    </div>
                     @endif
                     @if($__can('customers'))
                     <div class="nav-item">
@@ -2439,6 +2445,10 @@
             <a href="{{ route('sales.orders') }}" class="app-tile {{ request()->routeIs('sales.orders*') ? 'active' : '' }}" data-label="Orders">
                 <div class="app-tile-icon" style="background:#f59e0b;"><i class="fas fa-shopping-cart"></i></div>
                 <span class="app-tile-label">Orders</span>
+            </a>
+            <a href="{{ route('quotations.index') }}" class="app-tile {{ request()->routeIs('quotations.*') ? 'active' : '' }}" data-label="Quotations">
+                <div class="app-tile-icon" style="background:#0d9488;"><i class="fas fa-file-signature"></i></div>
+                <span class="app-tile-label">Quotations</span>
             </a>
             @endif
             @if($__can('returns') && $__appOk('sales'))

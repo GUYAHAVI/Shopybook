@@ -24,6 +24,7 @@ use App\Http\Controllers\InventoryController;
 use App\Http\Controllers\CommissionPayoutController;
 use App\Http\Controllers\SupplierController;
 use App\Http\Controllers\PurchaseOrderController;
+use App\Http\Controllers\QuotationController;
 use App\Http\Controllers\RentalController;
 use App\Http\Controllers\PublicRentalController;
 use App\Http\Controllers\OrderController;
@@ -423,6 +424,23 @@ Route::post('/orders', [SalesController::class, 'createOrder'])->name('sales.cre
         // Organization customers
         Route::get('/organization-customers/create', [SalesController::class, 'createOrganizationCustomer'])->name('sales.organization-customers.create');
         Route::post('/organization-customers', [SalesController::class, 'storeOrganizationCustomer'])->name('sales.store-organization-customer');
+    });
+
+    // Quotations Routes (quote → send → accept → convert to sale)
+    Route::prefix('quotations')->middleware(['auth', 'has.business', 'permission:pos,orders'])->group(function () {
+        Route::get('/', [QuotationController::class, 'index'])->name('quotations.index');
+        Route::get('/create', [QuotationController::class, 'create'])->name('quotations.create');
+        Route::post('/', [QuotationController::class, 'store'])->name('quotations.store');
+        Route::get('/{quotation}', [QuotationController::class, 'show'])->name('quotations.show');
+        Route::get('/{quotation}/edit', [QuotationController::class, 'edit'])->name('quotations.edit');
+        Route::put('/{quotation}', [QuotationController::class, 'update'])->name('quotations.update');
+        Route::delete('/{quotation}', [QuotationController::class, 'destroy'])->name('quotations.destroy');
+        Route::post('/{quotation}/send', [QuotationController::class, 'send'])->name('quotations.send');
+        Route::post('/{quotation}/resend-email', [QuotationController::class, 'resendEmail'])->name('quotations.resend-email');
+        Route::post('/{quotation}/accept', [QuotationController::class, 'markAccepted'])->name('quotations.accept');
+        Route::post('/{quotation}/decline', [QuotationController::class, 'markDeclined'])->name('quotations.decline');
+        Route::post('/{quotation}/cancel', [QuotationController::class, 'cancel'])->name('quotations.cancel');
+        Route::post('/{quotation}/convert', [QuotationController::class, 'convert'])->name('quotations.convert');
     });
 
     // Contact Import Routes

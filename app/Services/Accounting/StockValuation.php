@@ -26,7 +26,7 @@ class StockValuation
      */
     public function receive(Product $product, float $qty, float $unitCost, ?Model $source = null, $date = null, ?string $batchId = null): float
     {
-        [$qtyBefore, $valueBefore, $rateBefore] = $this->position($product);
+        [$qtyBefore, $valueBefore, $rateBefore] = $this->position($product, $date);
 
         $value = round($qty * $unitCost, 2);
         $qtyAfter = round($qtyBefore + $qty, 3);
@@ -50,7 +50,7 @@ class StockValuation
      */
     public function issue(Product $product, float $qty, ?Model $source = null, $date = null, ?string $batchId = null): array
     {
-        [$qtyBefore, $valueBefore, $rate] = $this->position($product);
+        [$qtyBefore, $valueBefore, $rate] = $this->position($product, $date);
 
         $qtyAfter = round($qtyBefore - $qty, 3);
         $value = round($qty * $rate, 2);
@@ -65,7 +65,7 @@ class StockValuation
     }
 
     /** Current [qty, value, rate] for a product. */
-    public function position(Product $product): array
+    public function position(Product $product, $date = null): array
     {
         $last = StockLedgerEntry::where('business_id', $product->business_id)
             ->where('product_id', $product->id)
@@ -77,7 +77,7 @@ class StockValuation
             return [(float) $last->qty_after, (float) $last->value_after, (float) $last->valuation_rate];
         }
 
-        return $this->openingPosition($product);
+        return $this->openingPosition($product, $date);
     }
 
     /**
@@ -85,7 +85,7 @@ class StockValuation
      * record that stock as opening inventory (Dr Inventory / Cr Opening Balance Equity)
      * so the Inventory account and the stock ledger agree from the start.
      */
-    private function openingPosition(Product $product): array
+    private function openingPosition(Product $product, $date = null): array
     {
         $qty = round((float) Product::whereKey($product->id)->value('stock_quantity'), 3);
         $rate = $this->fallbackRate($product);
@@ -95,7 +95,10 @@ class StockValuation
             return [0.0, 0.0, $rate];
         }
 
+        // Date the opening with the movement that triggered it — the goods
+        // existed before that sale/receipt, so the entry shouldn't land later.
         $entry = $this->posting->post($product->business_id, [
+            'date' => $date,
             'description' => "Opening stock: {$product->name} ({$qty} @ ".number_format($rate, 2).')',
             'source' => $product,
             'event' => 'opening_stock',
@@ -105,7 +108,7 @@ class StockValuation
             ],
         ]);
 
-        $this->record($product, $qty, $rate, $value, $qty, $value, $product, null, null, $entry?->id);
+        $this->record($product, $qty, $rate, $value, $qty, $value, $product, $date, null, $entry?->id);
 
         return [$qty, $value, $rate];
     }
