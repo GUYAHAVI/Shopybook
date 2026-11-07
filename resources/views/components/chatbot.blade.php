@@ -2,7 +2,7 @@
 <div id="shopybook-chatbot">
     <!-- Chat Toggle Button -->
     <button id="chat-toggle-btn" class="chat-toggle-button" type="button">
-        <i class="bi bi-chat-dots-fill"></i>
+        <i class="fa-solid fa-comments"></i>
         <span class="chat-badge" id="chat-badge">AI</span>
     </button>
 
@@ -11,7 +11,7 @@
         <div class="chat-header">
             <div class="d-flex align-items-center">
                 <div class="chat-avatar">
-                    <i class="bi bi-robot"></i>
+                    <i class="fa-solid fa-robot"></i>
                 </div>
                 <div class="ms-2">
                     <h6 class="mb-0">Shopybook Support</h6>
@@ -19,14 +19,14 @@
                 </div>
             </div>
             <button class="btn-close-chat" id="chat-close-btn" type="button">
-                <i class="bi bi-x-lg"></i>
+                <i class="fa-solid fa-xmark"></i>
             </button>
         </div>
 
         <div class="chat-messages" id="chat-messages">
             <div class="message bot-message">
                 <div class="message-avatar">
-                    <i class="bi bi-robot"></i>
+                    <i class="fa-solid fa-robot"></i>
                 </div>
                 <div class="message-content">
                     <p>👋 Hello! I'm your Shopybook AI assistant. I can help you with:</p>
@@ -54,7 +54,7 @@
                     required
                 />
                 <button type="submit" class="btn btn-primary chat-send-btn" id="chat-send-btn">
-                    <i class="bi bi-send-fill"></i>
+                    <i class="fa-solid fa-paper-plane"></i>
                 </button>
             </form>
             <small class="text-muted mt-1 d-block text-center">Powered by Claude AI</small>
@@ -401,6 +401,27 @@ document.addEventListener('DOMContentLoaded', function() {
     const chatInput = document.getElementById('chat-input');
     const chatMessages = document.getElementById('chat-messages');
     const chatSendBtn = document.getElementById('chat-send-btn');
+    const chatbotRoot = document.getElementById('shopybook-chatbot');
+
+    // Keep the widget above the tracking-consent banner while it's visible
+    const consentBanner = document.getElementById('tracking-consent-banner');
+    function syncChatbotOffset() {
+        const lift = consentBanner && consentBanner.style.display !== 'none'
+            ? consentBanner.offsetHeight : 0;
+        chatbotRoot.style.bottom = lift ? (lift + 20) + 'px' : '';
+        chatWindow.style.bottom = lift ? (lift + 90) + 'px' : '';
+    }
+    if (consentBanner) {
+        syncChatbotOffset();
+        ['consent-accept', 'consent-decline'].forEach(function (id) {
+            const btn = document.getElementById(id);
+            if (btn) btn.addEventListener('click', function () {
+                consentBanner.style.display = 'none';
+                syncChatbotOffset();
+            });
+        });
+        window.addEventListener('resize', syncChatbotOffset);
+    }
 
     // Toggle chat window
     chatToggleBtn.addEventListener('click', function() {
@@ -491,7 +512,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
         const avatar = document.createElement('div');
         avatar.className = 'message-avatar';
-        avatar.innerHTML = sender === 'bot' ? '<i class="bi bi-robot"></i>' : '<i class="bi bi-person-fill"></i>';
+        avatar.innerHTML = sender === 'bot' ? '<i class="fa-solid fa-robot"></i>' : '<i class="fa-solid fa-user"></i>';
 
         const content = document.createElement('div');
         content.className = 'message-content';
@@ -520,7 +541,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
         const avatar = document.createElement('div');
         avatar.className = 'message-avatar';
-        avatar.innerHTML = '<i class="bi bi-robot"></i>';
+        avatar.innerHTML = '<i class="fa-solid fa-robot"></i>';
 
         const content = document.createElement('div');
         content.className = 'message-content';

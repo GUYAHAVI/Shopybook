@@ -416,6 +416,7 @@ Route::post('/orders', [SalesController::class, 'createOrder'])->name('sales.cre
         Route::post('/calculate-dynamic-conversion', [SalesController::class, 'calculateDynamicConversion'])->name('sales.calculate-dynamic-conversion');
         Route::get('/customers', [SalesController::class, 'customers'])->name('sales.customers');
         Route::get('/customers/create', [SalesController::class, 'createCustomer'])->name('sales.customers.create');
+        Route::get('/customers/{customer}/statement', [SalesController::class, 'customerStatement'])->name('sales.customers.statement');
         Route::get('/customers/{type}/{id}', [SalesController::class, 'showCustomer'])->name('sales.customers.show');
         Route::post('/customers', [SalesController::class, 'storeCustomer'])->name('sales.store-customer');
         Route::put('/customers/{customer}', [SalesController::class, 'updateCustomer'])->name('sales.update-customer');

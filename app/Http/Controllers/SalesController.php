@@ -709,6 +709,94 @@ class SalesController extends Controller
         return view('sales.customers.show', compact('type', 'customer', 'orders', 'totalSpent', 'orderCount'));
     }
 
+    /**
+     * Per-customer AR statement: every invoice (order) and payment with a
+     * running balance — the customer's view of their account with the business.
+     */
+    public function customerStatement(Request $request, Customer $customer)
+    {
+        $business = auth()->user()->business;
+        abort_unless($customer->business_id === $business->id, 403);
+
+        $rows = collect();
+
+        foreach ($customer->orders()->where('status', '!=', 'cancelled')->with('payments')->orderBy('created_at')->get() as $order) {
+            $rows->push([
+                'date'   => $order->created_at,
+                'ref'    => $order->invoice_number ?: $order->order_number,
+                'type'   => 'Invoice',
+                'debit'  => (float) $order->total_amount,
+                'credit' => 0,
+                'link'   => route('sales.generate-invoice', $order),
+            ]);
+            foreach ($order->payments as $payment) {
+                $rows->push([
+                    'date'   => $payment->payment_date ?? $payment->created_at,
+                    'ref'    => $payment->payment_number,
+                    'type'   => 'Payment · ' . str_replace('_', ' ', (string) $payment->payment_method),
+                    'debit'  => 0,
+                    'credit' => (float) $payment->amount,
+                    'link'   => null,
+                ]);
+            }
+        }
+
+        // Opening balances and manual AR entries not tied to an order
+        foreach (CustomerDebt::where('customer_id', $customer->id)->whereNull('order_id')->oldest()->get() as $debt) {
+            $rows->push([
+                'date'   => $debt->created_at,
+                'ref'    => $debt->notes ?: 'Opening balance',
+                'type'   => 'Opening balance',
+                'debit'  => (float) $debt->total_amount,
+                'credit' => 0,
+                'link'   => null,
+            ]);
+        }
+
+        $balance = 0;
+        $rows = $rows->sortBy('date')->values()->map(function ($r) use (&$balance) {
+            $balance += $r['debit'] - $r['credit'];
+            $r['balance'] = $balance;
+            return $r;
+        });
+
+        $summary = [
+            'invoiced' => $rows->sum('debit'),
+            'paid'     => $rows->sum('credit'),
+            'balance'  => $balance,
+            'overdue'  => CustomerDebt::where('customer_id', $customer->id)
+                ->whereIn('status', ['pending', 'partial', 'overdue'])
+                ->where('due_date', '<', now()->toDateString())
+                ->sum('balance'),
+        ];
+
+        if ($request->boolean('pdf')) {
+            $logo = $this->logoDataUri($business);
+            return \Barryvdh\DomPDF\Facade\Pdf::loadView('sales.customers.statement-pdf', [
+                'title'    => 'Customer Statement',
+                'subtitle' => 'As at ' . now()->format('d M Y'),
+                'customer' => $customer, 'rows' => $rows, 'summary' => $summary,
+                'business' => $business, 'logo' => $logo,
+            ])->setPaper('a4')->download('statement-' . \Illuminate\Support\Str::slug($customer->name) . '.pdf');
+        }
+
+        return view('sales.customers.statement', compact('customer', 'rows', 'summary', 'business'));
+    }
+
+    /** Business logo as a data URI so dompdf can embed it without remote access. */
+    private function logoDataUri($business): ?string
+    {
+        if (empty($business->logo)) {
+            return null;
+        }
+        $path = storage_path('app/public/' . ltrim((string) $business->logo, '/'));
+        if (!is_file($path)) {
+            return null;
+        }
+
+        return 'data:' . mime_content_type($path) . ';base64,' . base64_encode(file_get_contents($path));
+    }
+
     public function storeCustomer(Request $request)
     {
         try {

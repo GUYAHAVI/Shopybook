@@ -26,6 +26,11 @@
             </div>
         </div>
         <div class="d-flex gap-2">
+            @if($type !== 'organization')
+            <a href="{{ route('sales.customers.statement', $customer) }}" class="btn btn-outline-info btn-sm">
+                <i class="fas fa-file-invoice-dollar me-1"></i>Statement
+            </a>
+            @endif
             <button class="btn btn-outline-secondary btn-sm" onclick="window.print()">
                 <i class="fas fa-print me-1"></i>Print
             </button>

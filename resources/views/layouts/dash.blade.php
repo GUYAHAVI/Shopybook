@@ -1691,6 +1691,35 @@
         .modal-title {
             color: var(--primary-color);
         }
+
+        /* Print: strip all app chrome — printouts show content only */
+        @media print {
+            .sidebar,
+            .top-header,
+            .topbar-user-dropdown,
+            .ai-chat-widget,
+            #pwa-install-banner,
+            .pwa-install-guide,
+            .modal-backdrop,
+            .btn,
+            .btn-group,
+            .pagination,
+            form:not(.print-keep) {
+                display: none !important;
+            }
+            .main-content {
+                margin-left: 0 !important;
+                padding: 0 !important;
+                width: 100% !important;
+            }
+            body {
+                background: #fff !important;
+            }
+            .card {
+                box-shadow: none !important;
+                border: 1px solid #ddd !important;
+            }
+        }
     </style>
     @stack('styles')
 </head>

@@ -334,6 +334,9 @@
         })();
     </script>
 
+    <!-- Shopybook Customer Support Chatbot -->
+    @include('components.chatbot')
+
     @stack('scripts')
 </body>
 
